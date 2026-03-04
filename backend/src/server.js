@@ -108,7 +108,7 @@ async function getParcelTraits(tokenId) {
 app.get('/image/:tokenId', async (req, res) => {
   try {
     const tokenId = parseInt(req.params.tokenId);
-    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9999) {
+    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
       return res.status(400).send('Invalid token ID');
     }
 
@@ -146,8 +146,8 @@ app.get('/image/:tokenId', async (req, res) => {
 app.get('/estimate/:tokenId', async (req, res) => {
   try {
     const tokenId = parseInt(req.params.tokenId);
-    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9999) {
-      return res.status(400).json({ error: 'Invalid token ID (must be 1–9999)' });
+    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
+      return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     }
 
     const traits = await getParcelTraits(tokenId);

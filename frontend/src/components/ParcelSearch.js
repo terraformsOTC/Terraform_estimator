@@ -7,14 +7,14 @@ export default function ParcelSearch({ onSearch, loading }) {
   function handleSubmit(e) {
     e.preventDefault();
     const id = parseInt(value.trim());
-    if (isNaN(id) || id < 1 || id > 9999) return;
+    if (isNaN(id) || id < 1 || id > 9911) return;
     onSearch(id);
   }
 
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-60 text-sm">
-        enter a parcel token ID (1–9999) to get a price estimate based on zone and biome.
+        enter a parcel token ID (1–9911) to get a price estimate based on zone and biome.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
@@ -24,7 +24,7 @@ export default function ParcelSearch({ onSearch, loading }) {
           onChange={e => setValue(e.target.value)}
           type="number"
           min="1"
-          max="9999"
+          max="9911"
         />
         <button
           type="submit"
