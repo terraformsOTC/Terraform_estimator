@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: '[terraform estimator]',
+  title: 'terraform estimator',
   description: 'Price estimator for Terraforms by Mathcastles parcels',
 };
 
