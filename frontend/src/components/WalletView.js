@@ -67,15 +67,28 @@ export default function WalletView({ data, loading, address }) {
   );
 }
 
+const SPECIAL_TYPE_BADGES = {
+  'Plague': { label: 'plague',  color: '#e879f9' },
+  'X-Seed': { label: 'x-seed',  color: '#4ade80' },
+  'Y-Seed': { label: 'y-seed',  color: '#2dd4bf' },
+  'Lith0':  { label: 'lith0',   color: '#a5b4fc' },
+};
+
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, mysteryOutlier, mode } = traits;
+  const { zone, biome, level, mysteryOutlier, mode, specialType } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
     const order = { Grail: 0, Rare: 1, Premium: 2, 'Premium Floor': 3, Floor: 4 };
     return order[a] - order[b];
   })[0];
+
+  // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
+  // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
+  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES;
+  const showCategoryBadge = !(topCategory === 'Floor' && isHighValueSpecial);
+  const specialBadge = SPECIAL_TYPE_BADGES[specialType];
 
   return (
     <div className="inline-block relative mb-20 mx-2" style={{ width: 277 }}>
@@ -102,17 +115,27 @@ function ParcelCard({ parcel }) {
           <p className="text-xs opacity-75">L{level}/B{biome}/{zone}</p>
         </div>
         <div className="flex justify-between items-center mt-1">
-          <div className="flex items-center gap-1">
-            <span
-              className="text-xs px-1"
-              style={{
-                color: CATEGORY_COLORS[topCategory],
-                border: `1px solid ${CATEGORY_COLORS[topCategory]}`,
-                opacity: 0.8
-              }}
-            >
-              {topCategory}
-            </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            {showCategoryBadge && (
+              <span
+                className="text-xs px-1"
+                style={{
+                  color: CATEGORY_COLORS[topCategory],
+                  border: `1px solid ${CATEGORY_COLORS[topCategory]}`,
+                  opacity: 0.8
+                }}
+              >
+                {topCategory}
+              </span>
+            )}
+            {specialBadge && (
+              <span
+                className="text-xs px-1"
+                style={{ color: specialBadge.color, border: `1px solid ${specialBadge.color}`, opacity: 0.8 }}
+              >
+                {specialBadge.label}
+              </span>
+            )}
             {mysteryOutlier && (
               <span
                 className="text-xs px-1"
