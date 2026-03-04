@@ -13,7 +13,7 @@ export default function ParcelSearch({ onSearch, loading }) {
 
   return (
     <div className="max-w-lg">
-      <p className="mb-4 opacity-60 text-sm">
+      <p className="mb-4 opacity-75 text-sm">
         enter a parcel token ID (1–9911) to get a price estimate based on zone and biome.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
@@ -34,7 +34,7 @@ export default function ParcelSearch({ onSearch, loading }) {
           {loading ? '[loading...]' : '[estimate]'}
         </button>
       </form>
-      <p className="mt-6 opacity-40 text-xs">
+      <p className="mt-6 opacity-55 text-xs">
         estimates are based on a zone/biome multiplier model applied to the current floor price.
         this is not financial advice.
       </p>

@@ -11,10 +11,10 @@ const ATTAINABILITY_COLORS = {
 export default function WalletView({ data, loading, address }) {
   if (loading) {
     return (
-      <div className="text-sm opacity-60">
+      <div className="text-sm opacity-75">
         [loading parcels for {address?.slice(0, 6)}...{address?.slice(-4)}]
         <br />
-        <span className="opacity-40 text-xs">this may take a moment for large collections...</span>
+        <span className="opacity-55 text-xs">this may take a moment for large collections...</span>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function WalletView({ data, loading, address }) {
             {sets.map(set => (
               <div key={set.name} className="border border-current border-opacity-20 px-3 py-2">
                 <p className="text-sm font-semibold">{set.name}</p>
-                <p className="text-xs opacity-50">{set.description}</p>
+                <p className="text-xs opacity-65">{set.description}</p>
                 <p
                   className="text-xs mt-1"
                   style={{ color: ATTAINABILITY_COLORS[set.attainability] || 'inherit' }}
@@ -46,13 +46,13 @@ export default function WalletView({ data, loading, address }) {
       )}
 
       {totalParcels > fetchedParcels && (
-        <p className="text-xs opacity-40 mb-4">
+        <p className="text-xs opacity-55 mb-4">
           [showing {fetchedParcels} of {totalParcels} parcels]
         </p>
       )}
 
       {parcels?.length === 0 ? (
-        <p className="opacity-60 text-sm">no terraforms parcels found in this wallet.</p>
+        <p className="opacity-75 text-sm">no terraforms parcels found in this wallet.</p>
       ) : (
         <div
           className="text-center mt-4 inline-grid w-full"
@@ -99,7 +99,7 @@ function ParcelCard({ parcel }) {
           <a href={`/?token=${tokenId}`}>
             {tokenId}
           </a>
-          <p className="text-xs opacity-60">L{level}/B{biome}/{zone}</p>
+          <p className="text-xs opacity-75">L{level}/B{biome}/{zone}</p>
         </div>
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center gap-1">
