@@ -47,6 +47,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
           <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} badge={mode === 'Origin Daydream' ? { label: 'origin daydream', color: '#fb923c' } : null} />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
+          <SpecialTypeRow mode={mode} specialType={specialType} />
         </div>
 
         <div className="mt-1">
@@ -160,6 +161,39 @@ function MysteryRow({ value, outlier }) {
           <span className="text-xs px-1" style={{ color: accent, border: `1px solid ${accent}`, opacity: 0.85 }}>
             {isHigh ? 'top 5%' : 'bottom 5%'}
           </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const SPECIAL_TYPE_CONFIG = {
+  'Origin Daydream': { label: 'origin daydream', color: '#fb923c' },
+  'Plague':          { label: 'plague',           color: '#e879f9' },
+  'X-Seed':          { label: 'x-seed',           color: '#4ade80' },
+  'Y-Seed':          { label: 'y-seed',           color: '#2dd4bf' },
+  'Lith0':           { label: 'lith0',            color: '#a5b4fc' },
+  'Spine':           { label: 'spine',            color: '#f87171' },
+  '1of1':            { label: '1 of 1',           color: '#ffd700' },
+};
+
+function SpecialTypeRow({ mode, specialType }) {
+  const key = mode === 'Origin Daydream' ? 'Origin Daydream' : specialType;
+  const config = SPECIAL_TYPE_CONFIG[key];
+
+  return (
+    <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+      <span className="text-sm opacity-65">special</span>
+      <div className="flex items-center gap-2">
+        {config ? (
+          <>
+            <span className="text-sm">{key}</span>
+            <span className="text-xs px-1" style={{ color: config.color, border: `1px solid ${config.color}`, opacity: 0.85 }}>
+              {config.label}
+            </span>
+          </>
+        ) : (
+          <span className="text-sm opacity-35">No</span>
         )}
       </div>
     </div>

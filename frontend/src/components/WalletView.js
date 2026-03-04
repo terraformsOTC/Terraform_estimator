@@ -72,6 +72,8 @@ const SPECIAL_TYPE_BADGES = {
   'X-Seed': { label: 'x-seed',  color: '#4ade80' },
   'Y-Seed': { label: 'y-seed',  color: '#2dd4bf' },
   'Lith0':  { label: 'lith0',   color: '#a5b4fc' },
+  'Spine':  { label: 'spine',   color: '#f87171' },
+  '1of1':   { label: '1 of 1',  color: '#ffd700' },
 };
 
 function ParcelCard({ parcel }) {
