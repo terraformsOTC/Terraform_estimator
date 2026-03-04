@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Environment files (keep .env.example, not real secrets)
+backend/.env
+frontend/.env.local
+
+# Debug scripts (not part of production)
+backend/debug-traits.js
+backend/find-special.js
+backend/sample-mystery.js
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
