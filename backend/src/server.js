@@ -14,8 +14,10 @@ app.use(helmet({ contentSecurityPolicy: false }));
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 // Hardcoded production origins + optional extras via ALLOWED_ORIGINS env var
 const ALLOWED_ORIGINS = [
-  'https://terraformsestimator.xyz',
+  'https://terraformsestimator.xyz',      // terraforms + estimator (with s)
   'https://www.terraformsestimator.xyz',
+  'https://terraformestimator.xyz',       // terraform + estimator (without s)
+  'https://www.terraformestimator.xyz',
   'https://terraform-estimator.vercel.app',
   'http://localhost:3000',
   ...(process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
