@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
@@ -15,6 +16,19 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const searchParams = useSearchParams();
+
+  // Auto-search if ?token=XXX is in the URL (e.g. linked from wallet view)
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      const id = parseInt(token);
+      if (!isNaN(id) && id >= 1 && id <= 9911) {
+        setView('search');
+        searchParcel(id);
+      }
+    }
+  }, []);
 
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
