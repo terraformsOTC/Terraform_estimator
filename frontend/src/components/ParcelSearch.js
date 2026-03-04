@@ -18,6 +18,8 @@ export default function ParcelSearch({ onSearch, loading }) {
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
+          id="token-id"
+          name="tokenId"
           className="py-1 px-2 text-sm transition-all w-40"
           placeholder="token id"
           value={value}
