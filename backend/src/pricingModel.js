@@ -63,26 +63,26 @@ const BIOME_MULTIPLES = {
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
 const LEVEL_MULTIPLES = {
-  1: 5,     // Kairo zone only
-  2: 2,     // Kairo zone only
-  3: 2,     // Kairo zone only
-  4: 1,     // Kairo zone only
-  5: 2.5,   // Rare zones
-  6: 2,     // Premium zones
-  7: 1.5,   // Premium zones
-  8: 1.3,   // Premium Floor zones
-  9: 1.75,  // Premium zones
-  10: 1.1,  // [DUOTONE] zones
-  11: 1.1,  // [DUOTONE] zones
-  12: 1.3,  // Premium zones
-  13: 1,    // Mixed zones
-  14: 1,    // Mixed zones
-  15: 1.25, // Premium and grail zones
-  16: 1.3,  // Premium zones
-  17: 1,    // Alto zone only
-  18: 2,    // Alto zone only
-  19: 2,    // Alto zone only
-  20: 5,    // Alto zone only
+  1: 5,   // Kairo basement — extremely rare
+  2: 2,   // Kairo basement
+  3: 2,   // Kairo basement
+  4: 1,
+  5: 1,
+  6: 1,
+  7: 1,
+  8: 1,
+  9: 1,
+  10: 1,
+  11: 1,
+  12: 1,
+  13: 1,
+  14: 1,
+  15: 1,
+  16: 1,
+  17: 1,
+  18: 2,  // Alto penthouse
+  19: 2,  // Alto penthouse
+  20: 5,  // Alto penthouse — extremely rare
 };
 
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
