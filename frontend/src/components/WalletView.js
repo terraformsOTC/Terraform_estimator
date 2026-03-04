@@ -102,7 +102,7 @@ function ParcelCard({ parcel }) {
       </div>
       <div className="flex flex-col">
         <div className="flex flex-col mt-1">
-          <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer">
+          <a href={`/?token=${tokenId}`}>
             {tokenId}
           </a>
           <p className="text-xs opacity-60">L{level}/B{biome}/{zone}</p>
