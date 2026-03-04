@@ -1,12 +1,6 @@
 'use client';
 
-const CATEGORY_COLORS = {
-  Grail: '#ffd700',
-  Rare: '#c084fc',
-  Premium: '#60a5fa',
-  'Premium Floor': '#34d399',
-  Floor: 'inherit',
-};
+import { EthIcon, CATEGORY_COLORS } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -133,7 +127,7 @@ function ParcelCard({ parcel }) {
             )}
           </div>
           <span className="flex items-center gap-1 text-sm">
-            <EthIcon />
+            <EthIcon width={8} height={13} />
             {estimatedValue.toFixed(3)}
           </span>
         </div>
@@ -142,11 +136,3 @@ function ParcelCard({ parcel }) {
   );
 }
 
-function EthIcon() {
-  return (
-    <svg width="8" height="13" viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>
-      <path d="M5 0L0 8.15L5 11L10 8.15L5 0Z" />
-      <path d="M0 9.1L5 16L10 9.1L5 12L0 9.1Z" />
-    </svg>
-  );
-}

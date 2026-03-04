@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
+import { EthIcon } from '@/components/shared';
 
 function TokenParamHandler({ onToken }) {
   const searchParams = useSearchParams();
@@ -90,8 +91,6 @@ export default function Home() {
         walletAddress={walletAddress}
         onConnect={connectWallet}
         onDisconnect={disconnectWallet}
-        activeView={view}
-        onViewChange={setView}
       />
       <main>
         <div className="px-6 mb-6 block md:flex justify-between items-end">
@@ -168,11 +167,3 @@ export default function Home() {
   );
 }
 
-function EthIcon() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>
-      <path d="M5 0L0 8.15L5 11L10 8.15L5 0Z" />
-      <path d="M0 9.1L5 16L10 9.1L5 12L0 9.1Z" />
-    </svg>
-  );
-}

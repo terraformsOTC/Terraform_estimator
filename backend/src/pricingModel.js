@@ -305,12 +305,4 @@ module.exports = {
   estimatePrice,
   detectSets,
   FLOOR_PRICE_ETH,
-  ZONE_MULTIPLES,
-  BIOME_MULTIPLES,
-  LEVEL_MULTIPLES,
-  CHROMA_MULTIPLES,
-  MODE_MULTIPLES,
-  SPECIAL_TYPES,
-  SETS,
-  getCategoryFromMultiple,
 };

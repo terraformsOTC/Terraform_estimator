@@ -1,8 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    domains: ['api.terraformexplorer.xyz', 'terraformexplorer.xyz'],
-  },
-};
+const nextConfig = {};
 
 module.exports = nextConfig;
