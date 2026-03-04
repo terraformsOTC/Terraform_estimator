@@ -58,6 +58,39 @@ function mysteryOutlierFlag(value) {
   return null;
 }
 
+// ─── LIVE FLOOR PRICE (Alchemy NFT API) ────────────────────────────────────────
+const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
+
+async function getFloorPrice() {
+  const now = Date.now();
+  if (floorCache.isLive && (now - floorCache.fetchedAt) < FLOOR_CACHE_TTL_MS) {
+    return floorCache;
+  }
+  try {
+    const apiKey = process.env.ALCHEMY_API_KEY;
+    if (!apiKey) throw new Error('ALCHEMY_API_KEY not set');
+    const res = await fetch(
+      `https://eth-mainnet.g.alchemy.com/nft/v3/${apiKey}/getFloorPrice?contractAddress=0x4E1f41613c9084FdB9E34E11fAE9412427480e56`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) throw new Error(`Alchemy HTTP ${res.status}`);
+    const data = await res.json();
+    // Use OpenSea floor as primary source; fall back to looksRare if OpenSea unavailable
+    const floor = data?.openSea?.floorPrice ?? data?.looksRare?.floorPrice;
+    if (typeof floor !== 'number' || floor <= 0) throw new Error('Unexpected response shape');
+    floorCache = { price: floor, fetchedAt: now, isLive: true };
+    console.log(`[floor] Live floor updated: ${floor} ETH`);
+  } catch (err) {
+    console.warn(`[floor] Fetch failed (${err.message}), using fallback ${FLOOR_PRICE_ETH} ETH`);
+    // Preserve stale live cache if we have one; otherwise use hardcoded fallback
+    if (!floorCache.isLive) {
+      floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: now, isLive: false };
+    }
+  }
+  return floorCache;
+}
+
 // Parse all traits from tokenURI metadata
 // Zone and Level are read from tokenURI attributes (trait_type "Zone" / "Level").
 // tokenSupplementalData has a struct ABI mismatch and is not used.
@@ -150,10 +183,13 @@ app.get('/estimate/:tokenId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     }
 
-    const traits = await getParcelTraits(tokenId);
-    const pricing = estimatePrice(traits);
+    const [traits, { price: floor, isLive: floorIsLive }] = await Promise.all([
+      getParcelTraits(tokenId),
+      getFloorPrice(),
+    ]);
+    const pricing = estimatePrice(traits, floor);
 
-    res.json({ tokenId, traits, pricing });
+    res.json({ tokenId, traits, pricing, floorIsLive });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -171,8 +207,10 @@ app.get('/wallet/:address', async (req, res) => {
     const balance = await contract.balanceOf(address);
     const count = Number(balance);
 
+    const { price: liveFloor, isLive: floorIsLive } = await getFloorPrice();
+
     if (count === 0) {
-      return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: FLOOR_PRICE_ETH });
+      return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: liveFloor, floorIsLive });
     }
 
     const fetchCount = Math.min(count, 100);
@@ -195,7 +233,7 @@ app.get('/wallet/:address', async (req, res) => {
     const pricedParcels = parcels.map(p => ({
       tokenId: p.tokenId,
       traits: p,
-      pricing: estimatePrice(p),
+      pricing: estimatePrice(p, liveFloor),
     }));
 
     const sets = detectSets(parcels);
@@ -209,7 +247,8 @@ app.get('/wallet/:address', async (req, res) => {
       parcels: pricedParcels,
       sets,
       totalEstimatedValue: Math.round(totalEstimatedValue * 1000) / 1000,
-      floor: FLOOR_PRICE_ETH,
+      floor: liveFloor,
+      floorIsLive,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -217,8 +256,9 @@ app.get('/wallet/:address', async (req, res) => {
 });
 
 // GET /floor
-app.get('/floor', (req, res) => {
-  res.json({ floor: FLOOR_PRICE_ETH });
+app.get('/floor', async (req, res) => {
+  const { price, isLive, fetchedAt } = await getFloorPrice();
+  res.json({ floor: price, isLive, fetchedAt });
 });
 
 const PORT = process.env.PORT || 3001;
