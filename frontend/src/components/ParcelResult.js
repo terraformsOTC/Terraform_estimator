@@ -25,18 +25,18 @@ export default function ParcelResult({ parcel }) {
           <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
             {tokenId}
           </a>
-          <p className="opacity-60 text-sm">L{level}/B{biome}/{zone}</p>
+          <p className="opacity-75 text-sm">L{level}/B{biome}/{zone}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
         <div>
-          <p className="text-xs opacity-40 uppercase tracking-widest mb-1">estimated value</p>
+          <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
           <div className="flex items-center gap-2">
             <EthIcon />
             <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
           </div>
-          <p className="text-xs opacity-40 mt-1">floor: {floor} ETH × {totalMultiple}x combined multiplier</p>
+          <p className="text-xs opacity-55 mt-1">floor: {floor} ETH × {totalMultiple}x combined multiplier</p>
         </div>
 
         <div className="flex flex-col gap-0">
@@ -50,7 +50,7 @@ export default function ParcelResult({ parcel }) {
         </div>
 
         <div className="mt-1">
-          <p className="text-xs opacity-25 break-all">{formula}</p>
+          <p className="text-xs opacity-40 break-all">{formula}</p>
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -71,13 +71,13 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
             {tokenId}
           </a>
-          <p className="opacity-60 text-sm">L{level}/B{biome}/{zone}</p>
+          <p className="opacity-75 text-sm">L{level}/B{biome}/{zone}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
         <div>
-          <p className="text-xs opacity-40 uppercase tracking-widest mb-1">estimated value</p>
+          <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
           <div className="flex items-center gap-2">
             <EthIcon />
             <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
@@ -91,11 +91,11 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           special parcel: {specialType} — {specialMultiple}x multiplier
         </div>
 
-        <p className="text-xs opacity-30">
+        <p className="text-xs opacity-45">
           special parcels are priced independently of zone/biome/level/chroma/mode
         </p>
 
-        <div className="text-xs opacity-25">{formula}</div>
+        <div className="text-xs opacity-40">{formula}</div>
 
         <ExternalLinks tokenId={tokenId} />
       </div>
@@ -107,13 +107,13 @@ function TraitRow({ label, value, category, multiple }) {
   const color = CATEGORY_COLORS[category] || 'inherit';
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
-      <span className="text-sm opacity-50">{label}</span>
+      <span className="text-sm opacity-65">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-sm">{value}</span>
         <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
           {category}
         </span>
-        <span className="text-sm opacity-40">{multiple}x</span>
+        <span className="text-sm opacity-55">{multiple}x</span>
       </div>
     </div>
   );
@@ -121,7 +121,7 @@ function TraitRow({ label, value, category, multiple }) {
 
 function Divider({ label, value }) {
   return (
-    <div className="flex justify-between items-center py-1 mb-2 opacity-40 text-xs">
+    <div className="flex justify-between items-center py-1 mb-2 opacity-55 text-xs">
       <span>↳ {label}</span>
       <span>{value}</span>
     </div>
@@ -131,11 +131,11 @@ function Divider({ label, value }) {
 function SimpleRow({ label, value, multiple, note }) {
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
-      <span className="text-sm opacity-50">{label}</span>
+      <span className="text-sm opacity-65">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-sm">{value}</span>
-        {note && <span className="text-sm opacity-40">{note}</span>}
-        {!note && <span className="text-sm opacity-25">1x</span>}
+        {note && <span className="text-sm opacity-55">{note}</span>}
+        {!note && <span className="text-sm opacity-35">1x</span>}
       </div>
     </div>
   );
@@ -148,9 +148,9 @@ function MysteryRow({ value, outlier }) {
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
-      <span className="text-sm" style={{ opacity: accent ? 0.7 : 0.3 }}>???</span>
+      <span className="text-sm" style={{ opacity: accent ? 0.8 : 0.5 }}>???</span>
       <div className="flex items-center gap-2">
-        <span className="text-sm" style={{ opacity: accent ? 0.9 : 0.3 }}>{value.toLocaleString()}</span>
+        <span className="text-sm" style={{ opacity: accent ? 1 : 0.5 }}>{value.toLocaleString()}</span>
         {accent && (
           <span className="text-xs px-1" style={{ color: accent, border: `1px solid ${accent}`, opacity: 0.85 }}>
             {isHigh ? 'top 5%' : 'bottom 5%'}
