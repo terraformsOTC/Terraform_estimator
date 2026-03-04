@@ -69,7 +69,7 @@ export default function WalletView({ data, loading, address }) {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, mysteryOutlier } = traits;
+  const { zone, biome, level, mysteryOutlier, mode } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -123,6 +123,14 @@ function ParcelCard({ parcel }) {
                 }}
               >
                 ???
+              </span>
+            )}
+            {mode === 'Origin Daydream' && (
+              <span
+                className="text-xs px-1"
+                style={{ color: '#fb923c', border: '1px solid #fb923c', opacity: 0.8 }}
+              >
+                origin daydream
               </span>
             )}
           </div>

@@ -45,7 +45,7 @@ export default function ParcelResult({ parcel }) {
           <Divider label="zone/biome avg" value={`${zonebiomeAvg}x`} />
           <SimpleRow label="level" value={`L${level}`} multiple={levelMultiple} note={levelMultiple !== 1 ? `${levelMultiple}x` : null} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
-          <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} />
+          <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} badge={mode === 'Origin Daydream' ? { label: 'origin daydream', color: '#fb923c' } : null} />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
         </div>
 
@@ -128,12 +128,17 @@ function Divider({ label, value }) {
   );
 }
 
-function SimpleRow({ label, value, multiple, note }) {
+function SimpleRow({ label, value, multiple, note, badge }) {
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-sm">{value}</span>
+        {badge && (
+          <span className="text-xs px-1" style={{ color: badge.color, border: `1px solid ${badge.color}`, opacity: 0.85 }}>
+            {badge.label}
+          </span>
+        )}
         {note && <span className="text-sm opacity-55">{note}</span>}
         {!note && <span className="text-sm opacity-35">1x</span>}
       </div>
