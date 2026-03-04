@@ -171,11 +171,19 @@ function ParcelImage({ tokenId }) {
   return (
     <div className="relative" style={{ width: 277, height: 400 }}>
       <span className="flex bg-placeholder w-full animate-pulse absolute top-0 left-0" style={{ height: '100%' }} />
-      <img
-        src={`https://api.terraformexplorer.xyz/tokens/${tokenId}/image`}
-        alt={`Parcel ${tokenId}`}
-        style={{ width: 277, height: 400, objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
-        onError={e => { e.target.style.display = 'none'; }}
+      <iframe
+        src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
+        title={`Parcel ${tokenId}`}
+        scrolling="no"
+        style={{
+          width: 277,
+          height: 400,
+          border: 'none',
+          display: 'block',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
       />
     </div>
   );

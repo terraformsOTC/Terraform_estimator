@@ -90,7 +90,7 @@ function ParcelCard({ parcel }) {
           <span className="flex relative flex-1">
             <span className="flex bg-placeholder w-full animate-pulse absolute top-0 left-0" style={{ height: '99%' }} />
             <img
-              src={`https://api.terraformexplorer.xyz/tokens/${tokenId}/image`}
+              src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/image/${tokenId}`}
               alt={`Parcel ${tokenId}`}
               className="cursor-pointer transition-opacity absolute top-0 left-0 opacity-100"
               loading="lazy"
