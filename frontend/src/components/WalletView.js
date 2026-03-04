@@ -78,7 +78,7 @@ function ParcelCard({ parcel }) {
   })[0];
 
   return (
-    <div className="inline-block relative mb-20 mx-2">
+    <div className="inline-block relative mb-20 mx-2" style={{ width: 277 }}>
       <div className="relative flex flex-1 m-auto" style={{ height: 400, width: 277 }}>
         <div className="flex flex-1">
           <span className="flex relative flex-1">
