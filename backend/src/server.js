@@ -9,7 +9,11 @@ const app = express();
 
 // ─── SECURITY HEADERS ──────────────────────────────────────────────────────────
 // contentSecurityPolicy disabled — this server only serves JSON and SVG, not HTML pages
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  // Allow cross-origin <img> loading — frontend (different origin) fetches SVGs from this API
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 // Hardcoded production origins + optional extras via ALLOWED_ORIGINS env var
