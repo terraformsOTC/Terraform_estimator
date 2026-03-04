@@ -175,6 +175,7 @@ function ParcelImage({ tokenId }) {
         src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
         title={`Parcel ${tokenId}`}
         scrolling="no"
+        sandbox="allow-scripts"
         style={{
           width: 277,
           height: 400,

@@ -1,11 +1,59 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { ethers } = require('ethers');
 const { estimatePrice, detectSets, FLOOR_PRICE_ETH } = require('./pricingModel');
 
 const app = express();
-app.use(cors());
+
+// ─── SECURITY HEADERS ──────────────────────────────────────────────────────────
+// contentSecurityPolicy disabled — this server only serves JSON and SVG, not HTML pages
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// ─── CORS ──────────────────────────────────────────────────────────────────────
+// Hardcoded production origins + optional extras via ALLOWED_ORIGINS env var
+const ALLOWED_ORIGINS = [
+  'https://terraformsestimator.xyz',
+  'https://www.terraformsestimator.xyz',
+  'https://terraform-estimator.vercel.app',
+  'http://localhost:3000',
+  ...(process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, same-origin server calls)
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('CORS: origin not allowed'));
+  },
+}));
+
 app.use(express.json());
+
+// ─── RATE LIMITING ─────────────────────────────────────────────────────────────
+// Standard: 60 req/min — enough for a human browsing, blocks trivial scrapers
+const standardLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please slow down.' },
+});
+
+// Wallet limiter is stricter: each /wallet call can trigger 100+ RPC calls
+const walletLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many wallet requests — please wait a moment.' },
+});
+
+app.use('/estimate', standardLimiter);
+app.use('/image',    standardLimiter);
+app.use('/wallet',   walletLimiter);
+app.use('/floor',    standardLimiter);
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const RPC_URL = process.env.RPC_URL || 'https://eth.llamarpc.com';
@@ -171,7 +219,8 @@ app.get('/image/:tokenId', async (req, res) => {
 
     res.status(500).send('Unrecognised image format in tokenURI');
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(`[image] ${req.params.tokenId}:`, err.message);
+    res.status(500).send('Failed to load parcel image.');
   }
 });
 
@@ -191,7 +240,8 @@ app.get('/estimate/:tokenId', async (req, res) => {
 
     res.json({ tokenId, traits, pricing, floorIsLive });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[estimate] ${req.params.tokenId}:`, err.message);
+    res.status(500).json({ error: 'Failed to fetch parcel data.' });
   }
 });
 
@@ -251,7 +301,8 @@ app.get('/wallet/:address', async (req, res) => {
       floorIsLive,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[wallet] ${req.params.address}:`, err.message);
+    res.status(500).json({ error: 'Failed to fetch wallet data.' });
   }
 });
 
