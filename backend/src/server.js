@@ -102,6 +102,47 @@ async function getParcelTraits(tokenId) {
 }
 
 // GET /estimate/:tokenId
+// GET /image/:tokenId — serves the on-chain SVG directly from tokenURI
+// The SVG is base64-encoded inside the JSON image field.
+// Note: parcels can change mode (terraform/daydream), so no long-term caching.
+app.get('/image/:tokenId', async (req, res) => {
+  try {
+    const tokenId = parseInt(req.params.tokenId);
+    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9999) {
+      return res.status(400).send('Invalid token ID');
+    }
+
+    const { contract } = getProvider();
+    const uri = await contract.tokenURI(tokenId);
+
+    if (!uri.startsWith('data:application/json;base64,')) {
+      return res.status(500).send('Unexpected tokenURI format');
+    }
+
+    const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
+    const image = json.image || '';
+
+    if (image.startsWith('data:image/svg+xml;base64,')) {
+      const svg = Buffer.from(image.slice(26), 'base64');
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min — mode can change
+      return res.send(svg);
+    }
+
+    if (image.startsWith('data:image/svg+xml,')) {
+      const svg = decodeURIComponent(image.slice(19));
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.send(svg);
+    }
+
+    res.status(500).send('Unrecognised image format in tokenURI');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// GET /estimate/:tokenId
 app.get('/estimate/:tokenId', async (req, res) => {
   try {
     const tokenId = parseInt(req.params.tokenId);
