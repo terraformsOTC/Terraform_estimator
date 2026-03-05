@@ -98,6 +98,54 @@ function detectSpecialType(attributes) {
   return null;
 }
 
+// ─── HARDCODED SPECIAL TOKEN LOOKUP ────────────────────────────────────────────
+// On-chain Resource/Edition trait names are unverified — this lookup is the
+// authoritative source for X-Seed, Y-Seed, Lith0, and Spine.
+// Plague is detected reliably on-chain via Chroma trait and is NOT listed here.
+// Origin Daydream is detected on-chain via Mode trait and is NOT listed here.
+// 1of1 IDs to be added once the full list is provided.
+// Source: community-verified list provided Mar 2025.
+const SPECIAL_TOKEN_LOOKUP = {
+  // ── Lith0 (13) ──────────────────────────────────────────────────────────────
+   413: 'Lith0',  586: 'Lith0',  658: 'Lith0', 2377: 'Lith0', 2810: 'Lith0',
+  3300: 'Lith0', 4827: 'Lith0', 6293: 'Lith0', 6350: 'Lith0', 7958: 'Lith0',
+  8288: 'Lith0', 9449: 'Lith0', 9746: 'Lith0',
+
+  // ── Y-Seed (17) ─────────────────────────────────────────────────────────────
+   145: 'Y-Seed', 1365: 'Y-Seed', 1855: 'Y-Seed', 2755: 'Y-Seed', 3533: 'Y-Seed',
+  3584: 'Y-Seed', 3594: 'Y-Seed', 5925: 'Y-Seed', 6591: 'Y-Seed', 7586: 'Y-Seed',
+  8583: 'Y-Seed', 8951: 'Y-Seed', 9015: 'Y-Seed', 9086: 'Y-Seed', 9119: 'Y-Seed',
+  9417: 'Y-Seed', 9443: 'Y-Seed',
+
+  // ── X-Seed (48) — includes OD and Godmode variants ──────────────────────────
+     7: 'X-Seed',   24: 'X-Seed',   39: 'X-Seed',   41: 'X-Seed',   71: 'X-Seed',
+    83: 'X-Seed',   91: 'X-Seed',  102: 'X-Seed',  114: 'X-Seed',  124: 'X-Seed',
+   131: 'X-Seed',  514: 'X-Seed', 1114: 'X-Seed', 1162: 'X-Seed', 1329: 'X-Seed',
+  1656: 'X-Seed', 1955: 'X-Seed', 2109: 'X-Seed', 2231: 'X-Seed', 2263: 'X-Seed',
+  2681: 'X-Seed', 2752: 'X-Seed', 2894: 'X-Seed', 3028: 'X-Seed', 3264: 'X-Seed',
+  3574: 'X-Seed', 3828: 'X-Seed', 3855: 'X-Seed', 3917: 'X-Seed', 4028: 'X-Seed',
+  4457: 'X-Seed', 4469: 'X-Seed', 4472: 'X-Seed', 4641: 'X-Seed', 4753: 'X-Seed',
+  5930: 'X-Seed', 6127: 'X-Seed', 6392: 'X-Seed', 6655: 'X-Seed', 6725: 'X-Seed',
+  7047: 'X-Seed', 7054: 'X-Seed', 7104: 'X-Seed', 8057: 'X-Seed', 8726: 'X-Seed',
+  8755: 'X-Seed', 8794: 'X-Seed', 9138: 'X-Seed',
+
+  // ── Spine (68) ──────────────────────────────────────────────────────────────
+    99: 'Spine',  213: 'Spine',  361: 'Spine',  652: 'Spine',  697: 'Spine',
+   796: 'Spine',  867: 'Spine',  989: 'Spine', 1276: 'Spine', 1302: 'Spine',
+  1755: 'Spine', 2321: 'Spine', 2547: 'Spine', 3204: 'Spine', 3452: 'Spine',
+  3565: 'Spine', 3660: 'Spine', 3743: 'Spine', 3753: 'Spine', 3812: 'Spine',
+  3851: 'Spine', 3852: 'Spine', 4032: 'Spine', 4165: 'Spine', 4192: 'Spine',
+  4376: 'Spine', 4504: 'Spine', 4562: 'Spine', 4790: 'Spine', 4830: 'Spine',
+  4911: 'Spine', 5266: 'Spine', 5268: 'Spine', 5428: 'Spine', 5473: 'Spine',
+  5537: 'Spine', 5618: 'Spine', 6074: 'Spine', 6302: 'Spine', 6335: 'Spine',
+  6339: 'Spine', 6468: 'Spine', 6554: 'Spine', 6565: 'Spine', 6698: 'Spine',
+  6861: 'Spine', 7093: 'Spine', 7149: 'Spine', 7216: 'Spine', 7250: 'Spine',
+  7278: 'Spine', 7308: 'Spine', 7399: 'Spine', 7447: 'Spine', 7508: 'Spine',
+  7626: 'Spine', 7730: 'Spine', 7846: 'Spine', 7851: 'Spine', 7907: 'Spine',
+  8212: 'Spine', 8287: 'Spine', 8349: 'Spine', 8404: 'Spine', 8474: 'Spine',
+  9354: 'Spine', 9695: 'Spine', 9697: 'Spine',
+};
+
 // ??? value thresholds derived from sampling 500 tokens across the collection (Mar 2025)
 // Distribution: min=5573, max=53993, p5=20733, p95=52564
 const MYSTERY_P5  = 20733;
@@ -164,7 +212,7 @@ async function getParcelTraits(tokenId) {
       biome = parseInt(attrs.find(a => a.trait_type === 'Biome')?.value ?? -1);
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
-      specialType = detectSpecialType(attrs);
+      specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
       const rawMystery = attrs.find(a => a.trait_type === '???')?.value;
       mysteryValue = rawMystery != null ? Number(rawMystery) : null;
     }
