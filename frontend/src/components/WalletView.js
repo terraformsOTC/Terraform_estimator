@@ -55,7 +55,7 @@ export default function WalletView({ data, loading, address }) {
         <p className="opacity-75 text-sm">no terraforms parcels found in this wallet.</p>
       ) : (
         <div
-          className="text-center mt-4 inline-grid w-full"
+          className="grid w-full mt-4 gap-4"
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(277px, 1fr))' }}
         >
           {[...parcels].sort((a, b) => a.tokenId - b.tokenId).map(parcel => (
@@ -88,17 +88,17 @@ function ParcelCard({ parcel }) {
   const showAlso1of1Badge = isOneOfOne && specialType !== '1of1';
 
   return (
-    <div className="inline-block relative mb-20 mx-2" style={{ width: 277 }}>
-      <div className="relative flex flex-1 m-auto" style={{ height: 400, width: 277 }}>
+    <div className="relative mb-20">
+      <div className="relative flex flex-1" style={{ height: 400 }}>
         <div className="flex flex-1">
           <span className="flex relative flex-1">
             <span className="flex bg-placeholder w-full animate-pulse absolute top-0 left-0" style={{ height: '99%' }} />
             <img
               src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/image/${tokenId}`}
               alt={`Parcel ${tokenId}`}
-              className="cursor-pointer transition-opacity absolute top-0 left-0 opacity-100"
+              className="cursor-pointer transition-opacity absolute top-0 left-0 opacity-100 w-full"
               loading="lazy"
-              style={{ transitionDuration: '300ms', width: 277, height: 400, objectFit: 'cover' }}
+              style={{ transitionDuration: '300ms', height: 400, objectFit: 'cover' }}
               onError={e => { e.target.style.display = 'none'; }}
             />
           </span>
