@@ -74,7 +74,7 @@ function ParcelCard({ parcel }) {
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
-    const order = { Grail: 0, Rare: 1, Premium: 2, 'Elevated': 3, Floor: 4 };
+    const order = { Grail: 0, Rare: 1, Premium: 2, 'Uncommon': 3, Floor: 4 };
     return order[a] - order[b];
   })[0];
 
