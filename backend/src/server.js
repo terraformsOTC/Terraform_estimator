@@ -418,10 +418,13 @@ const ONE_OF_ONE_IDS = new Set([
   9813, 9828, 9848, 9872, 9887, 9891, 9892, 9896, 9903,
 ]);
 
-// ??? value thresholds derived from sampling 500 tokens across the collection (Mar 2025)
-// Distribution: min=5573, max=53993, p5=20733, p95=52564
-const MYSTERY_P5  = 20733;
-const MYSTERY_P95 = 52564;
+// ??? value thresholds — full collection scan of 9911 tokens (Mar 2026)
+// 8864 tokens have ??? trait (1047 have none).
+// Distribution: min=815, p5=19918, p25=32332, p50=41052, p75=48163, p95=52953, max=53994
+// low ???  : value < 20000  →  449 tokens  (5.1%)
+// high ??? : value > 50000  →  1574 tokens (17.8%)
+const MYSTERY_P5  = 20000;
+const MYSTERY_P95 = 50000;
 
 function mysteryOutlierFlag(value) {
   if (value == null) return null;
