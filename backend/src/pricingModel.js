@@ -10,20 +10,24 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
   // Grail (6x)
-  "Shahra": 6, "Antenna": 6,
+  "Shahra": 6, "Antenna": 6, "Aetherking": 6,
   // Grail (4x)
-  "Gemina": 4, "[SOON]": 4, "Aetherking": 4, "Dread": 4, "[SUN]": 4,
+  "Gemina": 4, "[SOON]": 4, "Dread": 4, "[SUN]": 4,
+  // Rare (2.2x)
+  "Royal": 2.2, "Killscreen": 2.2, "Mould": 2.2,
   // Rare (2x)
-  "Tetsu": 2, "Killscreen": 2, "Aria": 2, "First Earth": 2, "Uwo": 2,
-  "Mould": 2, "[NOV]": 2, "Avidana": 2, "Rocket": 2, "Mori": 2,
-  "Radiant": 2, "Dhampir": 2, "Venmon": 2, "Promiselands": 2, "Xleph": 2,
-  "Jadeite": 2, "Greysunn": 2, "Royal": 2, "Angel": 2, "Treasure": 2,
+  "Tetsu": 2, "Aria": 2, "First Earth": 2, "Uwo": 2,
+  "[NOV]": 2, "Avidana": 2, "Mori": 2,
+  "Radiant": 2, "Venmon": 2, "Promiselands": 2, "Xleph": 2,
+  "Jadeite": 2, "Greysunn": 2, "Angel": 2, "Treasure": 2,
   "[HOME]": 2,
+  // Premium (1.6x)
+  "Dhampir": 1.6, "Rocket": 1.6, "Mt Zuka": 1.6,
   // Premium (1.5x)
-  "Intro Forest": 1.5, "Mt Zuka": 1.5, "Dynacrypts": 1.5, "Valeria": 1.5,
+  "Intro Forest": 1.5, "Dynacrypts": 1.5, "Valeria": 1.5,
   "Cradle": 1.5, "Bubble": 1.5, "Kippsun": 1.5, "Everglades": 1.5,
   "Muxtai X1": 1.5, "pfpfpfpbbx80": 1.5, "Toad": 1.5,
-  // Premium Floor (1.1x)
+  // Elevated (1.1x)
   "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "[BOSS]": 1.1, "Palace": 1.1,
   "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Ender": 1.1,
   "[DARK]": 1.1, "[BLOOD]": 1.1, "Alto": 1.1, "Warp": 1.1,
@@ -45,8 +49,8 @@ const BIOME_MULTIPLES = {
   // Premium (1.5x)
   1: 1.5, 2: 1.5, 4: 1.5, 8: 1.5, 40: 1.5, 42: 1.5,
   84: 1.5, 85: 1.5, 86: 1.5, 89: 1.5, 90: 1.5, 91: 1.5,
-  // Premium Floor (1.1x)
-  5: 1.1, 6: 1.1, 7: 1.1, 9: 1.1,
+  // Elevated (1.1x)
+  3: 1.1, 5: 1.1, 6: 1.1, 7: 1.1, 9: 1.1,
   21: 1.1, 22: 1.1, 23: 1.1, 24: 1.1, 25: 1.1,
   26: 1.1, 28: 1.1, 29: 1.1, 30: 1.1,
   34: 1.1, 35: 1.1, 36: 1.1, 37: 1.1, 38: 1.1,
@@ -54,7 +58,7 @@ const BIOME_MULTIPLES = {
   58: 1.1, 65: 1.1, 66: 1.1, 67: 1.1, 68: 1.1, 69: 1.1,
   82: 1.1, 83: 1.1,
   // Floor (1x)
-  3: 1, 27: 1, 31: 1, 32: 1, 33: 1,
+  27: 1, 31: 1, 32: 1, 33: 1,
   43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
   51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1,
   59: 1, 60: 1, 61: 1, 62: 1, 63: 1, 64: 1,
@@ -106,9 +110,9 @@ const MODE_MULTIPLES = {
 // Bypass standard formula entirely — Floor × special_multiple
 // Spine and 1of1 are NOT here — they use the standard zone/biome formula + a premium below.
 const SPECIAL_TYPES = {
-  "Plague": 25,
-  "X-Seed": 10,
-  "Y-Seed": 15,
+  "Plague": 30,
+  "X-Seed": 12.5,
+  "Y-Seed": 14,
   "Lith0": 15,
 };
 
@@ -194,7 +198,7 @@ function getCategoryFromMultiple(multiple) {
   if (multiple >= 4) return "Grail";
   if (multiple >= 2) return "Rare";
   if (multiple >= 1.5) return "Premium";
-  if (multiple >= 1.1) return "Premium Floor";
+  if (multiple >= 1.1) return "Elevated";
   return "Floor";
 }
 

@@ -4,7 +4,7 @@ export const CATEGORY_COLORS = {
   Grail: '#ffd700',
   Rare: '#c084fc',
   Premium: '#60a5fa',
-  'Premium Floor': '#34d399',
+  'Elevated': '#34d399',
   Floor: 'inherit',
 };
 
