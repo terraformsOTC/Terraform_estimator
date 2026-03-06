@@ -14,7 +14,7 @@ export default function ParcelResult({ parcel }) {
     estimatedValue, floor, formula,
     zoneMultiple, biomeMultiple, zonebiomeAvg,
     levelMultiple, chromaMultiple, modeMultiple,
-    spineMultiple, oneOf1Multiple, biome0Multiple,
+    spineMultiple, oneOf1Multiple,
     totalMultiple,
     zoneCategory, biomeCategory,
   } = pricing;
@@ -54,10 +54,7 @@ export default function ParcelResult({ parcel }) {
           {oneOf1Multiple > 1 && (
             <SimpleRow label="1 of 1" value="+5%" note={`${oneOf1Multiple}x`} />
           )}
-          {biome0Multiple > 1 && (
-            <SimpleRow label="biome 0" value={`+${Math.round((biome0Multiple - 1) * 100)}%`} note={`${biome0Multiple}x`} />
-          )}
-          {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
+{mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} biome={biome} />
         </div>
 
