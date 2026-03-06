@@ -117,7 +117,7 @@ const SPECIAL_TYPES = {
 const TRAIT_PREMIUMS = {
   "Spine":  1.20,  // +20%
   "1of1":   1.05,  // +5%
-  "Biome0": 2.50,  // +150% — biome 0 is among the rarest biomes
+  // Biome 0 is already priced at 4x (Grail) in BIOME_MULTIPLES — no extra premium needed.
 };
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
@@ -246,17 +246,15 @@ function estimatePrice(traits, floorOverride) {
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
 
   // Trait premiums — applied on top of the standard formula
-  const spineMultiple  = specialType === 'Spine'                ? TRAIT_PREMIUMS['Spine']  : 1;
-  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1']   : 1;
-  const biome0Multiple = parseInt(biome) === 0                  ? TRAIT_PREMIUMS['Biome0'] : 1;
+  const spineMultiple  = specialType === 'Spine'                ? TRAIT_PREMIUMS['Spine'] : 1;
+  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1']  : 1;
 
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * biome0Multiple;
+  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple;
   const estimatedValue = floor * totalMultiple;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
   if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
-  if (biome0Multiple !== 1) formula += ` × ${biome0Multiple}(biome0)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -270,7 +268,6 @@ function estimatePrice(traits, floorOverride) {
     modeMultiple,
     spineMultiple,
     oneOf1Multiple,
-    biome0Multiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: getCategoryFromMultiple(biomeMultiple),
