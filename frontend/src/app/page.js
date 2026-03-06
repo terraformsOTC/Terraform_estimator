@@ -163,6 +163,13 @@ export default function Home() {
           )}
         </div>
       </main>
+      <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
+        Built with enthusiasm by{' '}
+        <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
+          TerraformsOTC
+        </a>
+        {' '}and Claude
+      </footer>
     </div>
   );
 }
