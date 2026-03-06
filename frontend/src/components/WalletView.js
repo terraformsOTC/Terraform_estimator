@@ -55,8 +55,8 @@ export default function WalletView({ data, loading, address }) {
         <p className="opacity-75 text-sm">no terraforms parcels found in this wallet.</p>
       ) : (
         <div
-          className="grid w-full mt-4 gap-4"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(277px, 1fr))' }}
+          className="grid w-full mt-4 gap-6"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
         >
           {[...parcels].sort((a, b) => a.tokenId - b.tokenId).map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
@@ -88,21 +88,17 @@ function ParcelCard({ parcel }) {
   const showAlso1of1Badge = isOneOfOne && specialType !== '1of1';
 
   return (
-    <div className="relative mb-20">
-      <div className="relative flex flex-1" style={{ height: 400 }}>
-        <div className="flex flex-1">
-          <span className="flex relative flex-1">
-            <span className="flex bg-placeholder w-full animate-pulse absolute top-0 left-0" style={{ height: '99%' }} />
-            <img
-              src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/image/${tokenId}`}
-              alt={`Parcel ${tokenId}`}
-              className="cursor-pointer transition-opacity absolute top-0 left-0 opacity-100 w-full"
-              loading="lazy"
-              style={{ transitionDuration: '300ms', height: 400, objectFit: 'cover' }}
-              onError={e => { e.target.style.display = 'none'; }}
-            />
-          </span>
-        </div>
+    <div className="relative">
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
+        <span className="absolute inset-0 bg-placeholder animate-pulse" />
+        <img
+          src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/image/${tokenId}`}
+          alt={`Parcel ${tokenId}`}
+          className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
+          loading="lazy"
+          style={{ transitionDuration: '300ms', objectFit: 'cover' }}
+          onError={e => { e.target.style.display = 'none'; }}
+        />
       </div>
       <div className="flex flex-col">
         <div className="flex flex-col mt-1">
