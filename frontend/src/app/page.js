@@ -149,6 +149,7 @@ export default function Home() {
         walletAddress={walletAddress}
         onConnect={connectWallet}
         onDisconnect={disconnectWallet}
+        onWhale={loadRandomWhale}
       />
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">
@@ -244,16 +245,6 @@ export default function Home() {
                   <ParcelResult parcel={searchResult} />
                 </div>
               )}
-              <div className="mt-10 pt-8 border-t border-current border-opacity-10">
-                <p className="text-xs opacity-55 mb-3">curious what top holders own?</p>
-                <button
-                  className="btn-primary btn-sm"
-                  onClick={loadRandomWhale}
-                  disabled={loading}
-                >
-                  [view random whale wallet]
-                </button>
-              </div>
             </>
           )}
 
