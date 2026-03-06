@@ -19,6 +19,8 @@ export const SPECIAL_TYPE_BADGES = {
   'Spine':            { label: 'spine',             color: '#f87171' },
   '1of1':             { label: '1 of 1',            color: '#ffd700' },
   'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
+  'BigGrass':         { label: 'big grass',         color: '#86efac' },
+  'LittleGrass':      { label: 'little grass',      color: '#d9f99d' },
 };
 
 export function EthIcon({ width = 10, height = 16 }) {

@@ -58,7 +58,7 @@ export default function WalletView({ data, loading, address }) {
           className="text-center mt-4 inline-grid w-full"
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(277px, 1fr))' }}
         >
-          {parcels.map(parcel => (
+          {[...parcels].sort((a, b) => a.tokenId - b.tokenId).map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
           ))}
         </div>
@@ -147,6 +147,22 @@ function ParcelCard({ parcel }) {
                 style={{ color: SPECIAL_TYPE_BADGES['Biome0'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['Biome0'].color}`, opacity: 0.8 }}
               >
                 {SPECIAL_TYPE_BADGES['Biome0'].label}
+              </span>
+            )}
+            {biome === 42 && (
+              <span
+                className="text-xs px-1"
+                style={{ color: SPECIAL_TYPE_BADGES['BigGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['BigGrass'].color}`, opacity: 0.8 }}
+              >
+                {SPECIAL_TYPE_BADGES['BigGrass'].label}
+              </span>
+            )}
+            {biome === 65 && (
+              <span
+                className="text-xs px-1"
+                style={{ color: SPECIAL_TYPE_BADGES['LittleGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['LittleGrass'].color}`, opacity: 0.8 }}
+              >
+                {SPECIAL_TYPE_BADGES['LittleGrass'].label}
               </span>
             )}
             {mysteryOutlier && (
