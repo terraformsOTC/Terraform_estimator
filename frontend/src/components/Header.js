@@ -6,7 +6,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
     : null;
 
   return (
-    <header className="z-10 px-6 py-4 md:py-6 md:mb-12 mb-6 sticky top-0 md:relative bg-primary">
+    <header className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
       <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
         <div className="flex items-center">
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
