@@ -19,23 +19,25 @@ const ZONE_MULTIPLES = {
   "Tetsu": 2, "Aria": 2, "First Earth": 2, "Uwo": 2,
   "[NOV]": 2, "Avidana": 2, "Mori": 2,
   "Radiant": 2, "Venmon": 2, "Promiselands": 2, "Xleph": 2,
-  "Jadeite": 2, "Greysunn": 2, "Angel": 2, "Treasure": 2,
-  "[HOME]": 2,
+  "Greysunn": 2, "Treasure": 2, "[HOME]": 2,
   // Premium (1.6x)
-  "Dhampir": 1.6, "Rocket": 1.6, "Mt Zuka": 1.6,
+  "Dhampir": 1.6, "Rocket": 1.6, "Mt Zuka": 1.6, "Angel": 1.6, "Valeria": 1.6, "Jadeite": 1.6,
   // Premium (1.5x)
-  "Intro Forest": 1.5, "Dynacrypts": 1.5, "Valeria": 1.5,
+  "Intro Forest": 1.5, "Dynacrypts": 1.5,
   "Cradle": 1.5, "Bubble": 1.5, "Kippsun": 1.5, "Everglades": 1.5,
   "Muxtai X1": 1.5, "pfpfpfpbbx80": 1.5, "Toad": 1.5,
+  // Uncommon (1.25x)
+  "[BOSS]": 1.25, "Pepo": 1.25, "Wastelands": 1.25, "[BLOOD]": 1.25,
+  "Blushing": 1.25, "Ender": 1.25, "Akileaf": 1.25,
   // Uncommon (1.1x)
-  "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "[BOSS]": 1.1, "Palace": 1.1,
-  "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Ender": 1.1,
-  "[DARK]": 1.1, "[BLOOD]": 1.1, "Alto": 1.1, "Warp": 1.1,
-  "Blushing": 1.1, "Blossom": 1.1, "Pepo": 1.1, "Akileaf": 1.1, "Wastelands": 1.1,
+  "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "Palace": 1.1,
+  "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1,
+  "[DARK]": 1.1, "Alto": 1.1, "Warp": 1.1,
+  "Blossom": 1.1, "Linosim": 1.1,
   // Floor (1x)
   "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
-  "Kairo": 1, "Nightrose": 1, "Hypermage": 1, "Holo": 1, "Linosim": 1,
+  "Kairo": 1, "Nightrose": 1, "Hypermage": 1, "Holo": 1,
   "Ouallada": 1,
 };
 
@@ -46,6 +48,8 @@ const BIOME_MULTIPLES = {
   // Rare (2x)
   12: 2, 13: 2, 14: 2, 15: 2, 16: 2, 18: 2, 19: 2, 20: 2,
   39: 2, 75: 2, 80: 2, 87: 2, 88: 2,
+  // Rare (1.6x — category override, see BIOME_CATEGORY_OVERRIDES)
+  82: 1.6,
   // Premium (1.5x)
   1: 1.5, 2: 1.5, 4: 1.5, 8: 1.5, 40: 1.5, 42: 1.5,
   84: 1.5, 85: 1.5, 86: 1.5, 89: 1.5, 90: 1.5, 91: 1.5,
@@ -56,13 +60,19 @@ const BIOME_MULTIPLES = {
   34: 1.1, 35: 1.1, 36: 1.1, 37: 1.1, 38: 1.1,
   41: 1.1,
   58: 1.1, 65: 1.1, 66: 1.1, 67: 1.1, 68: 1.1, 69: 1.1,
-  82: 1.1, 83: 1.1,
+  83: 1.1,
   // Floor (1x)
   27: 1, 31: 1, 32: 1, 33: 1,
   43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
   51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1,
   59: 1, 60: 1, 61: 1, 62: 1, 63: 1, 64: 1,
   70: 1, 71: 1, 72: 1,
+};
+
+// ─── BIOME CATEGORY OVERRIDES ──────────────────────────────────────────────────
+// Biomes whose display category differs from what getCategoryFromMultiple() returns.
+const BIOME_CATEGORY_OVERRIDES = {
+  82: "Rare", // Rare-tier badge despite 1.6x pricing
 };
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
@@ -93,7 +103,7 @@ const LEVEL_MULTIPLES = {
 const CHROMA_MULTIPLES = {
   "Flow": 1,
   "Pulse": 1.05,
-  "Hyper": 1.1,
+  "Hyper": 1.05,
   // Plague is handled as a special parcel — not applied here
 };
 
@@ -274,7 +284,7 @@ function estimatePrice(traits, floorOverride) {
     oneOf1Multiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
-    biomeCategory: getCategoryFromMultiple(biomeMultiple),
+    biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
     formula,
   };
 }
