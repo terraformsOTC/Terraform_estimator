@@ -183,8 +183,9 @@ const SETS = {
     bottleneck: "levels 1 & 20",
   },
   "Grail set": {
-    description: "One each: X-Seed, Y-Seed, Plague, Lith0, 1of1, Spine + Origin daydream/terraform",
-    requiredSpecialTypes: ["X-Seed", "Y-Seed", "Plague", "Lith0", "1of1", "Spine"],
+    description: "One each: X-Seed, Y-Seed, Plague, Lith0, Spine + biome 0 + Origin daydream/terraform",
+    requiredSpecialTypes: ["X-Seed", "Y-Seed", "Plague", "Lith0", "Spine"],
+    requiredBiomes: [0],
     requiredModes: ["Origin Daydream", "Origin Terraform"],
     attainability: "Very difficult",
     bottleneck: "Plague chroma",
@@ -305,16 +306,18 @@ function detectSets(parcels) {
   for (const [setName, setDef] of Object.entries(SETS)) {
     let qualifies = false;
 
-    if (setDef.requiredBiomes) {
+    if (setDef.requiredSpecialTypes) {
+      // Check specials + origin mode + optional biomes (e.g. Grail set requires biome 0)
+      const hasSpecials = setDef.requiredSpecialTypes.every(t => ownedSpecialTypes.has(t));
+      const hasOrigin = setDef.requiredModes.some(m => ownedModes.has(m));
+      const hasBiomes = !setDef.requiredBiomes || setDef.requiredBiomes.every(b => ownedBiomes.has(b));
+      qualifies = hasSpecials && hasOrigin && hasBiomes;
+    } else if (setDef.requiredBiomes) {
       qualifies = setDef.requiredBiomes.every(b => ownedBiomes.has(b));
     } else if (setDef.requiredZones) {
       qualifies = setDef.requiredZones.every(z => ownedZones.has(z));
     } else if (setDef.requiredLevels) {
       qualifies = setDef.requiredLevels.every(l => ownedLevels.has(l));
-    } else if (setDef.requiredSpecialTypes) {
-      const hasSpecials = setDef.requiredSpecialTypes.every(t => ownedSpecialTypes.has(t));
-      const hasOrigin = setDef.requiredModes.some(m => ownedModes.has(m));
-      qualifies = hasSpecials && hasOrigin;
     } else if (setDef.allZones) {
       qualifies = ALL_ZONES.every(z => ownedZones.has(z));
     } else if (setDef.allBiomes) {
