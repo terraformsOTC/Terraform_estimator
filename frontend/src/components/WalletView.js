@@ -68,12 +68,13 @@ export default function WalletView({ data, loading, address }) {
 }
 
 const SPECIAL_TYPE_BADGES = {
-  'Plague': { label: 'plague',  color: '#e879f9' },
-  'X-Seed': { label: 'x-seed',  color: '#4ade80' },
-  'Y-Seed': { label: 'y-seed',  color: '#2dd4bf' },
-  'Lith0':  { label: 'lith0',   color: '#a5b4fc' },
-  'Spine':  { label: 'spine',   color: '#f87171' },
-  '1of1':   { label: '1 of 1',  color: '#ffd700' },
+  'Plague':  { label: 'plague',   color: '#e879f9' },
+  'X-Seed':  { label: 'x-seed',   color: '#4ade80' },
+  'Y-Seed':  { label: 'y-seed',   color: '#2dd4bf' },
+  'Lith0':   { label: 'lith0',    color: '#a5b4fc' },
+  'Spine':   { label: 'spine',    color: '#f87171' },
+  '1of1':    { label: '1 of 1',   color: '#ffd700' },
+  'Biome0':  { label: 'biome 0',  color: '#22d3ee' },
 };
 
 function ParcelCard({ parcel }) {
@@ -88,7 +89,7 @@ function ParcelCard({ parcel }) {
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
-  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES || isOneOfOne;
+  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || biome === 0;
   const showCategoryBadge = !(topCategory === 'Floor' && isHighValueSpecial);
   const specialBadge = SPECIAL_TYPE_BADGES[specialType];
   // Show the 1of1 badge alongside when the token is also 1of1 but its primary type is something else
@@ -148,6 +149,14 @@ function ParcelCard({ parcel }) {
                 {SPECIAL_TYPE_BADGES['1of1'].label}
               </span>
             )}
+            {biome === 0 && (
+              <span
+                className="text-xs px-1"
+                style={{ color: SPECIAL_TYPE_BADGES['Biome0'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['Biome0'].color}`, opacity: 0.8 }}
+              >
+                {SPECIAL_TYPE_BADGES['Biome0'].label}
+              </span>
+            )}
             {mysteryOutlier && (
               <span
                 className="text-xs px-1"
@@ -157,7 +166,7 @@ function ParcelCard({ parcel }) {
                   opacity: 0.8
                 }}
               >
-                ???
+                {mysteryOutlier === 'high' ? 'high ???' : 'low ???'}
               </span>
             )}
             {mode === 'Origin Daydream' && (

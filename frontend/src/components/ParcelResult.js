@@ -14,7 +14,7 @@ export default function ParcelResult({ parcel }) {
     estimatedValue, floor, formula,
     zoneMultiple, biomeMultiple, zonebiomeAvg,
     levelMultiple, chromaMultiple, modeMultiple,
-    spineMultiple, oneOf1Multiple,
+    spineMultiple, oneOf1Multiple, biome0Multiple,
     totalMultiple,
     zoneCategory, biomeCategory,
   } = pricing;
@@ -54,8 +54,11 @@ export default function ParcelResult({ parcel }) {
           {oneOf1Multiple > 1 && (
             <SimpleRow label="1 of 1" value="+5%" note={`${oneOf1Multiple}x`} />
           )}
+          {biome0Multiple > 1 && (
+            <SimpleRow label="biome 0" value={`+${Math.round((biome0Multiple - 1) * 100)}%`} note={`${biome0Multiple}x`} />
+          )}
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} biome={biome} />
         </div>
 
         <div className="mt-1">
@@ -101,6 +104,11 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           {isOneOfOne && specialType !== '1of1' && (
             <span className="text-xs px-1" style={{ color: '#ffd700', border: '1px solid #ffd700', opacity: 0.85 }}>
               1 of 1
+            </span>
+          )}
+          {parseInt(biome) === 0 && (
+            <span className="text-xs px-1" style={{ color: '#22d3ee', border: '1px solid #22d3ee', opacity: 0.85 }}>
+              biome 0
             </span>
           )}
         </div>
@@ -172,7 +180,7 @@ function MysteryRow({ value, outlier }) {
         <span className="text-sm" style={{ opacity: accent ? 1 : 0.5 }}>{value.toLocaleString()}</span>
         {accent && (
           <span className="text-xs px-1" style={{ color: accent, border: `1px solid ${accent}`, opacity: 0.85 }}>
-            {isHigh ? 'top 5%' : 'bottom 5%'}
+            {isHigh ? 'high ???' : 'low ???'}
           </span>
         )}
       </div>
@@ -181,48 +189,55 @@ function MysteryRow({ value, outlier }) {
 }
 
 const SPECIAL_TYPE_CONFIG = {
-  'Origin Daydream': { label: 'origin daydream', color: '#fb923c' },
-  'Plague':          { label: 'plague',           color: '#e879f9' },
-  'X-Seed':          { label: 'x-seed',           color: '#4ade80' },
-  'Y-Seed':          { label: 'y-seed',           color: '#2dd4bf' },
-  'Lith0':           { label: 'lith0',            color: '#a5b4fc' },
-  'Spine':           { label: 'spine',            color: '#f87171' },
-  '1of1':            { label: '1 of 1',           color: '#ffd700' },
+  'Origin Daydream':  { label: 'origin daydream',  color: '#fb923c' },
+  'Origin Terraform': { label: 'origin terraform', color: '#fb923c' },
+  'Plague':           { label: 'plague',            color: '#e879f9' },
+  'X-Seed':           { label: 'x-seed',            color: '#4ade80' },
+  'Y-Seed':           { label: 'y-seed',            color: '#2dd4bf' },
+  'Lith0':            { label: 'lith0',             color: '#a5b4fc' },
+  'Spine':            { label: 'spine',             color: '#f87171' },
+  '1of1':             { label: '1 of 1',            color: '#ffd700' },
+  'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
 };
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne }) {
-  // Primary special type — OD takes precedence over specialType for display
-  const primaryKey = mode === 'Origin Daydream' ? 'Origin Daydream' : specialType;
+function SpecialTypeRow({ mode, specialType, isOneOfOne, biome }) {
+  // OD/OT mode takes precedence over specialType for primary display
+  const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
+                   : mode === 'Origin Terraform' ? 'Origin Terraform'
+                   : specialType;
   const primaryConfig = SPECIAL_TYPE_CONFIG[primaryKey];
 
-  // Show 1of1 badge alongside when token is also 1of1 but primary is something else
-  const showAlso1of1 = isOneOfOne && primaryKey !== '1of1';
-  const oneOf1Config = SPECIAL_TYPE_CONFIG['1of1'];
+  const oneOf1Config  = SPECIAL_TYPE_CONFIG['1of1'];
+  const biome0Config  = SPECIAL_TYPE_CONFIG['Biome0'];
+  const showBiome0    = parseInt(biome) === 0;
+  // Show extra 1of1 badge only when there is already a different primary badge
+  const showAlso1of1  = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
+
+  const hasNothing = !primaryConfig && !isOneOfOne && !showBiome0;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
       <div className="flex items-center gap-2 flex-wrap justify-end">
         {primaryConfig ? (
-          <>
-            <span className="text-sm">{primaryKey}</span>
-            <span className="text-xs px-1" style={{ color: primaryConfig.color, border: `1px solid ${primaryConfig.color}`, opacity: 0.85 }}>
-              {primaryConfig.label}
-            </span>
-          </>
+          <span className="text-xs px-1" style={{ color: primaryConfig.color, border: `1px solid ${primaryConfig.color}`, opacity: 0.85 }}>
+            {primaryConfig.label}
+          </span>
         ) : isOneOfOne ? (
-          <>
-            <span className="text-sm">1of1</span>
-            <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
-              {oneOf1Config.label}
-            </span>
-          </>
-        ) : (
+          <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
+            {oneOf1Config.label}
+          </span>
+        ) : hasNothing ? (
           <span className="text-sm opacity-35">No</span>
-        )}
+        ) : null}
         {showAlso1of1 && (
           <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
-            1 of 1
+            {oneOf1Config.label}
+          </span>
+        )}
+        {showBiome0 && (
+          <span className="text-xs px-1" style={{ color: biome0Config.color, border: `1px solid ${biome0Config.color}`, opacity: 0.85 }}>
+            {biome0Config.label}
           </span>
         )}
       </div>
