@@ -473,7 +473,7 @@ async function getParcelTraits(tokenId) {
     const uri = await contract.tokenURI(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
-        specialType = null, mysteryValue = null;
+        specialType = null, isOneOfOne = false, mysteryValue = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -485,7 +485,7 @@ async function getParcelTraits(tokenId) {
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
-      const isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
+      isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
       const rawMystery = attrs.find(a => a.trait_type === '???')?.value;
       mysteryValue = rawMystery != null ? Number(rawMystery) : null;
     }
