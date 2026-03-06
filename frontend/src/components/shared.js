@@ -1,5 +1,7 @@
 // Shared constants and micro-components used across multiple files
 
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export const CATEGORY_COLORS = {
   Grail: '#ffd700',
   Rare: '#c084fc',

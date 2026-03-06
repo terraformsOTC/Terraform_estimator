@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
-import { EthIcon } from '@/components/shared';
+import { EthIcon, API_URL } from '@/components/shared';
 
 const WHALE_WALLETS = [
   // Raw addresses
@@ -67,8 +67,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
       setError('No wallet detected. Install MetaMask or another Web3 wallet.');
@@ -94,7 +92,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/wallet/${address}`);
+      const res = await fetch(`${API_URL}/wallet/${address}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWalletData(data);
@@ -110,7 +108,7 @@ export default function Home() {
     setError(null);
     setSearchResult(null);
     try {
-      const res = await fetch(`${API}/estimate/${tokenId}`);
+      const res = await fetch(`${API_URL}/estimate/${tokenId}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSearchResult(data);
@@ -129,7 +127,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/wallet/${encodeURIComponent(whale)}`);
+      const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(whale)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWhaleData(data);
