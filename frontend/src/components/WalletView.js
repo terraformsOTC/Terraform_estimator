@@ -78,7 +78,7 @@ const SPECIAL_TYPE_BADGES = {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, mysteryOutlier, mode, specialType } = traits;
+  const { zone, biome, level, mysteryOutlier, mode, specialType, isOneOfOne } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -88,9 +88,11 @@ function ParcelCard({ parcel }) {
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
-  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES;
+  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES || isOneOfOne;
   const showCategoryBadge = !(topCategory === 'Floor' && isHighValueSpecial);
   const specialBadge = SPECIAL_TYPE_BADGES[specialType];
+  // Show the 1of1 badge alongside when the token is also 1of1 but its primary type is something else
+  const showAlso1of1Badge = isOneOfOne && specialType !== '1of1';
 
   return (
     <div className="inline-block relative mb-20 mx-2" style={{ width: 277 }}>
@@ -136,6 +138,14 @@ function ParcelCard({ parcel }) {
                 style={{ color: specialBadge.color, border: `1px solid ${specialBadge.color}`, opacity: 0.8 }}
               >
                 {specialBadge.label}
+              </span>
+            )}
+            {showAlso1of1Badge && (
+              <span
+                className="text-xs px-1"
+                style={{ color: SPECIAL_TYPE_BADGES['1of1'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['1of1'].color}`, opacity: 0.8 }}
+              >
+                {SPECIAL_TYPE_BADGES['1of1'].label}
               </span>
             )}
             {mysteryOutlier && (
