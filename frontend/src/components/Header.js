@@ -16,7 +16,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             onClick={onWhale}
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"
           >
-            [whale wallet]
+            [view random tf whale]
           </button>
           <a
             href="https://terraformexplorer.xyz"
