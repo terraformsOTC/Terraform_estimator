@@ -33,7 +33,7 @@ app.use(cors({
   },
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '1kb' }));
 
 // ─── RATE LIMITING ─────────────────────────────────────────────────────────────
 // Standard: 60 req/min — enough for a human browsing, blocks trivial scrapers
@@ -486,6 +486,8 @@ async function getParcelTraits(tokenId) {
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
       level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1, 10);
       biome = parseInt(attrs.find(a => a.trait_type === 'Biome')?.value ?? -1, 10);
+      if (level === -1) console.warn(`[traits] Token ${tokenId}: missing Level attribute`);
+      if (biome === -1) console.warn(`[traits] Token ${tokenId}: missing Biome attribute`);
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
@@ -518,8 +520,9 @@ async function getParcelTraits(tokenId) {
 // Note: parcels can change mode (terraform/daydream), so no long-term caching.
 app.get('/image/:tokenId', async (req, res) => {
   try {
+    if (!/^\d+$/.test(req.params.tokenId)) return res.status(400).send('Invalid token ID');
     const tokenId = parseInt(req.params.tokenId, 10);
-    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
+    if (tokenId < 1 || tokenId > 9911) {
       return res.status(400).send('Invalid token ID');
     }
 
@@ -557,8 +560,9 @@ app.get('/image/:tokenId', async (req, res) => {
 // GET /estimate/:tokenId
 app.get('/estimate/:tokenId', async (req, res) => {
   try {
+    if (!/^\d+$/.test(req.params.tokenId)) return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     const tokenId = parseInt(req.params.tokenId, 10);
-    if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
+    if (tokenId < 1 || tokenId > 9911) {
       return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     }
 
@@ -646,6 +650,9 @@ app.get('/wallet/:address', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch wallet data.' });
   }
 });
+
+// GET /health
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // GET /floor
 app.get('/floor', async (req, res) => {

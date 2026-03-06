@@ -1,6 +1,7 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from './shared';
+import { useMemo } from 'react';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, API_URL } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -58,7 +59,7 @@ export default function WalletView({ data, loading, address }) {
           className="grid w-full mt-4 gap-6"
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
         >
-          {[...parcels].sort((a, b) => a.tokenId - b.tokenId).map(parcel => (
+          {useMemo(() => [...parcels].sort((a, b) => a.tokenId - b.tokenId), [parcels]).map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
           ))}
         </div>
@@ -92,7 +93,7 @@ function ParcelCard({ parcel }) {
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
         <span className="absolute inset-0 bg-placeholder animate-pulse" />
         <img
-          src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/image/${tokenId}`}
+          src={`${API_URL}/image/${tokenId}`}
           alt={`Parcel ${tokenId}`}
           className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
           loading="lazy"
