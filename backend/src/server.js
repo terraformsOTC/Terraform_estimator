@@ -578,9 +578,20 @@ app.get('/estimate/:tokenId', async (req, res) => {
 // GET /wallet/:address
 app.get('/wallet/:address', async (req, res) => {
   try {
-    const address = req.params.address;
+    let address = req.params.address;
     if (!ethers.isAddress(address)) {
-      return res.status(400).json({ error: 'Invalid Ethereum address' });
+      // Attempt ENS resolution (supports .eth names including emoji ENS like 🐒.eth)
+      const { provider } = getProvider();
+      try {
+        const resolved = await provider.resolveName(address);
+        if (!resolved) {
+          return res.status(400).json({ error: `Could not resolve ENS name: ${address}` });
+        }
+        address = resolved;
+        console.log(`[wallet] ENS resolved: ${req.params.address} → ${address}`);
+      } catch (ensErr) {
+        return res.status(400).json({ error: `Invalid address or unresolvable name: ${req.params.address}` });
+      }
     }
 
     const { contract } = getProvider();
