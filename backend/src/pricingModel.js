@@ -26,10 +26,10 @@ const ZONE_MULTIPLES = {
   // Premium Floor (1.1x)
   "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "[BOSS]": 1.1, "Palace": 1.1,
   "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Ender": 1.1,
-  "[DARK]": 1.1, "[SEP]": 1.1, "[BLOOD]": 1.1, "Alto": 1.1, "Warp": 1.1,
+  "[DARK]": 1.1, "[BLOOD]": 1.1, "Alto": 1.1, "Warp": 1.1,
   "Blushing": 1.1, "Blossom": 1.1, "Pepo": 1.1, "Akileaf": 1.1, "Wastelands": 1.1,
   // Floor (1x)
-  "[WEN]": 1, "[MOON]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
+  "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
   "Kairo": 1, "Nightrose": 1, "Hypermage": 1, "Holo": 1, "Linosim": 1,
   "Ouallada": 1,
@@ -49,12 +49,12 @@ const BIOME_MULTIPLES = {
   5: 1.1, 6: 1.1, 9: 1.1,
   21: 1.1, 22: 1.1, 23: 1.1, 24: 1.1, 25: 1.1,
   26: 1.1, 28: 1.1, 29: 1.1, 30: 1.1,
-  34: 1.1, 35: 1.1, 36: 1.1, 37: 1.1,
+  34: 1.1, 35: 1.1, 36: 1.1, 37: 1.1, 38: 1.1,
   41: 1.1,
   58: 1.1, 65: 1.1, 66: 1.1, 67: 1.1, 68: 1.1, 69: 1.1,
   82: 1.1, 83: 1.1,
   // Floor (1x)
-  3: 1, 7: 1, 27: 1, 31: 1, 32: 1, 33: 1, 38: 1,
+  3: 1, 7: 1, 27: 1, 31: 1, 32: 1, 33: 1,
   43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
   51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1,
   59: 1, 60: 1, 61: 1, 62: 1, 63: 1, 64: 1,
@@ -88,7 +88,7 @@ const LEVEL_MULTIPLES = {
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
 const CHROMA_MULTIPLES = {
   "Flow": 1,
-  "Pulse": 1.1,
+  "Pulse": 1.05,
   "Hyper": 1.1,
   // Plague is handled as a special parcel — not applied here
 };
@@ -98,8 +98,8 @@ const MODE_MULTIPLES = {
   "Origin Daydream": 4,
   "Origin Terraform": 4,
   "Terrain": 1,
-  "Daydream": 0.9,
-  "Terraform": 0.9,
+  "Daydream": 0.95,
+  "Terraform": 0.95,
 };
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
@@ -115,8 +115,9 @@ const SPECIAL_TYPES = {
 // ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
 const TRAIT_PREMIUMS = {
-  "Spine": 1.20,  // +20%
-  "1of1":  1.05,  // +5%
+  "Spine":  1.20,  // +20%
+  "1of1":   1.05,  // +5%
+  "Biome0": 2.50,  // +150% — biome 0 is among the rarest biomes
 };
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
@@ -245,15 +246,17 @@ function estimatePrice(traits, floorOverride) {
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
 
   // Trait premiums — applied on top of the standard formula
-  const spineMultiple  = specialType === 'Spine'            ? TRAIT_PREMIUMS['Spine'] : 1;
-  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1'] : 1;
+  const spineMultiple  = specialType === 'Spine'                ? TRAIT_PREMIUMS['Spine']  : 1;
+  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1']   : 1;
+  const biome0Multiple = parseInt(biome) === 0                  ? TRAIT_PREMIUMS['Biome0'] : 1;
 
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple;
+  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * biome0Multiple;
   const estimatedValue = floor * totalMultiple;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
   if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
+  if (biome0Multiple !== 1) formula += ` × ${biome0Multiple}(biome0)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -267,6 +270,7 @@ function estimatePrice(traits, floorOverride) {
     modeMultiple,
     spineMultiple,
     oneOf1Multiple,
+    biome0Multiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: getCategoryFromMultiple(biomeMultiple),
