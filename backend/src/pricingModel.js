@@ -203,11 +203,11 @@ function getZoneMultiple(zoneName) {
 }
 
 function getBiomeMultiple(biomeNumber) {
-  return BIOME_MULTIPLES[parseInt(biomeNumber)] ?? 1;
+  return BIOME_MULTIPLES[parseInt(biomeNumber, 10)] ?? 1;
 }
 
 function getLevelMultiple(level) {
-  return LEVEL_MULTIPLES[parseInt(level)] ?? 1;
+  return LEVEL_MULTIPLES[parseInt(level, 10)] ?? 1;
 }
 
 function getChromaMultiple(chroma) {
@@ -277,9 +277,9 @@ function estimatePrice(traits, floorOverride) {
 
 // ─── SET DETECTION ─────────────────────────────────────────────────────────────
 function detectSets(parcels) {
-  const ownedBiomes = new Set(parcels.map(p => parseInt(p.biome)).filter(b => !isNaN(b)));
+  const ownedBiomes = new Set(parcels.map(p => parseInt(p.biome, 10)).filter(b => !isNaN(b)));
   const ownedZones = new Set(parcels.map(p => p.zone).filter(Boolean));
-  const ownedLevels = new Set(parcels.map(p => parseInt(p.level)).filter(l => !isNaN(l)));
+  const ownedLevels = new Set(parcels.map(p => parseInt(p.level, 10)).filter(l => !isNaN(l)));
   const ownedSpecialTypes = new Set(parcels.map(p => p.specialType).filter(Boolean));
   const ownedModes = new Set(parcels.map(p => p.mode).filter(Boolean));
 

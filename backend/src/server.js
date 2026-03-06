@@ -60,7 +60,8 @@ app.use('/wallet',   walletLimiter);
 app.use('/floor',    standardLimiter);
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
-const RPC_URL = process.env.RPC_URL || 'https://eth.llamarpc.com';
+const RPC_URL = process.env.RPC_URL;
+if (!RPC_URL) throw new Error('[startup] RPC_URL environment variable is required — set it in backend/.env');
 
 const TERRAFORMS_ABI = [
   'function tokenURI(uint256 tokenId) view returns (string)',
@@ -483,8 +484,8 @@ async function getParcelTraits(tokenId) {
       const attrs = json.attributes || [];
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
-      level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1);
-      biome = parseInt(attrs.find(a => a.trait_type === 'Biome')?.value ?? -1);
+      level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1, 10);
+      biome = parseInt(attrs.find(a => a.trait_type === 'Biome')?.value ?? -1, 10);
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
@@ -517,7 +518,7 @@ async function getParcelTraits(tokenId) {
 // Note: parcels can change mode (terraform/daydream), so no long-term caching.
 app.get('/image/:tokenId', async (req, res) => {
   try {
-    const tokenId = parseInt(req.params.tokenId);
+    const tokenId = parseInt(req.params.tokenId, 10);
     if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
       return res.status(400).send('Invalid token ID');
     }
@@ -556,7 +557,7 @@ app.get('/image/:tokenId', async (req, res) => {
 // GET /estimate/:tokenId
 app.get('/estimate/:tokenId', async (req, res) => {
   try {
-    const tokenId = parseInt(req.params.tokenId);
+    const tokenId = parseInt(req.params.tokenId, 10);
     if (isNaN(tokenId) || tokenId < 1 || tokenId > 9911) {
       return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     }

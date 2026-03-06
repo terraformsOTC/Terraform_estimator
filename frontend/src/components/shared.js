@@ -8,6 +8,19 @@ export const CATEGORY_COLORS = {
   Floor: 'inherit',
 };
 
+// Badge config for all special token types — shared between ParcelResult and WalletView
+export const SPECIAL_TYPE_BADGES = {
+  'Origin Daydream':  { label: 'origin daydream',  color: '#fb923c' },
+  'Origin Terraform': { label: 'origin terraform', color: '#fb923c' },
+  'Plague':           { label: 'plague',            color: '#e879f9' },
+  'X-Seed':           { label: 'x-seed',            color: '#4ade80' },
+  'Y-Seed':           { label: 'y-seed',            color: '#2dd4bf' },
+  'Lith0':            { label: 'lith0',             color: '#a5b4fc' },
+  'Spine':            { label: 'spine',             color: '#f87171' },
+  '1of1':             { label: '1 of 1',            color: '#ffd700' },
+  'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
+};
+
 export function EthIcon({ width = 10, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>

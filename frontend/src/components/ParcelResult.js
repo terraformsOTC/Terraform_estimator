@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from './shared';
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
@@ -103,7 +103,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
               1 of 1
             </span>
           )}
-          {parseInt(biome) === 0 && (
+          {biome === 0 && (
             <span className="text-xs px-1" style={{ color: '#22d3ee', border: '1px solid #22d3ee', opacity: 0.85 }}>
               biome 0
             </span>
@@ -185,28 +185,16 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-const SPECIAL_TYPE_CONFIG = {
-  'Origin Daydream':  { label: 'origin daydream',  color: '#fb923c' },
-  'Origin Terraform': { label: 'origin terraform', color: '#fb923c' },
-  'Plague':           { label: 'plague',            color: '#e879f9' },
-  'X-Seed':           { label: 'x-seed',            color: '#4ade80' },
-  'Y-Seed':           { label: 'y-seed',            color: '#2dd4bf' },
-  'Lith0':            { label: 'lith0',             color: '#a5b4fc' },
-  'Spine':            { label: 'spine',             color: '#f87171' },
-  '1of1':             { label: '1 of 1',            color: '#ffd700' },
-  'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
-};
-
 function SpecialTypeRow({ mode, specialType, isOneOfOne, biome }) {
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
                    : specialType;
-  const primaryConfig = SPECIAL_TYPE_CONFIG[primaryKey];
+  const primaryConfig = SPECIAL_TYPE_BADGES[primaryKey];
 
-  const oneOf1Config  = SPECIAL_TYPE_CONFIG['1of1'];
-  const biome0Config  = SPECIAL_TYPE_CONFIG['Biome0'];
-  const showBiome0    = parseInt(biome) === 0;
+  const oneOf1Config  = SPECIAL_TYPE_BADGES['1of1'];
+  const biome0Config  = SPECIAL_TYPE_BADGES['Biome0'];
+  const showBiome0    = biome === 0;
   // Show extra 1of1 badge only when there is already a different primary badge
   const showAlso1of1  = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
 
