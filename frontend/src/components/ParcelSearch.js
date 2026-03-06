@@ -14,7 +14,7 @@ export default function ParcelSearch({ onSearch, loading }) {
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        enter a parcel token ID (1–9911) to get a price estimate based on zone, biome, and other variables.
+        enter a parcel token ID (1–9911) to get a value estimate based on zone, biome, and other variables.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
