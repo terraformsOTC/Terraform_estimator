@@ -104,13 +104,19 @@ const MODE_MULTIPLES = {
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
 // Bypass standard formula entirely — Floor × special_multiple
+// Spine and 1of1 are NOT here — they use the standard zone/biome formula + a premium below.
 const SPECIAL_TYPES = {
   "Plague": 25,
   "X-Seed": 10,
   "Y-Seed": 12,
   "Lith0": 15,
-  "Spine": 3,
-  "1of1": 1.1,
+};
+
+// ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
+// Applied on top of the standard zone/biome formula (multiplied in at the end).
+const TRAIT_PREMIUMS = {
+  "Spine": 1.20,  // +20%
+  "1of1":  1.05,  // +5%
 };
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
@@ -213,10 +219,11 @@ function getModeMultiple(mode) {
 
 // ─── MAIN ESTIMATE FUNCTION ────────────────────────────────────────────────────
 function estimatePrice(traits, floorOverride) {
-  const { zone, biome, level, chroma, mode, specialType } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne } = traits;
   const floor = floorOverride ?? FLOOR_PRICE_ETH;
 
-  // Special parcel: bypass standard formula
+  // Special parcel: bypass standard formula entirely
+  // (Spine and 1of1 are NOT in SPECIAL_TYPES — they use the formula below)
   if (specialType && SPECIAL_TYPES[specialType] != null) {
     const specialMultiple = SPECIAL_TYPES[specialType];
     return {
@@ -236,8 +243,17 @@ function estimatePrice(traits, floorOverride) {
   const modeMultiple = getModeMultiple(mode);
 
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple;
+
+  // Trait premiums — applied on top of the standard formula
+  const spineMultiple  = specialType === 'Spine'            ? TRAIT_PREMIUMS['Spine'] : 1;
+  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1'] : 1;
+
+  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple;
   const estimatedValue = floor * totalMultiple;
+
+  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
+  if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
+  if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -249,10 +265,12 @@ function estimatePrice(traits, floorOverride) {
     levelMultiple,
     chromaMultiple,
     modeMultiple,
+    spineMultiple,
+    oneOf1Multiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: getCategoryFromMultiple(biomeMultiple),
-    formula: `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`,
+    formula,
   };
 }
 

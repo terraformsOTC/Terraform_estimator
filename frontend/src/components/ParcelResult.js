@@ -4,7 +4,7 @@ import { EthIcon, CATEGORY_COLORS } from './shared';
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, mysteryValue, mysteryOutlier } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, mysteryValue, mysteryOutlier } = traits;
 
   if (pricing.isSpecial) {
     return <SpecialParcelResult tokenId={tokenId} traits={traits} pricing={pricing} />;
@@ -13,7 +13,9 @@ export default function ParcelResult({ parcel }) {
   const {
     estimatedValue, floor, formula,
     zoneMultiple, biomeMultiple, zonebiomeAvg,
-    levelMultiple, chromaMultiple, modeMultiple, totalMultiple,
+    levelMultiple, chromaMultiple, modeMultiple,
+    spineMultiple, oneOf1Multiple,
+    totalMultiple,
     zoneCategory, biomeCategory,
   } = pricing;
 
@@ -46,8 +48,14 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="level" value={`L${level}`} multiple={levelMultiple} note={levelMultiple !== 1 ? `${levelMultiple}x` : null} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
           <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} badge={mode === 'Origin Daydream' ? { label: 'origin daydream', color: '#fb923c' } : null} />
+          {spineMultiple > 1 && (
+            <SimpleRow label="spine" value="+20%" note={`${spineMultiple}x`} />
+          )}
+          {oneOf1Multiple > 1 && (
+            <SimpleRow label="1 of 1" value="+5%" note={`${oneOf1Multiple}x`} />
+          )}
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} />
         </div>
 
         <div className="mt-1">
@@ -61,7 +69,7 @@ export default function ParcelResult({ parcel }) {
 }
 
 function SpecialParcelResult({ tokenId, traits, pricing }) {
-  const { zone, biome, level, chroma, mode, specialType } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne } = traits;
   const { estimatedValue, floor, specialMultiple, formula } = pricing;
 
   return (
@@ -86,10 +94,15 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         </div>
 
         <div
-          className="px-3 py-2 text-sm"
+          className="px-3 py-2 text-sm flex items-center gap-2 flex-wrap"
           style={{ border: `1px solid ${CATEGORY_COLORS['Grail']}`, color: CATEGORY_COLORS['Grail'] }}
         >
-          special parcel: {specialType} — {specialMultiple}x multiplier
+          <span>special parcel: {specialType} — {specialMultiple}x multiplier</span>
+          {isOneOfOne && specialType !== '1of1' && (
+            <span className="text-xs px-1" style={{ color: '#ffd700', border: '1px solid #ffd700', opacity: 0.85 }}>
+              1 of 1
+            </span>
+          )}
         </div>
 
         <p className="text-xs opacity-45">
@@ -177,23 +190,40 @@ const SPECIAL_TYPE_CONFIG = {
   '1of1':            { label: '1 of 1',           color: '#ffd700' },
 };
 
-function SpecialTypeRow({ mode, specialType }) {
-  const key = mode === 'Origin Daydream' ? 'Origin Daydream' : specialType;
-  const config = SPECIAL_TYPE_CONFIG[key];
+function SpecialTypeRow({ mode, specialType, isOneOfOne }) {
+  // Primary special type — OD takes precedence over specialType for display
+  const primaryKey = mode === 'Origin Daydream' ? 'Origin Daydream' : specialType;
+  const primaryConfig = SPECIAL_TYPE_CONFIG[primaryKey];
+
+  // Show 1of1 badge alongside when token is also 1of1 but primary is something else
+  const showAlso1of1 = isOneOfOne && primaryKey !== '1of1';
+  const oneOf1Config = SPECIAL_TYPE_CONFIG['1of1'];
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
-      <div className="flex items-center gap-2">
-        {config ? (
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        {primaryConfig ? (
           <>
-            <span className="text-sm">{key}</span>
-            <span className="text-xs px-1" style={{ color: config.color, border: `1px solid ${config.color}`, opacity: 0.85 }}>
-              {config.label}
+            <span className="text-sm">{primaryKey}</span>
+            <span className="text-xs px-1" style={{ color: primaryConfig.color, border: `1px solid ${primaryConfig.color}`, opacity: 0.85 }}>
+              {primaryConfig.label}
+            </span>
+          </>
+        ) : isOneOfOne ? (
+          <>
+            <span className="text-sm">1of1</span>
+            <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
+              {oneOf1Config.label}
             </span>
           </>
         ) : (
           <span className="text-sm opacity-35">No</span>
+        )}
+        {showAlso1of1 && (
+          <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
+            1 of 1
+          </span>
         )}
       </div>
     </div>
