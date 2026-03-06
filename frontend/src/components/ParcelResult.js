@@ -47,7 +47,7 @@ export default function ParcelResult({ parcel }) {
           <Divider label="zone/biome avg" value={`${zonebiomeAvg}x`} />
           <SimpleRow label="level" value={`L${level}`} multiple={levelMultiple} note={levelMultiple !== 1 ? `${levelMultiple}x` : null} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
-          <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} badge={mode === 'Origin Daydream' ? { label: 'origin daydream', color: '#fb923c' } : null} />
+          <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} />
           {spineMultiple > 1 && (
             <SimpleRow label="spine" value="+20%" note={`${spineMultiple}x`} />
           )}
