@@ -38,7 +38,7 @@ export default function ParcelSearch({ onSearch, loading }) {
       </form>
       <p className="mt-6 opacity-55 text-xs">
         estimates are based on a zone/biome multiplier model applied to the current floor price.
-        this is not financial advice.
+        valuations are subjective and can change. this is not financial advice.
       </p>
     </div>
   );
