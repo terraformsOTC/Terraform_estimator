@@ -27,7 +27,7 @@ const ZONE_MULTIPLES = {
   "Intro Forest": 1.5, "Dynacrypts": 1.5, "Valeria": 1.5,
   "Cradle": 1.5, "Bubble": 1.5, "Kippsun": 1.5, "Everglades": 1.5,
   "Muxtai X1": 1.5, "pfpfpfpbbx80": 1.5, "Toad": 1.5,
-  // Elevated (1.1x)
+  // Uncommon (1.1x)
   "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "[BOSS]": 1.1, "Palace": 1.1,
   "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Ender": 1.1,
   "[DARK]": 1.1, "[BLOOD]": 1.1, "Alto": 1.1, "Warp": 1.1,
@@ -49,7 +49,7 @@ const BIOME_MULTIPLES = {
   // Premium (1.5x)
   1: 1.5, 2: 1.5, 4: 1.5, 8: 1.5, 40: 1.5, 42: 1.5,
   84: 1.5, 85: 1.5, 86: 1.5, 89: 1.5, 90: 1.5, 91: 1.5,
-  // Elevated (1.1x)
+  // Uncommon (1.1x)
   3: 1.1, 5: 1.1, 6: 1.1, 7: 1.1, 9: 1.1,
   21: 1.1, 22: 1.1, 23: 1.1, 24: 1.1, 25: 1.1,
   26: 1.1, 28: 1.1, 29: 1.1, 30: 1.1,
@@ -198,7 +198,7 @@ function getCategoryFromMultiple(multiple) {
   if (multiple >= 4) return "Grail";
   if (multiple >= 2) return "Rare";
   if (multiple >= 1.5) return "Premium";
-  if (multiple >= 1.1) return "Elevated";
+  if (multiple >= 1.1) return "Uncommon";
   return "Floor";
 }
 
