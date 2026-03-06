@@ -108,7 +108,7 @@ const MODE_MULTIPLES = {
 const SPECIAL_TYPES = {
   "Plague": 25,
   "X-Seed": 10,
-  "Y-Seed": 12,
+  "Y-Seed": 15,
   "Lith0": 15,
 };
 
