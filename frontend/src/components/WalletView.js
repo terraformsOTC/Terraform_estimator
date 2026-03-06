@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -67,15 +67,6 @@ export default function WalletView({ data, loading, address }) {
   );
 }
 
-const SPECIAL_TYPE_BADGES = {
-  'Plague':  { label: 'plague',   color: '#e879f9' },
-  'X-Seed':  { label: 'x-seed',   color: '#4ade80' },
-  'Y-Seed':  { label: 'y-seed',   color: '#2dd4bf' },
-  'Lith0':   { label: 'lith0',    color: '#a5b4fc' },
-  'Spine':   { label: 'spine',    color: '#f87171' },
-  '1of1':    { label: '1 of 1',   color: '#ffd700' },
-  'Biome0':  { label: 'biome 0',  color: '#22d3ee' },
-};
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
@@ -89,8 +80,9 @@ function ParcelCard({ parcel }) {
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
-  const isHighValueSpecial = mode === 'Origin Daydream' || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || biome === 0;
-  const showCategoryBadge = !(topCategory === 'Floor' && isHighValueSpecial);
+  const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || biome === 0;
+  // Guard against undefined topCategory (special parcels don't have zoneCategory/biomeCategory)
+  const showCategoryBadge = topCategory != null && !(topCategory === 'Floor' && isHighValueSpecial);
   const specialBadge = SPECIAL_TYPE_BADGES[specialType];
   // Show the 1of1 badge alongside when the token is also 1of1 but its primary type is something else
   const showAlso1of1Badge = isOneOfOne && specialType !== '1of1';
@@ -169,12 +161,12 @@ function ParcelCard({ parcel }) {
                 {mysteryOutlier === 'high' ? 'high ???' : 'low ???'}
               </span>
             )}
-            {mode === 'Origin Daydream' && (
+            {(mode === 'Origin Daydream' || mode === 'Origin Terraform') && (
               <span
                 className="text-xs px-1"
-                style={{ color: '#fb923c', border: '1px solid #fb923c', opacity: 0.8 }}
+                style={{ color: SPECIAL_TYPE_BADGES[mode].color, border: `1px solid ${SPECIAL_TYPE_BADGES[mode].color}`, opacity: 0.8 }}
               >
-                origin daydream
+                {SPECIAL_TYPE_BADGES[mode].label}
               </span>
             )}
           </div>
