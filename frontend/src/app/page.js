@@ -208,7 +208,6 @@ export default function Home() {
           )}
           {whaleData && view === 'whale' && (
             <div className="text-left md:text-right">
-              <p className="text-xs opacity-50 mb-1">{whaleIdentifier}</p>
               <div className="flex text-left md:text-right gap-6">
                 <div>
                   <p className="font-semibold">Parcels</p>
