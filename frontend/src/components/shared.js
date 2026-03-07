@@ -3,7 +3,7 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const CATEGORY_COLORS = {
-  Grail: '#ffe401',
+  Mythical: '#ffe401',
   Rare: '#84488b',
   Premium: '#b0d6fa',
   'Uncommon': '#7ffcc4',

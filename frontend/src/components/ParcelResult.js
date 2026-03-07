@@ -95,7 +95,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
 
         <div
           className="px-3 py-2 text-sm flex items-center gap-2 flex-wrap"
-          style={{ border: `1px solid ${CATEGORY_COLORS['Grail']}`, color: CATEGORY_COLORS['Grail'] }}
+          style={{ border: `1px solid ${CATEGORY_COLORS['Mythical']}`, color: CATEGORY_COLORS['Mythical'] }}
         >
           <span>special parcel: {specialType} — {specialMultiple}x multiplier</span>
           {isGodmode && <SpecialBadge type="Godmode" />}
