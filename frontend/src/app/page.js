@@ -83,6 +83,7 @@ export default function Home() {
   const [walletData, setWalletData] = useState(null);
   const [whaleIdentifier, setWhaleIdentifier] = useState(null);
   const [whaleData, setWhaleData] = useState(null);
+  const [isRandomWhale, setIsRandomWhale] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -142,6 +143,7 @@ export default function Home() {
     if (!addr) return;
     setWhaleIdentifier(addr);
     setWhaleData(null);
+    setIsRandomWhale(false);
     setView('whale');
     setLoading(true);
     setError(null);
@@ -161,6 +163,7 @@ export default function Home() {
     const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
     setWhaleIdentifier(whale);
     setWhaleData(null);
+    setIsRandomWhale(true);
     setView('whale');
     setLoading(true);
     setError(null);
@@ -214,7 +217,7 @@ export default function Home() {
                   className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'whale' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
                   onClick={() => setView('whale')}
                 >
-                  🐋 Whale
+                  {isRandomWhale ? '🐋 Whale' : whaleIdentifier}
                 </a>
               </>
             )}
