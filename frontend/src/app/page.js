@@ -83,6 +83,7 @@ export default function Home() {
   const [whaleData, setWhaleData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [addressInput, setAddressInput] = useState('');
 
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
@@ -131,6 +132,27 @@ export default function Home() {
       setSearchResult(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch parcel data.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadAddressWallet(e) {
+    e.preventDefault();
+    const addr = addressInput.trim();
+    if (!addr) return;
+    setWhaleIdentifier(addr);
+    setWhaleData(null);
+    setView('whale');
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(addr)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setWhaleData(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load wallet.');
     } finally {
       setLoading(false);
     }
@@ -254,6 +276,22 @@ export default function Home() {
           {view === 'search' && (
             <>
               <ParcelSearch onSearch={searchParcel} loading={loading} />
+              <form onSubmit={loadAddressWallet} className="flex gap-2 items-center mt-4 max-w-lg">
+                <input
+                  className="py-1 px-2 text-sm transition-all flex-1"
+                  placeholder="wallet address (0x...)"
+                  value={addressInput}
+                  onChange={e => setAddressInput(e.target.value)}
+                  type="text"
+                />
+                <button
+                  type="submit"
+                  className="btn-primary btn-sm"
+                  disabled={loading || !addressInput.trim()}
+                >
+                  {loading ? '[loading...]' : '[view wallet]'}
+                </button>
+              </form>
               {searchResult && !loading && (
                 <div className="mt-8">
                   <ParcelResult parcel={searchResult} />
