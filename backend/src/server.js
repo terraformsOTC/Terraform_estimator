@@ -36,19 +36,19 @@ app.use(cors({
 app.use(express.json({ limit: '1kb' }));
 
 // ─── RATE LIMITING ─────────────────────────────────────────────────────────────
-// Standard: 60 req/min — enough for a human browsing, blocks trivial scrapers
+// Standard: 200 req/min
 const standardLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests — please slow down.' },
 });
 
-// Wallet limiter is stricter: each /wallet call can trigger 100+ RPC calls
+// Wallet limiter: 20 req/min (each /wallet call triggers many RPC calls)
 const walletLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many wallet requests — please wait a moment.' },
