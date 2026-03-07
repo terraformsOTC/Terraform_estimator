@@ -62,7 +62,7 @@ const WHALE_WALLETS = [
   '0xcb14228737c6b38C0d060bf7Cf5FF8f9090936fc',
 ];
 
-function TokenParamHandler({ onToken }) {
+function TokenParamHandler({ onToken, onAddress }) {
   const searchParams = useSearchParams();
   useEffect(() => {
     const token = searchParams.get('token');
@@ -70,6 +70,8 @@ function TokenParamHandler({ onToken }) {
       const id = parseInt(token);
       if (!isNaN(id) && id >= 1 && id <= 9911) onToken(id);
     }
+    const address = searchParams.get('address');
+    if (address) onAddress(address);
   }, []);
   return null;
 }
@@ -83,7 +85,6 @@ export default function Home() {
   const [whaleData, setWhaleData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [addressInput, setAddressInput] = useState('');
 
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
@@ -137,9 +138,7 @@ export default function Home() {
     }
   }
 
-  async function loadAddressWallet(e) {
-    e.preventDefault();
-    const addr = addressInput.trim();
+  async function loadAddressWallet(addr) {
     if (!addr) return;
     setWhaleIdentifier(addr);
     setWhaleData(null);
@@ -180,7 +179,7 @@ export default function Home() {
   return (
     <div className="content-wrapper">
       <Suspense fallback={null}>
-        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} />
+        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} />
       </Suspense>
       <Header
         walletAddress={walletAddress}
@@ -276,22 +275,6 @@ export default function Home() {
           {view === 'search' && (
             <>
               <ParcelSearch onSearch={searchParcel} loading={loading} />
-              <form onSubmit={loadAddressWallet} className="flex gap-2 items-center mt-4 max-w-lg">
-                <input
-                  className="py-1 px-2 text-sm transition-all flex-1"
-                  placeholder="wallet address (0x...)"
-                  value={addressInput}
-                  onChange={e => setAddressInput(e.target.value)}
-                  type="text"
-                />
-                <button
-                  type="submit"
-                  className="btn-primary btn-sm"
-                  disabled={loading || !addressInput.trim()}
-                >
-                  {loading ? '[loading...]' : '[view wallet]'}
-                </button>
-              </form>
               {searchResult && !loading && (
                 <div className="mt-8">
                   <ParcelResult parcel={searchResult} />
