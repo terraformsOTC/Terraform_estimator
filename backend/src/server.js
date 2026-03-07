@@ -678,37 +678,38 @@ app.get('/wallet/:address', async (req, res) => {
       return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: liveFloor, floorIsLive });
     }
 
-    const fetchCount = Math.min(count, 100);
-
     const tokenIds = await Promise.all(
-      Array.from({ length: fetchCount }, (_, i) => contract.tokenOfOwnerByIndex(address, i))
+      Array.from({ length: count }, (_, i) => contract.tokenOfOwnerByIndex(address, i))
     );
 
-    // Batch fetch traits with concurrency limit
+    // Batch fetch traits for all tokens (needed for accurate set detection)
     const BATCH_SIZE = 5;
-    const parcels = [];
+    const allParcels = [];
     for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
       const batch = tokenIds.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(batch.map(id => getParcelTraits(id)));
       for (const r of results) {
-        if (r.status === 'fulfilled') parcels.push(r.value);
+        if (r.status === 'fulfilled') allParcels.push(r.value);
       }
     }
 
-    const pricedParcels = parcels.map(p => ({
+    // Set detection runs on all parcels
+    const sets = detectSets(allParcels);
+
+    // Pricing and display capped at 100 to keep response size manageable
+    const displayParcels = allParcels.slice(0, 100);
+    const pricedParcels = displayParcels.map(p => ({
       tokenId: p.tokenId,
       traits: p,
       pricing: estimatePrice(p, liveFloor),
     }));
 
-    const sets = detectSets(parcels);
-
-    const totalEstimatedValue = pricedParcels.reduce((sum, p) => sum + p.pricing.estimatedValue, 0);
+    const totalEstimatedValue = allParcels.reduce((sum, p) => sum + estimatePrice(p, liveFloor).estimatedValue, 0);
 
     res.json({
       address,
       totalParcels: count,
-      fetchedParcels: parcels.length,
+      fetchedParcels: allParcels.length,
       parcels: pricedParcels,
       sets,
       totalEstimatedValue: Math.round(totalEstimatedValue * 1000) / 1000,
