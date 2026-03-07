@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from './shared';
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
@@ -98,26 +98,10 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           style={{ border: `1px solid ${CATEGORY_COLORS['Grail']}`, color: CATEGORY_COLORS['Grail'] }}
         >
           <span>special parcel: {specialType} — {specialMultiple}x multiplier</span>
-          {isOneOfOne && specialType !== '1of1' && (
-            <span className="text-xs px-1" style={{ color: '#ffd700', border: '1px solid #ffd700', opacity: 0.85 }}>
-              1 of 1
-            </span>
-          )}
-          {biome === 0 && (
-            <span className="text-xs px-1" style={{ color: SPECIAL_TYPE_BADGES['Biome0'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['Biome0'].color}`, opacity: 0.85 }}>
-              {SPECIAL_TYPE_BADGES['Biome0'].label}
-            </span>
-          )}
-          {biome === 42 && (
-            <span className="text-xs px-1" style={{ color: SPECIAL_TYPE_BADGES['BigGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['BigGrass'].color}`, opacity: 0.85 }}>
-              {SPECIAL_TYPE_BADGES['BigGrass'].label}
-            </span>
-          )}
-          {biome === 65 && (
-            <span className="text-xs px-1" style={{ color: SPECIAL_TYPE_BADGES['LittleGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['LittleGrass'].color}`, opacity: 0.85 }}>
-              {SPECIAL_TYPE_BADGES['LittleGrass'].label}
-            </span>
-          )}
+          {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
+          {biome === 0  && <SpecialBadge type="Biome0" />}
+          {biome === 42 && <SpecialBadge type="BigGrass" />}
+          {biome === 65 && <SpecialBadge type="LittleGrass" />}
         </div>
 
         <p className="text-xs opacity-45">
@@ -163,11 +147,7 @@ function SimpleRow({ label, value, multiple, note, badge }) {
       <span className="text-sm opacity-65">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-sm">{value}</span>
-        {badge && (
-          <span className="text-xs px-1" style={{ color: badge.color, border: `1px solid ${badge.color}`, opacity: 0.85 }}>
-            {badge.label}
-          </span>
-        )}
+        {badge && <SpecialBadge config={badge} />}
         {note && <span className="text-sm opacity-55">{note}</span>}
         {!note && <span className="text-sm opacity-35">1x</span>}
       </div>
@@ -200,55 +180,26 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, biome }) {
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
                    : specialType;
-  const primaryConfig = SPECIAL_TYPE_BADGES[primaryKey];
-
-  const oneOf1Config     = SPECIAL_TYPE_BADGES['1of1'];
-  const biome0Config     = SPECIAL_TYPE_BADGES['Biome0'];
-  const bigGrassConfig   = SPECIAL_TYPE_BADGES['BigGrass'];
-  const littleGrassConfig = SPECIAL_TYPE_BADGES['LittleGrass'];
-  const showBiome0       = biome === 0;
-  const showBigGrass     = biome === 42;
-  const showLittleGrass  = biome === 65;
+  const primaryConfig  = SPECIAL_TYPE_BADGES[primaryKey];
+  const showBiome0     = biome === 0;
+  const showBigGrass   = biome === 42;
+  const showLittleGrass = biome === 65;
   // Show extra 1of1 badge only when there is already a different primary badge
-  const showAlso1of1  = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-
-  const hasNothing = !primaryConfig && !isOneOfOne && !showBiome0 && !showBigGrass && !showLittleGrass;
+  const showAlso1of1   = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
+  const hasNothing     = !primaryConfig && !isOneOfOne && !showBiome0 && !showBigGrass && !showLittleGrass;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
       <div className="flex items-center gap-2 flex-wrap justify-end">
-        {primaryConfig ? (
-          <span className="text-xs px-1" style={{ color: primaryConfig.color, border: `1px solid ${primaryConfig.color}`, opacity: 0.85 }}>
-            {primaryConfig.label}
-          </span>
-        ) : isOneOfOne ? (
-          <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
-            {oneOf1Config.label}
-          </span>
-        ) : hasNothing ? (
-          <span className="text-sm opacity-35">No</span>
-        ) : null}
-        {showAlso1of1 && (
-          <span className="text-xs px-1" style={{ color: oneOf1Config.color, border: `1px solid ${oneOf1Config.color}`, opacity: 0.85 }}>
-            {oneOf1Config.label}
-          </span>
-        )}
-        {showBiome0 && (
-          <span className="text-xs px-1" style={{ color: biome0Config.color, border: `1px solid ${biome0Config.color}`, opacity: 0.85 }}>
-            {biome0Config.label}
-          </span>
-        )}
-        {showBigGrass && (
-          <span className="text-xs px-1" style={{ color: bigGrassConfig.color, border: `1px solid ${bigGrassConfig.color}`, opacity: 0.85 }}>
-            {bigGrassConfig.label}
-          </span>
-        )}
-        {showLittleGrass && (
-          <span className="text-xs px-1" style={{ color: littleGrassConfig.color, border: `1px solid ${littleGrassConfig.color}`, opacity: 0.85 }}>
-            {littleGrassConfig.label}
-          </span>
-        )}
+        {primaryConfig  ? <SpecialBadge config={primaryConfig} />
+         : isOneOfOne   ? <SpecialBadge type="1of1" />
+         : hasNothing   ? <span className="text-sm opacity-35">No</span>
+         : null}
+        {showAlso1of1   && <SpecialBadge type="1of1" />}
+        {showBiome0     && <SpecialBadge type="Biome0" />}
+        {showBigGrass   && <SpecialBadge type="BigGrass" />}
+        {showLittleGrass && <SpecialBadge type="LittleGrass" />}
       </div>
     </div>
   );

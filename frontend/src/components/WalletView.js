@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, API_URL } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, API_URL } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -122,65 +122,22 @@ function ParcelCard({ parcel }) {
                 {topCategory}
               </span>
             )}
-            {specialBadge && (
-              <span
-                className="text-xs px-1"
-                style={{ color: specialBadge.color, border: `1px solid ${specialBadge.color}`, opacity: 0.8 }}
-              >
-                {specialBadge.label}
-              </span>
-            )}
-            {showAlso1of1Badge && (
-              <span
-                className="text-xs px-1"
-                style={{ color: SPECIAL_TYPE_BADGES['1of1'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['1of1'].color}`, opacity: 0.8 }}
-              >
-                {SPECIAL_TYPE_BADGES['1of1'].label}
-              </span>
-            )}
-            {biome === 0 && (
-              <span
-                className="text-xs px-1"
-                style={{ color: SPECIAL_TYPE_BADGES['Biome0'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['Biome0'].color}`, opacity: 0.8 }}
-              >
-                {SPECIAL_TYPE_BADGES['Biome0'].label}
-              </span>
-            )}
-            {biome === 42 && (
-              <span
-                className="text-xs px-1"
-                style={{ color: SPECIAL_TYPE_BADGES['BigGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['BigGrass'].color}`, opacity: 0.8 }}
-              >
-                {SPECIAL_TYPE_BADGES['BigGrass'].label}
-              </span>
-            )}
-            {biome === 65 && (
-              <span
-                className="text-xs px-1"
-                style={{ color: SPECIAL_TYPE_BADGES['LittleGrass'].color, border: `1px solid ${SPECIAL_TYPE_BADGES['LittleGrass'].color}`, opacity: 0.8 }}
-              >
-                {SPECIAL_TYPE_BADGES['LittleGrass'].label}
-              </span>
-            )}
+            {specialBadge     && <SpecialBadge config={specialBadge} opacity={0.8} />}
+            {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
+            {biome === 0      && <SpecialBadge type="Biome0" opacity={0.8} />}
+            {biome === 42     && <SpecialBadge type="BigGrass" opacity={0.8} />}
+            {biome === 65     && <SpecialBadge type="LittleGrass" opacity={0.8} />}
             {mysteryOutlier && (
-              <span
-                className="text-xs px-1"
-                style={{
-                  color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',
-                  border: `1px solid ${mysteryOutlier === 'high' ? '#ffd700' : '#f87171'}`,
-                  opacity: 0.8
-                }}
-              >
+              <span className="text-xs px-1" style={{
+                color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',
+                border: `1px solid ${mysteryOutlier === 'high' ? '#ffd700' : '#f87171'}`,
+                opacity: 0.8,
+              }}>
                 {mysteryOutlier === 'high' ? 'high ???' : 'low ???'}
               </span>
             )}
             {(mode === 'Origin Daydream' || mode === 'Origin Terraform') && (
-              <span
-                className="text-xs px-1"
-                style={{ color: SPECIAL_TYPE_BADGES[mode].color, border: `1px solid ${SPECIAL_TYPE_BADGES[mode].color}`, opacity: 0.8 }}
-              >
-                {SPECIAL_TYPE_BADGES[mode].label}
-              </span>
+              <SpecialBadge type={mode} opacity={0.8} />
             )}
           </div>
           <span className="flex items-center gap-1 text-sm">
