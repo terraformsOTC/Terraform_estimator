@@ -18,7 +18,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Plague':           { label: 'plague',            color: '#da709a' },
   'X-Seed':           { label: 'x-seed',            color: '#62d840' },
   'Y-Seed':           { label: 'y-seed',            color: '#3dddb0' },
-  'Lith0':            { label: 'lith0',             color: '#6b3b77' },
+  'Lith0':            { label: 'lith0',             color: '#8e918c' },
   'Spine':            { label: 'spine',             color: '#ff4538' },
   '1of1':             { label: '1 of 1',            color: '#eac802' },
   'Biome0':           { label: 'biome 0',           color: '#30e7ff' },
