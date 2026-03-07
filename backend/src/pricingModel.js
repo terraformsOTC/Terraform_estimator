@@ -2,8 +2,9 @@
 // Formula (standard parcels):
 //   Estimated Value = Floor × ((zone_m + biome_m) / 2) × level_m × chroma_m × mode_m
 //
-// Special parcels (Plague, X-Seed, Y-Seed, Lith0, Spines, 1of1):
+// Special parcels (Godmode, Plague, X-Seed, Y-Seed, Lith0):
 //   Estimated Value = Floor × special_multiple  (all other traits ignored)
+// Spine and 1of1 use the standard formula with a multiplier premium appended.
 
 const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 
@@ -120,11 +121,12 @@ const MODE_MULTIPLES = {
 // Bypass standard formula entirely — Floor × special_multiple
 // Spine and 1of1 are NOT here — they use the standard zone/biome formula + a premium below.
 const SPECIAL_TYPES = {
-  "Plague": 30,
-  "X-Seed": 12.5,
-  "Y-Seed": 14,
-  "Lith0": 15,
+  "Plague":  65,
+  "X-Seed":  12.5,
+  "Y-Seed":  14,
+  "Lith0":   15,
 };
+const GODMODE_MULTIPLE = 45;
 
 // ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
@@ -235,8 +237,20 @@ function getModeMultiple(mode) {
 
 // ─── MAIN ESTIMATE FUNCTION ────────────────────────────────────────────────────
 function estimatePrice(traits, floorOverride) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode } = traits;
   const floor = floorOverride ?? FLOOR_PRICE_ETH;
+
+  // Godmode override: X-Seed + Origin Daydream (3 tokens) — priced above X-Seed
+  if (isGodmode) {
+    return {
+      estimatedValue: Math.round(floor * GODMODE_MULTIPLE * 1000) / 1000,
+      floor,
+      isSpecial: true,
+      specialType,
+      specialMultiple: GODMODE_MULTIPLE,
+      formula: `${floor} ETH × ${GODMODE_MULTIPLE}x (Godmode)`,
+    };
+  }
 
   // Special parcel: bypass standard formula entirely
   // (Spine and 1of1 are NOT in SPECIAL_TYPES — they use the formula below)

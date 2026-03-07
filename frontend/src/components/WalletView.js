@@ -71,7 +71,7 @@ export default function WalletView({ data, loading, address }) {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, mysteryOutlier, mode, specialType, isOneOfOne } = traits;
+  const { zone, biome, level, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -123,10 +123,13 @@ function ParcelCard({ parcel }) {
               </span>
             )}
             {specialBadge     && <SpecialBadge config={specialBadge} opacity={0.8} />}
+            {isGodmode        && <SpecialBadge type="Godmode" opacity={0.8} />}
             {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
             {biome === 0      && <SpecialBadge type="Biome0" opacity={0.8} />}
             {biome === 42     && <SpecialBadge type="BigGrass" opacity={0.8} />}
             {biome === 65     && <SpecialBadge type="LittleGrass" opacity={0.8} />}
+            {level === 1      && <SpecialBadge type="Basement" opacity={0.8} />}
+            {level === 20     && <SpecialBadge type="Penthouse" opacity={0.8} />}
             {mysteryOutlier && (
               <span className="text-xs px-1" style={{
                 color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',

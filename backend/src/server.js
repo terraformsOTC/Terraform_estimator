@@ -118,7 +118,7 @@ const SPECIAL_TOKEN_LOOKUP = {
   8583: 'Y-Seed', 8951: 'Y-Seed', 9015: 'Y-Seed', 9086: 'Y-Seed', 9119: 'Y-Seed',
   9417: 'Y-Seed', 9443: 'Y-Seed',
 
-  // ── X-Seed (48) — includes OD and Godmode variants ──────────────────────────
+  // ── X-Seed (48) ──────────────────────────────────────────────────────────────
      7: 'X-Seed',   24: 'X-Seed',   39: 'X-Seed',   41: 'X-Seed',   71: 'X-Seed',
     83: 'X-Seed',   91: 'X-Seed',  102: 'X-Seed',  114: 'X-Seed',  124: 'X-Seed',
    131: 'X-Seed',  514: 'X-Seed', 1114: 'X-Seed', 1162: 'X-Seed', 1329: 'X-Seed',
@@ -371,6 +371,12 @@ const SPECIAL_TOKEN_LOOKUP = {
 // 1186 tokens with a confirmed-unique zone/biome combination across all 9911 minted parcels.
 // Methodology: full on-chain tokenURI scan of all tokens (Mar 2026) — NOT Alchemy metadata
 // (Alchemy returns empty attributes for all Terraforms tokens and cannot be used for this).
+// ─── GODMODE SET ─────────────────────────────────────────────────────────────
+// X-Seed + Origin Daydream — the rarest combination (3 tokens).
+// These remain specialType='X-Seed' in the lookup but get a 45x pricing override
+// and show an additional Godmode badge alongside the X-Seed and Origin Daydream badges.
+const GODMODE_IDS = new Set([83, 124, 1955]);
+
 // Includes both pure 1of1s AND Spine/Lith0/X-Seed/Y-Seed tokens that are also 1of1.
 // To re-verify, run: node backend/verify_1of1.js (script in git history, commit 8848717).
 // Used to set isOneOfOne on trait responses independently of specialType.
@@ -534,7 +540,7 @@ async function getParcelTraits(tokenId) {
     const uri = await contract.tokenURI(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
-        specialType = null, isOneOfOne = false, mysteryValue = null;
+        specialType = null, isOneOfOne = false, isGodmode = false, mysteryValue = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -549,6 +555,7 @@ async function getParcelTraits(tokenId) {
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
       isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
+      isGodmode  = GODMODE_IDS.has(Number(tokenId));
       // '???' trait — a large integer present on ~89% of tokens (purpose unknown, value locked on-chain).
       // Not used in pricing: its distribution is collection-wide and doesn't correlate with rarity.
       // Surfaced as a high/low outlier flag only — see MYSTERY_P5 / MYSTERY_P95 thresholds below.
@@ -565,6 +572,7 @@ async function getParcelTraits(tokenId) {
       mode,
       specialType,
       isOneOfOne,
+      isGodmode,
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
     };

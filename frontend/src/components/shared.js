@@ -12,6 +12,7 @@ export const CATEGORY_COLORS = {
 
 // Badge config for all special token types — shared between ParcelResult and WalletView
 export const SPECIAL_TYPE_BADGES = {
+  'Godmode':          { label: 'godmode',           color: '#ffffff' },
   'Origin Daydream':  { label: 'origin daydream',  color: '#fb923c' },
   'Origin Terraform': { label: 'origin terraform', color: '#fb923c' },
   'Plague':           { label: 'plague',            color: '#e879f9' },
@@ -23,6 +24,8 @@ export const SPECIAL_TYPE_BADGES = {
   'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
   'BigGrass':         { label: 'big grass',         color: '#86efac' },
   'LittleGrass':      { label: 'little grass',      color: '#d9f99d' },
+  'Basement':         { label: 'basement',          color: '#94a3b8' },
+  'Penthouse':        { label: 'penthouse',         color: '#fde68a' },
 };
 
 // Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
