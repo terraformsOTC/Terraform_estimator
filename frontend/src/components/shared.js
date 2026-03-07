@@ -25,6 +25,17 @@ export const SPECIAL_TYPE_BADGES = {
   'LittleGrass':      { label: 'little grass',      color: '#d9f99d' },
 };
 
+// Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
+export function SpecialBadge({ type, config: cfg, opacity = 0.85 }) {
+  const config = cfg ?? SPECIAL_TYPE_BADGES[type];
+  if (!config) return null;
+  return (
+    <span className="text-xs px-1" style={{ color: config.color, border: `1px solid ${config.color}`, opacity }}>
+      {config.label}
+    </span>
+  );
+}
+
 export function EthIcon({ width = 10, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>
