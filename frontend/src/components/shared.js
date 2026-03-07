@@ -20,7 +20,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Y-Seed':           { label: 'y-seed',            color: '#3dddb0' },
   'Lith0':            { label: 'lith0',             color: '#8e918c' },
   'Spine':            { label: 'spine',             color: '#ff4538' },
-  '1of1':             { label: '1 of 1',            color: '#eac802' },
+  '1of1':             { label: '1 of 1',            color: '#cb8175' },
   'Biome0':           { label: 'biome 0',           color: '#30e7ff' },
   'BigGrass':         { label: 'big grass',         color: '#7bb03e' },
   'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
