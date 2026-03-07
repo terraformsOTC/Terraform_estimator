@@ -3,29 +3,29 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const CATEGORY_COLORS = {
-  Grail: '#ffd700',
-  Rare: '#c084fc',
-  Premium: '#60a5fa',
-  'Uncommon': '#34d399',
+  Grail: '#ffe401',
+  Rare: '#84488b',
+  Premium: '#b0d6fa',
+  'Uncommon': '#7ffcc4',
   Floor: 'inherit',
 };
 
 // Badge config for all special token types — shared between ParcelResult and WalletView
 export const SPECIAL_TYPE_BADGES = {
-  'Godmode':          { label: 'godmode',           color: '#ffffff' },
-  'Origin Daydream':  { label: 'origin daydream',  color: '#fb923c' },
-  'Origin Terraform': { label: 'origin terraform', color: '#fb923c' },
-  'Plague':           { label: 'plague',            color: '#e879f9' },
-  'X-Seed':           { label: 'x-seed',            color: '#4ade80' },
-  'Y-Seed':           { label: 'y-seed',            color: '#2dd4bf' },
-  'Lith0':            { label: 'lith0',             color: '#a5b4fc' },
-  'Spine':            { label: 'spine',             color: '#f87171' },
-  '1of1':             { label: '1 of 1',            color: '#ffd700' },
-  'Biome0':           { label: 'biome 0',           color: '#22d3ee' },
-  'BigGrass':         { label: 'big grass',         color: '#86efac' },
-  'LittleGrass':      { label: 'little grass',      color: '#d9f99d' },
-  'Basement':         { label: 'basement',          color: '#94a3b8' },
-  'Penthouse':        { label: 'penthouse',         color: '#fde68a' },
+  'Godmode':          { label: 'godmode',           color: '#f5eee8' },
+  'Origin Daydream':  { label: 'origin daydream',  color: '#ffaa00' },
+  'Origin Terraform': { label: 'origin terraform', color: '#f95738' },
+  'Plague':           { label: 'plague',            color: '#da709a' },
+  'X-Seed':           { label: 'x-seed',            color: '#62d840' },
+  'Y-Seed':           { label: 'y-seed',            color: '#3dddb0' },
+  'Lith0':            { label: 'lith0',             color: '#6b3b77' },
+  'Spine':            { label: 'spine',             color: '#ff4538' },
+  '1of1':             { label: '1 of 1',            color: '#eac802' },
+  'Biome0':           { label: 'biome 0',           color: '#30e7ff' },
+  'BigGrass':         { label: 'big grass',         color: '#104d28' },
+  'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
+  'Basement':         { label: 'basement',          color: '#bbbbbb' },
+  'Penthouse':        { label: 'penthouse',         color: '#d77c11' },
 };
 
 // Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
