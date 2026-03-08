@@ -105,8 +105,8 @@ const LEVEL_MULTIPLES = {
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
 const CHROMA_MULTIPLES = {
   "Flow": 1,
-  "Pulse": 1.05,
-  "Hyper": 1.05,
+  "Pulse": 1.025,
+  "Hyper": 1.025,
   // Plague is handled as a special parcel — not applied here
 };
 
