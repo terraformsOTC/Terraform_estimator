@@ -86,7 +86,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Spine" />}
-            description={<>These parcels form the central axis up and down the Hypercastle&apos;s 20 levels, with 4 parcels to each level. They have also been used to host a collection of artwork uploaded by the Mathcastles community — learn more at <a href="https://terrafans.xyz/spine/index.php" target="_blank" rel="noopener noreferrer" style={{opacity:1}}>terrafans.xyz/spine</a>. Uses the standard zone/biome formula with an additional 1.2x premium on top.</>}
+            description={<>These parcels form the central axis up and down the Hypercastle&apos;s 20 levels, with 4 parcels to each level. They have also been used to host a collection of artwork uploaded by the Mathcastles community — learn more at <a href="https://terrafans.xyz/spine/index.php" target="_blank" rel="noopener noreferrer" style={{opacity:1}}>terrafans.xyz/spine</a>.</>}
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
