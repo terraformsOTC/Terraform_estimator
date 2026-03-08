@@ -90,7 +90,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
-            description="Parcels with a unique zone and biome combination. It is worth noting that parcels in this category will change when the remaining 1,193 are minted. Adds a 1.05x premium on top of the standard formula."
+            description="Parcels with a unique zone and biome combination. It is worth noting that parcels in this category will change when the remaining 1,193 are minted."
           />
         </Section>
 
