@@ -122,9 +122,9 @@ const MODE_MULTIPLES = {
 // Spine and 1of1 are NOT here — they use the standard zone/biome formula + a premium below.
 const SPECIAL_TYPES = {
   "Plague":  65,
-  "X-Seed":  12.5,
-  "Y-Seed":  14,
-  "Lith0":   15,
+  "X-Seed":  15,
+  "Y-Seed":  17.5,
+  "Lith0":   18,
 };
 const GODMODE_MULTIPLE = 45;
 
