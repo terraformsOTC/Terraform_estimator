@@ -44,7 +44,6 @@ export default function ParcelResult({ parcel }) {
         <div className="flex flex-col gap-0">
           <TraitRow label="zone" value={zone || '—'} category={zoneCategory} multiple={zoneMultiple} />
           <TraitRow label="biome" value={`B${biome}`} category={biomeCategory} multiple={biomeMultiple} />
-          <Divider label="zone/biome avg" value={`${zonebiomeAvg}x`} />
           <SimpleRow label="level" value={`L${level}`} multiple={levelMultiple} note={levelMultiple !== 1 ? `${levelMultiple}x` : null} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
           <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} />
@@ -59,10 +58,6 @@ export default function ParcelResult({ parcel }) {
           )}
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} />
-        </div>
-
-        <div className="mt-1">
-          <p className="text-xs opacity-40 break-all">{formula}</p>
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -114,8 +109,6 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         <p className="text-xs opacity-45">
           special parcels are priced independently of zone/biome/level/chroma/mode
         </p>
-
-        <div className="text-xs opacity-40">{formula}</div>
 
         <ExternalLinks tokenId={tokenId} />
       </div>
