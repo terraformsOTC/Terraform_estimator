@@ -80,6 +80,32 @@ function getProvider() {
   return { provider, contract };
 }
 
+// ─── tokenURI LRU CACHE ─────────────────────────────────────────────────────
+// Terraforms tokenURIs are immutable on-chain — safe to cache indefinitely.
+// Caching here benefits both /image and /estimate (via getParcelTraits).
+// Max 500 entries (~24MB worst-case); oldest entry evicted when full.
+const TOKEN_URI_CACHE_MAX = 500;
+const tokenUriCache = new Map(); // Map<tokenId, uri> — insertion order = LRU order
+
+async function getCachedTokenURI(tokenId) {
+  const key = Number(tokenId);
+  if (tokenUriCache.has(key)) {
+    // Refresh insertion order (LRU hit)
+    const uri = tokenUriCache.get(key);
+    tokenUriCache.delete(key);
+    tokenUriCache.set(key, uri);
+    return uri;
+  }
+  const { contract } = getProvider();
+  const uri = await contract.tokenURI(tokenId);
+  if (tokenUriCache.size >= TOKEN_URI_CACHE_MAX) {
+    // Evict oldest entry (first key in insertion order)
+    tokenUriCache.delete(tokenUriCache.keys().next().value);
+  }
+  tokenUriCache.set(key, uri);
+  return uri;
+}
+
 // Detect special type from metadata attributes
 function detectSpecialType(attributes) {
   if (!attributes) return null;
@@ -532,10 +558,8 @@ async function getFloorPrice() {
 // Zone and Level are read from tokenURI attributes (trait_type "Zone" / "Level").
 // tokenSupplementalData has a struct ABI mismatch and is not used.
 async function getParcelTraits(tokenId) {
-  const { contract } = getProvider();
-
   try {
-    const uri = await contract.tokenURI(tokenId);
+    const uri = await getCachedTokenURI(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
         specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false, mysteryValue = null;
@@ -597,8 +621,7 @@ app.get('/image/:tokenId', async (req, res) => {
       return res.status(400).send('Invalid token ID');
     }
 
-    const { contract } = getProvider();
-    const uri = await contract.tokenURI(tokenId);
+    const uri = await getCachedTokenURI(tokenId);
 
     if (!uri.startsWith('data:application/json;base64,')) {
       return res.status(500).send('Unexpected tokenURI format');
@@ -610,7 +633,7 @@ app.get('/image/:tokenId', async (req, res) => {
     if (image.startsWith('data:image/svg+xml;base64,')) {
       const svg = Buffer.from(image.slice(26), 'base64');
       res.setHeader('Content-Type', 'image/svg+xml');
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min — mode can change
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h — tokenURI is immutable
       return res.send(svg);
     }
 
