@@ -21,39 +21,33 @@ export default function GlossaryPage() {
       <main className="flex-1 px-6 max-w-2xl">
         <h1 className="text-3xl mb-2">Glossary</h1>
         <p className="opacity-55 text-sm mb-10">
-          A reference for all the tags and terms used in parcel estimates.
+          A reference for all the classifier tags used in parcel estimates.
         </p>
 
-        {/* ── RARITY TIERS ─────────────────────────────────────────── */}
-        <Section title="Rarity Tiers">
+        {/* ── DESIRABILITY TIERS ───────────────────────────────────── */}
+        <Section title="Desirability Tiers">
           <p className="text-sm opacity-50 mb-4">
-            Every parcel's zone and biome are assigned a rarity tier based on their pricing multiplier.
-            The tier badge appears next to the zone and biome in the estimate breakdown.
+            Every zone and biome are assigned a desirability tier based on how numerous they are in the collection and how avidly they are sought after by collectors. Usually, but not always, the rarer a trait the more highly it is valued.
           </p>
           <GlossaryRow
             badge={<CategoryBadge label="Mythical" color={CATEGORY_COLORS.Mythical} />}
-            title="Mythical"
-            description="The rarest zones and biomes in the collection. Parcels carrying a Mythical trait command a 4x or greater multiplier above floor, reserved for the most sought-after terrain in the game."
+            description="The most coveted zones and biomes in the collection. Parcels carrying a Mythical trait command large premiums, and are extremely hard to acquire."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Rare" color={CATEGORY_COLORS.Rare} />}
-            title="Rare"
-            description="High-demand zones and biomes with strong collector appeal. A Rare trait applies a 2x multiplier — a meaningful premium over standard parcels."
+            description="High-demand zones and biomes that are not only hard to acquire, but have strong collector appeal."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Premium" color={CATEGORY_COLORS.Premium} />}
-            title="Premium"
-            description="Desirable traits that carry a 1.5x multiplier. Noticeably above average, but more accessible than Rare."
+            description="Desirable traits that carry a premium. Noticeably above average, but more accessible than Rare parcels."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Uncommon" color={CATEGORY_COLORS['Uncommon']} />}
-            title="Uncommon"
-            description="Slightly above-average traits carrying a modest 1.1x multiplier. A gentle step above the collection baseline."
+            description="Slightly above-average traits that create a modest increase in value."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Floor" color="rgba(232,232,232,0.4)" />}
-            title="Floor"
-            description="Standard traits with no rarity premium. A Floor zone or biome applies a 1x multiplier — the parcel's value is driven entirely by its other traits."
+            description="The most common traits with no premium."
           />
         </Section>
 
@@ -236,7 +230,7 @@ function GlossaryRow({ badge, title, description }) {
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-1">
         {badge}
-        <p className="text-sm font-medium">{title}</p>
+        {title && <p className="text-sm font-medium">{title}</p>}
       </div>
       <p className="text-sm opacity-50 leading-relaxed">{description}</p>
     </div>
