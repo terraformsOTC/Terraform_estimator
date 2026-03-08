@@ -10,31 +10,31 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
-  // Grail (6x)
-  "Shahra": 6, "Antenna": 6, "Aetherking": 6,
-  // Grail (4x)
-  "Gemina": 4, "[SOON]": 4, "Dread": 4, "[SUN]": 4,
-  // Rare (2.2x)
-  "Royal": 2.2, "Killscreen": 2.2, "Mould": 2.2,
-  // Rare (2x)
-  "Tetsu": 2, "Aria": 2, "First Earth": 2, "Uwo": 2,
-  "[NOV]": 2, "Avidana": 2, "Mori": 2,
-  "Radiant": 2, "Venmon": 2, "Promiselands": 2, "Xleph": 2,
-  "Greysunn": 2, "Treasure": 2, "[HOME]": 2,
-  // Premium (1.6x)
-  "Dhampir": 1.6, "Rocket": 1.6, "Mt Zuka": 1.6, "Angel": 1.6, "Valeria": 1.6, "Jadeite": 1.6,
-  // Premium (1.5x)
-  "Intro Forest": 1.5, "Dynacrypts": 1.5,
-  "Cradle": 1.5, "Bubble": 1.5, "Kippsun": 1.5, "Everglades": 1.5,
-  "Muxtai X1": 1.5, "pfpfpfpbbx80": 1.5, "Toad": 1.5,
-  // Uncommon (1.25x)
-  "[BOSS]": 1.25, "Pepo": 1.25, "Wastelands": 1.25, "[BLOOD]": 1.25,
-  "Blushing": 1.25, "Ender": 1.25, "Akileaf": 1.25,
-  // Uncommon (1.1x)
-  "[NEON]": 1.1, "Calyx": 1.1, "Zerinia": 1.1, "Palace": 1.1,
-  "[CUR2]": 1.1, "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1,
-  "[DARK]": 1.1, "Alto": 1.1, "Warp": 1.1,
-  "Blossom": 1.1, "Linosim": 1.1,
+  // Mythical (7.2x)
+  "Shahra": 7.2, "Antenna": 7.2, "Aetherking": 7.2,
+  // Mythical (4.8x)
+  "Gemina": 4.8, "[SOON]": 4.8, "Dread": 4.8, "[SUN]": 4.8,
+  // Rare (2.53x)
+  "Royal": 2.53, "Killscreen": 2.53, "Mould": 2.53,
+  // Rare (2.3x)
+  "Tetsu": 2.3, "Aria": 2.3, "First Earth": 2.3, "Uwo": 2.3,
+  "[NOV]": 2.3, "Avidana": 2.3, "Mori": 2.3,
+  "Radiant": 2.3, "Venmon": 2.3, "Promiselands": 2.3, "Xleph": 2.3,
+  "Greysunn": 2.3, "Treasure": 2.3, "[HOME]": 2.3,
+  // Premium (1.84x)
+  "Dhampir": 1.84, "Rocket": 1.84, "Mt Zuka": 1.84, "Angel": 1.84, "Valeria": 1.84, "Jadeite": 1.84,
+  // Premium (1.73x)
+  "Intro Forest": 1.73, "Dynacrypts": 1.73,
+  "Cradle": 1.73, "Bubble": 1.73, "Kippsun": 1.73, "Everglades": 1.73,
+  "Muxtai X1": 1.73, "pfpfpfpbbx80": 1.73, "Toad": 1.73,
+  // Uncommon (1.44x)
+  "[BOSS]": 1.44, "Pepo": 1.44, "Wastelands": 1.44, "[BLOOD]": 1.44,
+  "Blushing": 1.44, "Ender": 1.44, "Akileaf": 1.44,
+  // Uncommon (1.27x)
+  "[NEON]": 1.27, "Calyx": 1.27, "Zerinia": 1.27, "Palace": 1.27,
+  "[CUR2]": 1.27, "[HYCA]": 1.27, "[YUNA]": 1.27, "[MENU]": 1.27,
+  "[DARK]": 1.27, "Alto": 1.27, "Warp": 1.27,
+  "Blossom": 1.27, "Linosim": 1.27,
   // Floor (1x)
   "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
@@ -44,24 +44,24 @@ const ZONE_MULTIPLES = {
 
 // ─── BIOME MULTIPLES ───────────────────────────────────────────────────────────
 const BIOME_MULTIPLES = {
-  // Grail (4x)
-  0: 4, 10: 4, 11: 4, 17: 4, 73: 4, 74: 4, 76: 4, 77: 4, 78: 4, 79: 4, 81: 4,
-  // Rare (2x)
-  12: 2, 13: 2, 14: 2, 15: 2, 16: 2, 18: 2, 19: 2, 20: 2,
-  39: 2, 75: 2, 80: 2, 87: 2, 88: 2,
-  // Rare (1.6x — category override, see BIOME_CATEGORY_OVERRIDES)
-  82: 1.6,
-  // Premium (1.5x)
-  1: 1.5, 2: 1.5, 4: 1.5, 8: 1.5, 40: 1.5, 42: 1.5,
-  84: 1.5, 85: 1.5, 89: 1.5, 90: 1.5, 91: 1.5,
-  // Uncommon (1.1x)
-  3: 1.1, 5: 1.1, 6: 1.1, 7: 1.1, 9: 1.1,
-  21: 1.1, 22: 1.1, 23: 1.1, 24: 1.1, 25: 1.1,
-  26: 1.1, 28: 1.1, 29: 1.1, 30: 1.1,
-  34: 1.1, 35: 1.1, 36: 1.1, 37: 1.1, 38: 1.1,
-  41: 1.1,
-  58: 1.1, 65: 1.1, 66: 1.1, 67: 1.1, 69: 1.1,
-  83: 1.1, 86: 1.1,
+  // Mythical (4.8x)
+  0: 4.8, 10: 4.8, 11: 4.8, 17: 4.8, 73: 4.8, 74: 4.8, 76: 4.8, 77: 4.8, 78: 4.8, 79: 4.8, 81: 4.8,
+  // Rare (2.3x)
+  12: 2.3, 13: 2.3, 14: 2.3, 15: 2.3, 16: 2.3, 18: 2.3, 19: 2.3, 20: 2.3,
+  39: 2.3, 75: 2.3, 80: 2.3, 87: 2.3, 88: 2.3,
+  // Rare (1.84x — category override, see BIOME_CATEGORY_OVERRIDES)
+  82: 1.84,
+  // Premium (1.73x)
+  1: 1.73, 2: 1.73, 4: 1.73, 8: 1.73, 40: 1.73, 42: 1.73,
+  84: 1.73, 85: 1.73, 89: 1.73, 90: 1.73, 91: 1.73,
+  // Uncommon (1.27x)
+  3: 1.27, 5: 1.27, 6: 1.27, 7: 1.27, 9: 1.27,
+  21: 1.27, 22: 1.27, 23: 1.27, 24: 1.27, 25: 1.27,
+  26: 1.27, 28: 1.27, 29: 1.27, 30: 1.27,
+  34: 1.27, 35: 1.27, 36: 1.27, 37: 1.27, 38: 1.27,
+  41: 1.27,
+  58: 1.27, 65: 1.27, 66: 1.27, 67: 1.27, 69: 1.27,
+  83: 1.27, 86: 1.27,
   // Floor (1x)
   27: 1, 31: 1, 32: 1, 33: 1,
   43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
@@ -73,7 +73,7 @@ const BIOME_MULTIPLES = {
 // ─── BIOME CATEGORY OVERRIDES ──────────────────────────────────────────────────
 // Biomes whose display category differs from what getCategoryFromMultiple() returns.
 const BIOME_CATEGORY_OVERRIDES = {
-  82: "Rare", // Rare-tier badge despite 1.6x pricing
+  82: "Rare", // Rare-tier badge despite 1.84x pricing
 };
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
