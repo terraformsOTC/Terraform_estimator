@@ -47,10 +47,10 @@ const BIOME_MULTIPLES = {
   // Mythical (4.8x)
   0: 4.8, 10: 4.8, 11: 4.8, 17: 4.8, 73: 4.8, 74: 4.8, 76: 4.8, 77: 4.8, 78: 4.8, 79: 4.8, 81: 4.8,
   // Rare (2.4x)
-  12: 2.4, 13: 2.4, 14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
+  14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
   39: 2.4, 75: 2.4, 80: 2.4, 87: 2.4, 88: 2.4,
   // Rare (1.84x — category override, see BIOME_CATEGORY_OVERRIDES)
-  82: 1.84,
+  12: 1.84, 13: 1.84, 82: 1.84,
   // Premium (1.73x)
   1: 1.73, 2: 1.73, 4: 1.73, 8: 1.73, 40: 1.73, 42: 1.73,
   84: 1.73, 85: 1.73, 89: 1.73, 90: 1.73, 91: 1.73,
@@ -73,6 +73,8 @@ const BIOME_MULTIPLES = {
 // ─── BIOME CATEGORY OVERRIDES ──────────────────────────────────────────────────
 // Biomes whose display category differs from what getCategoryFromMultiple() returns.
 const BIOME_CATEGORY_OVERRIDES = {
+  12: "Rare", // Rare-tier badge despite 1.84x pricing
+  13: "Rare", // Rare-tier badge despite 1.84x pricing
   82: "Rare", // Rare-tier badge despite 1.84x pricing
 };
 
