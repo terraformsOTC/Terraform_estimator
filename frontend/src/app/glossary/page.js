@@ -95,7 +95,7 @@ export default function GlossaryPage() {
         </Section>
 
         {/* ── MISC TRAITS ──────────────────────────────────────────── */}
-        <Section title="Notable Traits">
+        <Section title="Other Notable Traits">
           <p className="text-sm opacity-50 mb-4">
             Additional properties that appear on certain parcels that collectors pay attention to.
           </p>
