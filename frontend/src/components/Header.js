@@ -12,6 +12,12 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
         </div>
         <div className="flex items-center gap-4">
+          <a
+            href="/glossary"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+          >
+            [glossary]
+          </a>
           <button
             onClick={onWhale}
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"
