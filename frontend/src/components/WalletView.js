@@ -71,7 +71,7 @@ export default function WalletView({ data, loading, address }) {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode } = traits;
+  const { zone, biome, level, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -81,7 +81,7 @@ function ParcelCard({ parcel }) {
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
-  const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || biome === 0;
+  const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || isS0 || biome === 0;
   // Guard against undefined topCategory (special parcels don't have zoneCategory/biomeCategory)
   const showCategoryBadge = topCategory != null && !(topCategory === 'Floor' && isHighValueSpecial);
   const specialBadge = SPECIAL_TYPE_BADGES[specialType];
@@ -125,6 +125,7 @@ function ParcelCard({ parcel }) {
             {specialBadge     && <SpecialBadge config={specialBadge} opacity={0.8} />}
             {isGodmode        && <SpecialBadge type="Godmode" opacity={0.8} />}
             {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
+            {isS0             && <SpecialBadge type="S0" opacity={0.8} />}
             {biome === 0      && <SpecialBadge type="Biome0" opacity={0.8} />}
             {biome === 42     && <SpecialBadge type="BigGrass" opacity={0.8} />}
             {biome === 65     && <SpecialBadge type="LittleGrass" opacity={0.8} />}
