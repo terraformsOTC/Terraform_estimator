@@ -16,11 +16,11 @@ const ZONE_MULTIPLES = {
   "Gemina": 4.8, "[SOON]": 4.8, "Dread": 4.8, "[SUN]": 4.8,
   // Rare (2.53x)
   "Royal": 2.53, "Killscreen": 2.53, "Mould": 2.53,
-  // Rare (2.3x)
-  "Tetsu": 2.3, "Aria": 2.3, "First Earth": 2.3, "Uwo": 2.3,
-  "[NOV]": 2.3, "Avidana": 2.3, "Mori": 2.3,
-  "Radiant": 2.3, "Venmon": 2.3, "Promiselands": 2.3, "Xleph": 2.3,
-  "Greysunn": 2.3, "Treasure": 2.3, "[HOME]": 2.3,
+  // Rare (2.4x)
+  "Tetsu": 2.4, "Aria": 2.4, "First Earth": 2.4, "Uwo": 2.4,
+  "[NOV]": 2.4, "Avidana": 2.4, "Mori": 2.4,
+  "Radiant": 2.4, "Venmon": 2.4, "Promiselands": 2.4, "Xleph": 2.4,
+  "Greysunn": 2.4, "Treasure": 2.4, "[HOME]": 2.4,
   // Premium (1.84x)
   "Dhampir": 1.84, "Rocket": 1.84, "Mt Zuka": 1.84, "Angel": 1.84, "Valeria": 1.84, "Jadeite": 1.84,
   // Premium (1.73x)
@@ -46,9 +46,9 @@ const ZONE_MULTIPLES = {
 const BIOME_MULTIPLES = {
   // Mythical (4.8x)
   0: 4.8, 10: 4.8, 11: 4.8, 17: 4.8, 73: 4.8, 74: 4.8, 76: 4.8, 77: 4.8, 78: 4.8, 79: 4.8, 81: 4.8,
-  // Rare (2.3x)
-  12: 2.3, 13: 2.3, 14: 2.3, 15: 2.3, 16: 2.3, 18: 2.3, 19: 2.3, 20: 2.3,
-  39: 2.3, 75: 2.3, 80: 2.3, 87: 2.3, 88: 2.3,
+  // Rare (2.4x)
+  12: 2.4, 13: 2.4, 14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
+  39: 2.4, 75: 2.4, 80: 2.4, 87: 2.4, 88: 2.4,
   // Rare (1.84x — category override, see BIOME_CATEGORY_OVERRIDES)
   82: 1.84,
   // Premium (1.73x)
