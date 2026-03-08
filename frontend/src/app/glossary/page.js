@@ -105,7 +105,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Biome0" />}
-            description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do. Already priced at the Mythical tier (4x), this badge highlights the trait visually in the breakdown."
+            description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do."
           />
           <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
