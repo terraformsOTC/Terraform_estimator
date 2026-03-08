@@ -308,7 +308,10 @@ export default function Home() {
         <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
           TerraformsOTC
         </a>
-        {' '}and Claude
+        {' '}and Claude. Want help selling or buying a parcel? Contact{' '}
+        <a href="mailto:terraformsotc@protonmail.com">
+          terraformsotc@protonmail.com
+        </a>
       </footer>
     </div>
   );
