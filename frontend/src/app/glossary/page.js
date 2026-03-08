@@ -9,11 +9,11 @@ export default function GlossaryPage() {
         <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
           <div className="flex items-center gap-4">
-            <a href="/glossary" className="text-sm opacity-100 no-underline hidden md:inline">[glossary]</a>
             <a href="https://terraformexplorer.xyz" target="_blank" rel="noopener noreferrer"
               className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline">
-              [explorer ↗]
+              [tf explorer ↗]
             </a>
+            <a href="/glossary" className="text-sm opacity-100 no-underline hidden md:inline">[glossary]</a>
           </div>
         </nav>
       </header>
