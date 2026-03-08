@@ -11,7 +11,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
   // Mythical (individual)
-  "Shahra": 12, "Antenna": 9, "Aetherking": 7.2,
+  "Shahra": 12, "Antenna": 9, "Aetherking": 7.5,
   // Mythical (4.8x)
   "Gemina": 6.5, "[SOON]": 4.8, "Dread": 4.8, "[SUN]": 4.8,
   // Rare (2.53x)
