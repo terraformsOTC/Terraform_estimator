@@ -70,15 +70,15 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Plague" />}
-            description="Tokens with the Plague chroma — the rarest chroma type, and still shrouded in mystery. We do not yet know how they could possibly interact with the rest of the Hypercastle, or if they have some other function. Easily identified by their animation style and warped zone colour palettes."
+            description="Tokens with the Plague chroma — the rarest chroma type, and still a mystery. We do not yet know how they could possibly interact with the rest of the Hypercastle, or if they have some other function. Easily identified by their animation style and warped zone colour palettes."
           />
           <GlossaryRow
             badge={<SpecialBadge type="X-Seed" />}
-            description="Parcels that animate through the full character set. Applies to Origin Daydream parcels with Seed > 9000 and Terrain parcels with Seed > 9970."
+            description="Parcels that animate through the full onchain character set instead of a specific biome's. Applies to Origin Daydream parcels with Seed > 9000 and Terrain parcels with Seed > 9970."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Y-Seed" />}
-            description="Parcels that animate with 1 of 3 possible additional character sets. Applies to parcels with Seed > 9950 and ≤ 9970."
+            description="Parcels that animate with 1 of 3 possible additional character sets instead of a specific biome's. Applies to parcels with Seed > 9950 and ≤ 9970."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Lith0" />}
@@ -86,7 +86,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Spine" />}
-            description="Tokens bearing the Spine resource — an unusual structural artifact found in 68 parcels. Uses the standard zone/biome formula with an additional 1.2x premium on top."
+            description="They form the central axis up and down the Hypercastle, 4 parcels to each level. Uses the standard zone/biome formula with an additional 1.2x premium on top."
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
