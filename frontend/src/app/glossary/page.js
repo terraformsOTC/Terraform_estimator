@@ -54,19 +54,19 @@ export default function GlossaryPage() {
         {/* ── SPECIAL PARCEL TYPES ─────────────────────────────────── */}
         <Section title="Special Parcel Types">
           <p className="text-sm opacity-50 mb-4">
-            Special parcels have rare properties that override or supplement the standard zone/biome/level valuation formula. Most are priced as a direct multiple of the collection floor.
+            Special parcels have rare properties that override or supplement the standard zone/biome/level valuation formula. Most are priced as a multiple of the collection floor.
           </p>
           <GlossaryRow
             badge={<SpecialBadge type="Godmode" />}
-            description="Origin Daydream (or potentially Origin Terraform) parcels that are not only X-Seed, but are in the highest possible range for seed values, which is between 9970 and 9999."
+            description="Origin Daydream (or potentially Origin Terraform) parcels that are not only X-Seed, but are in the highest possible range for seed values, which is between 9970 and 9999. Godmode parcels have a unique animation style that cycles through the entire possible character set, in the daydream format."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Origin Daydream" />}
-            description="Parcels that were specially minted by certain contributors and community members when the Terraforms collection launched in 2021. As each parcel going from terrain into daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin Daydream parcels also seeded the initial window of time before the Hypercastle would begin to decay."
+            description="Parcels that were specially minted by certain contributors and community members when the Terraforms collection launched in 2021. As each parcel going from terrain into daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin Daydream parcels also set the initial window of time before the Hypercastle would begin to decay."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Origin Terraform" />}
-            description="An Origin Daydream parcel that has had a drawing committed to it onchain, changing it into a Terraform."
+            description="An Origin Daydream parcel that has had a drawing committed to it onchain, changing it into a Terraform. Like standard terraform mode parcels, this can be reverted."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Plague" />}
@@ -74,15 +74,15 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="X-Seed" />}
-            description="Parcels containing the X-Seed resource, a scarce on-chain artifact buried in 48 parcels throughout the collection. Priced at 12.5x floor."
+            description="Parcels that animate through the full character set. Applies to Origin Daydream parcels with Seed > 9000 and Terrain parcels with Seed > 9970."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Y-Seed" />}
-            description="Parcels containing the Y-Seed resource, one of the rarest items embedded in Terraforms terrain. Only 17 exist in the collection. Priced at 14x floor."
+            description="Parcels that animate with 1 of 3 possible additional character sets. Applies to parcels with Seed > 9950 and ≤ 9970."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Lith0" />}
-            description="Parcels bearing the Lith0 resource — a rare crystalline material found in only 13 locations across the entire map. Priced at 15x floor."
+            description="Parcels with an animation style evocative of lithograph printing. This is created by the intersection of biome 0 and certain duotone zone colour palettes in a parcel."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Spine" />}
