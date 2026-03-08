@@ -125,57 +125,6 @@ export default function GlossaryPage() {
           />
         </Section>
 
-        {/* ── CHROMA ───────────────────────────────────────────────── */}
-        <Section title="Chroma">
-          <p className="text-sm opacity-50 mb-4">
-            Chroma controls the colour animation style of a parcel. Most parcels are Flow by default;
-            Pulse and Hyper carry a small premium, and Plague is treated as a separate special type.
-          </p>
-          <GlossaryRow
-            badge={<PlainBadge label="Flow" />}
-            description="The standard chroma. A smooth, continuous colour animation that forms the visual baseline for the collection. No multiplier applied (1x)."
-          />
-          <GlossaryRow
-            badge={<PlainBadge label="Pulse" />}
-            description="An animated chroma with a rhythmic, pulsing colour cycle. Less common than Flow and carries a 1.05x multiplier."
-          />
-          <GlossaryRow
-            badge={<PlainBadge label="Hyper" />}
-            description="An intensified chroma with heightened visual energy and faster colour cycling. Equally rare to Pulse and also carries a 1.05x multiplier."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Plague" />}
-            description="The rarest chroma — a corrupted, mutated colour variant. So distinctive it's treated as a full special parcel type rather than a simple multiplier. See Special Parcel Types above."
-          />
-        </Section>
-
-        {/* ── MODE ─────────────────────────────────────────────────── */}
-        <Section title="Mode">
-          <p className="text-sm opacity-50 mb-4">
-            Mode defines the terrain's visual rendering state. Origin modes are the rarest;
-            Daydream and Terraform are slight discounts from the standard Terrain baseline.
-          </p>
-          <GlossaryRow
-            badge={<PlainBadge label="Terrain" />}
-            description="The default mode. A fully rendered, structured terrain view — the standard visual state for most parcels. No multiplier adjustment (1x)."
-          />
-          <GlossaryRow
-            badge={<PlainBadge label="Daydream" />}
-            description="A softened, dreamlike rendering of the terrain with a fluid, animated quality. Slightly less common than Terrain but applies a mild discount (0.95x) in the model."
-          />
-          <GlossaryRow
-            badge={<PlainBadge label="Terraform" />}
-            description="An active, structural rendering showing the terrain mid-transformation. Also carries a 0.95x multiplier in the pricing model."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Origin Daydream" />}
-            description="See Special Parcel Types above. The rarest mode designation — applies a 4x multiplier."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Origin Terraform" />}
-            description="See Special Parcel Types above. Equally rare to Origin Daydream — applies a 4x multiplier."
-          />
-        </Section>
       </main>
 
       <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
