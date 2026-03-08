@@ -233,14 +233,12 @@ function Section({ title, children }) {
 
 function GlossaryRow({ badge, title, description }) {
   return (
-    <div className="flex gap-4 mb-6">
-      <div className="flex-shrink-0 w-28 flex justify-end pt-0.5">
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-1">
         {badge}
+        <p className="text-sm font-medium">{title}</p>
       </div>
-      <div>
-        <p className="text-sm font-medium mb-1">{title}</p>
-        <p className="text-sm opacity-50 leading-relaxed">{description}</p>
-      </div>
+      <p className="text-sm opacity-50 leading-relaxed">{description}</p>
     </div>
   );
 }
