@@ -1,6 +1,6 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Estimated Value = Floor × ((zone_m + biome_m) / 2) × level_m × chroma_m × mode_m
+//   Estimated Value = Floor × ((zone_m + biome_m) / 1.8) × level_m × chroma_m × mode_m
 //
 // Special parcels (Godmode, Plague, X-Seed, Y-Seed, Lith0):
 //   Estimated Value = Floor × special_multiple  (all other traits ignored)
@@ -273,7 +273,7 @@ function estimatePrice(traits, floorOverride) {
   const chromaMultiple = getChromaMultiple(chroma);
   const modeMultiple = getModeMultiple(mode);
 
-  const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
+  const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 1.8;
 
   // Trait premiums — applied on top of the standard formula
   const spineMultiple  = specialType === 'Spine'                ? TRAIT_PREMIUMS['Spine'] : 1;
@@ -283,7 +283,7 @@ function estimatePrice(traits, floorOverride) {
   const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple;
   const estimatedValue = floor * totalMultiple;
 
-  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
+  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 1.8) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
   if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
   if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
