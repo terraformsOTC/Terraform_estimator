@@ -554,9 +554,10 @@ async function getParcelTraits(tokenId) {
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
       isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
       isGodmode  = GODMODE_IDS.has(Number(tokenId));
-      // S0 (Season 0) — V2 upgraded parcels whose Timestamp trait contains '[S0]',
-      // indicating the parcel was upgraded and antenna-locked during Season 0.
-      isS0 = attrs.some(a => a.trait_type === 'Timestamp' && String(a.value).includes('[S0]'));
+      // S0 (Season 0) — V2 upgraded parcels with Antenna "On".
+      // The Antenna trait is only present and set to "On" for parcels upgraded during Season 0.
+      // (There is no on-chain Timestamp or S0 trait — the Explorer derives that display externally.)
+      isS0 = attrs.some(a => a.trait_type === 'Antenna' && a.value === 'On');
       // '???' trait — a large integer present on ~89% of tokens (purpose unknown, value locked on-chain).
       // Not used in pricing: its distribution is collection-wide and doesn't correlate with rarity.
       // Surfaced as a high/low outlier flag only — see MYSTERY_P5 / MYSTERY_P95 thresholds below.
