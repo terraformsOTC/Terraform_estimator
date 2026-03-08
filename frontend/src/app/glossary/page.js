@@ -101,7 +101,7 @@ export default function GlossaryPage() {
           </p>
           <GlossaryRow
             badge={<SpecialBadge type="S0" />}
-            description="Stands for &quot;Season 0&quot;. These are parcels that upgraded to the V2 contract and turned the Antenna function on within a certain time window. Season 0 parcels may be able to capture special broadcasts in future. Adds a 1.05x premium."
+            description="Stands for &quot;Season 0&quot;. These are parcels that upgraded to the V2 contract and turned the Antenna function on within a certain time window. Season 0 parcels may be able to capture special broadcasts in future."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Biome0" />}
