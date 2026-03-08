@@ -538,7 +538,7 @@ async function getParcelTraits(tokenId) {
     const uri = await contract.tokenURI(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
-        specialType = null, isOneOfOne = false, isGodmode = false, mysteryValue = null;
+        specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false, mysteryValue = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -554,6 +554,9 @@ async function getParcelTraits(tokenId) {
       specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
       isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
       isGodmode  = GODMODE_IDS.has(Number(tokenId));
+      // S0 (Season 0) — V2 upgraded parcels whose Timestamp trait contains '[S0]',
+      // indicating the parcel was upgraded and antenna-locked during Season 0.
+      isS0 = attrs.some(a => a.trait_type === 'Timestamp' && String(a.value).includes('[S0]'));
       // '???' trait — a large integer present on ~89% of tokens (purpose unknown, value locked on-chain).
       // Not used in pricing: its distribution is collection-wide and doesn't correlate with rarity.
       // Surfaced as a high/low outlier flag only — see MYSTERY_P5 / MYSTERY_P95 thresholds below.
@@ -571,6 +574,7 @@ async function getParcelTraits(tokenId) {
       specialType,
       isOneOfOne,
       isGodmode,
+      isS0,
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
     };

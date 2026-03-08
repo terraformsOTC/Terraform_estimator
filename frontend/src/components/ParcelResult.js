@@ -4,7 +4,7 @@ import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from './s
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, mysteryValue, mysteryOutlier } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, mysteryValue, mysteryOutlier } = traits;
 
   if (pricing.isSpecial) {
     return <SpecialParcelResult tokenId={tokenId} traits={traits} pricing={pricing} />;
@@ -14,7 +14,7 @@ export default function ParcelResult({ parcel }) {
     estimatedValue, floor, formula,
     zoneMultiple, biomeMultiple, zonebiomeAvg,
     levelMultiple, chromaMultiple, modeMultiple,
-    spineMultiple, oneOf1Multiple,
+    spineMultiple, oneOf1Multiple, s0Multiple,
     totalMultiple,
     zoneCategory, biomeCategory,
   } = pricing;
@@ -54,8 +54,11 @@ export default function ParcelResult({ parcel }) {
           {oneOf1Multiple > 1 && (
             <SimpleRow label="1 of 1" value="+5%" note={`${oneOf1Multiple}x`} />
           )}
+          {s0Multiple > 1 && (
+            <SimpleRow label="s0" value="+5%" note={`${s0Multiple}x`} />
+          )}
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} biome={biome} level={level} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} />
         </div>
 
         <div className="mt-1">
@@ -69,7 +72,7 @@ export default function ParcelResult({ parcel }) {
 }
 
 function SpecialParcelResult({ tokenId, traits, pricing }) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0 } = traits;
   const { estimatedValue, floor, specialMultiple, formula } = pricing;
 
   return (
@@ -100,6 +103,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           <span>special parcel: {specialType} — {specialMultiple}x multiplier</span>
           {isGodmode && <SpecialBadge type="Godmode" />}
           {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
+          {isS0       && <SpecialBadge type="S0" />}
           {biome === 0  && <SpecialBadge type="Biome0" />}
           {biome === 42 && <SpecialBadge type="BigGrass" />}
           {biome === 65 && <SpecialBadge type="LittleGrass" />}
@@ -178,7 +182,7 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, biome, level }) {
+function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome, level }) {
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
@@ -191,7 +195,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, biome, level
   const showPenthouse   = level === 20;
   // Show extra 1of1 badge only when there is already a different primary badge
   const showAlso1of1    = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !showBiome0 && !showBigGrass && !showLittleGrass && !showBasement && !showPenthouse;
+  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showBigGrass && !showLittleGrass && !showBasement && !showPenthouse;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -203,6 +207,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, biome, level
          : null}
         {isGodmode      && <SpecialBadge type="Godmode" />}
         {showAlso1of1   && <SpecialBadge type="1of1" />}
+        {isS0           && <SpecialBadge type="S0" />}
         {showBiome0     && <SpecialBadge type="Biome0" />}
         {showBigGrass   && <SpecialBadge type="BigGrass" />}
         {showLittleGrass && <SpecialBadge type="LittleGrass" />}
