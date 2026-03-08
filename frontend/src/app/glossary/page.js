@@ -1,0 +1,272 @@
+'use client';
+
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from '@/components/shared';
+
+export default function GlossaryPage() {
+  return (
+    <div className="content-wrapper">
+      <header className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
+        <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
+          <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
+          <div className="flex items-center gap-4">
+            <a href="/glossary" className="text-sm opacity-100 no-underline hidden md:inline">[glossary]</a>
+            <a href="https://terraformexplorer.xyz" target="_blank" rel="noopener noreferrer"
+              className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline">
+              [explorer ↗]
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <main className="flex-1 px-6 max-w-2xl">
+        <h1 className="text-3xl mb-2">Glossary</h1>
+        <p className="opacity-55 text-sm mb-10">
+          A reference for all the tags and terms used in parcel estimates.
+        </p>
+
+        {/* ── RARITY TIERS ─────────────────────────────────────────── */}
+        <Section title="Rarity Tiers">
+          <p className="text-sm opacity-50 mb-4">
+            Every parcel's zone and biome are assigned a rarity tier based on their pricing multiplier.
+            The tier badge appears next to the zone and biome in the estimate breakdown.
+          </p>
+          <GlossaryRow
+            badge={<CategoryBadge label="Mythical" color={CATEGORY_COLORS.Mythical} />}
+            title="Mythical"
+            description="The rarest zones and biomes in the collection. Parcels carrying a Mythical trait command a 4x or greater multiplier above floor, reserved for the most sought-after terrain in the game."
+          />
+          <GlossaryRow
+            badge={<CategoryBadge label="Rare" color={CATEGORY_COLORS.Rare} />}
+            title="Rare"
+            description="High-demand zones and biomes with strong collector appeal. A Rare trait applies a 2x multiplier — a meaningful premium over standard parcels."
+          />
+          <GlossaryRow
+            badge={<CategoryBadge label="Premium" color={CATEGORY_COLORS.Premium} />}
+            title="Premium"
+            description="Desirable traits that carry a 1.5x multiplier. Noticeably above average, but more accessible than Rare."
+          />
+          <GlossaryRow
+            badge={<CategoryBadge label="Uncommon" color={CATEGORY_COLORS['Uncommon']} />}
+            title="Uncommon"
+            description="Slightly above-average traits carrying a modest 1.1x multiplier. A gentle step above the collection baseline."
+          />
+          <GlossaryRow
+            badge={<CategoryBadge label="Floor" color="rgba(232,232,232,0.4)" />}
+            title="Floor"
+            description="Standard traits with no rarity premium. A Floor zone or biome applies a 1x multiplier — the parcel's value is driven entirely by its other traits."
+          />
+        </Section>
+
+        {/* ── SPECIAL PARCEL TYPES ─────────────────────────────────── */}
+        <Section title="Special Parcel Types">
+          <p className="text-sm opacity-50 mb-4">
+            Special parcels carry rare on-chain properties that override or supplement the standard
+            zone/biome/level formula. Most are priced as a direct multiple of the collection floor.
+          </p>
+          <GlossaryRow
+            badge={<SpecialBadge type="Godmode" />}
+            title="Godmode"
+            description="The three most powerful parcels in the collection — X-Seed tokens that are simultaneously Origin Daydream. The rarest intersection of traits in Terraforms, priced at 45x floor."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Origin Daydream" />}
+            title="Origin Daydream"
+            description="Parcels frozen in their original pre-terraformed animated dreamstate. These were never terraformed, preserving the land's initial on-chain form. Applies a 4x mode multiplier."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Origin Terraform" />}
+            title="Origin Terraform"
+            description="Like Origin Daydream but rendered in the terraform visual state. Equally rare origin parcels that were never altered from their initial form. Applies a 4x mode multiplier."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Plague" />}
+            title="Plague"
+            description="Tokens with the Plague chroma — the rarest chroma type, producing vivid, mutated visuals distinct from the rest of the collection. Priced at 65x floor."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Y-Seed" />}
+            title="Y-Seed"
+            description="Parcels containing the Y-Seed resource, one of the rarest items embedded in Terraforms terrain. Only 17 exist in the collection. Priced at 14x floor."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Lith0" />}
+            title="Lith0"
+            description="Parcels bearing the Lith0 resource — a rare crystalline material found in only 13 locations across the entire map. Priced at 15x floor."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="X-Seed" />}
+            title="X-Seed"
+            description="Parcels containing the X-Seed resource, a scarce on-chain artifact buried in 48 parcels throughout the collection. Priced at 12.5x floor."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Spine" />}
+            title="Spine"
+            description="Tokens bearing the Spine resource — an unusual structural artifact found in 68 parcels. Uses the standard zone/biome formula with an additional 1.2x premium on top."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="1of1" />}
+            title="1 of 1"
+            description="Parcels with a unique combination of zone and biome found nowhere else in the collection. Adds a 1.05x premium on top of the standard formula."
+          />
+        </Section>
+
+        {/* ── MISC TRAITS ──────────────────────────────────────────── */}
+        <Section title="Notable Traits">
+          <p className="text-sm opacity-50 mb-4">
+            Additional characteristics that appear on certain parcels, surfaced for context
+            alongside the main estimate.
+          </p>
+          <GlossaryRow
+            badge={<SpecialBadge type="S0" />}
+            title="Season 0"
+            description="Parcels upgraded to V2 with the Antenna trait enabled during Season 0 — the first and only upgrade window in Terraforms history. Marks early participants in the on-chain upgrade system. Adds a 1.05x premium."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Biome0" />}
+            title="Biome 0"
+            description="Parcels situated in Biome 0, the rarest biome in the collection. Already priced at the Mythical tier (4x), this badge highlights the trait visually in the breakdown."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="BigGrass" />}
+            title="Big Grass"
+            description="Parcels in Biome 42, characterised by a distinctive lush, large-form grass terrain. A visually recognisable biome with a dedicated collector following."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="LittleGrass" />}
+            title="Little Grass"
+            description="Parcels in Biome 65, a variant of the grass biome with a more delicate, fine-grained visual character. The quieter sibling to Big Grass."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Penthouse" />}
+            title="Penthouse"
+            description="Level 20 parcels — the highest level achievable in the collection. Sitting at the very top of the terrain stack, these are among the rarest level designations."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Basement" />}
+            title="Basement"
+            description="Level 1 parcels — the lowest possible level, sitting at the foundation of the terrain. The ground floor of the Terraforms world."
+          />
+        </Section>
+
+        {/* ── CHROMA ───────────────────────────────────────────────── */}
+        <Section title="Chroma">
+          <p className="text-sm opacity-50 mb-4">
+            Chroma controls the colour animation style of a parcel. Most parcels are Flow by default;
+            Pulse and Hyper carry a small premium, and Plague is treated as a separate special type.
+          </p>
+          <GlossaryRow
+            badge={<PlainBadge label="Flow" />}
+            title="Flow"
+            description="The standard chroma. A smooth, continuous colour animation that forms the visual baseline for the collection. No multiplier applied (1x)."
+          />
+          <GlossaryRow
+            badge={<PlainBadge label="Pulse" />}
+            title="Pulse"
+            description="An animated chroma with a rhythmic, pulsing colour cycle. Less common than Flow and carries a 1.05x multiplier."
+          />
+          <GlossaryRow
+            badge={<PlainBadge label="Hyper" />}
+            title="Hyper"
+            description="An intensified chroma with heightened visual energy and faster colour cycling. Equally rare to Pulse and also carries a 1.05x multiplier."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Plague" />}
+            title="Plague"
+            description="The rarest chroma — a corrupted, mutated colour variant. So distinctive it's treated as a full special parcel type rather than a simple multiplier. See Special Parcel Types above."
+          />
+        </Section>
+
+        {/* ── MODE ─────────────────────────────────────────────────── */}
+        <Section title="Mode">
+          <p className="text-sm opacity-50 mb-4">
+            Mode defines the terrain's visual rendering state. Origin modes are the rarest;
+            Daydream and Terraform are slight discounts from the standard Terrain baseline.
+          </p>
+          <GlossaryRow
+            badge={<PlainBadge label="Terrain" />}
+            title="Terrain"
+            description="The default mode. A fully rendered, structured terrain view — the standard visual state for most parcels. No multiplier adjustment (1x)."
+          />
+          <GlossaryRow
+            badge={<PlainBadge label="Daydream" />}
+            title="Daydream"
+            description="A softened, dreamlike rendering of the terrain with a fluid, animated quality. Slightly less common than Terrain but applies a mild discount (0.95x) in the model."
+          />
+          <GlossaryRow
+            badge={<PlainBadge label="Terraform" />}
+            title="Terraform"
+            description="An active, structural rendering showing the terrain mid-transformation. Also carries a 0.95x multiplier in the pricing model."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Origin Daydream" />}
+            title="Origin Daydream"
+            description="See Special Parcel Types above. The rarest mode designation — applies a 4x multiplier."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Origin Terraform" />}
+            title="Origin Terraform"
+            description="See Special Parcel Types above. Equally rare to Origin Daydream — applies a 4x multiplier."
+          />
+        </Section>
+      </main>
+
+      <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
+        Built with enthusiasm by{' '}
+        <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
+          TerraformsOTC
+        </a>
+        {' '}and Claude
+      </footer>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="mb-12">
+      <h2 className="text-lg mb-1 opacity-80">{title}</h2>
+      <div className="mb-4" style={{ borderBottom: '1px solid rgba(232,232,232,0.1)' }} />
+      {children}
+    </section>
+  );
+}
+
+function GlossaryRow({ badge, title, description }) {
+  return (
+    <div className="flex gap-4 mb-6">
+      <div className="flex-shrink-0 w-28 flex justify-end pt-0.5">
+        {badge}
+      </div>
+      <div>
+        <p className="text-sm font-medium mb-1">{title}</p>
+        <p className="text-sm opacity-50 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function CategoryBadge({ label, color }) {
+  return (
+    <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
+      {label}
+    </span>
+  );
+}
+
+function SpecialBadge({ type }) {
+  const config = SPECIAL_TYPE_BADGES[type];
+  if (!config) return null;
+  return (
+    <span className="text-xs px-1" style={{ color: config.color, border: `1px solid ${config.color}`, opacity: 0.85 }}>
+      {config.label}
+    </span>
+  );
+}
+
+function PlainBadge({ label }) {
+  return (
+    <span className="text-xs px-1 opacity-50" style={{ border: '1px solid rgba(232,232,232,0.4)' }}>
+      {label.toLowerCase()}
+    </span>
+  );
+}
