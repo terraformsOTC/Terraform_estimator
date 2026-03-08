@@ -27,7 +27,7 @@ export default function ParcelResult({ parcel }) {
           <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
             {tokenId}
           </a>
-          <p className="opacity-75 text-sm">L{level}/B{biome}/{zone}</p>
+          <p className="opacity-75 text-sm">{zone}/B{biome}/L{level}</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
             {tokenId}
           </a>
-          <p className="opacity-75 text-sm">L{level}/B{biome}/{zone}</p>
+          <p className="opacity-75 text-sm">{zone}/B{biome}/L{level}</p>
         </div>
       </div>
 
