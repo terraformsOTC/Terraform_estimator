@@ -47,15 +47,6 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="level" value={`L${level}`} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
-          {spineMultiple > 1 && (
-            <SimpleRow label="spine" value="+20%" />
-          )}
-          {oneOf1Multiple > 1 && (
-            <SimpleRow label="1 of 1" value="+5%" />
-          )}
-          {s0Multiple > 1 && (
-            <SimpleRow label="s0" value="+5%" />
-          )}
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} />
         </div>
