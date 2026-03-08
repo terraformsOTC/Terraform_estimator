@@ -26,7 +26,7 @@ export const SPECIAL_TYPE_BADGES = {
   'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
   'Basement':         { label: 'basement',          color: '#bbbbbb' },
   'Penthouse':        { label: 'penthouse',         color: '#d77c11' },
-  'S0':               { label: 's0',                color: '#2b24ad' },
+  'S0':               { label: 's0',                color: '#9ebbc1' },
 };
 
 // Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
