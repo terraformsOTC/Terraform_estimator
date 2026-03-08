@@ -27,7 +27,7 @@ export default function GlossaryPage() {
         {/* ── DESIRABILITY TIERS ───────────────────────────────────── */}
         <Section title="Desirability Tiers">
           <p className="text-sm opacity-50 mb-4">
-            Every zone and biome are assigned a desirability tier based on how numerous they are in the collection and how avidly they are sought after by collectors. Usually, but not always, the rarer a trait the more highly it is valued.
+            Every zone and biome are assigned a desirability tier based on how numerous they are in the collection and how avidly they are sought after by collectors. Usually, the rarer a trait the more highly it is valued.
           </p>
           <GlossaryRow
             badge={<CategoryBadge label="Mythical" color={CATEGORY_COLORS.Mythical} />}
