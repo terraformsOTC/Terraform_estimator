@@ -86,43 +86,42 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Spine" />}
-            description="They form the central axis up and down the Hypercastle, 4 parcels to each level. Uses the standard zone/biome formula with an additional 1.2x premium on top."
+            description={<>These parcels form the central axis up and down the Hypercastle&apos;s 20 levels, with 4 parcels to each level. They have also been used to host a collection of artwork uploaded by the Mathcastles community — learn more at <a href="https://terrafans.xyz/spine/index.php" target="_blank" rel="noopener noreferrer" style={{opacity:1}}>terrafans.xyz/spine</a>. Uses the standard zone/biome formula with an additional 1.2x premium on top.</>}
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
-            description="Parcels with a unique combination of zone and biome found nowhere else in the collection. Adds a 1.05x premium on top of the standard formula."
+            description="Parcels with a unique zone and biome combination. It is worth noting that parcels in this category will change when the remaining 1,193 are minted. Adds a 1.05x premium on top of the standard formula."
           />
         </Section>
 
         {/* ── MISC TRAITS ──────────────────────────────────────────── */}
         <Section title="Notable Traits">
           <p className="text-sm opacity-50 mb-4">
-            Additional characteristics that appear on certain parcels, surfaced for context
-            alongside the main estimate.
+            Additional properties that appear on certain parcels that collectors pay attention to.
           </p>
           <GlossaryRow
             badge={<SpecialBadge type="S0" />}
-            description="Parcels upgraded to V2 with the Antenna trait enabled during Season 0 — the first and only upgrade window in Terraforms history. Marks early participants in the on-chain upgrade system. Adds a 1.05x premium."
+            description="Stands for &quot;Season 0&quot;. These are parcels that upgraded to the V2 contract and turned the Antenna function on within a certain time window. Season 0 parcels may be able to capture special broadcasts in future. Adds a 1.05x premium."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Biome0" />}
-            description="Parcels situated in Biome 0, the rarest biome in the collection. Already priced at the Mythical tier (4x), this badge highlights the trait visually in the breakdown."
+            description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do. Already priced at the Mythical tier (4x), this badge highlights the trait visually in the breakdown."
           />
           <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
-            description="Parcels in Biome 42, characterised by a distinctive lush, large-form grass terrain. A visually recognisable biome with a dedicated collector following."
+            description="Parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
           />
           <GlossaryRow
             badge={<SpecialBadge type="LittleGrass" />}
-            description="Parcels in Biome 65, a variant of the grass biome with a more delicate, fine-grained visual character. The quieter sibling to Big Grass."
+            description="Parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Penthouse" />}
-            description="Level 20 parcels — the highest level achievable in the collection. Sitting at the very top of the terrain stack, these are among the rarest level designations."
+            description="Parcels on level 20, the top of the Hypercastle."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Basement" />}
-            description="Level 1 parcels — the lowest possible level, sitting at the foundation of the terrain. The ground floor of the Terraforms world."
+            description="Parcels on level 1, the bottom of the Hypercastle."
           />
         </Section>
 
