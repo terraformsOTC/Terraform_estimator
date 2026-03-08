@@ -38,23 +38,23 @@ export default function ParcelResult({ parcel }) {
             <EthIcon />
             <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
           </div>
-          <p className="text-xs opacity-55 mt-1">floor: {floor} ETH × {totalMultiple}x combined multiplier</p>
+          <p className="text-xs opacity-55 mt-1">floor: {floor} ETH</p>
         </div>
 
         <div className="flex flex-col gap-0">
           <TraitRow label="zone" value={zone || '—'} category={zoneCategory} multiple={zoneMultiple} />
           <TraitRow label="biome" value={`B${biome}`} category={biomeCategory} multiple={biomeMultiple} />
-          <SimpleRow label="level" value={`L${level}`} multiple={levelMultiple} note={levelMultiple !== 1 ? `${levelMultiple}x` : null} />
-          <SimpleRow label="chroma" value={chroma || 'Flow'} multiple={chromaMultiple} note={chromaMultiple !== 1 ? `${chromaMultiple}x` : null} />
-          <SimpleRow label="mode" value={mode || 'Terrain'} multiple={modeMultiple} note={modeMultiple !== 1 ? `${modeMultiple}x` : null} />
+          <SimpleRow label="level" value={`L${level}`} />
+          <SimpleRow label="chroma" value={chroma || 'Flow'} />
+          <SimpleRow label="mode" value={mode || 'Terrain'} />
           {spineMultiple > 1 && (
-            <SimpleRow label="spine" value="+20%" note={`${spineMultiple}x`} />
+            <SimpleRow label="spine" value="+20%" />
           )}
           {oneOf1Multiple > 1 && (
-            <SimpleRow label="1 of 1" value="+5%" note={`${oneOf1Multiple}x`} />
+            <SimpleRow label="1 of 1" value="+5%" />
           )}
           {s0Multiple > 1 && (
-            <SimpleRow label="s0" value="+5%" note={`${s0Multiple}x`} />
+            <SimpleRow label="s0" value="+5%" />
           )}
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} />
@@ -95,7 +95,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           className="px-3 py-2 text-sm flex items-center gap-2 flex-wrap"
           style={{ border: `1px solid ${CATEGORY_COLORS['Mythical']}`, color: CATEGORY_COLORS['Mythical'] }}
         >
-          <span>special parcel: {specialType} — {specialMultiple}x multiplier</span>
+          <span>special parcel: {specialType}</span>
           {isGodmode && <SpecialBadge type="Godmode" />}
           {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
           {isS0       && <SpecialBadge type="S0" />}
@@ -126,7 +126,6 @@ function TraitRow({ label, value, category, multiple }) {
         <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
           {category}
         </span>
-        <span className="text-sm opacity-55">{multiple}x</span>
       </div>
     </div>
   );
@@ -149,7 +148,6 @@ function SimpleRow({ label, value, multiple, note, badge }) {
         <span className="text-sm">{value}</span>
         {badge && <SpecialBadge config={badge} />}
         {note && <span className="text-sm opacity-55">{note}</span>}
-        {!note && <span className="text-sm opacity-35">1x</span>}
       </div>
     </div>
   );
