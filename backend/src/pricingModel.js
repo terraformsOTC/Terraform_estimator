@@ -270,7 +270,10 @@ function estimatePrice(traits, floorOverride) {
   const zoneMultiple = getZoneMultiple(zone);
   const biomeMultiple = getBiomeMultiple(biome);
   const levelMultiple = getLevelMultiple(level);
-  const chromaMultiple = getChromaMultiple(chroma);
+  // Biome 0 + Flow chroma gets a 1.1x boost (Flow is otherwise 1x)
+  const chromaMultiple = (parseInt(biome, 10) === 0 && (chroma === 'Flow' || !chroma))
+    ? 1.1
+    : getChromaMultiple(chroma);
   const modeMultiple = getModeMultiple(mode);
 
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 1.8;
