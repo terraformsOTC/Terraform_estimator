@@ -97,7 +97,7 @@ export default function GlossaryPage() {
         {/* ── MISC TRAITS ──────────────────────────────────────────── */}
         <Section title="Other Notable Traits">
           <p className="text-sm opacity-50 mb-4">
-            Additional properties that appear on certain parcels that collectors pay attention to.
+            Additional properties appearing on certain parcels valued by collectors.
           </p>
           <GlossaryRow
             badge={<SpecialBadge type="S0" />}
