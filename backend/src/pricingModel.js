@@ -15,9 +15,9 @@ const ZONE_MULTIPLES = {
   // Mythical (4.8x)
   "Gemina": 6.5, "[SOON]": 4.8, "Dread": 4.8, "[SUN]": 4.8,
   // Rare (2.53x)
-  "Royal": 2.53, "Killscreen": 2.53, "Mould": 2.53, "[NOV]": 2.53, "Avidana": 2.53,
+  "Royal": 2.53, "Killscreen": 2.53, "Mould": 2.53, "[NOV]": 2.53, "Avidana": 2.53, "First Earth": 2.53,
   // Rare (2.4x)
-  "Tetsu": 2.4, "Aria": 2.4, "First Earth": 2.4, "Uwo": 2.4,
+  "Tetsu": 2.4, "Aria": 2.4, "Uwo": 2.4,
   "Mori": 2.4,
   "Radiant": 2.4, "Venmon": 2.4, "Promiselands": 2.4, "Xleph": 2.4,
   "Greysunn": 2.4, "Treasure": 2.4, "[HOME]": 2.4,
