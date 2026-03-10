@@ -61,8 +61,8 @@ export default function WalletView({ data, loading, address }) {
         <p className="opacity-75 text-sm">no terraforms parcels found in this wallet.</p>
       ) : (
         <div
-          className="grid w-full mt-4 gap-6"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+          className="grid w-full mt-4 gap-4"
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 280px))' }}
         >
           {sortedParcels.map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
