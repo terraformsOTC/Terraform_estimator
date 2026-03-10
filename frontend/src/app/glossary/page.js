@@ -117,7 +117,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Matrix" />}
-            description="Parcels that combine biome 58 with the Intro Forest zone. Digital rain in the Hypercastle."
+            description="Biome 58 parcels with the Intro Forest zone colour palette. Digital rain in the Hypercastle."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Butte" />}
