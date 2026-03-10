@@ -121,7 +121,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Butte" />}
-            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces heightmap topographically reminiscent of a butte."
+            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of butte rock formations."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
