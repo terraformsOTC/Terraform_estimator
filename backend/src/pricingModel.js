@@ -137,6 +137,7 @@ const GODMODE_MULTIPLE = 45;
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
 const TRAIT_PREMIUMS = {
   "Spine":  1.20,  // +20%
+  "Matrix": 1.15,  // +15% — B58 + Intro Forest
   "1of1":   1.05,  // +5%
   "S0":     1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
@@ -284,17 +285,19 @@ function estimatePrice(traits, floorOverride) {
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 1.88;
 
   // Trait premiums — applied on top of the standard formula
-  const spineMultiple  = specialType === 'Spine'                ? TRAIT_PREMIUMS['Spine'] : 1;
-  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne) ? TRAIT_PREMIUMS['1of1']  : 1;
-  const s0Multiple     = isS0                                   ? TRAIT_PREMIUMS['S0']    : 1;
+  const spineMultiple  = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']  : 1;
+  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']   : 1;
+  const s0Multiple     = isS0                                           ? TRAIT_PREMIUMS['S0']     : 1;
+  const matrixMultiple = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix'] : 1;
 
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple;
+  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple;
   const estimatedValue = floor * totalMultiple;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 1.88) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
   if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
   if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
+  if (matrixMultiple !== 1) formula += ` × ${matrixMultiple}(matrix)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -309,6 +312,7 @@ function estimatePrice(traits, floorOverride) {
     spineMultiple,
     oneOf1Multiple,
     s0Multiple,
+    matrixMultiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
