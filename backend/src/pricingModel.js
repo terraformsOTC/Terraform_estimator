@@ -21,8 +21,8 @@ const ZONE_MULTIPLES = {
   "Mori": 2.52,
   "Radiant": 2.52, "Venmon": 2.52, "Promiselands": 2.52, "Xleph": 2.52,
   "Greysunn": 2.52, "Treasure": 2.52, "[HOME]": 2.52,
-  // Premium (1.93x)
-  "Dhampir": 1.93, "Rocket": 1.93, "Mt Zuka": 1.93, "Angel": 1.93, "Valeria": 1.93, "Jadeite": 1.93,
+  // Premium (1.99x)
+  "Dhampir": 1.99, "Rocket": 1.99, "Mt Zuka": 1.99, "Angel": 1.99, "Valeria": 1.99, "Jadeite": 1.99,
   // Premium (1.82x)
   "Intro Forest": 1.82, "Dynacrypts": 1.82,
   "Cradle": 1.82, "Bubble": 1.82, "Kippsun": 1.82, "Everglades": 1.82,
