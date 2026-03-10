@@ -20,7 +20,7 @@ export default function ParcelSearch({ onSearch, loading }) {
         <input
           id="token-id"
           name="tokenId"
-          className="py-1 px-2 text-sm transition-all w-40"
+          className="text-sm transition-all w-40"
           placeholder="token id"
           value={value}
           onChange={e => setValue(e.target.value)}
