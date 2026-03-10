@@ -14,12 +14,13 @@ const ZONE_MULTIPLES = {
   "Shahra": 12.6, "Antenna": 9.45, "Aetherking": 7.88,
   // Mythical (5.04x)
   "Gemina": 6.83, "[SOON]": 5.04, "Dread": 5.04, "[SUN]": 5.04,
+  // Rare (2.75x)
+  "Royal": 2.75, "Killscreen": 2.75, "[NOV]": 2.75, "Avidana": 2.75,
   // Rare (2.66x)
-  "Royal": 2.66, "Killscreen": 2.66, "Mould": 2.66, "[NOV]": 2.66, "Avidana": 2.66, "First Earth": 2.66,
+  "Mould": 2.66, "First Earth": 2.66, "Tetsu": 2.66, "Aria": 2.66, "Xleph": 2.66,
   // Rare (2.52x)
-  "Tetsu": 2.52, "Aria": 2.52, "Uwo": 2.52,
-  "Mori": 2.52,
-  "Radiant": 2.52, "Venmon": 2.52, "Promiselands": 2.52, "Xleph": 2.52,
+  "Uwo": 2.52, "Mori": 2.52,
+  "Radiant": 2.52, "Venmon": 2.52, "Promiselands": 2.52,
   "Greysunn": 2.52, "Treasure": 2.52, "[HOME]": 2.52,
   // Premium (1.99x)
   "Dhampir": 1.99, "Rocket": 1.99, "Mt Zuka": 1.99, "Angel": 1.99, "Valeria": 1.99, "Jadeite": 1.99,
