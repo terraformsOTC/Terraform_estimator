@@ -19,18 +19,18 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             [view random collector]
           </button>
           <a
+            href="/glossary"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+          >
+            [glossary]
+          </a>
+          <a
             href="https://terraformexplorer.xyz"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
           >
             [tf explorer ↗]
-          </a>
-          <a
-            href="/glossary"
-            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
-          >
-            [glossary]
           </a>
           <a
             href="https://www.terraformlore.xyz"
