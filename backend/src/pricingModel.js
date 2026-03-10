@@ -137,7 +137,7 @@ const GODMODE_MULTIPLE = 45;
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
 const TRAIT_PREMIUMS = {
   "Spine":  1.20,  // +20%
-  "Matrix": 1.15,  // +15% — B58 + Intro Forest
+  "Matrix": 1.5,   // +50% — B58 + Intro Forest
   "1of1":   1.05,  // +5%
   "S0":     1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
