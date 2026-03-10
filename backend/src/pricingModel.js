@@ -118,8 +118,8 @@ const MODE_MULTIPLES = {
   "Origin Daydream": 4,
   "Origin Terraform": 4,
   "Terrain": 1,
-  "Daydream": 0.95,
-  "Terraform": 0.95,
+  "Daydream": 0.975,
+  "Terraform": 0.975,
 };
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
