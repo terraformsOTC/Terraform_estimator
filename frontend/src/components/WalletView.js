@@ -85,7 +85,7 @@ function ParcelCard({ parcel }) {
   })[0];
 
   const showMatrix = biome === 58 && zone === 'Intro Forest';
-  const showButte  = biome === 39 && mysteryOutlier === 'low';
+  const showMesa   = biome === 39 && mysteryOutlier === 'low';
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
@@ -138,7 +138,7 @@ function ParcelCard({ parcel }) {
             {biome === 42      && <SpecialBadge type="BigGrass" opacity={0.8} />}
             {biome === 65      && <SpecialBadge type="LittleGrass" opacity={0.8} />}
             {showMatrix        && <SpecialBadge type="Matrix" opacity={0.8} />}
-            {showButte         && <SpecialBadge type="Butte" opacity={0.8} />}
+            {showMesa          && <SpecialBadge type="Mesa" opacity={0.8} />}
             {level === 1       && <SpecialBadge type="Basement" opacity={0.8} />}
             {level === 20      && <SpecialBadge type="Penthouse" opacity={0.8} />}
             {mysteryOutlier && (

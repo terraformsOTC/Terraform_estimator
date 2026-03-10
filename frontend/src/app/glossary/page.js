@@ -128,8 +128,8 @@ export default function GlossaryPage() {
             description="Biome 58 parcels with the Intro Forest zone colour palette. Digital rain in the Hypercastle."
           />
           <GlossaryRow
-            badge={<SpecialBadge type="Butte" />}
-            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of butte rock formations."
+            badge={<SpecialBadge type="Mesa" />}
+            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}

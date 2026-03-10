@@ -138,7 +138,7 @@ const GODMODE_MULTIPLE = 45;
 const TRAIT_PREMIUMS = {
   "Spine":  1.20,  // +20%
   "Matrix": 1.5,   // +50% — B58 + Intro Forest
-  "Butte":   1.25,  // +25% — B39 + low ???
+  "Mesa":    1.25,  // +25% — B39 + low ???
   "1of1":   1.05,  // +5%
   "S0":     1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
@@ -290,9 +290,9 @@ function estimatePrice(traits, floorOverride) {
   const oneOf1Multiple = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']   : 1;
   const s0Multiple     = isS0                                           ? TRAIT_PREMIUMS['S0']     : 1;
   const matrixMultiple = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix'] : 1;
-  const butteMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Butte']  : 1;
+  const mesaMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']   : 1;
 
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * butteMultiple;
+  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
   const estimatedValue = floor * totalMultiple;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 1.88) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
@@ -300,7 +300,7 @@ function estimatePrice(traits, floorOverride) {
   if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
   if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
   if (matrixMultiple !== 1) formula += ` × ${matrixMultiple}(matrix)`;
-  if (butteMultiple   !== 1) formula += ` × ${butteMultiple}(butte)`;
+  if (mesaMultiple   !== 1) formula += ` × ${mesaMultiple}(mesa)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -316,7 +316,7 @@ function estimatePrice(traits, floorOverride) {
     oneOf1Multiple,
     s0Multiple,
     matrixMultiple,
-    butteMultiple,
+    mesaMultiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
