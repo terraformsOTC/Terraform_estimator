@@ -14,8 +14,8 @@ const ZONE_MULTIPLES = {
   "Shahra": 12.6, "Antenna": 9.45, "Aetherking": 7.88,
   // Mythical (5.04x)
   "Gemina": 6.83, "[SOON]": 5.04, "Dread": 5.04, "[SUN]": 5.04,
-  // Rare (2.75x)
-  "Royal": 2.75, "Killscreen": 2.75, "[NOV]": 2.75, "Avidana": 2.75,
+  // Rare (2.9x)
+  "Royal": 2.9, "Killscreen": 2.9, "[NOV]": 2.9, "Avidana": 2.9,
   // Rare (2.66x)
   "Mould": 2.66, "First Earth": 2.66, "Tetsu": 2.66, "Aria": 2.66, "Xleph": 2.66,
   // Rare (2.52x)
