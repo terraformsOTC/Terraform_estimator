@@ -116,6 +116,14 @@ export default function GlossaryPage() {
             description="Parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Matrix" />}
+            description="Parcels that combine biome 58 with the Intro Forest zone. This specific combination produces a distinctive green-tinted visual that collectors have likened to a digital matrix."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="Mesa" />}
+            description="Biome 39 parcels with an unusually low ??? value. The low ??? separates these from standard biome 39 parcels and produces a noticeably distinct visual."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="Penthouse" />}
             description="Parcels on level 20, the top of the Hypercastle."
           />
