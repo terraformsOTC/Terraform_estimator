@@ -10,6 +10,11 @@ const ATTAINABILITY_COLORS = {
 };
 
 export default function WalletView({ data, loading, address }) {
+  const sortedParcels = useMemo(
+    () => data?.parcels ? [...data.parcels].sort((a, b) => a.tokenId - b.tokenId) : [],
+    [data?.parcels],
+  );
+
   if (loading) {
     return (
       <div className="text-sm opacity-75">
@@ -22,7 +27,7 @@ export default function WalletView({ data, loading, address }) {
 
   if (!data) return null;
 
-  const { parcels, sets, totalParcels, fetchedParcels } = data;
+  const { sets, totalParcels, fetchedParcels } = data;
 
   return (
     <div>
@@ -52,14 +57,14 @@ export default function WalletView({ data, loading, address }) {
         </p>
       )}
 
-      {parcels?.length === 0 ? (
+      {sortedParcels.length === 0 ? (
         <p className="opacity-75 text-sm">no terraforms parcels found in this wallet.</p>
       ) : (
         <div
           className="grid w-full mt-4 gap-6"
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
         >
-          {useMemo(() => [...parcels].sort((a, b) => a.tokenId - b.tokenId), [parcels]).map(parcel => (
+          {sortedParcels.map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
           ))}
         </div>
@@ -78,6 +83,9 @@ function ParcelCard({ parcel }) {
     const order = { Mythical: 0, Rare: 1, Premium: 2, 'Uncommon': 3, Floor: 4 };
     return order[a] - order[b];
   })[0];
+
+  const showMatrix = biome === 58 && zone === 'Intro Forest';
+  const showButte  = biome === 39 && mysteryOutlier === 'low';
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
@@ -122,15 +130,17 @@ function ParcelCard({ parcel }) {
                 {topCategory}
               </span>
             )}
-            {specialBadge     && <SpecialBadge config={specialBadge} opacity={0.8} />}
-            {isGodmode        && <SpecialBadge type="Godmode" opacity={0.8} />}
+            {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
+            {isGodmode         && <SpecialBadge type="Godmode" opacity={0.8} />}
             {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
-            {isS0             && <SpecialBadge type="S0" opacity={0.8} />}
-            {biome === 0      && <SpecialBadge type="Biome0" opacity={0.8} />}
-            {biome === 42     && <SpecialBadge type="BigGrass" opacity={0.8} />}
-            {biome === 65     && <SpecialBadge type="LittleGrass" opacity={0.8} />}
-            {level === 1      && <SpecialBadge type="Basement" opacity={0.8} />}
-            {level === 20     && <SpecialBadge type="Penthouse" opacity={0.8} />}
+            {isS0              && <SpecialBadge type="S0" opacity={0.8} />}
+            {biome === 0       && <SpecialBadge type="Biome0" opacity={0.8} />}
+            {biome === 42      && <SpecialBadge type="BigGrass" opacity={0.8} />}
+            {biome === 65      && <SpecialBadge type="LittleGrass" opacity={0.8} />}
+            {showMatrix        && <SpecialBadge type="Matrix" opacity={0.8} />}
+            {showButte         && <SpecialBadge type="Butte" opacity={0.8} />}
+            {level === 1       && <SpecialBadge type="Basement" opacity={0.8} />}
+            {level === 20      && <SpecialBadge type="Penthouse" opacity={0.8} />}
             {mysteryOutlier && (
               <span className="text-xs px-1" style={{
                 color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',

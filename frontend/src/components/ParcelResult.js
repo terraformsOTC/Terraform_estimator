@@ -123,15 +123,6 @@ function TraitRow({ label, value, category, multiple }) {
   );
 }
 
-function Divider({ label, value }) {
-  return (
-    <div className="flex justify-between items-center py-1 mb-2 opacity-55 text-xs">
-      <span>↳ {label}</span>
-      <span>{value}</span>
-    </div>
-  );
-}
-
 function SimpleRow({ label, value, multiple, note, badge }) {
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
