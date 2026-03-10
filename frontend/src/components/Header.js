@@ -32,6 +32,14 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           >
             [glossary]
           </a>
+          <a
+            href="https://www.terraformlore.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+          >
+            [lore ↗]
+          </a>
           {walletAddress ? (
             <button
               className="btn-primary btn-sm"
