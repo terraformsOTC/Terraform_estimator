@@ -62,6 +62,32 @@ const WHALE_WALLETS = [
   '0xcb14228737c6b38C0d060bf7Cf5FF8f9090936fc',
 ];
 
+function PortfolioStats({ data }) {
+  return (
+    <div className="text-left md:text-right">
+      <div className="flex text-left md:text-right gap-6">
+        <div>
+          <p className="font-semibold">Parcels</p>
+          <span>{data.totalParcels}</span>
+        </div>
+        <div>
+          <p className="font-semibold">Est. Portfolio</p>
+          <span className="flex items-center gap-1">
+            <EthIcon />
+            {data.totalEstimatedValue.toFixed(3)}
+          </span>
+        </div>
+        {data.sets?.length > 0 && (
+          <div>
+            <p className="font-semibold">Sets</p>
+            <span>{data.sets.length}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TokenParamHandler({ onToken, onAddress }) {
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -102,7 +128,7 @@ export default function Home() {
     }
   }
 
-  async function disconnectWallet() {
+  function disconnectWallet() {
     setWalletAddress(null);
     setWalletData(null);
     setView('search');
@@ -222,52 +248,8 @@ export default function Home() {
               </>
             )}
           </div>
-          {walletData && view === 'wallet' && (
-            <div className="text-left md:text-right">
-              <div className="flex text-left md:text-right gap-6">
-                <div>
-                  <p className="font-semibold">Parcels</p>
-                  <span>{walletData.totalParcels}</span>
-                </div>
-                <div>
-                  <p className="font-semibold">Est. Portfolio</p>
-                  <span className="flex items-center gap-1">
-                    <EthIcon />
-                    {walletData.totalEstimatedValue.toFixed(3)}
-                  </span>
-                </div>
-                {walletData.sets?.length > 0 && (
-                  <div>
-                    <p className="font-semibold">Sets</p>
-                    <span>{walletData.sets.length}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {whaleData && view === 'whale' && (
-            <div className="text-left md:text-right">
-              <div className="flex text-left md:text-right gap-6">
-                <div>
-                  <p className="font-semibold">Parcels</p>
-                  <span>{whaleData.totalParcels}</span>
-                </div>
-                <div>
-                  <p className="font-semibold">Est. Portfolio</p>
-                  <span className="flex items-center gap-1">
-                    <EthIcon />
-                    {whaleData.totalEstimatedValue.toFixed(3)}
-                  </span>
-                </div>
-                {whaleData.sets?.length > 0 && (
-                  <div>
-                    <p className="font-semibold">Sets</p>
-                    <span>{whaleData.sets.length}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {walletData && view === 'wallet' && <PortfolioStats data={walletData} />}
+          {whaleData  && view === 'whale'  && <PortfolioStats data={whaleData} />}
         </div>
 
         <div className="px-6">

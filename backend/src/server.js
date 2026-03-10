@@ -732,7 +732,10 @@ app.get('/wallet/:address', async (req, res) => {
       pricing: estimatePrice(p, liveFloor),
     }));
 
-    const totalEstimatedValue = allParcels.reduce((sum, p) => sum + estimatePrice(p, liveFloor).estimatedValue, 0);
+    // Reuse already-computed pricing for the first 100; run estimatePrice only for the remainder
+    const displayedTotal = pricedParcels.reduce((sum, p) => sum + p.pricing.estimatedValue, 0);
+    const remainderTotal = allParcels.slice(100).reduce((sum, p) => sum + estimatePrice(p, liveFloor).estimatedValue, 0);
+    const totalEstimatedValue = displayedTotal + remainderTotal;
 
     res.json({
       address,

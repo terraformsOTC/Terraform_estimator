@@ -11,11 +11,8 @@ export default function ParcelResult({ parcel }) {
   }
 
   const {
-    estimatedValue, floor, formula,
-    zoneMultiple, biomeMultiple, zonebiomeAvg,
-    levelMultiple, chromaMultiple, modeMultiple,
-    spineMultiple, oneOf1Multiple, s0Multiple,
-    totalMultiple,
+    estimatedValue, floor,
+    zoneMultiple, biomeMultiple,
     zoneCategory, biomeCategory,
   } = pricing;
 
@@ -42,8 +39,8 @@ export default function ParcelResult({ parcel }) {
         </div>
 
         <div className="flex flex-col gap-0">
-          <TraitRow label="zone" value={zone || '—'} category={zoneCategory} multiple={zoneMultiple} />
-          <TraitRow label="biome" value={`B${biome}`} category={biomeCategory} multiple={biomeMultiple} />
+          <TraitRow label="zone" value={zone || '—'} category={zoneCategory} />
+          <TraitRow label="biome" value={`B${biome}`} category={biomeCategory} />
           <SimpleRow label="level" value={`L${level}`} />
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
@@ -108,7 +105,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
   );
 }
 
-function TraitRow({ label, value, category, multiple }) {
+function TraitRow({ label, value, category }) {
   const color = CATEGORY_COLORS[category] || 'inherit';
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
