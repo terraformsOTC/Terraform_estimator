@@ -175,12 +175,12 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
   const showBigGrass    = biome === 42;
   const showLittleGrass = biome === 65;
   const showMatrix      = biome === 58 && zone === 'Intro Forest';
-  const showMesa        = biome === 39 && mysteryOutlier === 'low';
+  const showButte        = biome === 39 && mysteryOutlier === 'low';
   const showBasement    = level === 1;
   const showPenthouse   = level === 20;
   // Show extra 1of1 badge only when there is already a different primary badge
   const showAlso1of1    = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showBigGrass && !showLittleGrass && !showMatrix && !showMesa && !showBasement && !showPenthouse;
+  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showBigGrass && !showLittleGrass && !showMatrix && !showButte && !showBasement && !showPenthouse;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -197,7 +197,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
         {showBigGrass   && <SpecialBadge type="BigGrass" />}
         {showLittleGrass && <SpecialBadge type="LittleGrass" />}
         {showMatrix     && <SpecialBadge type="Matrix" />}
-        {showMesa       && <SpecialBadge type="Mesa" />}
+        {showButte       && <SpecialBadge type="Butte" />}
         {showBasement   && <SpecialBadge type="Basement" />}
         {showPenthouse  && <SpecialBadge type="Penthouse" />}
       </div>

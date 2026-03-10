@@ -117,11 +117,11 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Matrix" />}
-            description="Parcels that combine biome 58 with the Intro Forest zone. This specific combination produces a distinctive green-tinted visual that collectors have likened to a digital matrix."
+            description="Parcels that combine biome 58 with the Intro Forest zone. Digital rain in the Hypercastle."
           />
           <GlossaryRow
-            badge={<SpecialBadge type="Mesa" />}
-            description="Biome 39 parcels with an unusually low ??? value. The low ??? separates these from standard biome 39 parcels and produces a noticeably distinct visual."
+            badge={<SpecialBadge type="Butte" />}
+            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces heightmap topographically reminiscent of a butte."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
