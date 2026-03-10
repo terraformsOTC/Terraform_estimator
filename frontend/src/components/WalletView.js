@@ -114,7 +114,7 @@ function ParcelCard({ parcel }) {
           <a href={`/?token=${tokenId}`}>
             {tokenId}
           </a>
-          <p className="text-xs opacity-75">L{level}/B{biome}/{zone}</p>
+          <p className="text-xs opacity-75">{zone}/B{biome}/L{level}</p>
         </div>
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center gap-1 flex-wrap">
