@@ -150,7 +150,7 @@ const SETS = {
     description: "Biomes 85, 39, 26, 27, 38",
     requiredBiomes: [85, 39, 26, 27, 38],
     attainability: "Easy",
-    bottleneck: "biome 58",
+    bottleneck: "biome 39",
   },
   "Binary biome set": {
     description: "Biomes 54, 58, 89",

@@ -1,6 +1,6 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES } from '@/components/shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from '@/components/shared';
 
 export default function GlossaryPage() {
   return (
@@ -108,6 +108,14 @@ export default function GlossaryPage() {
             description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do."
           />
           <GlossaryRow
+            badge={<CategoryBadge label="high ???" color="#ffd700" />}
+            description="The ??? trait is a large integer present on roughly 89% of all Terraforms tokens. Its purpose is unknown and its value is locked on-chain. Parcels with a high ??? value fall above the 95th percentile of the collection (above ~50,000). 1,574 tokens carry this flag."
+          />
+          <GlossaryRow
+            badge={<CategoryBadge label="low ???" color="#f87171" />}
+            description="Parcels with a low ??? value fall below the 5th percentile of the collection (below ~20,000). 449 tokens carry this flag. Low ??? values interact with biome 39 to produce the distinctive Butte formation."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
             description="Parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
           />
@@ -183,20 +191,3 @@ function CategoryBadge({ label, color }) {
   );
 }
 
-function SpecialBadge({ type }) {
-  const config = SPECIAL_TYPE_BADGES[type];
-  if (!config) return null;
-  return (
-    <span className="text-xs px-1" style={{ color: config.color, border: `1px solid ${config.color}`, opacity: 0.85 }}>
-      {config.label}
-    </span>
-  );
-}
-
-function PlainBadge({ label }) {
-  return (
-    <span className="text-xs px-1 opacity-50" style={{ border: '1px solid rgba(232,232,232,0.4)' }}>
-      {label.toLowerCase()}
-    </span>
-  );
-}
