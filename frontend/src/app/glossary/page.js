@@ -109,11 +109,11 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<CategoryBadge label="high ???" color="#ffd700" />}
-            description="The ??? trait is a large integer present on roughly 89% of all Terraforms tokens. Its purpose is unknown and its value is locked on-chain. Parcels with a high ??? value fall above the 95th percentile of the collection (above ~50,000). 1,574 tokens carry this flag."
+            description="Parcels with a ??? value above 50,000. We still do not fully understand what this trait does, but it appears visually on parcels as a &quot;water level&quot; for cycling characters in the animation. This may be a resource that could be &quot;tapped&quot; in the future."
           />
           <GlossaryRow
             badge={<CategoryBadge label="low ???" color="#f87171" />}
-            description="Parcels with a low ??? value fall below the 5th percentile of the collection (below ~20,000). 449 tokens carry this flag. Low ??? values interact with biome 39 to produce the distinctive Butte formation."
+            description="Parcels with a ??? value below 20,000. These are recognisable for their low &quot;water level&quot; of animated cycling characters, and are rarer than their high ??? value counterparts."
           />
           <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}

@@ -582,9 +582,10 @@ async function getParcelTraits(tokenId) {
       // The Antenna trait is only present and set to "On" for parcels upgraded during Season 0.
       // (There is no on-chain Timestamp or S0 trait — the Explorer derives that display externally.)
       isS0 = attrs.some(a => a.trait_type === 'Antenna' && a.value === 'On');
-      // '???' trait — a large integer present on ~89% of tokens (purpose unknown, value locked on-chain).
-      // Not used in pricing: its distribution is collection-wide and doesn't correlate with rarity.
-      // Surfaced as a high/low outlier flag only — see MYSTERY_P5 / MYSTERY_P95 thresholds below.
+      // '???' trait — the watermark level, controlling how much of the parcel surface is flooded by
+      // the liquid animation. Derived from Perlin Noise; locked on-chain but delegatable to an external
+      // contract. Present on ~89% of tokens. Not used in pricing (collection-wide distribution, no
+      // rarity correlation). Surfaced as a high/low outlier flag — see MYSTERY_P5/MYSTERY_P95 below.
       const rawMystery = attrs.find(a => a.trait_type === '???')?.value;
       mysteryValue = rawMystery != null ? Number(rawMystery) : null;
     }
