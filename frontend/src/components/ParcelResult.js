@@ -48,7 +48,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} zone={zone} />
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -93,6 +93,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           {biome === 0  && <SpecialBadge type="Biome0" />}
           {biome === 42 && <SpecialBadge type="BigGrass" />}
           {biome === 65 && <SpecialBadge type="LittleGrass" />}
+          {biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
           {level === 1  && <SpecialBadge type="Basement" />}
           {level === 20 && <SpecialBadge type="Penthouse" />}
         </div>
@@ -164,7 +165,7 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome, level }) {
+function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome, level, zone }) {
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
@@ -173,11 +174,12 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
   const showBiome0      = biome === 0;
   const showBigGrass    = biome === 42;
   const showLittleGrass = biome === 65;
+  const showMatrix      = biome === 58 && zone === 'Intro Forest';
   const showBasement    = level === 1;
   const showPenthouse   = level === 20;
   // Show extra 1of1 badge only when there is already a different primary badge
   const showAlso1of1    = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showBigGrass && !showLittleGrass && !showBasement && !showPenthouse;
+  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showBigGrass && !showLittleGrass && !showMatrix && !showBasement && !showPenthouse;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -193,6 +195,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
         {showBiome0     && <SpecialBadge type="Biome0" />}
         {showBigGrass   && <SpecialBadge type="BigGrass" />}
         {showLittleGrass && <SpecialBadge type="LittleGrass" />}
+        {showMatrix     && <SpecialBadge type="Matrix" />}
         {showBasement   && <SpecialBadge type="Basement" />}
         {showPenthouse  && <SpecialBadge type="Penthouse" />}
       </div>
