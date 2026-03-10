@@ -1,6 +1,10 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Estimated Value = Floor × ((zone_m + biome_m) / 2) × level_m × chroma_m × mode_m
+//   Estimated Value = Floor × ((zone_m + biome_m) / 2)
+//                   + (level_m × Floor) × chroma_m × mode_m × [premiums]
+//
+//   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
+//   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
 //
 // Special parcels (Godmode, Plague, X-Seed, Y-Seed, Lith0):
 //   Estimated Value = Floor × special_multiple  (all other traits ignored)
@@ -84,26 +88,26 @@ const BIOME_CATEGORY_OVERRIDES = {
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
 const LEVEL_MULTIPLES = {
-  1: 5,   // Kairo basement — extremely rare
-  2: 2,   // Kairo basement
-  3: 2,   // Kairo basement
-  4: 1,
-  5: 1,
-  6: 1,
-  7: 1,
-  8: 1,
-  9: 1,
-  10: 1,
-  11: 1,
-  12: 1,
-  13: 1,
-  14: 1,
-  15: 1,
-  16: 1,
-  17: 1,
-  18: 2,  // Alto penthouse
-  19: 2,  // Alto penthouse
-  20: 5,  // Alto penthouse — extremely rare
+  1: 5,   // Basement — extremely rare
+  2: 2,   // Basement
+  3: 2,   // Basement
+  4: 0,   // Mid-level — no level premium
+  5: 0,
+  6: 0,
+  7: 0,
+  8: 0,
+  9: 0,
+  10: 0,
+  11: 0,
+  12: 0,
+  13: 0,
+  14: 0,
+  15: 0,
+  16: 0,
+  17: 0,
+  18: 2,  // Penthouse
+  19: 2,  // Penthouse
+  20: 5,  // Penthouse — extremely rare
 };
 
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
@@ -286,22 +290,29 @@ function estimatePrice(traits, floorOverride) {
 
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
 
-  // Trait premiums — applied on top of the standard formula
+  // Trait premiums — applied on top of the level term
   const spineMultiple  = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']  : 1;
   const oneOf1Multiple = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']   : 1;
   const s0Multiple     = isS0                                           ? TRAIT_PREMIUMS['S0']     : 1;
   const matrixMultiple = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix'] : 1;
   const mesaMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']   : 1;
 
-  const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
-  const estimatedValue = floor * totalMultiple;
+  // Additive formula: base zone/biome value + level premium (0 for mid-levels)
+  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
+  const baseValue       = floor * zonebiomeAvg;
+  const levelValue      = levelMultiple * floor * premiumMultiple;
+  const estimatedValue  = baseValue + levelValue;
+  const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
-  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2) × ${levelMultiple}(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
-  if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
-  if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
-  if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
-  if (matrixMultiple !== 1) formula += ` × ${matrixMultiple}(matrix)`;
-  if (mesaMultiple   !== 1) formula += ` × ${mesaMultiple}(mesa)`;
+  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
+  if (levelMultiple > 0) {
+    formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
+    if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
+    if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
+    if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
+    if (matrixMultiple !== 1) formula += ` × ${matrixMultiple}(matrix)`;
+    if (mesaMultiple   !== 1) formula += ` × ${mesaMultiple}(mesa)`;
+  }
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
