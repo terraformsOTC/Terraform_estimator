@@ -11,31 +11,31 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
   // Mythical (individual)
-  "Shahra": 12, "Antenna": 9, "Aetherking": 7.5,
-  // Mythical (4.8x)
-  "Gemina": 6.5, "[SOON]": 4.8, "Dread": 4.8, "[SUN]": 4.8,
-  // Rare (2.53x)
-  "Royal": 2.53, "Killscreen": 2.53, "Mould": 2.53, "[NOV]": 2.53, "Avidana": 2.53, "First Earth": 2.53,
-  // Rare (2.4x)
-  "Tetsu": 2.4, "Aria": 2.4, "Uwo": 2.4,
-  "Mori": 2.4,
-  "Radiant": 2.4, "Venmon": 2.4, "Promiselands": 2.4, "Xleph": 2.4,
-  "Greysunn": 2.4, "Treasure": 2.4, "[HOME]": 2.4,
-  // Premium (1.84x)
-  "Dhampir": 1.84, "Rocket": 1.84, "Mt Zuka": 1.84, "Angel": 1.84, "Valeria": 1.84, "Jadeite": 1.84,
-  // Premium (1.73x)
-  "Intro Forest": 1.73, "Dynacrypts": 1.73,
-  "Cradle": 1.73, "Bubble": 1.73, "Kippsun": 1.73, "Everglades": 1.73,
-  "Muxtai X1": 1.73, "pfpfpfpbbx80": 1.73, "Toad": 1.73,
-  // Uncommon (1.44x)
-  "[BOSS]": 1.44, "Pepo": 1.44, "Wastelands": 1.44, "[BLOOD]": 1.44,
-  "Blushing": 1.44, "Ender": 1.44, "Akileaf": 1.44,
-  // Uncommon (1.27x)
-  "[NEON]": 1.27, "Calyx": 1.27, "Zerinia": 1.27, "Palace": 1.27,
-  "[CUR2]": 1.27, "[DARK]": 1.27, "Warp": 1.27,
-  "Blossom": 1.27, "Linosim": 1.27,
-  // Uncommon (1.1x)
-  "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Alto": 1.1, "Kairo": 1.1,
+  "Shahra": 12.6, "Antenna": 9.45, "Aetherking": 7.88,
+  // Mythical (5.04x)
+  "Gemina": 6.83, "[SOON]": 5.04, "Dread": 5.04, "[SUN]": 5.04,
+  // Rare (2.66x)
+  "Royal": 2.66, "Killscreen": 2.66, "Mould": 2.66, "[NOV]": 2.66, "Avidana": 2.66, "First Earth": 2.66,
+  // Rare (2.52x)
+  "Tetsu": 2.52, "Aria": 2.52, "Uwo": 2.52,
+  "Mori": 2.52,
+  "Radiant": 2.52, "Venmon": 2.52, "Promiselands": 2.52, "Xleph": 2.52,
+  "Greysunn": 2.52, "Treasure": 2.52, "[HOME]": 2.52,
+  // Premium (1.93x)
+  "Dhampir": 1.93, "Rocket": 1.93, "Mt Zuka": 1.93, "Angel": 1.93, "Valeria": 1.93, "Jadeite": 1.93,
+  // Premium (1.82x)
+  "Intro Forest": 1.82, "Dynacrypts": 1.82,
+  "Cradle": 1.82, "Bubble": 1.82, "Kippsun": 1.82, "Everglades": 1.82,
+  "Muxtai X1": 1.82, "pfpfpfpbbx80": 1.82, "Toad": 1.82,
+  // Uncommon (1.51x)
+  "[BOSS]": 1.51, "Pepo": 1.51, "Wastelands": 1.51, "[BLOOD]": 1.51,
+  "Blushing": 1.51, "Ender": 1.51, "Akileaf": 1.51,
+  // Uncommon (1.33x)
+  "[NEON]": 1.33, "Calyx": 1.33, "Zerinia": 1.33, "Palace": 1.33,
+  "[CUR2]": 1.33, "[DARK]": 1.33, "Warp": 1.33,
+  "Blossom": 1.33, "Linosim": 1.33,
+  // Uncommon (1.16x)
+  "[HYCA]": 1.16, "[YUNA]": 1.16, "[MENU]": 1.16, "Alto": 1.16, "Kairo": 1.16,
   // Floor (1x)
   "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
