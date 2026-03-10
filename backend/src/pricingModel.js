@@ -32,14 +32,14 @@ const ZONE_MULTIPLES = {
   "Blushing": 1.44, "Ender": 1.44, "Akileaf": 1.44,
   // Uncommon (1.27x)
   "[NEON]": 1.27, "Calyx": 1.27, "Zerinia": 1.27, "Palace": 1.27,
-  "[CUR2]": 1.27, "[HYCA]": 1.27, "[YUNA]": 1.27, "[MENU]": 1.27,
-  "[DARK]": 1.27, "Alto": 1.27, "Warp": 1.27,
+  "[CUR2]": 1.27, "[DARK]": 1.27, "Warp": 1.27,
   "Blossom": 1.27, "Linosim": 1.27,
   // Uncommon (1.1x)
+  "[HYCA]": 1.1, "[YUNA]": 1.1, "[MENU]": 1.1, "Alto": 1.1, "Kairo": 1.1,
   // Floor (1x)
   "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
-  "Kairo": 1, "Nightrose": 1, "Hypermage": 1, "Holo": 1,
+  "Nightrose": 1, "Hypermage": 1, "Holo": 1,
   "Ouallada": 1,
 };
 
