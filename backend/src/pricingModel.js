@@ -35,6 +35,7 @@ const ZONE_MULTIPLES = {
   "[CUR2]": 1.27, "[HYCA]": 1.27, "[YUNA]": 1.27, "[MENU]": 1.27,
   "[DARK]": 1.27, "Alto": 1.27, "Warp": 1.27,
   "Blossom": 1.27, "Linosim": 1.27,
+  // Uncommon (1.1x)
   // Floor (1x)
   "[WEN]": 1, "[MOON]": 1, "[SEP]": 1, "Shiro": 1, "Mirage": 1, "Grove": 1,
   "Hyphae": 1, "Mecha": 1, "Riso": 1, "Exduo": 1, "Arc": 1,
@@ -62,6 +63,7 @@ const BIOME_MULTIPLES = {
   41: 1.27,
   58: 1.27, 65: 1.27, 66: 1.27, 67: 1.27, 69: 1.27,
   83: 1.27, 86: 1.27,
+  // Uncommon (1.1x)
   // Floor (1x)
   27: 1, 31: 1, 32: 1, 33: 1,
   43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
