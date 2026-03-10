@@ -124,6 +124,10 @@ export default function GlossaryPage() {
             description="Biome 39 parcels with an unusually low ??? value. The low ??? separates these from standard biome 39 parcels and produces a noticeably distinct visual."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Synchro" />}
+            description="[redacted]"
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="Penthouse" />}
             description="Parcels on level 20, the top of the Hypercastle."
           />
