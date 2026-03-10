@@ -290,7 +290,7 @@ function estimatePrice(traits, floorOverride) {
   const oneOf1Multiple = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']   : 1;
   const s0Multiple     = isS0                                           ? TRAIT_PREMIUMS['S0']     : 1;
   const matrixMultiple = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix'] : 1;
-  const butteMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']   : 1;
+  const butteMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Butte']  : 1;
 
   const totalMultiple = zonebiomeAvg * levelMultiple * chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * butteMultiple;
   const estimatedValue = floor * totalMultiple;
