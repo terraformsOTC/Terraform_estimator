@@ -24,6 +24,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Biome0':           { label: 'biome 0',           color: '#30e7ff' },
   'Matrix':           { label: 'matrix',             color: '#369e40' },
   'Mesa':             { label: 'mesa',               color: '#fc5602' },
+  'Synchro':          { label: 'synchro',            color: '#c4a675' },
   'BigGrass':         { label: 'big grass',         color: '#b0e111' },
   'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
   'Basement':         { label: 'basement',          color: '#bbbbbb' },
