@@ -171,14 +171,13 @@ const TRAIT_PREMIUMS = {
 };
 
 // ─── LITH0-LIKE PREMIUMS (per-token) ─────────────────────────────────────────
-// Tiered: tokens whose opening frame is a perfect single-colour block get 2x;
-// those with a near-perfect block get 1.5x.
+// All tokens: 1.5x
 const LITH0LIKE_PREMIUMS = {
   3124: 1.5,
   3218: 1.5,
   6005: 1.5,
-  6512: 2,
-  9427: 2,
+  6512: 1.5,
+  9427: 1.5,
 };
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
