@@ -404,9 +404,9 @@ const GODMODE_IDS = new Set([83, 124, 1955]);
 // ─── LITH0-LIKE SET ───────────────────────────────────────────────────────────
 // Biome 0 parcels whose zone/chroma combination produces an opening frame that is a
 // flat, single block of colour — visually indistinguishable from genuine Lith0 parcels.
-// Informational badge only; no pricing adjustment.
+// Tiered pricing premiums applied in pricingModel.js (1.5x or 2x per token).
 // Source: community-verified list provided Mar 2026.
-const LITH0LIKE_IDS = new Set([3214, 3218, 6005, 6512, 9427]);
+const LITH0LIKE_IDS = new Set([3124, 3218, 6005, 6512, 9427]);
 
 // Includes both pure 1of1s AND Spine/Lith0/X-Seed/Y-Seed tokens that are also 1of1.
 // To re-verify, run: node backend/verify_1of1.js (script in git history, commit 8848717).
