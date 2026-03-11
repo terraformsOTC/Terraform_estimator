@@ -79,11 +79,9 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           </div>
         </div>
 
-        <div
-          className="px-3 py-2 text-sm flex items-center gap-2 flex-wrap"
-          style={{ border: `1px solid ${CATEGORY_COLORS['Mythical']}`, color: CATEGORY_COLORS['Mythical'] }}
-        >
-          <span>special parcel: {specialType}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm opacity-65">special parcel:</span>
+          <SpecialBadge type={specialType} />
           {isGodmode && <SpecialBadge type="Godmode" />}
           {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
           {isS0       && <SpecialBadge type="S0" />}
