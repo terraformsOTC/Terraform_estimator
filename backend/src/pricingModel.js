@@ -2,11 +2,11 @@
 // Formula (standard parcels):
 //   Estimated Value = (Floor × ((zone_m + biome_m) / 2)
 //                   + (level_m × Floor) × chroma_m × mode_m × [premiums])
-//                   × [heartbeat_m if applicable]
+//                   × [matrix_m] × [mesa_m] × [heartbeat_m]
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
-//   heartbeat_m (1.25x) applies to the total — not level-dependent.
+//   Matrix (1.5x), Mesa (1.25x), Heartbeat (1.25x) apply to the total — not level-dependent.
 //
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
@@ -347,11 +347,11 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
+  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple;
   const baseValue       = floor * zonebiomeAvg;
   const levelValue      = levelMultiple * floor * premiumMultiple;
-  // Heartbeat applied to the total — not level-dependent
-  const estimatedValue  = (baseValue + levelValue) * heartbeatMultiple;
+  // Matrix, Mesa, Heartbeat applied to the total — not level-dependent
+  const estimatedValue  = (baseValue + levelValue) * matrixMultiple * mesaMultiple * heartbeatMultiple;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
@@ -360,9 +360,9 @@ function estimatePrice(traits, floorOverride) {
     if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
     if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
     if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
-    if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
-    if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
   }
+  if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
+  if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
   if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
 
   return {
