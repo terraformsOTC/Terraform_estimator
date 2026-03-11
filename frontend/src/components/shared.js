@@ -27,7 +27,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Synchro':          { label: 'synchro',            color: '#c4a675' },
   'BigGrass':         { label: 'big grass',         color: '#b0e111' },
   'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
-  'Heartbeat':        { label: 'heartbeat',          color: '#c0203e' },
+  'Heartbeat':        { label: 'heartbeat',          color: '#ee0000' },
   'Basement':         { label: 'basement',          color: '#bbbbbb' },
   'Penthouse':        { label: 'penthouse',         color: '#d77c11' },
   'S0':               { label: 's0',                color: '#9ebbc1' },
