@@ -109,7 +109,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Lith0like" />}
-            description="Biome 0 parcels with a zone colour palette and chroma combination very similar to special Lith0 types. A Lith0 look-alike, that starts its cycling animation with a flat single colour block."
+            description="Biome 0 parcels with a zone/chroma combination that creates an animation very similar to special Lith0 types. A Lith0 look-alike. In order to have this trait the opening frame of a parcel's cycle must be a flat, single block of colour."
           />
           <GlossaryRow
             badge={<CategoryBadge label="high ???" color="#ffd700" />}
