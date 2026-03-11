@@ -136,7 +136,7 @@ function ParcelCard({ parcel }) {
             {isGodmode         && <SpecialBadge type="Godmode" opacity={0.8} />}
             {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
             {isS0              && <SpecialBadge type="S0" opacity={0.8} />}
-            {biome === 0       && <SpecialBadge type="Biome0" opacity={0.8} />}
+            {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" opacity={0.8} />}
             {biome === 42      && <SpecialBadge type="BigGrass" opacity={0.8} />}
             {biome === 65      && <SpecialBadge type="LittleGrass" opacity={0.8} />}
             {showMatrix        && <SpecialBadge type="Matrix" opacity={0.8} />}

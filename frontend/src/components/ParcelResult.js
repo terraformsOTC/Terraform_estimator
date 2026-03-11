@@ -87,7 +87,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           {isGodmode && <SpecialBadge type="Godmode" />}
           {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
           {isS0       && <SpecialBadge type="S0" />}
-          {biome === 0  && <SpecialBadge type="Biome0" />}
+          {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" />}
           {biome === 42 && <SpecialBadge type="BigGrass" />}
           {biome === 65 && <SpecialBadge type="LittleGrass" />}
           {biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
@@ -159,7 +159,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
                    : specialType;
   const primaryConfig   = SPECIAL_TYPE_BADGES[primaryKey];
-  const showBiome0      = biome === 0;
+  const showBiome0      = biome === 0 && specialType !== 'Lith0';
   const showBigGrass    = biome === 42;
   const showLittleGrass = biome === 65;
   const showMatrix      = biome === 58 && zone === 'Intro Forest';
