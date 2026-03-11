@@ -1,12 +1,12 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
 //   Estimated Value = (Floor × ((zone_m + biome_m) / 2)
-//                   + (level_m × Floor) × chroma_m × mode_m × [premiums])
-//                   × [matrix_m] × [mesa_m] × [heartbeat_m]
+//                   + (level_m × Floor) × chroma_m × mode_m)
+//                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
-//   Matrix (1.5x), Mesa (1.25x), Heartbeat (1.25x) apply to the total — not level-dependent.
+//   All trait premiums apply to the total — none are level-dependent.
 //
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
@@ -162,7 +162,7 @@ const TRAIT_PREMIUMS = {
   "Spine":      1.20,  // +20%
   "Matrix":     1.5,   // +50% — B58 + Intro Forest
   "Mesa":       1.25,  // +25% — B39 + low ???
-  "Heartbeat":  1.25,  // +25% — [BLOOD] zone + Pulse chroma
+  "Heartbeat":  1.35,  // +35% — [BLOOD] zone + Pulse chroma
   "1of1":       1.05,  // +5%
   "S0":         1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
@@ -352,20 +352,20 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple;
+  // Only chroma and mode multiply into the level term — all trait premiums apply to the total
+  const premiumMultiple = chromaMultiple * modeMultiple;
   const baseValue       = floor * zonebiomeAvg;
   const levelValue      = levelMultiple * floor * premiumMultiple;
-  // Matrix, Mesa, Heartbeat applied to the total — not level-dependent
-  const estimatedValue  = (baseValue + levelValue) * matrixMultiple * mesaMultiple * heartbeatMultiple;
+  const estimatedValue  = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
     formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
-    if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
-    if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
-    if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
   }
+  if (spineMultiple     !== 1) formula += ` × ${spineMultiple}(spine)`;
+  if (oneOf1Multiple    !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
+  if (s0Multiple        !== 1) formula += ` × ${s0Multiple}(s0)`;
   if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
   if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
   if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
