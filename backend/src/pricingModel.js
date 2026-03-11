@@ -152,11 +152,12 @@ const SEED_ZONE_TIER_MULTIPLES = {
 // ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
 const TRAIT_PREMIUMS = {
-  "Spine":  1.20,  // +20%
-  "Matrix": 1.5,   // +50% — B58 + Intro Forest
-  "Mesa":    1.25,  // +25% — B39 + low ???
-  "1of1":   1.05,  // +5%
-  "S0":     1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
+  "Spine":      1.20,  // +20%
+  "Matrix":     1.5,   // +50% — B58 + Intro Forest
+  "Mesa":       1.25,  // +25% — B39 + low ???
+  "Heartbeat":  1.25,  // +25% — [BLOOD] zone + Pulse chroma
+  "1of1":       1.05,  // +5%
+  "S0":         1.05,  // +5% — Season 0 upgrade (V2 + antenna locked during S0)
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
 };
 
@@ -335,14 +336,15 @@ function estimatePrice(traits, floorOverride) {
   const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
 
   // Trait premiums — applied on top of the level term
-  const spineMultiple  = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']  : 1;
-  const oneOf1Multiple = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']   : 1;
-  const s0Multiple     = isS0                                           ? TRAIT_PREMIUMS['S0']     : 1;
-  const matrixMultiple = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix'] : 1;
-  const mesaMultiple   = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']   : 1;
+  const spineMultiple     = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']     : 1;
+  const oneOf1Multiple    = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']      : 1;
+  const s0Multiple        = isS0                                           ? TRAIT_PREMIUMS['S0']        : 1;
+  const matrixMultiple    = (parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix']    : 1;
+  const mesaMultiple      = (parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']      : 1;
+  const heartbeatMultiple = (zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
+  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple;
   const baseValue       = floor * zonebiomeAvg;
   const levelValue      = levelMultiple * floor * premiumMultiple;
   const estimatedValue  = baseValue + levelValue;
@@ -354,8 +356,9 @@ function estimatePrice(traits, floorOverride) {
     if (spineMultiple  !== 1) formula += ` × ${spineMultiple}(spine)`;
     if (oneOf1Multiple !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
     if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
-    if (matrixMultiple !== 1) formula += ` × ${matrixMultiple}(matrix)`;
-    if (mesaMultiple   !== 1) formula += ` × ${mesaMultiple}(mesa)`;
+    if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
+    if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
+    if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
   }
 
   return {
@@ -373,6 +376,7 @@ function estimatePrice(traits, floorOverride) {
     s0Multiple,
     matrixMultiple,
     mesaMultiple,
+    heartbeatMultiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
