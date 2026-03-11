@@ -117,23 +117,23 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
-            description="Parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
+            description="Terrain mode parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
           />
           <GlossaryRow
             badge={<SpecialBadge type="LittleGrass" />}
-            description="Parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
+            description="Terrain mode parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Heartbeat" />}
-            description="Parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle."
+            description="Terrain mode parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Matrix" />}
-            description="Biome 58 parcels with the Intro Forest zone colour palette. Digital rain in the Hypercastle."
+            description="Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Mesa" />}
-            description="Biome 39 parcels with a low ??? value. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
+            description="Terrain mode parcels with a low ??? value and Biome 39 character set. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}

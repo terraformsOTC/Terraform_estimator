@@ -86,9 +86,9 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
           {isS0       && <SpecialBadge type="S0" />}
           {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" />}
-          {biome === 42 && <SpecialBadge type="BigGrass" />}
-          {biome === 65 && <SpecialBadge type="LittleGrass" />}
-          {biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
+          {mode === 'Terrain' && biome === 42 && <SpecialBadge type="BigGrass" />}
+          {mode === 'Terrain' && biome === 65 && <SpecialBadge type="LittleGrass" />}
+          {mode === 'Terrain' && biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
           {level === 1  && <SpecialBadge type="Basement" />}
           {level === 20 && <SpecialBadge type="Penthouse" />}
         </div>
@@ -158,11 +158,12 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome,
                    : specialType;
   const primaryConfig   = SPECIAL_TYPE_BADGES[primaryKey];
   const showBiome0      = biome === 0 && specialType !== 'Lith0';
-  const showBigGrass    = biome === 42;
-  const showLittleGrass = biome === 65;
-  const showHeartbeat   = zone === '[BLOOD]' && chroma === 'Pulse';
-  const showMatrix      = biome === 58 && zone === 'Intro Forest';
-  const showMesa         = biome === 39 && mysteryOutlier === 'low';
+  const isTerrain       = mode === 'Terrain';
+  const showBigGrass    = isTerrain && biome === 42;
+  const showLittleGrass = isTerrain && biome === 65;
+  const showHeartbeat   = isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
+  const showMatrix      = isTerrain && biome === 58 && zone === 'Intro Forest';
+  const showMesa        = isTerrain && biome === 39 && mysteryOutlier === 'low';
   const showBasement    = level === 1;
   const showPenthouse   = level === 20;
   // Show extra 1of1 badge only when there is already a different primary badge
