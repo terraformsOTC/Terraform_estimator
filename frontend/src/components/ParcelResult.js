@@ -45,7 +45,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} zone={zone} mysteryOutlier={mysteryOutlier} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} />
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -151,7 +151,7 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome, level, zone, mysteryOutlier }) {
+function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, biome, level, zone, chroma, mysteryOutlier }) {
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
