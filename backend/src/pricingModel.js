@@ -6,8 +6,10 @@
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
 //
-// Special parcels (Godmode, Plague, X-Seed, Y-Seed, Lith0):
-//   Estimated Value = Floor × special_multiple  (all other traits ignored)
+// Special parcels:
+//   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
+//   X-Seed / Y-Seed:  Floor × special_multiple × seed_zone_tier_m  (zone tier only, biome ignored)
+//   Lith0:            Floor × 18x × [1.1x if 1of1]
 // Spine and 1of1 use the standard formula with a multiplier premium appended.
 
 const FLOOR_PRICE_ETH = 0.2; // Update as market moves
@@ -128,7 +130,7 @@ const MODE_MULTIPLES = {
 };
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
-// Bypass standard formula entirely — Floor × special_multiple
+// Bypass standard formula entirely.
 // Spine and 1of1 are NOT here — they use the standard zone/biome formula + a premium below.
 const SPECIAL_TYPES = {
   "Plague":  65,
@@ -137,6 +139,15 @@ const SPECIAL_TYPES = {
   "Lith0":   18,
 };
 const GODMODE_MULTIPLE = 45;
+
+// X-Seed / Y-Seed zone tier multipliers (zone only — biome ignored for seeds)
+const SEED_ZONE_TIER_MULTIPLES = {
+  "Mythical": 2,
+  "Rare":     1.5,
+  "Premium":  1.25,
+  "Uncommon": 1.1,
+  "Floor":    1,
+};
 
 // ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
 // Applied on top of the standard zone/biome formula (multiplied in at the end).
@@ -268,14 +279,47 @@ function estimatePrice(traits, floorOverride) {
   // Special parcel: bypass standard formula entirely
   // (Spine and 1of1 are NOT in SPECIAL_TYPES — they use the formula below)
   if (specialType && SPECIAL_TYPES[specialType] != null) {
-    const specialMultiple = SPECIAL_TYPES[specialType];
+    const baseMultiple = SPECIAL_TYPES[specialType];
+
+    // X-Seed / Y-Seed: apply zone tier multiplier on top of base multiple (biome ignored)
+    if (specialType === 'X-Seed' || specialType === 'Y-Seed') {
+      const zoneCategory = getCategoryFromMultiple(getZoneMultiple(zone));
+      const seedZoneTier = SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1;
+      const specialMultiple = Math.round(baseMultiple * seedZoneTier * 1000) / 1000;
+      return {
+        estimatedValue: Math.round(floor * specialMultiple * 1000) / 1000,
+        floor,
+        isSpecial: true,
+        specialType,
+        specialMultiple,
+        formula: `${floor} ETH × ${baseMultiple}x (${specialType}) × ${seedZoneTier}x (${zoneCategory} zone: ${zone})`,
+      };
+    }
+
+    // Lith0: +10% if also 1of1
+    if (specialType === 'Lith0') {
+      const oneOf1Bonus = isOneOfOne ? 1.1 : 1;
+      const specialMultiple = Math.round(baseMultiple * oneOf1Bonus * 1000) / 1000;
+      return {
+        estimatedValue: Math.round(floor * specialMultiple * 1000) / 1000,
+        floor,
+        isSpecial: true,
+        specialType,
+        specialMultiple,
+        formula: oneOf1Bonus > 1
+          ? `${floor} ETH × ${baseMultiple}x (Lith0) × ${oneOf1Bonus}x (1of1 bonus)`
+          : `${floor} ETH × ${baseMultiple}x (Lith0)`,
+      };
+    }
+
+    // Default: flat special multiple (Plague, etc.)
     return {
-      estimatedValue: Math.round(floor * specialMultiple * 1000) / 1000,
+      estimatedValue: Math.round(floor * baseMultiple * 1000) / 1000,
       floor,
       isSpecial: true,
       specialType,
-      specialMultiple,
-      formula: `${floor} ETH × ${specialMultiple}x (${specialType})`,
+      specialMultiple: baseMultiple,
+      formula: `${floor} ETH × ${baseMultiple}x (${specialType})`,
     };
   }
 
