@@ -26,7 +26,7 @@ export default function GlossaryPage() {
 
         {/* ── DESIRABILITY TIERS ───────────────────────────────────── */}
         <Section title="Desirability Tiers">
-          <p className="text-sm opacity-50 mb-4">
+          <p className="text-sm opacity-65 mb-4">
             Every zone and biome are assigned a desirability tier based on how numerous they are in the collection and how avidly they are sought after by collectors. Usually, the rarer a trait the more highly it is valued.
           </p>
           <GlossaryRow
@@ -53,7 +53,7 @@ export default function GlossaryPage() {
 
         {/* ── SPECIAL PARCEL TYPES ─────────────────────────────────── */}
         <Section title="Special Parcel Types">
-          <p className="text-sm opacity-50 mb-4">
+          <p className="text-sm opacity-65 mb-4">
             Special parcels have rare properties that override or supplement the standard zone/biome/level valuation formula. Most are priced as a multiple of the collection floor.
           </p>
           <GlossaryRow
@@ -96,7 +96,7 @@ export default function GlossaryPage() {
 
         {/* ── MISC TRAITS ──────────────────────────────────────────── */}
         <Section title="Other Notable Traits">
-          <p className="text-sm opacity-50 mb-4">
+          <p className="text-sm opacity-65 mb-4">
             Additional properties appearing on certain parcels valued by collectors.
           </p>
           <GlossaryRow
@@ -109,7 +109,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Lith0like" />}
-            description="A Lith0 look-alike. In order to have this trait the opening frame of a parcel's cycle must be a flat, single block of colour."
+            description="A Lith0 look-alike. In order to have this trait the opening frame of a parcel's animation cycle must be a flat, single block of colour."
           />
           <GlossaryRow
             badge={<CategoryBadge label="high ???" color="#ffd700" />}
@@ -186,7 +186,7 @@ function GlossaryRow({ badge, title, description }) {
         {badge}
         {title && <p className="text-sm font-medium">{title}</p>}
       </div>
-      <p className="text-sm opacity-50 leading-relaxed">{description}</p>
+      <p className="text-sm opacity-65 leading-relaxed">{description}</p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 // Formula (standard parcels):
 //   Estimated Value = (Floor × ((zone_m + biome_m) / 2)
 //                   + (level_m × Floor) × chroma_m × mode_m)
-//                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m
+//                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
@@ -170,6 +170,17 @@ const TRAIT_PREMIUMS = {
   // Biome 0 is already priced at 4x (Mythical) in BIOME_MULTIPLES — no extra premium needed.
 };
 
+// ─── LITH0-LIKE PREMIUMS (per-token) ─────────────────────────────────────────
+// Tiered: tokens whose opening frame is a perfect single-colour block get 2x;
+// those with a near-perfect block get 1.5x.
+const LITH0LIKE_PREMIUMS = {
+  3214: 1.5,
+  3218: 1.5,
+  6005: 1.5,
+  6512: 2,
+  9427: 2,
+};
+
 // ─── SETS ──────────────────────────────────────────────────────────────────────
 const SETS = {
   "Chess biome set": {
@@ -271,7 +282,7 @@ function getModeMultiple(mode) {
 
 // ─── MAIN ESTIMATE FUNCTION ────────────────────────────────────────────────────
 function estimatePrice(traits, floorOverride) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, mysteryOutlier } = traits;
+  const { tokenId, zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, mysteryOutlier } = traits;
   const floor = floorOverride ?? FLOOR_PRICE_ETH;
 
   // Godmode override: X-Seed + Origin Daydream (3 tokens) — priced above X-Seed
@@ -352,13 +363,14 @@ function estimatePrice(traits, floorOverride) {
   const matrixMultiple    = (isTerrain && parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix']    : 1;
   const mesaMultiple      = (isTerrain && parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']      : 1;
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
+  const lith0likeMultiple = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
   // Only chroma and mode multiply into the level term — all trait premiums apply to the total
   const premiumMultiple = chromaMultiple * modeMultiple;
   const baseValue       = floor * zonebiomeAvg;
   const levelValue      = levelMultiple * floor * premiumMultiple;
-  const estimatedValue  = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple;
+  const estimatedValue  = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
@@ -371,6 +383,7 @@ function estimatePrice(traits, floorOverride) {
   if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
   if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
   if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
+  if (lith0likeMultiple !== 1) formula += ` × ${lith0likeMultiple}(lith-0like)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
@@ -388,6 +401,7 @@ function estimatePrice(traits, floorOverride) {
     matrixMultiple,
     mesaMultiple,
     heartbeatMultiple,
+    lith0likeMultiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
     biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
