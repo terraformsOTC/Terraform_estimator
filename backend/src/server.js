@@ -575,7 +575,7 @@ async function getParcelTraits(tokenId) {
       if (biome === -1) console.warn(`[traits] Token ${tokenId}: missing Biome attribute`);
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
-      specialType = detectSpecialType(attrs) || SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || null;
+      specialType = SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || detectSpecialType(attrs) || null;
       isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
       isGodmode  = GODMODE_IDS.has(Number(tokenId));
       // S0 (Season 0) — V2 upgraded parcels with Antenna "On".
