@@ -108,6 +108,10 @@ export default function GlossaryPage() {
             description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Lith0like" />}
+            description="Biome 0 parcels with a zone colour palette and chroma combination that create an animation virtually indistinguishable from special Lith0 types. A Lith0 look-alike."
+          />
+          <GlossaryRow
             badge={<CategoryBadge label="high ???" color="#ffd700" />}
             description="Parcels with a ??? value above 50,000. We still do not fully understand what this trait does, but it appears visually on parcels as a &quot;water level&quot; for cycling characters in the animation. This may be a resource that could be &quot;tapped&quot; in the future."
           />
