@@ -174,7 +174,7 @@ const TRAIT_PREMIUMS = {
 // Tiered: tokens whose opening frame is a perfect single-colour block get 2x;
 // those with a near-perfect block get 1.5x.
 const LITH0LIKE_PREMIUMS = {
-  3214: 1.5,
+  3124: 1.5,
   3218: 1.5,
   6005: 1.5,
   6512: 2,
