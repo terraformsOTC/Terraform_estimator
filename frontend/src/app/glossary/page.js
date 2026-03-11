@@ -82,7 +82,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Lith0" />}
-            description="Parcels with an animation style evocative of lithograph printing. This is created by the intersection of biome 0 and certain duotone zone colour palettes in a parcel."
+            description="Parcels with an animation style evocative of lithography. This is created by the intersection of biome 0 and duotone, non-alternating, zone colour palettes."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Spine" />}
