@@ -401,6 +401,13 @@ const SPECIAL_TOKEN_LOOKUP = {
 // and show an additional Godmode badge alongside the X-Seed and Origin Daydream badges.
 const GODMODE_IDS = new Set([83, 124, 1955]);
 
+// ─── LITH0-LIKE SET ───────────────────────────────────────────────────────────
+// Biome 0 parcels whose zone/chroma combination produces an opening frame that is a
+// flat, single block of colour — visually indistinguishable from genuine Lith0 parcels.
+// Informational badge only; no pricing adjustment.
+// Source: community-verified list provided Mar 2026.
+const LITH0LIKE_IDS = new Set([3214, 3218, 6005, 6512, 9427]);
+
 // Includes both pure 1of1s AND Spine/Lith0/X-Seed/Y-Seed tokens that are also 1of1.
 // To re-verify, run: node backend/verify_1of1.js (script in git history, commit 8848717).
 // Used to set isOneOfOne on trait responses independently of specialType.
@@ -562,7 +569,8 @@ async function getParcelTraits(tokenId) {
     const uri = await getCachedTokenURI(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
-        specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false, mysteryValue = null;
+        specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false,
+        isLith0like = false, mysteryValue = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -576,8 +584,9 @@ async function getParcelTraits(tokenId) {
       chroma = attrs.find(a => a.trait_type === 'Chroma')?.value || 'Flow';
       mode = attrs.find(a => a.trait_type === 'Mode')?.value || 'Terrain';
       specialType = SPECIAL_TOKEN_LOOKUP[Number(tokenId)] || detectSpecialType(attrs) || null;
-      isOneOfOne = ONE_OF_ONE_IDS.has(Number(tokenId));
-      isGodmode  = GODMODE_IDS.has(Number(tokenId));
+      isOneOfOne  = ONE_OF_ONE_IDS.has(Number(tokenId));
+      isGodmode   = GODMODE_IDS.has(Number(tokenId));
+      isLith0like = LITH0LIKE_IDS.has(Number(tokenId));
       // S0 (Season 0) — V2 upgraded parcels with Antenna "On".
       // The Antenna trait is only present and set to "On" for parcels upgraded during Season 0.
       // (There is no on-chain Timestamp or S0 trait — the Explorer derives that display externally.)
@@ -601,6 +610,7 @@ async function getParcelTraits(tokenId) {
       isOneOfOne,
       isGodmode,
       isS0,
+      isLith0like,
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
     };
