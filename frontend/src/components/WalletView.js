@@ -29,6 +29,8 @@ export default function WalletView({ data, loading, address }) {
 
   const { sets, totalParcels, fetchedParcels } = data;
 
+  const cols = Math.min(6, Math.max(4, sortedParcels.length));
+
   return (
     <div>
       {sets?.length > 0 && (
@@ -62,7 +64,7 @@ export default function WalletView({ data, loading, address }) {
       ) : (
         <div
           className="grid w-full mt-4 gap-4"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 280px))' }}
+          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
         >
           {sortedParcels.map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
