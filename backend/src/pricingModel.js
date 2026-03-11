@@ -31,11 +31,11 @@ const ZONE_MULTIPLES = {
   "Radiant": 2.52, "Venmon": 2.52, "Promiselands": 2.52,
   "Greysunn": 2.52, "Treasure": 2.52, "[HOME]": 2.52,
   // Premium (1.99x)
-  "Dhampir": 1.99, "Rocket": 1.99, "Mt Zuka": 1.99, "Angel": 1.99, "Valeria": 1.99, "Jadeite": 1.99,
+  "Dhampir": 1.99, "Rocket": 1.99, "Mt Zuka": 1.99, "Valeria": 1.99, "Jadeite": 1.99,
   // Premium (1.82x)
   "Intro Forest": 1.82, "Dynacrypts": 1.82,
   "Cradle": 1.82, "Bubble": 1.82, "Kippsun": 1.82, "Everglades": 1.82,
-  "Muxtai X1": 1.82, "pfpfpfpbbx80": 1.82, "Toad": 1.82,
+  "Muxtai X1": 1.82, "pfpfpfpbbx80": 1.82, "Toad": 1.82, "Angel": 1.82,
   // Uncommon (1.51x)
   "[BOSS]": 1.51, "Pepo": 1.51, "Wastelands": 1.51, "[BLOOD]": 1.51,
   "Blushing": 1.51, "Ender": 1.51, "Akileaf": 1.51,
