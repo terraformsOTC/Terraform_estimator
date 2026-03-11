@@ -22,6 +22,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Spine':            { label: 'spine',             color: '#ff4538' },
   '1of1':             { label: '1 of 1',            color: '#cb8175' },
   'Biome0':           { label: 'biome 0',           color: '#30e7ff' },
+  'Lith0like':        { label: 'lith-0like',         color: '#005d1a' },
   'Matrix':           { label: 'matrix',             color: '#369e40' },
   'Mesa':             { label: 'mesa',               color: '#fc5602' },
   'Synchro':          { label: 'synchro',            color: '#c4a675' },
