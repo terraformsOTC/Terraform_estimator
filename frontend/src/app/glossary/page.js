@@ -124,6 +124,10 @@ export default function GlossaryPage() {
             description="Parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Heartbeat" />}
+            description="Parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="Matrix" />}
             description="Biome 58 parcels with the Intro Forest zone colour palette. Digital rain in the Hypercastle."
           />
