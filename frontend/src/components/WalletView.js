@@ -86,9 +86,10 @@ function ParcelCard({ parcel }) {
     return order[a] - order[b];
   })[0];
 
-  const showMatrix    = biome === 58 && zone === 'Intro Forest';
-  const showMesa      = biome === 39 && mysteryOutlier === 'low';
-  const showHeartbeat = zone === '[BLOOD]' && chroma === 'Pulse';
+  const isTerrain     = mode === 'Terrain';
+  const showMatrix    = isTerrain && biome === 58 && zone === 'Intro Forest';
+  const showMesa      = isTerrain && biome === 39 && mysteryOutlier === 'low';
+  const showHeartbeat = isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
 
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
   // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
@@ -138,8 +139,8 @@ function ParcelCard({ parcel }) {
             {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
             {isS0              && <SpecialBadge type="S0" opacity={0.8} />}
             {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" opacity={0.8} />}
-            {biome === 42      && <SpecialBadge type="BigGrass" opacity={0.8} />}
-            {biome === 65      && <SpecialBadge type="LittleGrass" opacity={0.8} />}
+            {isTerrain && biome === 42 && <SpecialBadge type="BigGrass" opacity={0.8} />}
+            {isTerrain && biome === 65 && <SpecialBadge type="LittleGrass" opacity={0.8} />}
             {showHeartbeat     && <SpecialBadge type="Heartbeat" opacity={0.8} />}
             {showMatrix        && <SpecialBadge type="Matrix" opacity={0.8} />}
             {showMesa          && <SpecialBadge type="Mesa" opacity={0.8} />}
