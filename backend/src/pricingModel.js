@@ -1,10 +1,12 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Estimated Value = Floor × ((zone_m + biome_m) / 2)
-//                   + (level_m × Floor) × chroma_m × mode_m × [premiums]
+//   Estimated Value = (Floor × ((zone_m + biome_m) / 2)
+//                   + (level_m × Floor) × chroma_m × mode_m × [premiums])
+//                   × [heartbeat_m if applicable]
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
+//   heartbeat_m (1.25x) applies to the total — not level-dependent.
 //
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
@@ -344,10 +346,11 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple;
+  const premiumMultiple = chromaMultiple * modeMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple;
   const baseValue       = floor * zonebiomeAvg;
   const levelValue      = levelMultiple * floor * premiumMultiple;
-  const estimatedValue  = baseValue + levelValue;
+  // Heartbeat applied to the total — not level-dependent
+  const estimatedValue  = (baseValue + levelValue) * heartbeatMultiple;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
@@ -358,8 +361,8 @@ function estimatePrice(traits, floorOverride) {
     if (s0Multiple     !== 1) formula += ` × ${s0Multiple}(s0)`;
     if (matrixMultiple    !== 1) formula += ` × ${matrixMultiple}(matrix)`;
     if (mesaMultiple      !== 1) formula += ` × ${mesaMultiple}(mesa)`;
-    if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
   }
+  if (heartbeatMultiple !== 1) formula += ` × ${heartbeatMultiple}(heartbeat)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
