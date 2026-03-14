@@ -140,6 +140,10 @@ export default function GlossaryPage() {
             description="Terrain mode parcels with a low ??? value and Biome 39 character set. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="gm" />}
+            description="Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean &quot;gm&quot; in the heightmap animation."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
             description="[redacted]"
           />
