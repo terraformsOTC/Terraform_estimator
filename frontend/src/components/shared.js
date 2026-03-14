@@ -25,6 +25,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Lith0like':        { label: 'lith-0like',         color: '#9ff240' },
   'Matrix':           { label: 'matrix',             color: '#369e40' },
   'Mesa':             { label: 'mesa',               color: '#fc5602' },
+  'gm':               { label: 'gm',                 color: '#f7c948' },
   'Synchro':          { label: 'synchro',            color: '#c4a675' },
   'BigGrass':         { label: 'big grass',         color: '#b0e111' },
   'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
