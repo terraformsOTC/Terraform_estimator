@@ -4,7 +4,7 @@ import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from './s
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, mysteryValue, mysteryOutlier } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier } = traits;
 
   if (pricing.isSpecial) {
     return <SpecialParcelResult tokenId={tokenId} traits={traits} pricing={pricing} />;
@@ -45,7 +45,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} />
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -55,7 +55,7 @@ export default function ParcelResult({ parcel }) {
 }
 
 function SpecialParcelResult({ tokenId, traits, pricing }) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm } = traits;
   const { estimatedValue, floor, specialMultiple, formula } = pricing;
 
   return (
@@ -87,6 +87,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
           {isS0       && <SpecialBadge type="S0" />}
           {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" />}
           {isLith0like && <SpecialBadge type="Lith0like" />}
+          {isGm        && <SpecialBadge type="gm" />}
           {mode === 'Terrain' && biome === 42 && <SpecialBadge type="BigGrass" />}
           {mode === 'Terrain' && biome === 65 && <SpecialBadge type="LittleGrass" />}
           {mode === 'Terrain' && biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
@@ -152,7 +153,7 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, biome, level, zone, chroma, mysteryOutlier }) {
+function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier }) {
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
@@ -166,11 +167,12 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith
   const showMatrix      = isTerrain && biome === 58 && zone === 'Intro Forest';
   const showMesa        = isTerrain && biome === 39 && mysteryOutlier === 'low';
   const showLith0like   = !!isLith0like;
+  const showGm          = !!isGm;
   const showBasement    = level === 1;
   const showPenthouse   = level === 20;
   // Show extra 1of1 badge only when there is already a different primary badge
   const showAlso1of1    = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showLith0like && !showBigGrass && !showLittleGrass && !showHeartbeat && !showMatrix && !showMesa && !showBasement && !showPenthouse;
+  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showLith0like && !showGm && !showBigGrass && !showLittleGrass && !showHeartbeat && !showMatrix && !showMesa && !showBasement && !showPenthouse;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -185,6 +187,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith
         {isS0           && <SpecialBadge type="S0" />}
         {showBiome0     && <SpecialBadge type="Biome0" />}
         {showLith0like  && <SpecialBadge type="Lith0like" />}
+        {showGm         && <SpecialBadge type="gm" />}
         {showBigGrass   && <SpecialBadge type="BigGrass" />}
         {showLittleGrass && <SpecialBadge type="LittleGrass" />}
         {showHeartbeat  && <SpecialBadge type="Heartbeat" />}

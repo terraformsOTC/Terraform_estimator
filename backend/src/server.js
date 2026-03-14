@@ -401,6 +401,11 @@ const SPECIAL_TOKEN_LOOKUP = {
 // and show an additional Godmode badge alongside the X-Seed and Origin Daydream badges.
 const GODMODE_IDS = new Set([83, 124, 1955]);
 
+// ─── GM SET ───────────────────────────────────────────────────────────────────
+// Terrain / Biome 71 parcels with a low ??? value that print a clean "gm" in the heightmap.
+// Source: community-verified list provided Mar 2026.
+const GM_IDS = new Set([1369, 1800, 4632, 6997, 7297]);
+
 // ─── LITH0-LIKE SET ───────────────────────────────────────────────────────────
 // Biome 0 parcels whose zone/chroma combination produces an opening frame that is a
 // flat, single block of colour — visually indistinguishable from genuine Lith0 parcels.
@@ -570,7 +575,7 @@ async function getParcelTraits(tokenId) {
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
         specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false,
-        isLith0like = false, mysteryValue = null;
+        isLith0like = false, isGm = false, mysteryValue = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -587,6 +592,7 @@ async function getParcelTraits(tokenId) {
       isOneOfOne  = ONE_OF_ONE_IDS.has(Number(tokenId));
       isGodmode   = GODMODE_IDS.has(Number(tokenId));
       isLith0like = LITH0LIKE_IDS.has(Number(tokenId));
+      isGm        = GM_IDS.has(Number(tokenId));
       // S0 (Season 0) — V2 upgraded parcels with Antenna "On".
       // The Antenna trait is only present and set to "On" for parcels upgraded during Season 0.
       // (There is no on-chain Timestamp or S0 trait — the Explorer derives that display externally.)
@@ -611,6 +617,7 @@ async function getParcelTraits(tokenId) {
       isGodmode,
       isS0,
       isLith0like,
+      isGm,
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
     };

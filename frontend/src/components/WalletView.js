@@ -78,7 +78,7 @@ export default function WalletView({ data, loading, address }) {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like } = traits;
+  const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -140,6 +140,7 @@ function ParcelCard({ parcel }) {
             {isS0              && <SpecialBadge type="S0" opacity={0.8} />}
             {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" opacity={0.8} />}
             {isLith0like && <SpecialBadge type="Lith0like" opacity={0.8} />}
+            {isGm        && <SpecialBadge type="gm" opacity={0.8} />}
             {isTerrain && biome === 42 && <SpecialBadge type="BigGrass" opacity={0.8} />}
             {isTerrain && biome === 65 && <SpecialBadge type="LittleGrass" opacity={0.8} />}
             {showHeartbeat     && <SpecialBadge type="Heartbeat" opacity={0.8} />}
