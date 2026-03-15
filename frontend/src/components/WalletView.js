@@ -113,7 +113,7 @@ function ParcelCard({ parcel }) {
           <a href={`/?token=${tokenId}`}>
             {tokenId}
           </a>
-          <p className="text-xs opacity-75">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
+          <p className="text-xs opacity-75">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
         </div>
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center gap-1 flex-wrap">
