@@ -92,7 +92,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         </div>
 
         <p className="text-xs opacity-45">
-          special parcels are priced independently of zone/biome/level/chroma/mode
+          special parcel types are priced independently
         </p>
 
         <ExternalLinks tokenId={tokenId} />
