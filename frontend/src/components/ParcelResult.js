@@ -92,7 +92,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         </div>
 
         <p className="text-xs opacity-45">
-          special parcel types are priced independently
+          special parcel types are priced independently.
         </p>
 
         <ExternalLinks tokenId={tokenId} />
