@@ -128,6 +128,10 @@ export default function GlossaryPage() {
             description="Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean &quot;gm&quot; in the heightmap animation."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Matrix" />}
+            description="Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
             description="Terrain mode parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
           />
@@ -138,10 +142,6 @@ export default function GlossaryPage() {
           <GlossaryRow
             badge={<SpecialBadge type="Heartbeat" />}
             description="Terrain mode parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Matrix" />}
-            description="Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
