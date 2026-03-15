@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, API_URL } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, BadgeStack, API_URL } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -78,7 +78,7 @@ export default function WalletView({ data, loading, address }) {
 
 function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm } = traits;
+  const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
@@ -86,19 +86,10 @@ function ParcelCard({ parcel }) {
     return order[a] - order[b];
   })[0];
 
-  const isTerrain     = mode === 'Terrain';
-  const showMatrix    = isTerrain && biome === 58 && zone === 'Intro Forest';
-  const showMesa      = isTerrain && biome === 39 && mysteryOutlier === 'low';
-  const showHeartbeat = isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
-
   // For high-value special types, hide the "Floor" zone/biome badge — it's redundant noise.
-  // If they happen to have a Rare/Premium zone too, that badge is still informative so keep it.
   const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || isS0 || biome === 0;
-  // Guard against undefined topCategory (special parcels don't have zoneCategory/biomeCategory)
   const showCategoryBadge = topCategory != null && !(topCategory === 'Floor' && isHighValueSpecial);
   const specialBadge = SPECIAL_TYPE_BADGES[specialType];
-  // Show the 1of1 badge alongside when the token is also 1of1 but its primary type is something else
-  const showAlso1of1Badge = isOneOfOne && specialType !== '1of1';
 
   return (
     <div className="relative">
@@ -110,7 +101,7 @@ function ParcelCard({ parcel }) {
           className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
           loading="lazy"
           style={{ transitionDuration: '300ms', objectFit: 'cover' }}
-          onError={e => { e.target.style.display = 'none'; }}
+          onError={e => { e.target.style.opacity = 0; e.target.parentNode.querySelector('span').classList.remove('animate-pulse'); }}
         />
       </div>
       <div className="flex flex-col">
@@ -135,19 +126,7 @@ function ParcelCard({ parcel }) {
               </span>
             )}
             {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
-            {isGodmode         && <SpecialBadge type="Godmode" opacity={0.8} />}
-            {showAlso1of1Badge && <SpecialBadge type="1of1" opacity={0.8} />}
-            {isS0              && <SpecialBadge type="S0" opacity={0.8} />}
-            {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" opacity={0.8} />}
-            {isLith0like && <SpecialBadge type="Lith0like" opacity={0.8} />}
-            {isGm        && <SpecialBadge type="gm" opacity={0.8} />}
-            {isTerrain && biome === 42 && <SpecialBadge type="BigGrass" opacity={0.8} />}
-            {isTerrain && biome === 65 && <SpecialBadge type="LittleGrass" opacity={0.8} />}
-            {showHeartbeat     && <SpecialBadge type="Heartbeat" opacity={0.8} />}
-            {showMatrix        && <SpecialBadge type="Matrix" opacity={0.8} />}
-            {showMesa          && <SpecialBadge type="Mesa" opacity={0.8} />}
-            {level === 1       && <SpecialBadge type="Basement" opacity={0.8} />}
-            {level === 20      && <SpecialBadge type="Penthouse" opacity={0.8} />}
+            <BadgeStack traits={traits} opacity={0.8} />
             {mysteryOutlier && (
               <span className="text-xs px-1" style={{
                 color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',
