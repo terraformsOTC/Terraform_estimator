@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, BadgeStack } from './shared';
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
@@ -82,17 +82,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm opacity-65">special parcel:</span>
           <SpecialBadge type={specialType} />
-          {isGodmode && <SpecialBadge type="Godmode" />}
-          {isOneOfOne && specialType !== '1of1' && <SpecialBadge type="1of1" />}
-          {isS0       && <SpecialBadge type="S0" />}
-          {biome === 0 && specialType !== 'Lith0' && <SpecialBadge type="Biome0" />}
-          {isLith0like && <SpecialBadge type="Lith0like" />}
-          {isGm        && <SpecialBadge type="gm" />}
-          {mode === 'Terrain' && biome === 42 && <SpecialBadge type="BigGrass" />}
-          {mode === 'Terrain' && biome === 65 && <SpecialBadge type="LittleGrass" />}
-          {mode === 'Terrain' && biome === 58 && zone === 'Intro Forest' && <SpecialBadge type="Matrix" />}
-          {level === 1  && <SpecialBadge type="Basement" />}
-          {level === 20 && <SpecialBadge type="Penthouse" />}
+          <BadgeStack traits={traits} />
         </div>
 
         <p className="text-xs opacity-45">
@@ -154,25 +144,20 @@ function MysteryRow({ value, outlier }) {
 }
 
 function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier }) {
+  const traits = { mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier };
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
                    : specialType;
   const primaryConfig   = SPECIAL_TYPE_BADGES[primaryKey];
-  const showBiome0      = biome === 0 && specialType !== 'Lith0';
   const isTerrain       = mode === 'Terrain';
-  const showBigGrass    = isTerrain && biome === 42;
-  const showLittleGrass = isTerrain && biome === 65;
-  const showHeartbeat   = isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
-  const showMatrix      = isTerrain && biome === 58 && zone === 'Intro Forest';
-  const showMesa        = isTerrain && biome === 39 && mysteryOutlier === 'low';
-  const showLith0like   = !!isLith0like;
-  const showGm          = !!isGm;
-  const showBasement    = level === 1;
-  const showPenthouse   = level === 20;
-  // Show extra 1of1 badge only when there is already a different primary badge
-  const showAlso1of1    = isOneOfOne && !!primaryConfig && primaryKey !== '1of1';
-  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0 && !showBiome0 && !showLith0like && !showGm && !showBigGrass && !showLittleGrass && !showHeartbeat && !showMatrix && !showMesa && !showBasement && !showPenthouse;
+  const hasNothing      = !primaryConfig && !isOneOfOne && !isGodmode && !isS0
+    && !(biome === 0 && specialType !== 'Lith0') && !isLith0like && !isGm
+    && !(isTerrain && biome === 42) && !(isTerrain && biome === 65)
+    && !(isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')
+    && !(isTerrain && biome === 58 && zone === 'Intro Forest')
+    && !(isTerrain && biome === 39 && mysteryOutlier === 'low')
+    && level !== 1 && level !== 20;
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -182,19 +167,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith
          : isOneOfOne   ? <SpecialBadge type="1of1" />
          : hasNothing   ? <span className="text-sm opacity-35">No</span>
          : null}
-        {isGodmode      && <SpecialBadge type="Godmode" />}
-        {showAlso1of1   && <SpecialBadge type="1of1" />}
-        {isS0           && <SpecialBadge type="S0" />}
-        {showBiome0     && <SpecialBadge type="Biome0" />}
-        {showLith0like  && <SpecialBadge type="Lith0like" />}
-        {showGm         && <SpecialBadge type="gm" />}
-        {showBigGrass   && <SpecialBadge type="BigGrass" />}
-        {showLittleGrass && <SpecialBadge type="LittleGrass" />}
-        {showHeartbeat  && <SpecialBadge type="Heartbeat" />}
-        {showMatrix     && <SpecialBadge type="Matrix" />}
-        {showMesa        && <SpecialBadge type="Mesa" />}
-        {showBasement   && <SpecialBadge type="Basement" />}
-        {showPenthouse  && <SpecialBadge type="Penthouse" />}
+        <BadgeStack traits={traits} />
       </div>
     </div>
   );

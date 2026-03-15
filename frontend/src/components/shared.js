@@ -46,6 +46,30 @@ export function SpecialBadge({ type, config: cfg, opacity = 0.85 }) {
   );
 }
 
+// Shared badge stack — renders all applicable special badges for a parcel.
+// Used in ParcelResult (special + standard views) and WalletView (card grid).
+export function BadgeStack({ traits, opacity = 0.85 }) {
+  const { mode, specialType, biome, level, zone, chroma, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier } = traits;
+  const isTerrain = mode === 'Terrain';
+  return (
+    <>
+      {isGodmode                                        && <SpecialBadge type="Godmode" opacity={opacity} />}
+      {isOneOfOne && specialType !== '1of1'             && <SpecialBadge type="1of1" opacity={opacity} />}
+      {isS0                                             && <SpecialBadge type="S0" opacity={opacity} />}
+      {biome === 0 && specialType !== 'Lith0'           && <SpecialBadge type="Biome0" opacity={opacity} />}
+      {isLith0like                                      && <SpecialBadge type="Lith0like" opacity={opacity} />}
+      {isGm                                             && <SpecialBadge type="gm" opacity={opacity} />}
+      {isTerrain && biome === 42                        && <SpecialBadge type="BigGrass" opacity={opacity} />}
+      {isTerrain && biome === 65                        && <SpecialBadge type="LittleGrass" opacity={opacity} />}
+      {isTerrain && zone === '[BLOOD]' && chroma === 'Pulse' && <SpecialBadge type="Heartbeat" opacity={opacity} />}
+      {isTerrain && biome === 58 && zone === 'Intro Forest'  && <SpecialBadge type="Matrix" opacity={opacity} />}
+      {isTerrain && biome === 39 && mysteryOutlier === 'low' && <SpecialBadge type="Mesa" opacity={opacity} />}
+      {level === 1                                      && <SpecialBadge type="Basement" opacity={opacity} />}
+      {level === 20                                     && <SpecialBadge type="Penthouse" opacity={opacity} />}
+    </>
+  );
+}
+
 export function EthIcon({ width = 10, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>

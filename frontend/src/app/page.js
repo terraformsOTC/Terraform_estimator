@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL } from '@/components/shared';
 
 const WHALE_WALLETS = [
@@ -257,6 +258,7 @@ export default function Home() {
             <div className="mb-6 text-sm opacity-70">[error: {error}]</div>
           )}
 
+          <ErrorBoundary>
           {view === 'search' && (
             <>
               <ParcelSearch onSearch={searchParcel} loading={loading} />
@@ -283,6 +285,7 @@ export default function Home() {
               address={whaleIdentifier}
             />
           )}
+          </ErrorBoundary>
         </div>
       </main>
       <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
