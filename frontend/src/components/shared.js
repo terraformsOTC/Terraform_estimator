@@ -49,7 +49,7 @@ export function SpecialBadge({ type, config: cfg, opacity = 0.85 }) {
 // Shared badge stack — renders all applicable special badges for a parcel.
 // Used in ParcelResult (special + standard views) and WalletView (card grid).
 export function BadgeStack({ traits, opacity = 0.85 }) {
-  const { mode, specialType, biome, level, zone, chroma, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier } = traits;
+  const { mode, specialType, biome, level, zone, chroma, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier, mysteryValue } = traits;
   const isTerrain = mode === 'Terrain';
   return (
     <>
@@ -63,7 +63,7 @@ export function BadgeStack({ traits, opacity = 0.85 }) {
       {isTerrain && biome === 65                        && <SpecialBadge type="LittleGrass" opacity={opacity} />}
       {isTerrain && zone === '[BLOOD]' && chroma === 'Pulse' && <SpecialBadge type="Heartbeat" opacity={opacity} />}
       {isTerrain && biome === 58 && zone === 'Intro Forest'  && <SpecialBadge type="Matrix" opacity={opacity} />}
-      {isTerrain && biome === 39 && mysteryOutlier === 'low' && <SpecialBadge type="Mesa" opacity={opacity} />}
+      {isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000 && <SpecialBadge type="Mesa" opacity={opacity} />}
       {level === 1                                      && <SpecialBadge type="Basement" opacity={opacity} />}
       {level === 20                                     && <SpecialBadge type="Penthouse" opacity={opacity} />}
     </>

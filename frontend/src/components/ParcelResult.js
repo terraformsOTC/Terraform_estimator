@@ -51,7 +51,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
-          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} />
+          <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} mysteryValue={mysteryValue} />
         </div>
 
         <ExternalLinks tokenId={tokenId} />
@@ -149,8 +149,8 @@ function MysteryRow({ value, outlier }) {
   );
 }
 
-function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier }) {
-  const traits = { mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier };
+function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier, mysteryValue }) {
+  const traits = { mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier, mysteryValue };
   // OD/OT mode takes precedence over specialType for primary display
   const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
                    : mode === 'Origin Terraform' ? 'Origin Terraform'
@@ -162,7 +162,7 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith
     && !(isTerrain && biome === 42) && !(isTerrain && biome === 65)
     && !(isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')
     && !(isTerrain && biome === 58 && zone === 'Intro Forest')
-    && !(isTerrain && biome === 39 && mysteryOutlier === 'low')
+    && !(isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000)
     && level !== 1 && level !== 20;
 
   return (

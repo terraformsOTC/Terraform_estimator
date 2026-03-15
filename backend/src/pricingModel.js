@@ -165,7 +165,7 @@ const SEED_ZONE_TIER_MULTIPLES = {
 const TRAIT_PREMIUMS = {
   "Spine":      1.20,  // +20%
   "Matrix":     1.5,   // +50% — B58 + Intro Forest
-  "Mesa":       1.25,  // +25% — B39 + low ???
+  "Mesa":       1.25,  // +25% — B39 + ??? < 30000
   "gm":         1.15,  // +15% — B71 + low ???
   "Heartbeat":  1.35,  // +35% — [BLOOD] zone + Pulse chroma
   "1of1":       1.05,  // +5%
@@ -284,7 +284,7 @@ function getModeMultiple(mode) {
 
 // ─── MAIN ESTIMATE FUNCTION ────────────────────────────────────────────────────
 function estimatePrice(traits, floorOverride) {
-  const { tokenId, zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier } = traits;
+  const { tokenId, zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier, mysteryValue } = traits;
   const floor = floorOverride ?? FLOOR_PRICE_ETH;
 
   // Godmode override: X-Seed + Origin Daydream (3 tokens) — priced above X-Seed
@@ -363,7 +363,7 @@ function estimatePrice(traits, floorOverride) {
   const s0Multiple        = isS0                                           ? TRAIT_PREMIUMS['S0']        : 1;
   const isTerrain         = mode === 'Terrain';
   const matrixMultiple    = (isTerrain && parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix']    : 1;
-  const mesaMultiple      = (isTerrain && parseInt(biome, 10) === 39 && mysteryOutlier === 'low') ? TRAIT_PREMIUMS['Mesa']      : 1;
+  const mesaMultiple      = (isTerrain && parseInt(biome, 10) === 39 && mysteryValue != null && mysteryValue < 30000) ? TRAIT_PREMIUMS['Mesa']      : 1;
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
