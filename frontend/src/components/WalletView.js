@@ -81,7 +81,11 @@ function ParcelCard({ parcel }) {
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
-  const topCategory = [zoneCategory, biomeCategory].sort((a, b) => {
+  const levelCategory = (level === 1 || level === 20) ? 'Mythical'
+                       : (level === 2 || level === 3 || level === 18 || level === 19) ? 'Rare'
+                       : null;
+
+  const topCategory = [zoneCategory, biomeCategory, levelCategory].filter(Boolean).sort((a, b) => {
     const order = { Mythical: 0, Rare: 1, Premium: 2, 'Uncommon': 3, Floor: 4 };
     return order[a] - order[b];
   })[0];
