@@ -120,6 +120,14 @@ export default function GlossaryPage() {
             description="Parcels with a ??? value below 20,000. These are recognisable for their low &quot;water level&quot; of animated cycling characters, and are rarer than their high ??? value counterparts."
           />
           <GlossaryRow
+            badge={<SpecialBadge type="Mesa" />}
+            description="Terrain mode parcels with a low ??? value and Biome 39 character set. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
+          />
+          <GlossaryRow
+            badge={<SpecialBadge type="gm" />}
+            description="Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean &quot;gm&quot; in the heightmap animation."
+          />
+          <GlossaryRow
             badge={<SpecialBadge type="BigGrass" />}
             description="Terrain mode parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
           />
@@ -134,14 +142,6 @@ export default function GlossaryPage() {
           <GlossaryRow
             badge={<SpecialBadge type="Matrix" />}
             description="Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Mesa" />}
-            description="Terrain mode parcels with a low ??? value and Biome 39 character set. This is the only biome in the collection that has gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="gm" />}
-            description="Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean &quot;gm&quot; in the heightmap animation."
           />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
