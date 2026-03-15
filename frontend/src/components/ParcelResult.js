@@ -16,6 +16,10 @@ export default function ParcelResult({ parcel }) {
     zoneCategory, biomeCategory,
   } = pricing;
 
+  const levelCategory = (level === 1 || level === 20) ? 'Mythical'
+                       : (level === 2 || level === 3 || level === 18 || level === 19) ? 'Rare'
+                       : null;
+
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
@@ -41,7 +45,9 @@ export default function ParcelResult({ parcel }) {
         <div className="flex flex-col gap-0">
           <TraitRow label="zone" value={zone || '—'} category={zoneCategory} />
           <TraitRow label="biome" value={`B${biome}`} category={biomeCategory} />
-          <SimpleRow label="level" value={`L${level}`} />
+          {levelCategory
+            ? <TraitRow label="level" value={`L${level}`} category={levelCategory} />
+            : <SimpleRow label="level" value={`L${level}`} />}
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
