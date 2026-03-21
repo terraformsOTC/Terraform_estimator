@@ -1,9 +1,10 @@
 'use client';
 
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from './shared';
+import TerraformAnimation from './TerraformAnimation';
 
 export default function UnmintedResult({ parcel }) {
-  const { traits, pricing } = parcel;
+  const { traits, pricing, animData } = parcel;
   const { level, x, y, biome, zone, chroma, seed, mysteryValue, mysteryOutlier, specialType, mode } = traits;
 
   const levelCategory = (level === 1 || level === 20) ? 'Mythical'
@@ -11,7 +12,7 @@ export default function UnmintedResult({ parcel }) {
                        : null;
 
   if (pricing.isSpecial) {
-    return <UnmintedSpecialResult traits={traits} pricing={pricing} />;
+    return <UnmintedSpecialResult traits={traits} pricing={pricing} animData={animData} />;
   }
 
   const { estimatedValue, floor, zoneCategory, biomeCategory } = pricing;
@@ -19,7 +20,7 @@ export default function UnmintedResult({ parcel }) {
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
-        <UnmintedAnimation level={level} x={x} y={y} seed={seed} mystery={mysteryValue} />
+        <UnmintedAnimation animData={animData} />
         <div className="mt-1">
           <p className="opacity-75 text-sm">L{level}/X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
@@ -59,14 +60,14 @@ export default function UnmintedResult({ parcel }) {
   );
 }
 
-function UnmintedSpecialResult({ traits, pricing }) {
+function UnmintedSpecialResult({ traits, pricing, animData }) {
   const { level, x, y, biome, zone, chroma, seed, specialType } = traits;
   const { estimatedValue, floor } = pricing;
 
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
-        <UnmintedAnimation level={level} x={x} y={y} seed={seed} />
+        <UnmintedAnimation animData={animData} />
         <div className="mt-1">
           <p className="opacity-75 text-sm">L{level}/X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
@@ -98,20 +99,8 @@ function UnmintedSpecialResult({ traits, pricing }) {
   );
 }
 
-function UnmintedAnimation({ level, x, y, seed }) {
-  // Phase 2: self-hosted animation renderer using seed/mode/resource/direction
-  // For now: placeholder with link to terrafans for visualisation
-  return (
-    <div
-      className="flex items-center justify-center"
-      style={{ width: 200, height: 288, background: '#0e0e0e', border: '1px solid rgba(255,255,255,0.06)' }}
-    >
-      <div className="text-center px-4">
-        <p className="text-xs opacity-30 mb-2">animation</p>
-        <p className="text-xs opacity-20">coming soon</p>
-      </div>
-    </div>
-  );
+function UnmintedAnimation({ animData }) {
+  return <TerraformAnimation animData={animData} width={200} height={288} />;
 }
 
 function UnmintedLinks({ level, x, y }) {
