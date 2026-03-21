@@ -526,6 +526,18 @@ const UNMINTED_PARCELS = require('./unminted-parcels.json');
 // Build a lookup map: "level/x/y" → parcel for O(1) coordinate lookup
 const UNMINTED_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [`${p.level}/${p.x}/${p.y}`, p]));
 
+// Animation data (grid + colors per parcel) — optional, loaded separately
+let UNMINTED_ANIM_LOOKUP = new Map();
+try {
+  const animData = require('./unminted-animation.json');
+  UNMINTED_ANIM_LOOKUP = new Map(animData.map(p => [`${p.level}/${p.x}/${p.y}`, {
+    grid: p.grid, colors: p.colors, seed: p.seed, resource: p.resource,
+  }]));
+  console.log(`[startup] Animation data loaded for ${UNMINTED_ANIM_LOOKUP.size} unminted parcels`);
+} catch(e) {
+  console.warn('[startup] unminted-animation.json not found — animations disabled');
+}
+
 app.use('/unminted', standardLimiter);
 
 // GET /unminted/search?level=L&x=X&y=Y
@@ -546,8 +558,9 @@ app.get('/unminted/search', async (req, res) => {
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
   const traits = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm: false };
   const pricing = estimatePrice(traits, floor);
+  const animData = UNMINTED_ANIM_LOOKUP.get(`${level}/${x}/${y}`) || null;
 
-  res.json({ traits, pricing, floorIsLive });
+  res.json({ traits, pricing, floorIsLive, animData });
 });
 
 // GET /health
