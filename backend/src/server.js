@@ -521,6 +521,35 @@ app.get('/wallet/:address', async (req, res) => {
   }
 });
 
+// ─── UNMINTED PARCELS ──────────────────────────────────────────────────────────
+const UNMINTED_PARCELS = require('./unminted-parcels.json');
+// Build a lookup map: "level/x/y" → parcel for O(1) coordinate lookup
+const UNMINTED_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [`${p.level}/${p.x}/${p.y}`, p]));
+
+app.use('/unminted', standardLimiter);
+
+// GET /unminted/search?level=L&x=X&y=Y
+app.get('/unminted/search', async (req, res) => {
+  const level = parseInt(req.query.level, 10);
+  const x     = parseInt(req.query.x, 10);
+  const y     = parseInt(req.query.y, 10);
+
+  if (isNaN(level) || isNaN(x) || isNaN(y)) {
+    return res.status(400).json({ error: 'level, x, and y are required numeric parameters.' });
+  }
+
+  const parcel = UNMINTED_LOOKUP.get(`${level}/${x}/${y}`);
+  if (!parcel) {
+    return res.status(404).json({ error: `No unminted parcel found at L${level}/X${x}/Y${y}.` });
+  }
+
+  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+  const traits = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm: false };
+  const pricing = estimatePrice(traits, floor);
+
+  res.json({ traits, pricing, floorIsLive });
+});
+
 // GET /health
 app.get('/health', (_req, res) => res.json({ ok: true }));
 

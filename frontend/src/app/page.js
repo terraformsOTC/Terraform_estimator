@@ -6,6 +6,8 @@ import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
+import UnmintedSearch from '@/components/UnmintedSearch';
+import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL } from '@/components/shared';
 
@@ -89,7 +91,7 @@ function PortfolioStats({ data }) {
   );
 }
 
-function TokenParamHandler({ onToken, onAddress }) {
+function TokenParamHandler({ onToken, onAddress, onUnminted }) {
   const searchParams = useSearchParams();
   useEffect(() => {
     const token = searchParams.get('token');
@@ -99,14 +101,20 @@ function TokenParamHandler({ onToken, onAddress }) {
     }
     const address = searchParams.get('address');
     if (address) onAddress(address);
+    const unminted = searchParams.get('unminted');
+    if (unminted) {
+      const [l, x, y] = unminted.split('/').map(Number);
+      if (!isNaN(l) && !isNaN(x) && !isNaN(y)) onUnminted(l, x, y);
+    }
   }, []);
   return null;
 }
 
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale'
+  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale' | 'unminted'
   const [searchResult, setSearchResult] = useState(null);
+  const [unmintedResult, setUnmintedResult] = useState(null);
   const [walletData, setWalletData] = useState(null);
   const [whaleIdentifier, setWhaleIdentifier] = useState(null);
   const [whaleData, setWhaleData] = useState(null);
@@ -166,6 +174,22 @@ export default function Home() {
     }
   }
 
+  async function searchUnminted(level, x, y) {
+    setLoading(true);
+    setError(null);
+    setUnmintedResult(null);
+    try {
+      const res = await fetch(`${API_URL}/unminted/search?level=${level}&x=${x}&y=${y}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUnmintedResult(data);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch unminted parcel data.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function loadAddressWallet(addr) {
     if (!addr) return;
     setWhaleIdentifier(addr);
@@ -209,7 +233,7 @@ export default function Home() {
   return (
     <div className="content-wrapper">
       <Suspense fallback={null}>
-        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} />
+        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} onUnminted={(l,x,y) => { setView('unminted'); searchUnminted(l,x,y); }} />
       </Suspense>
       <Header
         walletAddress={walletAddress}
@@ -237,6 +261,15 @@ export default function Home() {
                 </a>
               </>
             )}
+            <>
+              <span className="text-2xl md:text-3xl"> / </span>
+              <a
+                className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'unminted' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
+                onClick={() => setView('unminted')}
+              >
+                Unminted
+              </a>
+            </>
             {whaleData && (
               <>
                 <span className="text-2xl md:text-3xl"> / </span>
@@ -265,6 +298,17 @@ export default function Home() {
               {searchResult && !loading && (
                 <div className="mt-8">
                   <ParcelResult parcel={searchResult} />
+                </div>
+              )}
+            </>
+          )}
+
+          {view === 'unminted' && (
+            <>
+              <UnmintedSearch onSearch={searchUnminted} loading={loading} />
+              {unmintedResult && !loading && (
+                <div className="mt-8">
+                  <UnmintedResult parcel={unmintedResult} />
                 </div>
               )}
             </>
