@@ -103,8 +103,8 @@ function TokenParamHandler({ onToken, onAddress, onUnminted }) {
     if (address) onAddress(address);
     const unminted = searchParams.get('unminted');
     if (unminted) {
-      const [l, x, y] = unminted.split('/').map(Number);
-      if (!isNaN(l) && !isNaN(x) && !isNaN(y)) onUnminted(l, x, y);
+      const id = parseInt(unminted);
+      if (!isNaN(id) && id >= 1 && id <= 1193) onUnminted(id);
     }
   }, []);
   return null;
@@ -174,12 +174,12 @@ export default function Home() {
     }
   }
 
-  async function searchUnminted(level, x, y) {
+  async function searchUnminted(id) {
     setLoading(true);
     setError(null);
     setUnmintedResult(null);
     try {
-      const res = await fetch(`${API_URL}/unminted/search?level=${level}&x=${x}&y=${y}`);
+      const res = await fetch(`${API_URL}/unminted/search?id=${id}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUnmintedResult(data);
@@ -233,7 +233,7 @@ export default function Home() {
   return (
     <div className="content-wrapper">
       <Suspense fallback={null}>
-        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} onUnminted={(l,x,y) => { setView('unminted'); searchUnminted(l,x,y); }} />
+        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} onUnminted={(id) => { setView('unminted'); searchUnminted(id); }} />
       </Suspense>
       <Header
         walletAddress={walletAddress}
@@ -305,7 +305,7 @@ export default function Home() {
 
           {view === 'unminted' && (
             <>
-              <UnmintedSearch onSearch={searchUnminted} loading={loading} />
+              <UnmintedSearch onSearch={(id) => searchUnminted(id)} loading={loading} />
               {unmintedResult && !loading && (
                 <div className="mt-8">
                   <UnmintedResult parcel={unmintedResult} />

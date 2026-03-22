@@ -1,59 +1,40 @@
 'use client';
 import { useState } from 'react';
 
-const LEVELS = Array.from({ length: 20 }, (_, i) => i + 1);
-const COORDS = Array.from({ length: 48 }, (_, i) => i);
+const TOTAL = 1193;
 
 export default function UnmintedSearch({ onSearch, loading }) {
-  const [level, setLevel] = useState('');
-  const [x, setX] = useState('');
-  const [y, setY] = useState('');
+  const [value, setValue] = useState('');
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!level || x === '' || y === '') return;
-    onSearch(parseInt(level), parseInt(x), parseInt(y));
+    const id = parseInt(value.trim());
+    if (isNaN(id) || id < 1 || id > TOTAL) return;
+    onSearch(id);
   }
-
-  const valid = level !== '' && x !== '' && y !== '';
 
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        enter hypercastle coordinates to estimate an unminted parcel. coordinates are available in the{' '}
+        enter an unminted parcel ID (1–{TOTAL}) to get a valuation estimate. the full list of unminted parcels with their IDs is available in the{' '}
         <a href="https://docs.google.com/spreadsheets/d/1itQILMgviVWo19djdI569vGXrP8H6a1E3ExAwgLZgYc" target="_blank" rel="noopener noreferrer">
           unminted parcels sheet
         </a>.
       </p>
-      <form onSubmit={handleSubmit} className="flex gap-2 items-center flex-wrap">
-        <select
-          className="text-sm transition-all w-24"
-          value={level}
-          onChange={e => setLevel(e.target.value)}
-        >
-          <option value="">level</option>
-          {LEVELS.map(l => <option key={l} value={l}>L{l}</option>)}
-        </select>
-        <select
-          className="text-sm transition-all w-20"
-          value={x}
-          onChange={e => setX(e.target.value)}
-        >
-          <option value="">x</option>
-          {COORDS.map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
-        <select
-          className="text-sm transition-all w-20"
-          value={y}
-          onChange={e => setY(e.target.value)}
-        >
-          <option value="">y</option>
-          {COORDS.map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
+      <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+        <input
+          className="text-sm transition-all w-40"
+          placeholder="unminted id"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          type="number"
+          min="1"
+          max={TOTAL}
+        />
         <button
           type="submit"
           className="btn-primary btn-sm"
-          disabled={loading || !valid}
+          disabled={loading || !value}
         >
           {loading ? '[loading...]' : '[estimate]'}
         </button>
