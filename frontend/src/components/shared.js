@@ -33,7 +33,7 @@ export const SPECIAL_TYPE_BADGES = {
   'Basement':         { label: 'basement',          color: '#bbbbbb' },
   'Penthouse':        { label: 'penthouse',         color: '#d77c11' },
   'S0':               { label: 's0',                color: '#9ebbc1' },
-  'Unminted':         { label: 'unminted',          color: '#a78bfa' },
+  'Unminted':         { label: 'unminted',          color: '#eee8de' },
 };
 
 // Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
