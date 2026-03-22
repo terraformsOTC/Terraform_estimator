@@ -157,7 +157,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Unminted" />}
-            description="One of 1,193 parcels that occupy coordinates within the Hypercastle's grid but have not yet been claimed on-chain. Their traits — zone, biome, level, chroma, and seed — are fully deterministic from the contract, meaning their animations and rarity characteristics are already known. Once minted, an unminted parcel enters the collection as a standard Terraform. Unminted parcels can carry the same special types as minted ones, including Plague, X-Seed, and Y-Seed."
+            description="1,193 parcels are yet to be minted. Thanks to the deterministic nature of the Terraforms contracts, we can however infer their traits: zone, biome, level, chroma etc. This means we can estimate their value like the minted parcels, and even render their animations. We do not know when these remaining parcels will be minted."
           />
         </Section>
 
