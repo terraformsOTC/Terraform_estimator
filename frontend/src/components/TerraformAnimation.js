@@ -41,12 +41,41 @@ function buildCharSets(seed) {
 
 export default function TerraformAnimation({ animData, width = 200, height = 288 }) {
   const containerRef = useRef(null);
-  const timerRef = useRef(null);
 
-  const { mainSet, charSet } = useMemo(
-    () => animData ? buildCharSets(animData.seed) : { mainSet: [], charSet: [] },
+  // All hooks must run unconditionally — guard is below
+  const { mainSet } = useMemo(
+    () => animData ? buildCharSets(animData.seed) : { mainSet: [] },
     [animData?.seed]
   );
+
+  // Stable per-instance id for scoped CSS keyframes
+  const instanceId = useMemo(() => `tf-${Math.random().toString(36).slice(2, 7)}`, []);
+
+  // Memoize the 1024-cell grid elements to avoid recreating style objects on every render
+  const cells = useMemo(() => {
+    if (!animData) return [];
+    const { grid, colors } = animData;
+    const bgColor = colors?.bg || '#111';
+    return Array.from(grid).map((cls, i) => {
+      const color = colors?.[cls] || bgColor;
+      const isAnimated = ANIMATED_CLASSES.has(cls);
+      return (
+        <span
+          key={i}
+          data-cell=""
+          className={isAnimated ? `${instanceId}-${cls}` : undefined}
+          style={{
+            color: isAnimated ? undefined : color,
+            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            margin: 0,
+          }}
+        />
+      );
+    });
+  }, [animData?.grid, animData?.colors, instanceId]);
 
   useEffect(() => {
     if (!animData || !containerRef.current) return;
@@ -55,14 +84,16 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     const DIRECTION = 2;
     const waterline = 6 - RESOURCE;
     const heights = Array.from(grid).map(classToHeight);
-    const cells = containerRef.current.querySelectorAll('[data-cell]');
-    if (cells.length !== 1024) return;
+    const domCells = containerRef.current.querySelectorAll('[data-cell]');
+    if (domCells.length !== 1024) return;
 
+    // Wrap airship to avoid floating-point drift and integer overflow
+    const wrapAt = mainSet.length * 4096;
     let airship = 0;
-    timerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       for (let row = 0; row < 32; row++) {
         for (let col = 0; col < 32; col++) {
-          const cell = cells[row * 32 + col];
+          const cell = domCells[row * 32 + col];
           const h = heights[row * 32 + col];
           if (h === 9) { cell.textContent = ' '; continue; }
           if (h > waterline) {
@@ -73,12 +104,13 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
           }
         }
       }
-      airship++;
+      airship = (airship + 1) % wrapAt;
     }, 10);
 
-    return () => { clearInterval(timerRef.current); };
+    return () => clearInterval(timer);
   }, [animData, mainSet]);
 
+  // Guard after all hooks
   if (!animData) {
     return (
       <div style={{ width, height, background: '#0e0e0e', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -87,22 +119,12 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     );
   }
 
-  const { grid, colors, seed } = animData;
+  const { colors } = animData;
   const bgColor = colors?.bg || '#111';
-
-  // Scale the 388×560 original to our display size
-  const scaleX = width / 388;
-  const scaleY = height / 560;
-  const scale = Math.min(scaleX, scaleY);
-
-  // Build per-instance CSS: @keyframes + animated class rules
-  // Use a unique id so multiple instances on page don't clash
-  const instanceId = useMemo(() => `tf-${Math.random().toString(36).slice(2,7)}`, []);
+  const scale = Math.min(width / 388, height / 560);
 
   const colorList = ['a','b','c','d','e','f','g','h','i'].map(c => colors?.[c] || bgColor);
   const keyframeStops = colorList.map((c, i) => `${i * 10}% { color: ${c}; }`).join('\n');
-
-  // Animated class delays (c=0ms, d=160ms, e=320ms, f=480ms, g=640ms)
   const animDelays = { b: '0ms', c: '160ms', d: '320ms', e: '480ms', f: '640ms', g: '800ms', h: '960ms' };
   const animatedRules = Object.entries(animDelays)
     .map(([cls, delay]) => `.${instanceId}-${cls} { animation: 800ms linear ${delay} infinite alternate both running ${instanceId}-x; }`)
@@ -142,25 +164,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
             justifyContent: 'space-between',
           }}
         >
-          {Array.from(grid).map((cls, i) => {
-            const color = colors?.[cls] || bgColor;
-            const isAnimated = ANIMATED_CLASSES.has(cls);
-            return (
-              <span
-                key={i}
-                data-cell=""
-                className={isAnimated ? `${instanceId}-${cls}` : undefined}
-                style={{
-                  color: isAnimated ? undefined : color,
-                  textAlign: 'center',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  margin: 0,
-                }}
-              />
-            );
-          })}
+          {cells}
         </div>
       </div>
     </div>

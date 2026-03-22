@@ -71,6 +71,52 @@ export function BadgeStack({ traits, opacity = 0.85 }) {
   );
 }
 
+// ─── Shared trait row components ─────────────────────────────────────────────
+// Used in both ParcelResult and UnmintedResult
+
+export function TraitRow({ label, value, category }) {
+  const color = CATEGORY_COLORS[category] || 'inherit';
+  return (
+    <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+      <span className="text-sm opacity-65">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm">{value}</span>
+        <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
+          {category}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function SimpleRow({ label, value }) {
+  return (
+    <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+      <span className="text-sm opacity-65">{label}</span>
+      <span className="text-sm">{value}</span>
+    </div>
+  );
+}
+
+export function MysteryRow({ value, outlier }) {
+  const isHigh = outlier === 'high';
+  const isLow  = outlier === 'low';
+  const accent = isHigh ? '#ffd700' : isLow ? '#f87171' : null;
+  return (
+    <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+      <span className="text-sm" style={{ opacity: accent ? 0.8 : 0.5 }}>???</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm" style={{ opacity: accent ? 1 : 0.5 }}>{value.toLocaleString()}</span>
+        {accent && (
+          <span className="text-xs px-1" style={{ color: accent, border: `1px solid ${accent}`, opacity: 0.85 }}>
+            {isHigh ? 'high ???' : 'low ???'}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function EthIcon({ width = 10, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 10 16" fill="currentColor" style={{ opacity: 0.8 }}>
