@@ -14,7 +14,7 @@ export default function ParcelSearch({ onSearch, loading }) {
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        Enter a terraforms token ID (1–11104) to get a valuation estimate based on zone, biome, and other variables. Token ID values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted. Please note unminted parcel ids are based on level and will not correspond to their true id value once minted.
+        Enter a terraforms token ID (1–11104) to get a valuation estimate based on zone, biome, and other variables. Values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted. Unminted IDs are based on level and will not correspond to the true values when minted.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
