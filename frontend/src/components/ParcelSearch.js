@@ -14,7 +14,7 @@ export default function ParcelSearch({ onSearch, loading }) {
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        Enter a terraforms token ID (1–11104) to get a valuation estimate based on zone, biome, and other variables. Values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted. Unminted IDs are based on level and will not correspond to the true values when minted.
+        Enter a terraforms token ID (1–11104) to get a valuation estimate based on zone, biome, and other variables. Values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
@@ -37,7 +37,7 @@ export default function ParcelSearch({ onSearch, loading }) {
         </button>
       </form>
       <p className="mt-6 opacity-55 text-xs">
-        Estimates are subjective and can change. This is not financial advice.
+        Estimates are subjective and can change. This is not financial advice. Unminted IDs are based on level and will not correspond to the true values when minted.
       </p>
     </div>
   );
