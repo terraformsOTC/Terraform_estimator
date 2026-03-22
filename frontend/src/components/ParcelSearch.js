@@ -7,14 +7,14 @@ export default function ParcelSearch({ onSearch, loading }) {
   function handleSubmit(e) {
     e.preventDefault();
     const id = parseInt(value.trim());
-    if (isNaN(id) || id < 1 || id > 9911) return;
+    if (isNaN(id) || id < 1 || id > 11104) return;
     onSearch(id);
   }
 
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        enter a terraforms token ID (1–9911) to get a valuation estimate based on zone, biome, and other variables.
+        Enter a terraforms token ID (1–11104) to get a valuation estimate based on zone, biome, and other variables. Token ID values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted. Please note unminted parcel ids are based on level and will not correspond to their true id value once minted.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
@@ -26,7 +26,7 @@ export default function ParcelSearch({ onSearch, loading }) {
           onChange={e => setValue(e.target.value)}
           type="number"
           min="1"
-          max="9911"
+          max="11104"
         />
         <button
           type="submit"

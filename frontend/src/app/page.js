@@ -6,7 +6,6 @@ import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
-import UnmintedSearch from '@/components/UnmintedSearch';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL } from '@/components/shared';
@@ -91,28 +90,23 @@ function PortfolioStats({ data }) {
   );
 }
 
-function TokenParamHandler({ onToken, onAddress, onUnminted }) {
+function TokenParamHandler({ onToken, onAddress }) {
   const searchParams = useSearchParams();
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
       const id = parseInt(token);
-      if (!isNaN(id) && id >= 1 && id <= 9911) onToken(id);
+      if (!isNaN(id) && id >= 1 && id <= 11104) onToken(id);
     }
     const address = searchParams.get('address');
     if (address) onAddress(address);
-    const unminted = searchParams.get('unminted');
-    if (unminted) {
-      const id = parseInt(unminted);
-      if (!isNaN(id) && id >= 1 && id <= 1193) onUnminted(id);
-    }
   }, []);
   return null;
 }
 
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale' | 'unminted'
+  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale'
   const [searchResult, setSearchResult] = useState(null);
   const [unmintedResult, setUnmintedResult] = useState(null);
   const [walletData, setWalletData] = useState(null);
@@ -162,29 +156,22 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setSearchResult(null);
-    try {
-      const res = await fetch(`${API_URL}/estimate/${tokenId}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSearchResult(data);
-    } catch (err) {
-      setError(err.message || 'Failed to fetch parcel data.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function searchUnminted(id) {
-    setLoading(true);
-    setError(null);
     setUnmintedResult(null);
     try {
-      const res = await fetch(`${API_URL}/unminted/search?id=${id}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setUnmintedResult(data);
+      if (tokenId >= 1 && tokenId <= 9911) {
+        const res = await fetch(`${API_URL}/estimate/${tokenId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setSearchResult(data);
+      } else {
+        const unmintedId = tokenId - 9911;
+        const res = await fetch(`${API_URL}/unminted/search?id=${unmintedId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setUnmintedResult(data);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch unminted parcel data.');
+      setError(err.message || 'Failed to fetch parcel data.');
     } finally {
       setLoading(false);
     }
@@ -233,7 +220,7 @@ export default function Home() {
   return (
     <div className="content-wrapper">
       <Suspense fallback={null}>
-        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} onUnminted={(id) => { setView('unminted'); searchUnminted(id); }} />
+        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} />
       </Suspense>
       <Header
         walletAddress={walletAddress}
@@ -261,15 +248,6 @@ export default function Home() {
                 </a>
               </>
             )}
-            <>
-              <span className="text-2xl md:text-3xl"> / </span>
-              <a
-                className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'unminted' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
-                onClick={() => setView('unminted')}
-              >
-                Unminted
-              </a>
-            </>
             {whaleData && (
               <>
                 <span className="text-2xl md:text-3xl"> / </span>
@@ -300,12 +278,6 @@ export default function Home() {
                   <ParcelResult parcel={searchResult} />
                 </div>
               )}
-            </>
-          )}
-
-          {view === 'unminted' && (
-            <>
-              <UnmintedSearch onSearch={(id) => searchUnminted(id)} loading={loading} />
               {unmintedResult && !loading && (
                 <div className="mt-8">
                   <UnmintedResult parcel={unmintedResult} />
