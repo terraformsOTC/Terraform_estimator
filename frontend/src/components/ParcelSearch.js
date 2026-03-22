@@ -37,7 +37,7 @@ export default function ParcelSearch({ onSearch, loading }) {
         </button>
       </form>
       <p className="mt-6 opacity-55 text-xs">
-        estimates are subjective and can change. this is not financial advice.
+        Estimates are subjective and can change. This is not financial advice.
       </p>
     </div>
   );
