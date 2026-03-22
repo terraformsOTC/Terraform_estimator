@@ -155,6 +155,10 @@ export default function GlossaryPage() {
             badge={<SpecialBadge type="Basement" />}
             description="Parcels on level 1, the bottom of the Hypercastle."
           />
+          <GlossaryRow
+            badge={<SpecialBadge type="Unminted" />}
+            description="One of 1,193 parcels that occupy coordinates within the Hypercastle's grid but have not yet been claimed on-chain. Their traits — zone, biome, level, chroma, and seed — are fully deterministic from the contract, meaning their animations and rarity characteristics are already known. Once minted, an unminted parcel enters the collection as a standard Terraform. Unminted parcels can carry the same special types as minted ones, including Plague, X-Seed, and Y-Seed."
+          />
         </Section>
 
       </main>
