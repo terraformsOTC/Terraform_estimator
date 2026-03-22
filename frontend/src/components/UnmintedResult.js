@@ -5,7 +5,7 @@ import TerraformAnimation from './TerraformAnimation';
 
 export default function UnmintedResult({ parcel }) {
   const { traits, pricing, animData } = parcel;
-  const { level, x, y, biome, zone, chroma, seed, mysteryValue, mysteryOutlier, specialType } = traits;
+  const { id, level, x, y, biome, zone, chroma, seed, mysteryValue, mysteryOutlier, specialType } = traits;
 
   const levelCategory = (level === 1 || level === 20) ? 'Mythical'
                        : (level === 2 || level === 3 || level === 18 || level === 19) ? 'Rare'
@@ -22,7 +22,7 @@ export default function UnmintedResult({ parcel }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">L{level}/X{x}/Y{y}</p>
+          <p className="opacity-75 text-sm">#{id} · L{level}/X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function UnmintedResult({ parcel }) {
 }
 
 function UnmintedSpecialResult({ traits, pricing, animData }) {
-  const { level, x, y, biome, zone, chroma, seed, specialType } = traits;
+  const { id, level, x, y, biome, zone, chroma, seed, specialType } = traits;
   const { estimatedValue, floor } = pricing;
 
   return (
@@ -69,7 +69,7 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">L{level}/X{x}/Y{y}</p>
+          <p className="opacity-75 text-sm">#{id} · L{level}/X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
         </div>
       </div>

@@ -523,8 +523,9 @@ app.get('/wallet/:address', async (req, res) => {
 
 // ─── UNMINTED PARCELS ──────────────────────────────────────────────────────────
 const UNMINTED_PARCELS = require('./unminted-parcels.json');
-// Build a lookup map: "level/x/y" → parcel for O(1) coordinate lookup
-const UNMINTED_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [`${p.level}/${p.x}/${p.y}`, p]));
+// Build lookup maps: by coordinate and by sequential ID
+const UNMINTED_LOOKUP    = new Map(UNMINTED_PARCELS.map(p => [`${p.level}/${p.x}/${p.y}`, p]));
+const UNMINTED_ID_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [p.id, p]));
 
 // Animation data (grid + colors per parcel) — optional, loaded separately
 let UNMINTED_ANIM_LOOKUP = new Map();
@@ -540,27 +541,42 @@ try {
 
 app.use('/unminted', standardLimiter);
 
-// GET /unminted/search?level=L&x=X&y=Y
-app.get('/unminted/search', async (req, res) => {
-  const level = parseInt(req.query.level, 10);
-  const x     = parseInt(req.query.x, 10);
-  const y     = parseInt(req.query.y, 10);
-
-  if (isNaN(level) || isNaN(x) || isNaN(y)) {
-    return res.status(400).json({ error: 'level, x, and y are required numeric parameters.' });
-  }
-
-  const parcel = UNMINTED_LOOKUP.get(`${level}/${x}/${y}`);
-  if (!parcel) {
-    return res.status(404).json({ error: `No unminted parcel found at L${level}/X${x}/Y${y}.` });
-  }
-
+// Shared handler: resolve a parcel, price it, and attach anim data
+async function resolveUnminted(parcel, res) {
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
-  const traits = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm: false };
-  const pricing = estimatePrice(traits, floor);
-  const animData = UNMINTED_ANIM_LOOKUP.get(`${level}/${x}/${y}`) || null;
-
+  const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm: false };
+  const pricing  = estimatePrice(traits, floor);
+  const animData = UNMINTED_ANIM_LOOKUP.get(`${parcel.level}/${parcel.x}/${parcel.y}`) || null;
   res.json({ traits, pricing, floorIsLive, animData });
+}
+
+// GET /unminted/search?id=N  — lookup by sequential id (1–1193)
+// GET /unminted/search?level=L&x=X&y=Y  — lookup by coordinates
+app.get('/unminted/search', async (req, res) => {
+  try {
+    if (req.query.id !== undefined) {
+      const id = parseInt(req.query.id, 10);
+      if (isNaN(id) || id < 1 || id > UNMINTED_PARCELS.length) {
+        return res.status(400).json({ error: `Unminted ID must be between 1 and ${UNMINTED_PARCELS.length}.` });
+      }
+      const parcel = UNMINTED_ID_LOOKUP.get(id);
+      if (!parcel) return res.status(404).json({ error: `Unminted parcel #${id} not found.` });
+      return await resolveUnminted(parcel, res);
+    }
+
+    const level = parseInt(req.query.level, 10);
+    const x     = parseInt(req.query.x, 10);
+    const y     = parseInt(req.query.y, 10);
+    if (isNaN(level) || isNaN(x) || isNaN(y)) {
+      return res.status(400).json({ error: 'Provide either id=N or level=L&x=X&y=Y.' });
+    }
+    const parcel = UNMINTED_LOOKUP.get(`${level}/${x}/${y}`);
+    if (!parcel) return res.status(404).json({ error: `No unminted parcel found at L${level}/X${x}/Y${y}.` });
+    return await resolveUnminted(parcel, res);
+  } catch (err) {
+    console.error('[unminted/search]', err.message);
+    res.status(500).json({ error: 'Failed to fetch unminted parcel data.' });
+  }
 });
 
 // GET /health
