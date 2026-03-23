@@ -65,6 +65,7 @@ if (!RPC_URL) throw new Error('[startup] RPC_URL environment variable is require
 
 const TERRAFORMS_ABI = [
   'function tokenURI(uint256 tokenId) view returns (string)',
+  'function tokenHTML(uint256 tokenId) view returns (string)',
   'function ownerOf(uint256 tokenId) view returns (address)',
   'function balanceOf(address owner) view returns (uint256)',
   'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
@@ -331,13 +332,12 @@ async function getParcelTraits(tokenId) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
       const attrs = json.attributes || [];
 
-      // Extract seed from the embedded SVG script (on-chain as `const SEED=X;`)
+      // Extract seed from tokenHTML (on-chain HTML animation contains `const SEED=X;`)
+      // The SVG from tokenURI is static and has no SEED — tokenHTML is the correct source.
       try {
-        const img = json.image || '';
-        const svgText = img.startsWith('data:image/svg+xml;base64,')
-          ? Buffer.from(img.slice(26), 'base64').toString()
-          : img.startsWith('data:image/svg+xml,') ? decodeURIComponent(img.slice(19)) : '';
-        const m = svgText.match(/\bSEED\s*=\s*(\d+)/);
+        const { contract } = getProvider();
+        const html = await withTimeout(contract.tokenHTML(tokenId));
+        const m = html.match(/\bSEED\s*=\s*(\d+)/);
         if (m) seed = parseInt(m[1], 10);
       } catch (_) { /* seed stays null */ }
 
