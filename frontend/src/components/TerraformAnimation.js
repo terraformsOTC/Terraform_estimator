@@ -73,7 +73,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
           data-cls={cls}
           className={isAnimated ? `${instanceId}-${cls}` : undefined}
           style={{
-            color: isAnimated ? undefined : color,
+            color,
             textAlign: 'center',
             display: 'flex',
             justifyContent: 'center',
