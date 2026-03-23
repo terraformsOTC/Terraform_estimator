@@ -14,38 +14,43 @@ function makeSet(start) {
   return chars;
 }
 
-// Class index → height value (classIds = ['i','h','g','f','e','d','c','b','a'])
-// h=8 is highest (mountain peak), h=0 is lowest (valley floor)
-const CLASS_ORDER = ['i','h','g','f','e','d','c','b','a'];
+// classIds order matches terrafans: ['i','h','g','f','e','d','c','b','a']
+const CLASS_IDS = ['i','h','g','f','e','d','c','b','a'];
+const CLASS_ORDER = CLASS_IDS; // alias for height mapping
+
 function classToHeight(cls) {
   const idx = CLASS_ORDER.indexOf(cls);
-  return idx === -1 ? 9 : CLASS_ORDER.length - idx - 1; // j → 9 (empty cell)
+  return idx === -1 ? 9 : CLASS_ORDER.length - idx - 1; // 'j' → 9 (empty cell)
 }
 
 // Classes with CSS color-cycling animation in the original
 const ANIMATED_CLASSES = new Set(['b','c','d','e','f','g','h']);
 
-function buildCharSets(seed) {
+// Build mainSet from scraped per-class characters (chars = { a:'▆', b:'▇', ... })
+// Mirrors terrafans: originalChars built in classIds order, then reversed
+function buildMainSet(seed, chars) {
   const SEED = parseInt(seed);
-  // Original block chars (i,h,g,f,e,d,c,b,a order → reversed to a,b,c,...,i)
-  const originalChars = ['▆','▇','▆','▇','▉','▊','▋','█','▊'].reverse();
-  let charSet = [...originalChars];
+  // originalChars in classIds order: [char_i, char_h, ..., char_a]
+  const originalChars = CLASS_IDS.map(c => chars?.[c] || '▆');
+  // charSet starts with originalChars, possibly extended
+  const charSet = [...originalChars];
   if (SEED > 9970) {
     for (const u of UNI) charSet.push(...makeSet(u));
   } else if (SEED > 5000) {
     charSet.push(...makeSet(UNI[Math.floor(SEED) % 3]));
   }
-  const mainSet = SEED > 9950 ? charSet : [...originalChars];
-  return { mainSet, charSet };
+  // mainSet = originalChars.reverse() → [char_a, char_b, ..., char_i]
+  const mainSet = [...originalChars].reverse();
+  return SEED > 9950 ? charSet : mainSet;
 }
 
 export default function TerraformAnimation({ animData, width = 200, height = 288 }) {
   const containerRef = useRef(null);
 
   // All hooks must run unconditionally — guard is below
-  const { mainSet } = useMemo(
-    () => animData ? buildCharSets(animData.seed) : { mainSet: [] },
-    [animData?.seed]
+  const mainSet = useMemo(
+    () => animData ? buildMainSet(animData.seed, animData.chars) : [],
+    [animData?.seed, animData?.chars]
   );
 
   // Stable per-instance id for scoped CSS keyframes
@@ -63,6 +68,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
         <span
           key={i}
           data-cell=""
+          data-cls={cls}
           className={isAnimated ? `${instanceId}-${cls}` : undefined}
           style={{
             color: isAnimated ? undefined : color,
@@ -79,28 +85,32 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
   useEffect(() => {
     if (!animData || !containerRef.current) return;
-    const { grid, resource: resourceRaw } = animData;
-    const RESOURCE = parseInt(resourceRaw) / 10000;
-    const DIRECTION = 2;
+    const { grid, resource: resourceRaw, direction: directionRaw, chars } = animData;
+    const RESOURCE  = parseInt(resourceRaw) / 10000;
+    const DIRECTION = parseInt(directionRaw) || 0;
     const waterline = 6 - RESOURCE;
-    const heights = Array.from(grid).map(classToHeight);
-    const domCells = containerRef.current.querySelectorAll('[data-cell]');
+    const heights   = Array.from(grid).map(classToHeight);
+    const gridChars = Array.from(grid); // class per cell for biome char lookup
+    const domCells  = containerRef.current.querySelectorAll('[data-cell]');
     if (domCells.length !== 1024) return;
 
-    // Wrap airship to avoid floating-point drift and integer overflow
-    const wrapAt = mainSet.length * 4096;
+    // Wrap airship to avoid integer overflow
+    const wrapAt = Math.max(mainSet.length, 1) * 4096;
     let airship = 0;
     const timer = setInterval(() => {
       for (let row = 0; row < 32; row++) {
         for (let col = 0; col < 32; col++) {
-          const cell = domCells[row * 32 + col];
-          const h = heights[row * 32 + col];
+          const idx  = row * 32 + col;
+          const cell = domCells[idx];
+          const h    = heights[idx];
+          const cls  = gridChars[idx];
           if (h === 9) { cell.textContent = ' '; continue; }
           if (h > waterline) {
             const rawIdx = Math.floor(0.25 * airship + (h + 0.5 * row + 0.1 * DIRECTION * col));
             cell.textContent = mainSet[((rawIdx % mainSet.length) + mainSet.length) % mainSet.length];
           } else {
-            cell.textContent = '';
+            // Below waterline: show biome char for this class (mirrors PHP initial render)
+            cell.textContent = chars?.[cls] || '';
           }
         }
       }
