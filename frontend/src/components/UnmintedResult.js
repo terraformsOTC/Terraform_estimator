@@ -47,11 +47,7 @@ export default function UnmintedResult({ parcel }) {
           <SimpleRow label="mode" value="Terrain" />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SimpleRow label="seed" value={seed} />
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <SpecialBadge type="Unminted" />
-          {specialType && <SpecialBadge type={specialType} />}
+          <UnmintedSpecialRow specialType={specialType} />
         </div>
 
         <UnmintedLinks level={level} x={x} y={y} />
@@ -94,6 +90,18 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
         </p>
 
         <UnmintedLinks level={level} x={x} y={y} />
+      </div>
+    </div>
+  );
+}
+
+function UnmintedSpecialRow({ specialType }) {
+  return (
+    <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+      <span className="text-sm opacity-65">special</span>
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        <SpecialBadge type="Unminted" />
+        {specialType && <SpecialBadge type={specialType} />}
       </div>
     </div>
   );
