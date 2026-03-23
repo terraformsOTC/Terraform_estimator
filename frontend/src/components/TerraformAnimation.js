@@ -85,9 +85,11 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
   useEffect(() => {
     if (!animData || !containerRef.current) return;
-    const { grid, resource: resourceRaw, direction: directionRaw, chars } = animData;
+    const { grid, resource: resourceRaw, chars } = animData;
     const RESOURCE  = parseInt(resourceRaw) / 10000;
-    const DIRECTION = parseInt(directionRaw) || 0;
+    // DIRECTION is always 0 on terrafans moving.php for all unminted parcels (MODE=0 Terrain).
+    // Our scraped JSON has "2" but this is incorrect — confirmed 0 across all checked pages.
+    const DIRECTION = 0;
     const waterline = 6 - RESOURCE;
     const heights   = Array.from(grid).map(classToHeight);
     const gridClasses = Array.from(grid);
