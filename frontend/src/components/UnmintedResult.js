@@ -108,14 +108,14 @@ function UnmintedSpecialRow({ specialType }) {
 }
 
 function UnmintedAnimation({ animData }) {
-  return <TerraformAnimation animData={animData} width={200} height={288} />;
+  return <TerraformAnimation animData={animData} width={277} height={400} />;
 }
 
 function UnmintedLinks({ level, x, y }) {
   const terrafansUrl = `https://terrafans.xyz/all/index.php?level=${level}&x=${x}&y=${y}`;
   return (
-    <div className="flex gap-3 text-sm">
-      <a href={terrafansUrl} target="_blank" rel="noopener noreferrer" className="no-underline opacity-60 hover:opacity-100">
+    <div className="flex gap-2 mt-1 flex-wrap">
+      <a href={terrafansUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
         [terrafans ↗]
       </a>
     </div>

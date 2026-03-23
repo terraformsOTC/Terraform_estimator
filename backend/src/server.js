@@ -325,11 +325,21 @@ async function getParcelTraits(tokenId) {
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
         specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false,
-        isLith0like = false, isGm = false, mysteryValue = null;
+        isLith0like = false, isGm = false, mysteryValue = null, seed = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
       const attrs = json.attributes || [];
+
+      // Extract seed from the embedded SVG script (on-chain as `const SEED=X;`)
+      try {
+        const img = json.image || '';
+        const svgText = img.startsWith('data:image/svg+xml;base64,')
+          ? Buffer.from(img.slice(26), 'base64').toString()
+          : img.startsWith('data:image/svg+xml,') ? decodeURIComponent(img.slice(19)) : '';
+        const m = svgText.match(/\bSEED\s*=\s*(\d+)/);
+        if (m) seed = parseInt(m[1], 10);
+      } catch (_) { /* seed stays null */ }
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
       level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1, 10);
@@ -370,6 +380,7 @@ async function getParcelTraits(tokenId) {
       isGm,
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
+      seed,
     };
   } catch (err) {
     console.error(`Error fetching traits for token ${tokenId}:`, err.message);
