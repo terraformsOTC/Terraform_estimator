@@ -157,7 +157,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="Unminted" />}
-            description="1,193 parcels are yet to be minted. Thanks to the deterministic nature of the Terraforms contracts, we can however infer their traits: zone, biome, level, chroma etc. This means we can estimate their value like the minted parcels, and even render their animations. We do not know when these remaining parcels will be minted."
+            description="1,193 parcels are not yet minted. However thanks to the deterministic nature of the Terraforms smart contracts, we can infer their traits: zone, biome, level, chroma etc. This means we can still estimate their value, and even render the animations. We do not know when these remaining parcels will be minted."
           />
         </Section>
 
