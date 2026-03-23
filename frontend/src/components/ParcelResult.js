@@ -4,7 +4,7 @@ import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, BadgeStack
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed } = traits;
 
   if (pricing.isSpecial) {
     return <SpecialParcelResult tokenId={tokenId} traits={traits} pricing={pricing} />;
@@ -51,6 +51,7 @@ export default function ParcelResult({ parcel }) {
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
 {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
+          {seed != null && <SimpleRow label="seed" value={seed} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} mysteryValue={mysteryValue} />
         </div>
 
