@@ -130,9 +130,15 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     );
   }
 
-  const { colors, fontSize: parcelFontSize, fontWeight: parcelFontWeight, animClasses } = animData;
+  const { colors, fontSize: parcelFontSize, fontWeight: parcelFontWeight, animClasses, fontData } = animData;
   const bgColor = colors?.bg || '#111';
   const scale = Math.min(width / 388, height / 560);
+
+  // Per-parcel font: terrafans generates a custom font per character set
+  const fontFamily = fontData ? `'${instanceId}-font', monospace` : "'MathcastlesRemix-Regular', monospace";
+  const fontFaceRule = fontData
+    ? `@font-face { font-family: '${instanceId}-font'; font-display: block; src: url(data:application/font-woff2;charset=utf-8;base64,${fontData}) format('woff2'); }`
+    : '';
 
   // Build keyframe stops: 10 stops (0%-90%), with 90% = bg color (matches terrafans exactly)
   const colorList = ['a','b','c','d','e','f','g','h','i'].map(c => colors?.[c] || bgColor);
@@ -150,6 +156,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
   return (
     <div style={{ width, height, flexShrink: 0 }}>
       <style>{`
+        ${fontFaceRule}
         @keyframes ${instanceId}-x {
           ${keyframeStops}
         }
@@ -173,7 +180,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
             padding: 24,
             fontSize: parcelFontSize || 15,
             fontWeight: parcelFontWeight || 'normal',
-            fontFamily: 'MathcastlesRemix-Regular, monospace',
+            fontFamily,
             display: 'grid',
             gridTemplateColumns: 'repeat(32, 3%)',
             gridTemplateRows: 'repeat(32, 16px)',

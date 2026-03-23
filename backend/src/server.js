@@ -542,12 +542,15 @@ const UNMINTED_ID_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [p.id, p]));
 let UNMINTED_ANIM_LOOKUP = new Map();
 try {
   const animData = require('./unminted-animation.json');
+  let fontArray = [];
+  try { fontArray = require('./unminted-fonts.json'); } catch(_) {}
   UNMINTED_ANIM_LOOKUP = new Map(animData.map(p => [`${p.level}/${p.x}/${p.y}`, {
     grid: p.grid, colors: p.colors, seed: p.seed, resource: p.resource,
     chars: p.chars || {},
     fontSize: p.fontSize || 15,
     fontWeight: p.fontWeight || null,
     animClasses: p.animClasses || [],
+    fontData: p.fontIndex != null ? fontArray[p.fontIndex] : null,
   }]));
   console.log(`[startup] Animation data loaded for ${UNMINTED_ANIM_LOOKUP.size} unminted parcels`);
 } catch(e) {
