@@ -16,16 +16,12 @@ function makeSet(start) {
 // classIds order matches terrafans: ['i','h','g','f','e','d','c','b','a']
 const CLASS_IDS = ['i','h','g','f','e','d','c','b','a'];
 
-// Fallback block chars (high-seed parcels like SEED~9964 use these)
 const FALLBACK_CHAR = '▆';
 
 function classToHeight(cls) {
   const idx = CLASS_IDS.indexOf(cls);
   return idx === -1 ? 9 : CLASS_IDS.length - idx - 1;
 }
-
-// Classes with CSS color-cycling animation in the original
-const ANIMATED_CLASSES = new Set(['b','c','d','e','f','g','h']);
 
 // Mirrors terrafans character set logic exactly.
 // chars = per-class initial characters from PHP (varies by seed/parcel)
@@ -56,14 +52,20 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
   // Stable per-instance id for scoped CSS keyframes
   const instanceId = useMemo(() => `tf-${Math.random().toString(36).slice(2, 7)}`, []);
 
-  // Memoize the 1024-cell grid elements to avoid recreating style objects on every render
+  // Build set of animated classes from per-parcel data
+  const animatedSet = useMemo(() => {
+    if (!animData?.animClasses) return new Set();
+    return new Set(animData.animClasses.map(a => a.cls));
+  }, [animData?.animClasses]);
+
+  // Memoize the 1024-cell grid elements
   const cells = useMemo(() => {
     if (!animData) return [];
     const { grid, colors } = animData;
     const bgColor = colors?.bg || '#111';
     return Array.from(grid).map((cls, i) => {
       const color = colors?.[cls] || bgColor;
-      const isAnimated = ANIMATED_CLASSES.has(cls);
+      const isAnimated = animatedSet.has(cls);
       return (
         <span
           key={i}
@@ -81,14 +83,12 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
         />
       );
     });
-  }, [animData?.grid, animData?.colors, instanceId]);
+  }, [animData?.grid, animData?.colors, instanceId, animatedSet]);
 
   useEffect(() => {
     if (!animData || !containerRef.current) return;
     const { grid, resource: resourceRaw, chars } = animData;
     const RESOURCE  = parseInt(resourceRaw) / 10000;
-    // DIRECTION is always 0 on terrafans moving.php for all unminted parcels (MODE=0 Terrain).
-    // Our scraped JSON has "2" but this is incorrect — confirmed 0 across all checked pages.
     const DIRECTION = 0;
     const waterline = 6 - RESOURCE;
     const heights   = Array.from(grid).map(classToHeight);
@@ -96,7 +96,6 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     const domCells  = containerRef.current.querySelectorAll('[data-cell]');
     if (domCells.length !== 1024) return;
 
-    // Wrap airship to avoid integer overflow
     const wrapAt = Math.max(mainSet.length, 1) * 4096;
     let airship = 0;
     const timer = setInterval(() => {
@@ -131,16 +130,22 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     );
   }
 
-  const { colors } = animData;
+  const { colors, fontSize: parcelFontSize, fontWeight: parcelFontWeight, animClasses } = animData;
   const bgColor = colors?.bg || '#111';
   const scale = Math.min(width / 388, height / 560);
 
+  // Build keyframe stops: 10 stops (0%-90%), with 90% = bg color (matches terrafans exactly)
   const colorList = ['a','b','c','d','e','f','g','h','i'].map(c => colors?.[c] || bgColor);
-  const keyframeStops = colorList.map((c, i) => `${i * 10}% { color: ${c}; }`).join('\n');
-  const animDelays = { b: '0ms', c: '160ms', d: '320ms', e: '480ms', f: '640ms', g: '800ms', h: '960ms' };
-  const animatedRules = Object.entries(animDelays)
-    .map(([cls, delay]) => `.${instanceId}-${cls} { animation: 800ms linear ${delay} infinite alternate both running ${instanceId}-x; }`)
-    .join('\n');
+  const keyframeStops = [
+    ...colorList.map((c, i) => `${i * 10}% { color: ${c}; }`),
+    `90% { color: ${bgColor}; }`,
+  ].join('\n');
+
+  // Per-parcel animation rules from scraped CSS data
+  const animatedRules = (animClasses || [])
+    .map(({ cls, duration, delay }) =>
+      `.${instanceId}-${cls} { animation: ${duration}ms linear ${delay}ms infinite alternate both running ${instanceId}-x; }`
+    ).join('\n');
 
   return (
     <div style={{ width, height, flexShrink: 0 }}>
@@ -166,8 +171,8 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
             width: 388,
             height: 560,
             padding: 24,
-            fontSize: 27,
-            fontWeight: 'bold',
+            fontSize: parcelFontSize || 15,
+            fontWeight: parcelFontWeight || 'normal',
             fontFamily: 'MathcastlesRemix-Regular, monospace',
             display: 'grid',
             gridTemplateColumns: 'repeat(32, 3%)',
