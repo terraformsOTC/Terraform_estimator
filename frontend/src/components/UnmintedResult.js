@@ -22,7 +22,7 @@ export default function UnmintedResult({ parcel }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">#{id} · L{level}/X{x}/Y{y}</p>
+          <p className="opacity-75 text-sm">#{id}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function UnmintedResult({ parcel }) {
 }
 
 function UnmintedSpecialResult({ traits, pricing, animData }) {
-  const { id, level, x, y, biome, zone, chroma, seed, specialType } = traits;
+  const { id, level, x, y, biome, zone, chroma, seed, specialType, mysteryValue, mysteryOutlier } = traits;
   const { estimatedValue, floor } = pricing;
 
   return (
@@ -65,29 +65,32 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">#{id} · L{level}/X{x}/Y{y}</p>
+          <p className="opacity-75 text-sm">#{id}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 flex-1">
         <div>
           <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
           <div className="flex items-center gap-2">
             <EthIcon />
             <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
           </div>
+          <p className="text-xs opacity-55 mt-1">floor: {floor} ETH</p>
+          <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm opacity-65">special parcel:</span>
-          <SpecialBadge type={specialType} />
-          <SpecialBadge type="Unminted" />
+        <div className="flex flex-col gap-0">
+          <SimpleRow label="zone" value={zone || '—'} />
+          <SimpleRow label="biome" value={`B${biome}`} />
+          <SimpleRow label="level" value={`L${level}`} />
+          <SimpleRow label="chroma" value={chroma || 'Flow'} />
+          <SimpleRow label="mode" value="Terrain" />
+          {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
+          {seed != null && <SimpleRow label="seed" value={seed} />}
+          <UnmintedSpecialRow specialType={specialType} />
         </div>
-
-        <p className="text-xs opacity-45">
-          special parcel types are priced independently.
-        </p>
 
         <UnmintedLinks level={level} x={x} y={y} />
       </div>
