@@ -16,9 +16,8 @@ function makeSet(start) {
 // classIds order matches terrafans: ['i','h','g','f','e','d','c','b','a']
 const CLASS_IDS = ['i','h','g','f','e','d','c','b','a'];
 
-// PHP always renders these block chars per class — same for every parcel, every biome.
-// Confirmed by reading raw PHP-generated HTML (before JS animation runs).
-const ORIGINAL_CHARS = { i:'▊', h:'█', g:'▋', f:'▊', e:'▉', d:'▇', c:'▆', b:'▇', a:'▆' };
+// Fallback block chars (high-seed parcels like SEED~9964 use these)
+const FALLBACK_CHAR = '▆';
 
 function classToHeight(cls) {
   const idx = CLASS_IDS.indexOf(cls);
@@ -28,18 +27,19 @@ function classToHeight(cls) {
 // Classes with CSS color-cycling animation in the original
 const ANIMATED_CLASSES = new Set(['b','c','d','e','f','g','h']);
 
-// Mirrors terrafans character set logic exactly
-function buildMainSet(seed) {
+// Mirrors terrafans character set logic exactly.
+// chars = per-class initial characters from PHP (varies by seed/parcel)
+function buildMainSet(seed, chars) {
   const SEED = parseInt(seed);
-  // originalChars in classIds order: [▊, █, ▋, ▊, ▉, ▇, ▆, ▇, ▆]
-  const originalChars = CLASS_IDS.map(c => ORIGINAL_CHARS[c]);
+  // originalChars in classIds order: [char_i, char_h, ..., char_a]
+  const originalChars = CLASS_IDS.map(c => chars?.[c] || FALLBACK_CHAR);
   const charSet = [...originalChars];
   if (SEED > 9970) {
     for (const u of UNI) charSet.push(...makeSet(u));
   } else if (SEED > 5000) {
     charSet.push(...makeSet(UNI[Math.floor(SEED) % 3]));
   }
-  // mainSet = originalChars.reverse() → [▆, ▇, ▆, ▇, ▉, ▊, ▋, █, ▊] (a→i order)
+  // mainSet = originalChars.reverse() → [char_a, char_b, ..., char_i]
   const mainSet = [...originalChars].reverse();
   return SEED > 9950 ? charSet : mainSet;
 }
@@ -49,8 +49,8 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
   // All hooks must run unconditionally — guard is below
   const mainSet = useMemo(
-    () => animData ? buildMainSet(animData.seed) : [],
-    [animData?.seed]
+    () => animData ? buildMainSet(animData.seed, animData.chars) : [],
+    [animData?.seed, animData?.chars]
   );
 
   // Stable per-instance id for scoped CSS keyframes
@@ -85,7 +85,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
   useEffect(() => {
     if (!animData || !containerRef.current) return;
-    const { grid, resource: resourceRaw, direction: directionRaw } = animData;
+    const { grid, resource: resourceRaw, direction: directionRaw, chars } = animData;
     const RESOURCE  = parseInt(resourceRaw) / 10000;
     const DIRECTION = parseInt(directionRaw) || 0;
     const waterline = 6 - RESOURCE;
@@ -109,8 +109,8 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
             const rawIdx = Math.floor(0.25 * airship + (h + 0.5 * row + 0.1 * DIRECTION * col));
             cell.textContent = mainSet[((rawIdx % mainSet.length) + mainSet.length) % mainSet.length];
           } else {
-            // Below waterline: static PHP-initial block char for this class
-            cell.textContent = ORIGINAL_CHARS[cls] || '▆';
+            // Below waterline: static PHP-initial char for this class (varies by seed)
+            cell.textContent = chars?.[cls] || FALLBACK_CHAR;
           }
         }
       }
