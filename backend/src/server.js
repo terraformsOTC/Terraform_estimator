@@ -544,7 +544,10 @@ try {
   const animData = require('./unminted-animation.json');
   UNMINTED_ANIM_LOOKUP = new Map(animData.map(p => [`${p.level}/${p.x}/${p.y}`, {
     grid: p.grid, colors: p.colors, seed: p.seed, resource: p.resource,
-    chars: p.chars || {}, direction: p.direction ?? 0,
+    chars: p.chars || {},
+    fontSize: p.fontSize || 15,
+    fontWeight: p.fontWeight || null,
+    animClasses: p.animClasses || [],
   }]));
   console.log(`[startup] Animation data loaded for ${UNMINTED_ANIM_LOOKUP.size} unminted parcels`);
 } catch(e) {
