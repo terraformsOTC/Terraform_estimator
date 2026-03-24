@@ -4966,7 +4966,7 @@
     "seed": 5005,
     "mysteryValue": 40037,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Lith0",
     "mode": "Terrain"
   },
   {
@@ -6184,7 +6184,7 @@
     "seed": 3759,
     "mysteryValue": 45196,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Lith0",
     "mode": "Terrain"
   },
   {
@@ -6674,7 +6674,7 @@
     "seed": 5640,
     "mysteryValue": 43855,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Lith0",
     "mode": "Terrain"
   },
   {
