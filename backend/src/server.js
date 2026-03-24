@@ -343,7 +343,8 @@ async function getParcelTraits(tokenId) {
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
         specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false,
-        isLith0like = false, isGm = false, mysteryValue = null, seed = null;
+        isLith0like = false, isGm = false, mysteryValue = null, seed = null,
+        x = null, y = null;
 
     if (uri.startsWith('data:application/json;base64,')) {
       const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
@@ -357,6 +358,23 @@ async function getParcelTraits(tokenId) {
         if (m) seed = parseInt(m[1], 10);
       } catch (err) {
         console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
+      }
+
+      // Extract X/Y coordinates from tokenSupplementalData via raw call.
+      // The function returns a struct memory, which ABI-encodes as:
+      //   [0x20 outer pointer (32 bytes) | slot0 (32) | level (32) | xCoordinate (32) | yCoordinate (32) | ...]
+      // xCoordinate is at byte offset 96, yCoordinate at byte offset 128.
+      try {
+        const { provider } = getProvider();
+        const selector = ethers.id('tokenSupplementalData(uint256)').slice(0, 10);
+        const arg = ethers.zeroPadValue(ethers.toBeHex(tokenId), 32);
+        const raw = await withTimeout(provider.call({ to: TERRAFORMS_ADDRESS, data: selector + arg.slice(2) }));
+        if (raw && raw.length >= 322) {
+          x = Number(BigInt('0x' + raw.slice(194, 258)));
+          y = Number(BigInt('0x' + raw.slice(258, 322)));
+        }
+      } catch (err) {
+        console.warn(`[traits] Token ${tokenId}: tokenSupplementalData failed (${err.message}) — x/y will be null`);
       }
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
@@ -399,6 +417,8 @@ async function getParcelTraits(tokenId) {
       mysteryValue,
       mysteryOutlier: mysteryOutlierFlag(mysteryValue),
       seed,
+      x,
+      y,
     };
   } catch (err) {
     console.error(`Error fetching traits for token ${tokenId}:`, err.message);

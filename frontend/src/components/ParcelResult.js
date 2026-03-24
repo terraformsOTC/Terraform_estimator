@@ -4,7 +4,7 @@ import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, BadgeStack
 
 export default function ParcelResult({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed, x, y } = traits;
 
   if (pricing.isSpecial) {
     return <SpecialParcelResult tokenId={tokenId} traits={traits} pricing={pricing} />;
@@ -26,7 +26,7 @@ export default function ParcelResult({ parcel }) {
         <ParcelImage tokenId={tokenId} />
         <div className="mt-1">
           <p className="opacity-75 text-xs">
-            <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">{tokenId}</a>
+            <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">{tokenId}</a>{x != null && y != null ? ` · X${x}/Y${y}` : ''}
           </p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
@@ -62,7 +62,7 @@ export default function ParcelResult({ parcel }) {
 }
 
 function SpecialParcelResult({ tokenId, traits, pricing }) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed } = traits;
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed, x, y } = traits;
   const { estimatedValue, floor } = pricing;
 
   const levelCategory = (level === 1 || level === 20) ? 'Mythical'
@@ -75,7 +75,7 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
         <ParcelImage tokenId={tokenId} />
         <div className="mt-1">
           <p className="opacity-75 text-xs">
-            <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">{tokenId}</a>
+            <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">{tokenId}</a>{x != null && y != null ? ` · X${x}/Y${y}` : ''}
           </p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
