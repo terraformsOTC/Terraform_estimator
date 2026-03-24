@@ -586,7 +586,12 @@ app.use('/unminted', standardLimiter);
 // Shared handler: resolve a parcel, price it, and attach anim data
 async function resolveUnminted(parcel, res) {
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
-  const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm: false };
+  // Compute derivable special flags from parcel data.
+  // isS0 / isGodmode / isOneOfOne / isLith0like require manual curation — not applicable to unminted.
+  // isGm: Terrain + Biome 71 + low ??? (mirrors minted logic; visual pattern derives from these traits).
+  const isGm = parcel.biome === 71 && parcel.mode === 'Terrain'
+    && parcel.mysteryValue != null && parcel.mysteryValue < MYSTERY_P5;
+  const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm };
   const pricing  = estimatePrice(traits, floor);
   const animData = UNMINTED_ANIM_LOOKUP.get(`${parcel.level}/${parcel.x}/${parcel.y}`) || null;
   res.json({ traits, pricing, floorIsLive, animData });
