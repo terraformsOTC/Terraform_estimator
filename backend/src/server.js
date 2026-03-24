@@ -87,6 +87,7 @@ function getProvider() {
 // Max 500 entries (~24MB worst-case); oldest entry evicted when full.
 const TOKEN_URI_CACHE_MAX = 500;
 const tokenUriCache = new Map(); // Map<tokenId, uri> — insertion order = LRU order
+const tokenHtmlCache = new Map(); // Map<tokenId, html> — same LRU pattern for tokenHTML
 
 const RPC_TIMEOUT_MS = 15_000; // 15s timeout for contract calls
 
@@ -114,6 +115,23 @@ async function getCachedTokenURI(tokenId) {
   }
   tokenUriCache.set(key, uri);
   return uri;
+}
+
+async function getCachedTokenHTML(tokenId) {
+  const key = Number(tokenId);
+  if (tokenHtmlCache.has(key)) {
+    const html = tokenHtmlCache.get(key);
+    tokenHtmlCache.delete(key);
+    tokenHtmlCache.set(key, html);
+    return html;
+  }
+  const { contract } = getProvider();
+  const html = await withTimeout(contract.tokenHTML(tokenId));
+  if (tokenHtmlCache.size >= TOKEN_URI_CACHE_MAX) {
+    tokenHtmlCache.delete(tokenHtmlCache.keys().next().value);
+  }
+  tokenHtmlCache.set(key, html);
+  return html;
 }
 
 // Detect special type from metadata attributes
@@ -335,11 +353,12 @@ async function getParcelTraits(tokenId) {
       // Extract seed from tokenHTML (on-chain HTML animation contains `const SEED=X;`)
       // The SVG from tokenURI is static and has no SEED — tokenHTML is the correct source.
       try {
-        const { contract } = getProvider();
-        const html = await withTimeout(contract.tokenHTML(tokenId));
+        const html = await getCachedTokenHTML(tokenId);
         const m = html.match(/\bSEED\s*=\s*(\d+)/);
         if (m) seed = parseInt(m[1], 10);
-      } catch (_) { /* seed stays null */ }
+      } catch (err) {
+        console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
+      }
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
       level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1, 10);
@@ -495,8 +514,13 @@ app.get('/wallet/:address', async (req, res) => {
     for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
       const batch = tokenIds.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(batch.map(id => getParcelTraits(id)));
-      for (const r of results) {
-        if (r.status === 'fulfilled') allParcels.push(r.value);
+      for (let j = 0; j < results.length; j++) {
+        const r = results[j];
+        if (r.status === 'fulfilled') {
+          allParcels.push(r.value);
+        } else {
+          console.warn(`[wallet] Token ${batch[j]}: trait fetch failed — ${r.reason?.message || r.reason}`);
+        }
       }
     }
 
