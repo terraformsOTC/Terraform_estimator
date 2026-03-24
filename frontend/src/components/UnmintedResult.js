@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SpecialBadge, TraitRow, SimpleRow, MysteryRow } from './shared';
+import { EthIcon, SpecialBadge, BadgeStack, TraitRow, SimpleRow, MysteryRow } from './shared';
 import TerraformAnimation from './TerraformAnimation';
 
 export default function UnmintedResult({ parcel }) {
@@ -47,7 +47,7 @@ export default function UnmintedResult({ parcel }) {
           <SimpleRow label="mode" value="Terrain" />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           <SimpleRow label="seed" value={seed} />
-          <UnmintedSpecialRow specialType={specialType} />
+          <UnmintedSpecialRow traits={traits} />
         </div>
 
         <UnmintedLinks level={level} x={x} y={y} />
@@ -95,7 +95,7 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
           <SimpleRow label="mode" value="Terrain" />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           {seed != null && <SimpleRow label="seed" value={seed} />}
-          <UnmintedSpecialRow specialType={specialType} />
+          <UnmintedSpecialRow traits={traits} />
         </div>
 
         <UnmintedLinks level={level} x={x} y={y} />
@@ -104,13 +104,15 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
   );
 }
 
-function UnmintedSpecialRow({ specialType }) {
+function UnmintedSpecialRow({ traits }) {
+  const { specialType } = traits;
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
       <div className="flex items-center gap-2 flex-wrap justify-end">
         <SpecialBadge type="Unminted" />
         {specialType && <SpecialBadge type={specialType} />}
+        <BadgeStack traits={traits} />
       </div>
     </div>
   );

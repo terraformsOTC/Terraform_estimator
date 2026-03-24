@@ -25,10 +25,10 @@ export default function ParcelResult({ parcel }) {
       <div className="flex-shrink-0">
         <ParcelImage tokenId={tokenId} />
         <div className="mt-1">
-          <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
+          <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline text-sm opacity-75">
             {tokenId}
           </a>
-          <p className="opacity-75 text-sm">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
+          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
 
@@ -74,10 +74,10 @@ function SpecialParcelResult({ tokenId, traits, pricing }) {
       <div className="flex-shrink-0">
         <ParcelImage tokenId={tokenId} />
         <div className="mt-1">
-          <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">
+          <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline text-sm opacity-75">
             {tokenId}
           </a>
-          <p className="opacity-75 text-sm">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
+          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
 
