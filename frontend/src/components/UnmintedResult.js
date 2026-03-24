@@ -23,7 +23,7 @@ export default function UnmintedResult({ parcel }) {
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
           <p className="opacity-75 text-sm">#{id}</p>
-          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
+          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
 
@@ -60,13 +60,17 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
   const { id, level, x, y, biome, zone, chroma, seed, specialType, mysteryValue, mysteryOutlier } = traits;
   const { estimatedValue, floor } = pricing;
 
+  const levelCategory = (level === 1 || level === 20) ? 'Mythical'
+                       : (level === 2 || level === 3 || level === 18 || level === 19) ? 'Rare'
+                       : null;
+
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
           <p className="opacity-75 text-sm">#{id}</p>
-          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma}/L{level}</p>
+          <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
 
@@ -84,7 +88,9 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
         <div className="flex flex-col gap-0">
           <SimpleRow label="zone" value={zone || '—'} />
           <SimpleRow label="biome" value={`B${biome}`} />
-          <SimpleRow label="level" value={`L${level}`} />
+          {levelCategory
+            ? <TraitRow label="level" value={`L${level}`} category={levelCategory} />
+            : <SimpleRow label="level" value={`L${level}`} />}
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value="Terrain" />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}

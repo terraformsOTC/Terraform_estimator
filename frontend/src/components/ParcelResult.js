@@ -50,7 +50,7 @@ export default function ParcelResult({ parcel }) {
             : <SimpleRow label="level" value={`L${level}`} />}
           <SimpleRow label="chroma" value={chroma || 'Flow'} />
           <SimpleRow label="mode" value={mode || 'Terrain'} />
-{mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
+          {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           {seed != null && <SimpleRow label="seed" value={seed} />}
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} mysteryValue={mysteryValue} />
         </div>
