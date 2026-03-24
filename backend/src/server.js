@@ -145,7 +145,6 @@ function detectSpecialType(attributes) {
   if (resource.includes('X-Seed') || resource === 'X Seed') return 'X-Seed';
   if (resource.includes('Y-Seed') || resource === 'Y Seed') return 'Y-Seed';
   if (resource.includes('Lith0')) return 'Lith0';
-  if (resource.includes('Spine')) return 'Spine';
 
   const edition = attributes.find(a => a.trait_type === 'Edition')?.value || '';
   if (edition === '1 of 1' || edition === '1of1') return '1of1';
