@@ -22,7 +22,7 @@ export default function UnmintedResult({ parcel }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">#{id}</p>
+          <p className="opacity-75 text-xs">#{id} · X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
@@ -69,7 +69,7 @@ function UnmintedSpecialResult({ traits, pricing, animData }) {
       <div className="flex-shrink-0">
         <UnmintedAnimation animData={animData} />
         <div className="mt-1">
-          <p className="opacity-75 text-sm">#{id}</p>
+          <p className="opacity-75 text-xs">#{id} · X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
