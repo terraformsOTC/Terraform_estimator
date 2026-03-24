@@ -66,7 +66,7 @@
     "seed": 6151,
     "mysteryValue": 49183,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -458,7 +458,7 @@
     "seed": 6772,
     "mysteryValue": 39026,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -892,7 +892,7 @@
     "seed": 8926,
     "mysteryValue": 30481,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -2404,7 +2404,7 @@
     "seed": 2920,
     "mysteryValue": 15215,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -3272,7 +3272,7 @@
     "seed": 7892,
     "mysteryValue": 49933,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -9040,7 +9040,7 @@
     "seed": 4758,
     "mysteryValue": 23550,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -12260,7 +12260,7 @@
     "seed": 6029,
     "mysteryValue": 32424,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -12386,7 +12386,7 @@
     "seed": 2269,
     "mysteryValue": 34014,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -14752,7 +14752,7 @@
     "seed": 3236,
     "mysteryValue": 52943,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -15662,7 +15662,7 @@
     "seed": 1778,
     "mysteryValue": 53289,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
@@ -16432,7 +16432,7 @@
     "seed": 2904,
     "mysteryValue": 45926,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "Spine",
     "mode": "Terrain"
   },
   {
