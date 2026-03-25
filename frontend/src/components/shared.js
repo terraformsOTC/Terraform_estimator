@@ -55,7 +55,7 @@ export function BadgeStack({ traits, opacity = 0.85 }) {
   return (
     <>
       {isGodmode                                        && <SpecialBadge type="Godmode" opacity={opacity} />}
-      {isOneOfOne && specialType !== '1of1'             && <SpecialBadge type="1of1" opacity={opacity} />}
+      {isOneOfOne && specialType && specialType !== '1of1' && <SpecialBadge type="1of1" opacity={opacity} />}
       {isS0                                             && <SpecialBadge type="S0" opacity={opacity} />}
       {biome === 0 && specialType !== 'Lith0'           && <SpecialBadge type="Biome0" opacity={opacity} />}
       {isLith0like                                      && <SpecialBadge type="Lith0like" opacity={opacity} />}
