@@ -90,7 +90,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
-            description="Parcels with a unique zone and biome combination. It is worth noting that parcels in this category will change when the remaining 1,193 terraforms are minted."
+            description="Parcels with a unique zone and biome combination. This site draws from both the unminted and minted parcels to determine this trait, so there may be some differences between parcels shown here as &quot;1 of 1&quot; and on other sites such as terraformexplorer. These differences will resolve when the remaining parcels are minted."
           />
         </Section>
 
