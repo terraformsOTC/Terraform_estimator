@@ -74,7 +74,7 @@ function PortfolioStats({ data }) {
         </div>
         <div>
           <p className="font-semibold">Est. Portfolio</p>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center justify-end gap-1">
             <EthIcon />
             {data.totalEstimatedValue.toFixed(2)}
           </span>
