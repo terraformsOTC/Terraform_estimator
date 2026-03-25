@@ -90,7 +90,7 @@ export default function GlossaryPage() {
           />
           <GlossaryRow
             badge={<SpecialBadge type="1of1" />}
-            description="Parcels with a unique zone and biome combination. The site draws from both the unminted and minted parcels to determine this trait, so there may be differences between what is shown here as &quot;1 of 1&quot; and on other resources such as terraformexplorer. These differences will resolve when the remaining parcels are minted."
+            description="Parcels with a unique zone and biome combination. The site draws from both the unminted and minted parcels to determine this trait, so there may be differences between what is shown here as &quot;1 of 1&quot; and other resources such as terraformexplorer. These differences will resolve when the remaining parcels are minted."
           />
         </Section>
 
