@@ -76,7 +76,7 @@ function PortfolioStats({ data }) {
           <p className="font-semibold">Est. Portfolio</p>
           <span className="flex items-center gap-1">
             <EthIcon />
-            {data.totalEstimatedValue.toFixed(3)}
+            {data.totalEstimatedValue.toFixed(2)}
           </span>
         </div>
         {data.sets?.length > 0 && (
