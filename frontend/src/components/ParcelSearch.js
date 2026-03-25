@@ -14,7 +14,7 @@ export default function ParcelSearch({ onSearch, loading }) {
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        Enter a token ID (1–11,104) to get a valuation estimate based on zone, biome, and other variables. Values between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted.
+        Enter a token ID (1–11,104) to get a valuation estimate. IDs between 1–9911 are minted parcels, whilst values between 9912–11104 are unminted.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
