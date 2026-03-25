@@ -21,7 +21,7 @@ const ZONE_MULTIPLES = {
   // Mythical (individual)
   "Shahra": 25.2, "Antenna": 18.9, "Aetherking": 15,
   // Mythical (5.04x)
-  "Gemina": 9, "[SOON]": 5.04, "Dread": 5.04, "[SUN]": 5.04,
+  "Gemina": 12, "[SOON]": 5.04, "Dread": 5.04, "[SUN]": 5.04,
   // Rare (2.9x)
   "Royal": 2.9, "Killscreen": 2.9, "[NOV]": 2.9, "Avidana": 2.9,
   // Rare (2.75x)
