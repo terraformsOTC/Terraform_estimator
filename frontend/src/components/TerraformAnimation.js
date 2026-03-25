@@ -64,8 +64,10 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     const { grid, colors } = animData;
     const bgColor = colors?.bg || '#111';
     return Array.from(grid).map((cls, i) => {
-      const color = colors?.[cls] || bgColor;
-      const isAnimated = animatedSet.has(cls);
+        const isAnimated = animatedSet.has(cls);
+      // Animated cells default to bgColor so the undefined 100% keyframe
+      // doesn't flash the terrain color at the animation turnaround point
+      const color = isAnimated ? bgColor : (colors?.[cls] || bgColor);
       return (
         <span
           key={i}
