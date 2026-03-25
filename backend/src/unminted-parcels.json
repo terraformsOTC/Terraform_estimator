@@ -10,7 +10,7 @@
     "seed": 6664,
     "mysteryValue": 33178,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -122,7 +122,7 @@
     "seed": 2960,
     "mysteryValue": 44384,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -724,7 +724,7 @@
     "seed": 6952,
     "mysteryValue": 24461,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -920,7 +920,7 @@
     "seed": 9381,
     "mysteryValue": 51333,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1060,7 +1060,7 @@
     "seed": 19,
     "mysteryValue": 44161,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1256,7 +1256,7 @@
     "seed": 1689,
     "mysteryValue": 46323,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1354,7 +1354,7 @@
     "seed": 2799,
     "mysteryValue": 50301,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1438,7 +1438,7 @@
     "seed": 635,
     "mysteryValue": 46902,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1480,7 +1480,7 @@
     "seed": 7034,
     "mysteryValue": 45129,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1508,7 +1508,7 @@
     "seed": 5375,
     "mysteryValue": 33825,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1522,7 +1522,7 @@
     "seed": 4781,
     "mysteryValue": 39851,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1536,7 +1536,7 @@
     "seed": 44,
     "mysteryValue": 47479,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1550,7 +1550,7 @@
     "seed": 7469,
     "mysteryValue": 44551,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1578,7 +1578,7 @@
     "seed": 9178,
     "mysteryValue": 27729,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1648,7 +1648,7 @@
     "seed": 7383,
     "mysteryValue": 30120,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1718,7 +1718,7 @@
     "seed": 5212,
     "mysteryValue": 40312,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1816,7 +1816,7 @@
     "seed": 5146,
     "mysteryValue": 53401,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1858,7 +1858,7 @@
     "seed": 8315,
     "mysteryValue": 30409,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1942,7 +1942,7 @@
     "seed": 5403,
     "mysteryValue": 40141,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -1956,7 +1956,7 @@
     "seed": 35,
     "mysteryValue": 53346,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2250,7 +2250,7 @@
     "seed": 7052,
     "mysteryValue": 29222,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2278,7 +2278,7 @@
     "seed": 3317,
     "mysteryValue": 41106,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2306,7 +2306,7 @@
     "seed": 937,
     "mysteryValue": 51916,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2320,7 +2320,7 @@
     "seed": 6313,
     "mysteryValue": 31676,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2418,7 +2418,7 @@
     "seed": 942,
     "mysteryValue": 46528,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2432,7 +2432,7 @@
     "seed": 119,
     "mysteryValue": 43825,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2474,7 +2474,7 @@
     "seed": 7786,
     "mysteryValue": 27877,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2558,7 +2558,7 @@
     "seed": 1192,
     "mysteryValue": 35871,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2586,7 +2586,7 @@
     "seed": 3439,
     "mysteryValue": 17921,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2614,7 +2614,7 @@
     "seed": 8588,
     "mysteryValue": 52541,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2642,7 +2642,7 @@
     "seed": 8514,
     "mysteryValue": 37549,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2726,7 +2726,7 @@
     "seed": 3549,
     "mysteryValue": 32662,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2740,7 +2740,7 @@
     "seed": 2130,
     "mysteryValue": 42912,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2838,7 +2838,7 @@
     "seed": 501,
     "mysteryValue": 16199,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -2880,7 +2880,7 @@
     "seed": 5471,
     "mysteryValue": 40860,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3034,7 +3034,7 @@
     "seed": 515,
     "mysteryValue": 42609,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3048,7 +3048,7 @@
     "seed": 8907,
     "mysteryValue": 42470,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3062,7 +3062,7 @@
     "seed": 5178,
     "mysteryValue": 34847,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3090,7 +3090,7 @@
     "seed": 1167,
     "mysteryValue": 27313,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3104,7 +3104,7 @@
     "seed": 5967,
     "mysteryValue": 31441,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3118,7 +3118,7 @@
     "seed": 7066,
     "mysteryValue": 40508,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3174,7 +3174,7 @@
     "seed": 8054,
     "mysteryValue": 46098,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3286,7 +3286,7 @@
     "seed": 3418,
     "mysteryValue": 35374,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3356,7 +3356,7 @@
     "seed": 1848,
     "mysteryValue": 31025,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3496,7 +3496,7 @@
     "seed": 3005,
     "mysteryValue": 49699,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3678,7 +3678,7 @@
     "seed": 1134,
     "mysteryValue": 37221,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3692,7 +3692,7 @@
     "seed": 6704,
     "mysteryValue": 32038,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -3734,7 +3734,7 @@
     "seed": 9892,
     "mysteryValue": 38675,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4056,7 +4056,7 @@
     "seed": 8094,
     "mysteryValue": 39833,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4084,7 +4084,7 @@
     "seed": 1394,
     "mysteryValue": 26177,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4098,7 +4098,7 @@
     "seed": 6377,
     "mysteryValue": 53033,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4182,7 +4182,7 @@
     "seed": 2977,
     "mysteryValue": 20348,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4196,7 +4196,7 @@
     "seed": 7705,
     "mysteryValue": 31931,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4224,7 +4224,7 @@
     "seed": 5705,
     "mysteryValue": 46011,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4308,7 +4308,7 @@
     "seed": 7135,
     "mysteryValue": 43293,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4462,7 +4462,7 @@
     "seed": 7729,
     "mysteryValue": 49346,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4532,7 +4532,7 @@
     "seed": 7071,
     "mysteryValue": 47060,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4546,7 +4546,7 @@
     "seed": 2042,
     "mysteryValue": 46835,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4560,7 +4560,7 @@
     "seed": 6283,
     "mysteryValue": 40245,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -4910,7 +4910,7 @@
     "seed": 9873,
     "mysteryValue": 32500,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5148,7 +5148,7 @@
     "seed": 8852,
     "mysteryValue": 50404,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5302,7 +5302,7 @@
     "seed": 96,
     "mysteryValue": 31043,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5330,7 +5330,7 @@
     "seed": 4739,
     "mysteryValue": 49800,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5358,7 +5358,7 @@
     "seed": 1658,
     "mysteryValue": 52449,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5442,7 +5442,7 @@
     "seed": 9392,
     "mysteryValue": 49716,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5512,7 +5512,7 @@
     "seed": 2111,
     "mysteryValue": 27906,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5526,7 +5526,7 @@
     "seed": 6184,
     "mysteryValue": 11660,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5652,7 +5652,7 @@
     "seed": 8753,
     "mysteryValue": 25984,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5680,7 +5680,7 @@
     "seed": 1228,
     "mysteryValue": 42106,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -5862,7 +5862,7 @@
     "seed": 7432,
     "mysteryValue": 20139,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6030,7 +6030,7 @@
     "seed": 7321,
     "mysteryValue": 36433,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6086,7 +6086,7 @@
     "seed": 1560,
     "mysteryValue": 48903,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6142,7 +6142,7 @@
     "seed": 8026,
     "mysteryValue": 46426,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6254,7 +6254,7 @@
     "seed": 7097,
     "mysteryValue": 51840,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6268,7 +6268,7 @@
     "seed": 1744,
     "mysteryValue": 50116,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6352,7 +6352,7 @@
     "seed": 6290,
     "mysteryValue": 30302,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6366,7 +6366,7 @@
     "seed": 2983,
     "mysteryValue": 14680,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6408,7 +6408,7 @@
     "seed": 4619,
     "mysteryValue": 27326,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6604,7 +6604,7 @@
     "seed": 1217,
     "mysteryValue": 53483,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6716,7 +6716,7 @@
     "seed": 4046,
     "mysteryValue": 46359,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6842,7 +6842,7 @@
     "seed": 2172,
     "mysteryValue": 44797,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6926,7 +6926,7 @@
     "seed": 5314,
     "mysteryValue": 49827,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -6940,7 +6940,7 @@
     "seed": 3869,
     "mysteryValue": 40463,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -7024,7 +7024,7 @@
     "seed": 266,
     "mysteryValue": 36922,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -7080,7 +7080,7 @@
     "seed": 9668,
     "mysteryValue": 50160,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -7122,7 +7122,7 @@
     "seed": 8563,
     "mysteryValue": 34964,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -7304,7 +7304,7 @@
     "seed": 2392,
     "mysteryValue": 50961,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -7416,7 +7416,7 @@
     "seed": 9253,
     "mysteryValue": 50830,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -8270,7 +8270,7 @@
     "seed": 9276,
     "mysteryValue": 41694,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -8872,7 +8872,7 @@
     "seed": 840,
     "mysteryValue": 25774,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -10146,7 +10146,7 @@
     "seed": 699,
     "mysteryValue": 51569,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -10370,7 +10370,7 @@
     "seed": 8466,
     "mysteryValue": 48368,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -10692,7 +10692,7 @@
     "seed": 9208,
     "mysteryValue": 12225,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -10874,7 +10874,7 @@
     "seed": 1099,
     "mysteryValue": 31728,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -10916,7 +10916,7 @@
     "seed": 7734,
     "mysteryValue": 49300,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -11056,7 +11056,7 @@
     "seed": 6051,
     "mysteryValue": 43153,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -11140,7 +11140,7 @@
     "seed": 7567,
     "mysteryValue": 35209,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -11364,7 +11364,7 @@
     "seed": 4944,
     "mysteryValue": 47547,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -11798,7 +11798,7 @@
     "seed": 3874,
     "mysteryValue": 42266,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -12288,7 +12288,7 @@
     "seed": 5309,
     "mysteryValue": 42455,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -12498,7 +12498,7 @@
     "seed": 9509,
     "mysteryValue": 38044,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -12722,7 +12722,7 @@
     "seed": 9098,
     "mysteryValue": 44281,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14290,7 +14290,7 @@
     "seed": 5850,
     "mysteryValue": 50860,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14318,7 +14318,7 @@
     "seed": 8768,
     "mysteryValue": 44937,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14388,7 +14388,7 @@
     "seed": 4521,
     "mysteryValue": 48625,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14402,7 +14402,7 @@
     "seed": 741,
     "mysteryValue": 48141,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14444,7 +14444,7 @@
     "seed": 2566,
     "mysteryValue": 46458,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14528,7 +14528,7 @@
     "seed": 4303,
     "mysteryValue": 37560,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14542,7 +14542,7 @@
     "seed": 5029,
     "mysteryValue": 49586,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14738,7 +14738,7 @@
     "seed": 6587,
     "mysteryValue": 33703,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14892,7 +14892,7 @@
     "seed": 8076,
     "mysteryValue": 51624,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -14948,7 +14948,7 @@
     "seed": 3479,
     "mysteryValue": 47194,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15018,7 +15018,7 @@
     "seed": 1325,
     "mysteryValue": 12774,
     "mysteryOutlier": "low",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15172,7 +15172,7 @@
     "seed": 9716,
     "mysteryValue": 33877,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15214,7 +15214,7 @@
     "seed": 998,
     "mysteryValue": 49297,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15242,7 +15242,7 @@
     "seed": 7835,
     "mysteryValue": 42627,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15270,7 +15270,7 @@
     "seed": 5289,
     "mysteryValue": 43567,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15396,7 +15396,7 @@
     "seed": 3027,
     "mysteryValue": 29452,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15424,7 +15424,7 @@
     "seed": 6512,
     "mysteryValue": 48459,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15438,7 +15438,7 @@
     "seed": 833,
     "mysteryValue": 45649,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15466,7 +15466,7 @@
     "seed": 5670,
     "mysteryValue": 29354,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15480,7 +15480,7 @@
     "seed": 2058,
     "mysteryValue": 48056,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15564,7 +15564,7 @@
     "seed": 3360,
     "mysteryValue": 36772,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15606,7 +15606,7 @@
     "seed": 4740,
     "mysteryValue": 43404,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15648,7 +15648,7 @@
     "seed": 1012,
     "mysteryValue": 44015,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15690,7 +15690,7 @@
     "seed": 8478,
     "mysteryValue": 44726,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15746,7 +15746,7 @@
     "seed": 4398,
     "mysteryValue": 32602,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15886,7 +15886,7 @@
     "seed": 5348,
     "mysteryValue": 43072,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -15970,7 +15970,7 @@
     "seed": 2199,
     "mysteryValue": 43335,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -16026,7 +16026,7 @@
     "seed": 8746,
     "mysteryValue": 43058,
     "mysteryOutlier": null,
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
@@ -16558,7 +16558,7 @@
     "seed": 8928,
     "mysteryValue": 51536,
     "mysteryOutlier": "high",
-    "specialType": null,
+    "specialType": "1of1",
     "mode": "Terrain"
   },
   {
