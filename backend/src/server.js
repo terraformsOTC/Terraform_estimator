@@ -261,7 +261,7 @@ async function getFloorPrice() {
 
 // ─── OPENSEA LISTINGS + UNDERVALUED ───────────────────────────────────────────
 const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY;
-const UNDERVALUED_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const UNDERVALUED_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let undervaluedCache = { data: null, fetchedAt: 0 };
 
 // Fetch active listings from OpenSea for the Terraforms collection.
@@ -317,14 +317,14 @@ app.get('/undervalued', async (req, res) => {
       return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
     }
 
-    const allListings = await fetchOpenSeaListings(5);
+    const allListings = await fetchOpenSeaListings(2);
     // Work from cheapest upward — most likely to contain undervalued parcels
-    const candidates = allListings.slice(0, 75);
+    const candidates = allListings.slice(0, 40);
 
     const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
     const results = [];
-    const BATCH_SIZE = 5;
+    const BATCH_SIZE = 8;
     for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
       const batch = candidates.slice(i, i + BATCH_SIZE);
       const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
