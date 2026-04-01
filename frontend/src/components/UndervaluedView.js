@@ -60,6 +60,9 @@ export default function UndervaluedView({ data, loading, error }) {
           </table>
         </div>
       )}
+      {parcels?.length > 0 && (
+        <p className="mt-4 text-xs opacity-30">*excludes daydream and terraform mode parcels</p>
+      )}
     </div>
   );
 }
