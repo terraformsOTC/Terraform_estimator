@@ -43,6 +43,7 @@ export default function UndervaluedView({ data, loading, error }) {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
+                <th className="pb-3 pr-4 font-normal"></th>
                 <th className="pb-3 pr-4 font-normal">parcel</th>
                 <th className="pb-3 pr-4 font-normal">traits</th>
                 <th className="pb-3 pr-4 font-normal text-right">listed</th>
@@ -79,6 +80,17 @@ function ParcelRow({ parcel, rank }) {
       className="border-b"
       style={{ borderColor: 'rgba(232,232,232,0.08)' }}
     >
+      <td className="py-2 pr-4">
+        <a href={`/?token=${tokenId}`}>
+          <img
+            src={`${API_URL}/image/${tokenId}`}
+            alt={`Parcel ${tokenId}`}
+            width={42}
+            height={60}
+            style={{ display: 'block', objectFit: 'cover' }}
+          />
+        </a>
+      </td>
       <td className="py-2 pr-4">
         <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
           #{tokenId}
@@ -118,7 +130,7 @@ function ParcelRow({ parcel, rank }) {
           rel="noopener noreferrer"
           className="btn-primary btn-sm text-xs no-underline"
         >
-          [buy ↗]
+          [opensea ↗]
         </a>
       </td>
     </tr>

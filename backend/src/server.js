@@ -319,7 +319,7 @@ app.get('/undervalued', async (req, res) => {
 
     const allListings = await fetchOpenSeaListings(2);
     // Work from cheapest upward — most likely to contain undervalued parcels
-    const candidates = allListings.slice(0, 40);
+    const candidates = allListings.slice(0, 100);
 
     const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
