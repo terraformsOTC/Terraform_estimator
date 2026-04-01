@@ -36,8 +36,10 @@ export default function UndervaluedView({ data, loading, error }) {
         scanned {totalListingsScanned} listings · floor {floor} ETH · cached at {fetchedDate}
       </div>
 
+      <p className="mb-6 text-xs opacity-50">shows parcels listed at a discount according to our model. excludes daydream and terraform mode parcels. if no parcels appear that means there's no bargains currently listed.</p>
+
       {parcels.length === 0 ? (
-        <p className="text-sm opacity-75">no undervalued listings found in the cheapest {totalListingsScanned} results.</p>
+        <p className="text-sm opacity-75">no bargains currently listed.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -59,9 +61,6 @@ export default function UndervaluedView({ data, loading, error }) {
             </tbody>
           </table>
         </div>
-      )}
-      {parcels?.length > 0 && (
-        <p className="mt-4 text-xs opacity-30">*excludes daydream and terraform mode parcels</p>
       )}
     </div>
   );
