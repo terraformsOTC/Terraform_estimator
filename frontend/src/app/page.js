@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
+import UndervaluedView from '@/components/UndervaluedView';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL } from '@/components/shared';
 
@@ -62,7 +63,7 @@ const WHALE_WALLETS = [
   '0xaF8738a35eB57A2C69EeFD4ED48947aB45FcF765',
   '0xda930d632c17719b7d1f75a8cb986b7417c7ba75',
   '0xcb14228737c6b38C0d060bf7Cf5FF8f9090936fc',
-];
+].map(a => a.toLowerCase());
 
 function PortfolioStats({ data }) {
   return (
@@ -92,29 +93,35 @@ function PortfolioStats({ data }) {
 
 function TokenParamHandler({ onToken, onAddress }) {
   const searchParams = useSearchParams();
+  const onTokenRef = useRef(onToken);
+  const onAddressRef = useRef(onAddress);
+
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
-      const id = parseInt(token);
-      if (!isNaN(id) && id >= 1 && id <= 11104) onToken(id);
+      const id = parseInt(token, 10);
+      if (!isNaN(id) && id >= 1 && id <= 11104) onTokenRef.current(id);
     }
     const address = searchParams.get('address');
-    if (address) onAddress(address);
+    if (address) onAddressRef.current(address);
   }, []);
   return null;
 }
 
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale'
+  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale' | 'undervalued'
   const [searchResult, setSearchResult] = useState(null);
   const [unmintedResult, setUnmintedResult] = useState(null);
   const [walletData, setWalletData] = useState(null);
   const [whaleIdentifier, setWhaleIdentifier] = useState(null);
   const [whaleData, setWhaleData] = useState(null);
   const [isRandomWhale, setIsRandomWhale] = useState(false);
+  const [undervaluedData, setUndervaluedData] = useState(null);
+  const [undervaluedError, setUndervaluedError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const walletFetchId = useRef(0);
 
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
@@ -125,7 +132,7 @@ export default function Home() {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setWalletAddress(accounts[0]);
       setView('wallet');
-      loadWalletData(accounts[0]);
+      await loadWalletData(accounts[0]);
     } catch (err) {
       setError('Wallet connection rejected.');
     }
@@ -177,41 +184,64 @@ export default function Home() {
     }
   }
 
-  async function loadAddressWallet(addr) {
+  async function loadWalletByAddress(addr, { isWhale = false } = {}) {
     if (!addr) return;
+    const myId = ++walletFetchId.current;
     setWhaleIdentifier(addr);
     setWhaleData(null);
-    setIsRandomWhale(false);
+    setIsRandomWhale(isWhale);
     setView('whale');
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(addr)}`);
+      if (myId !== walletFetchId.current) return;
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWhaleData(data);
     } catch (err) {
+      if (myId !== walletFetchId.current) return;
       setError(err.message || 'Failed to load wallet.');
+    } finally {
+      if (myId === walletFetchId.current) setLoading(false);
+    }
+  }
+
+  function loadAddressWallet(addr) { return loadWalletByAddress(addr); }
+
+  function loadRandomWhale() {
+    const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
+    return loadWalletByAddress(whale, { isWhale: true });
+  }
+
+  async function loadUndervalued() {
+    setView('undervalued');
+    if (undervaluedData) return; // use cache until user explicitly refreshes
+    setLoading(true);
+    setUndervaluedError(null);
+    try {
+      const res = await fetch(`${API_URL}/undervalued`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUndervaluedData(data);
+    } catch (err) {
+      setUndervaluedError(err.message || 'Failed to load undervalued parcels.');
     } finally {
       setLoading(false);
     }
   }
 
-  async function loadRandomWhale() {
-    const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
-    setWhaleIdentifier(whale);
-    setWhaleData(null);
-    setIsRandomWhale(true);
-    setView('whale');
+  async function refreshUndervalued() {
+    setUndervaluedData(null);
     setLoading(true);
-    setError(null);
+    setUndervaluedError(null);
     try {
-      const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(whale)}`);
+      const res = await fetch(`${API_URL}/undervalued`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setWhaleData(data);
+      setUndervaluedData(data);
     } catch (err) {
-      setError(err.message || 'Failed to load whale wallet.');
+      setUndervaluedError(err.message || 'Failed to load undervalued parcels.');
     } finally {
       setLoading(false);
     }
@@ -227,6 +257,7 @@ export default function Home() {
         onConnect={connectWallet}
         onDisconnect={disconnectWallet}
         onWhale={loadRandomWhale}
+        onBargains={loadUndervalued}
       />
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">
@@ -256,6 +287,16 @@ export default function Home() {
                   onClick={() => setView('whale')}
                 >
                   {isRandomWhale ? '🐋 Whale' : whaleIdentifier}
+                </a>
+              </>
+            )}
+            {view === 'undervalued' && (
+              <>
+                <span className="text-2xl md:text-3xl"> / </span>
+                <a
+                  className="text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link switch-option-link--selected"
+                >
+                  [bargains]
                 </a>
               </>
             )}
@@ -300,6 +341,26 @@ export default function Home() {
               loading={loading}
               address={whaleIdentifier}
             />
+          )}
+
+          {view === 'undervalued' && (
+            <>
+              {undervaluedData && !loading && (
+                <div className="mb-4">
+                  <button
+                    className="btn-primary btn-sm text-xs"
+                    onClick={refreshUndervalued}
+                  >
+                    [refresh listings]
+                  </button>
+                </div>
+              )}
+              <UndervaluedView
+                data={undervaluedData}
+                loading={loading}
+                error={undervaluedError}
+              />
+            </>
           )}
           </ErrorBoundary>
         </div>

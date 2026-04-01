@@ -49,7 +49,7 @@ export function SpecialBadge({ type, config: cfg, opacity = 0.85 }) {
 
 // Shared badge stack — renders all applicable special badges for a parcel.
 // Used in ParcelResult (special + standard views) and WalletView (card grid).
-export function BadgeStack({ traits, opacity = 0.85 }) {
+export function AutoBadgeStack({ traits, opacity = 0.85 }) {
   const { mode, specialType, biome, level, zone, chroma, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier, mysteryValue } = traits;
   const isTerrain = mode === 'Terrain';
   return (
@@ -64,11 +64,36 @@ export function BadgeStack({ traits, opacity = 0.85 }) {
       {isTerrain && biome === 65                        && <SpecialBadge type="LittleGrass" opacity={opacity} />}
       {isTerrain && zone === '[BLOOD]' && chroma === 'Pulse' && <SpecialBadge type="Heartbeat" opacity={opacity} />}
       {isTerrain && biome === 58 && zone === 'Intro Forest'  && <SpecialBadge type="Matrix" opacity={opacity} />}
+      {/* 30000: manually determined from parcel animations — independent of MYSTERY_P5 (20000) */}
       {isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000 && <SpecialBadge type="Mesa" opacity={opacity} />}
       {level === 1                                      && <SpecialBadge type="Basement" opacity={opacity} />}
       {level === 20                                     && <SpecialBadge type="Penthouse" opacity={opacity} />}
     </>
   );
+}
+
+export function hasBadges(traits) {
+  const { mode, specialType, biome, level, zone, chroma, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue } = traits;
+  const isTerrain = mode === 'Terrain';
+  return isGodmode
+    || isOneOfOne
+    || isS0
+    || (biome === 0 && specialType !== 'Lith0')
+    || isLith0like
+    || isGm
+    || (isTerrain && biome === 42)
+    || (isTerrain && biome === 65)
+    || (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')
+    || (isTerrain && biome === 58 && zone === 'Intro Forest')
+    || (isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000)
+    || level === 1
+    || level === 20;
+}
+
+export function getLevelCategory(level) {
+  if (level === 1 || level === 20) return 'Mythical';
+  if (level === 2 || level === 3 || level === 18 || level === 19) return 'Rare';
+  return null;
 }
 
 // ─── Shared trait row components ─────────────────────────────────────────────
@@ -81,9 +106,11 @@ export function TraitRow({ label, value, category }) {
       <span className="text-sm opacity-65">{label}</span>
       <div className="flex items-center gap-2">
         <span className="text-sm">{value}</span>
-        <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
-          {category}
-        </span>
+        {category && category !== 'Floor' && (
+          <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
+            {category}
+          </span>
+        )}
       </div>
     </div>
   );
