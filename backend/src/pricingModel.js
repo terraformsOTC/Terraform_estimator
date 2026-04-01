@@ -266,12 +266,12 @@ function getZoneMultiple(zoneName) {
   return ZONE_MULTIPLES[zoneName] ?? 1;
 }
 
-function getBiomeMultiple(biomeNumber) {
-  return BIOME_MULTIPLES[parseInt(biomeNumber, 10)] ?? 1;
+function getBiomeMultiple(biome) {
+  return BIOME_MULTIPLES[biome] ?? 1;
 }
 
 function getLevelMultiple(level) {
-  return LEVEL_MULTIPLES[parseInt(level, 10)] ?? 1;
+  return LEVEL_MULTIPLES[level] ?? 1;
 }
 
 function getChromaMultiple(chroma) {
@@ -350,7 +350,7 @@ function estimatePrice(traits, floorOverride) {
   const biomeMultiple = getBiomeMultiple(biome);
   const levelMultiple = getLevelMultiple(level);
   // Biome 0 + Flow chroma gets a 1.1x boost (Flow is otherwise 1x)
-  const chromaMultiple = (parseInt(biome, 10) === 0 && (chroma === 'Flow' || !chroma))
+  const chromaMultiple = (biome === 0 && (chroma === 'Flow' || !chroma))
     ? 1.1
     : getChromaMultiple(chroma);
   const modeMultiple = getModeMultiple(mode);
@@ -362,8 +362,10 @@ function estimatePrice(traits, floorOverride) {
   const oneOf1Multiple    = (specialType === '1of1' || isOneOfOne)         ? TRAIT_PREMIUMS['1of1']      : 1;
   const s0Multiple        = isS0                                           ? TRAIT_PREMIUMS['S0']        : 1;
   const isTerrain         = mode === 'Terrain';
-  const matrixMultiple    = (isTerrain && parseInt(biome, 10) === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix']    : 1;
-  const mesaMultiple      = (isTerrain && parseInt(biome, 10) === 39 && mysteryValue != null && mysteryValue < 30000) ? TRAIT_PREMIUMS['Mesa']      : 1;
+  const matrixMultiple    = (isTerrain && biome === 58 && zone === 'Intro Forest') ? TRAIT_PREMIUMS['Matrix']    : 1;
+  // 30000 is manually determined based on parcel animations — the threshold below which
+  // the terrain renders as the distinctive Mesa plateau. Independent of MYSTERY_P5 (20000).
+  const mesaMultiple      = (isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000) ? TRAIT_PREMIUMS['Mesa']      : 1;
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
@@ -412,7 +414,7 @@ function estimatePrice(traits, floorOverride) {
     originModeMultiple,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
     zoneCategory: getCategoryFromMultiple(zoneMultiple),
-    biomeCategory: BIOME_CATEGORY_OVERRIDES[parseInt(biome, 10)] ?? getCategoryFromMultiple(biomeMultiple),
+    biomeCategory: BIOME_CATEGORY_OVERRIDES[biome] ?? getCategoryFromMultiple(biomeMultiple),
     formula,
   };
 }

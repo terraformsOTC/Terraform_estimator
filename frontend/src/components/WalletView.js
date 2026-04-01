@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, BadgeStack, API_URL } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, API_URL, getLevelCategory } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -81,9 +81,7 @@ function ParcelCard({ parcel }) {
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
-  const levelCategory = (level === 1 || level === 20) ? 'Mythical'
-                       : (level === 2 || level === 3 || level === 18 || level === 19) ? 'Rare'
-                       : null;
+  const levelCategory = getLevelCategory(level);
 
   const topCategory = [zoneCategory, biomeCategory, levelCategory].filter(Boolean).sort((a, b) => {
     const order = { Mythical: 0, Rare: 1, Premium: 2, 'Uncommon': 3, Floor: 4 };
@@ -130,7 +128,7 @@ function ParcelCard({ parcel }) {
               </span>
             )}
             {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
-            <BadgeStack traits={traits} opacity={0.8} />
+            <AutoBadgeStack traits={traits} opacity={0.8} />
             {mysteryOutlier && (
               <span className="text-xs px-1" style={{
                 color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',
