@@ -42,7 +42,7 @@ export default function UndervaluedView({ data, loading, error }) {
         <p className="text-sm opacity-75">no bargains currently listed.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="text-sm border-collapse w-full min-w-[640px]">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
                 <th className="pb-3 pr-4 font-normal"></th>

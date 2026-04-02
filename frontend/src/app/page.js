@@ -257,7 +257,6 @@ export default function Home() {
         onConnect={connectWallet}
         onDisconnect={disconnectWallet}
         onWhale={loadRandomWhale}
-        onBargains={loadUndervalued}
       />
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">

@@ -1,6 +1,6 @@
 'use client';
 
-export default function Header({ walletAddress, onConnect, onDisconnect, onWhale, onBargains }) {
+export default function Header({ walletAddress, onConnect, onDisconnect, onWhale }) {
   const short = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
     : null;
@@ -12,12 +12,12 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={onBargains}
-            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"
+          <a
+            href="/bargains"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
           >
             [bargains]
-          </button>
+          </a>
           <button
             onClick={onWhale}
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"
