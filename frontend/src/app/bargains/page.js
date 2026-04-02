@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import UndervaluedView from '@/components/UndervaluedView';
-import { API_URL } from '@/components/shared';
+import { API_URL, WHALE_WALLETS } from '@/components/shared';
+
+function randomWhaleUrl() {
+  const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
+  return `/?address=${whale}`;
+}
 
 export default function BargainsPage() {
   const [data, setData] = useState(null);
@@ -29,7 +34,7 @@ export default function BargainsPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={() => {}} />
+      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={() => { window.location.href = randomWhaleUrl(); }} />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-2xl md:text-3xl">
