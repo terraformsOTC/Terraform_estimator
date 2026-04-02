@@ -1,22 +1,17 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge } from '@/components/shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, WHALE_WALLETS } from '@/components/shared';
+import Header from '@/components/Header';
 
 export default function GlossaryPage() {
+  function goRandomWhale() {
+    const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
+    window.location.href = `/?address=${whale}`;
+  }
+
   return (
     <div className="content-wrapper">
-      <header className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
-        <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
-          <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
-          <div className="flex items-center gap-4">
-            <a href="https://terraformexplorer.xyz" target="_blank" rel="noopener noreferrer"
-              className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline">
-              [tf explorer ↗]
-            </a>
-            <a href="/glossary" className="text-sm opacity-100 no-underline hidden md:inline">[glossary]</a>
-          </div>
-        </nav>
-      </header>
+      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={goRandomWhale} />
 
       <main className="flex-1 px-6 max-w-2xl">
         <h1 className="text-3xl mb-2">Glossary</h1>
