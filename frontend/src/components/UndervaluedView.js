@@ -71,10 +71,10 @@ function ParcelRow({ parcel, rank }) {
   const { zone, biome, level, chroma, mode, specialType } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
-  const originBadge = SPECIAL_TYPE_BADGES[
+  const specialBadge = SPECIAL_TYPE_BADGES[
     mode === 'Origin Daydream' ? 'Origin Daydream'
     : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : null
+    : specialType
   ];
 
   return (
@@ -112,7 +112,7 @@ function ParcelRow({ parcel, rank }) {
               B{biome} {biomeCategory.toLowerCase()}
             </span>
           )}
-          {originBadge && <SpecialBadge config={originBadge} opacity={0.8} />}
+          {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
           <AutoBadgeStack traits={traits} opacity={0.8} />
         </div>
       </td>
