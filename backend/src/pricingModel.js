@@ -136,9 +136,13 @@ const MODE_MULTIPLES = {
   "Origin Daydream": 1,
   "Origin Terraform": 1,
   "Terrain": 1,
-  "Daydream": 0.975,
-  "Terraform": 0.975,
+  "Daydream": 1,
+  "Terraform": 1,
 };
+
+// For standard Daydream/Terraform: compress any premium above floor to this fraction.
+// Ensures these parcels price close to floor regardless of zone/biome/trait premiums.
+const DAYDREAM_PREMIUM_DISCOUNT = 0.32;
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
 // Bypass standard formula entirely.
@@ -376,18 +380,24 @@ function estimatePrice(traits, floorOverride) {
   const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.5 : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  // Only chroma and mode multiply into the level term — all trait premiums apply to the total
-  const premiumMultiple = chromaMultiple * modeMultiple;
-  const baseValue       = floor * zonebiomeAvg;
-  const levelValue      = levelMultiple * floor * premiumMultiple;
-  const estimatedValue  = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple;
+  // chroma multiplies into the level term; modeMultiple is no longer applied here
+  const baseValue      = floor * zonebiomeAvg;
+  const levelValue     = levelMultiple * floor * chromaMultiple;
+  const rawEstimate    = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple;
+
+  // For standard Daydream/Terraform: compress the premium above floor.
+  // Never goes below floor. Origin variants are unaffected (handled by originModeMultiple).
+  const isStandardDaydreamMode = (mode === 'Daydream' || mode === 'Terraform');
+  const estimatedValue = isStandardDaydreamMode
+    ? floor + (rawEstimate - floor) * DAYDREAM_PREMIUM_DISCOUNT
+    : rawEstimate;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = isDaydreamMode
     ? `${floor} × (${zoneMultiple}×0.85 + ${biomeMultiple}×0.15)`
     : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
-    formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
+    formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma)`;
   }
   if (spineMultiple     !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple    !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
@@ -398,6 +408,7 @@ function estimatePrice(traits, floorOverride) {
   if (lith0likeMultiple !== 1) formula += ` × ${lith0likeMultiple}(lith-0like)`;
   if (gmMultiple         !== 1) formula += ` × ${gmMultiple}(gm)`;
   if (originModeMultiple !== 1) formula += ` × ${originModeMultiple}(${mode.toLowerCase()})`;
+  if (isStandardDaydreamMode) formula += ` → floor + premium×${DAYDREAM_PREMIUM_DISCOUNT} (daydream discount)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
