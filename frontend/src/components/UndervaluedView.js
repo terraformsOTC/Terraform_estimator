@@ -36,7 +36,7 @@ export default function UndervaluedView({ data, loading, error }) {
         scanned {totalListingsScanned} listings · floor {floor} ETH · cached at {fetchedDate}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">shows any parcels listed at a discount according to our model. excludes daydream and terraform mode parcels.</p>
+      <p className="mb-6 text-xs opacity-50">shows any parcels listed at a discount according to our model.</p>
 
       {parcels.length === 0 ? (
         <p className="text-sm opacity-75">no bargains currently listed.</p>
