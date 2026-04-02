@@ -168,7 +168,7 @@ export default function GlossaryPage() {
         <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
           TerraformsOTC
         </a>
-        {' '}and Claude. Want help selling or buying a parcel? Contact{' '}
+        {' '}and Claude. Want help buying or selling a parcel? Contact{' '}
         <a href="mailto:terraformsotc@protonmail.com">
           terraformsotc@protonmail.com
         </a>
