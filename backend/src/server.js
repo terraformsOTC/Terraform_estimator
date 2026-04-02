@@ -338,7 +338,7 @@ app.get('/undervalued', async (req, res) => {
         const pricing = estimatePrice(traits, floor);
         const { listedPrice } = batch[j];
         const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
-        if (discount > 0) {
+        if (discount >= 0.01) {
           results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
         }
       }
