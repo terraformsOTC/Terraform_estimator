@@ -69,7 +69,7 @@ export default function UndervaluedView({ data, loading, error }) {
 function ParcelRow({ parcel, rank }) {
   const { tokenId, traits, pricing, listedPrice, discount } = parcel;
   const { zone, biome, level, chroma, mode, specialType } = traits;
-  const { estimatedValue, zoneCategory } = pricing;
+  const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const originBadge = SPECIAL_TYPE_BADGES[
     mode === 'Origin Daydream' ? 'Origin Daydream'
@@ -105,6 +105,11 @@ function ParcelRow({ parcel, rank }) {
           {zoneCategory && zoneCategory !== 'Floor' && (
             <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[zoneCategory], border: `1px solid ${CATEGORY_COLORS[zoneCategory]}`, opacity: 0.8 }}>
               {zoneCategory.toLowerCase()}
+            </span>
+          )}
+          {biomeCategory && biomeCategory !== 'Floor' && (
+            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[biomeCategory], border: `1px solid ${CATEGORY_COLORS[biomeCategory]}`, opacity: 0.8 }}>
+              B{biome} {biomeCategory.toLowerCase()}
             </span>
           )}
           {originBadge && <SpecialBadge config={originBadge} opacity={0.8} />}
