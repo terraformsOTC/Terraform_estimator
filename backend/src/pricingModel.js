@@ -355,7 +355,11 @@ function estimatePrice(traits, floorOverride) {
     : getChromaMultiple(chroma);
   const modeMultiple = getModeMultiple(mode);
 
-  const zonebiomeAvg = (zoneMultiple + biomeMultiple) / 2;
+  // Daydream/Terraform modes: zone is the dominant trait, biome adds little premium
+  const isDaydreamMode = ['Daydream', 'Origin Daydream', 'Terraform', 'Origin Terraform'].includes(mode);
+  const zoneWeight  = isDaydreamMode ? 0.85 : 0.5;
+  const biomeWeight = isDaydreamMode ? 0.15 : 0.5;
+  const zonebiomeAvg = zoneMultiple * zoneWeight + biomeMultiple * biomeWeight;
 
   // Trait premiums — applied on top of the level term
   const spineMultiple     = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']     : 1;
@@ -369,7 +373,7 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
-  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 4 : 1;
+  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.5 : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
   // Only chroma and mode multiply into the level term — all trait premiums apply to the total
@@ -379,7 +383,9 @@ function estimatePrice(traits, floorOverride) {
   const estimatedValue  = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple;
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
-  let formula = `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
+  let formula = isDaydreamMode
+    ? `${floor} × (${zoneMultiple}×0.85 + ${biomeMultiple}×0.15)`
+    : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
     formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma) × ${modeMultiple}(mode)`;
   }

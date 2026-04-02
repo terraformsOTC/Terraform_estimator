@@ -334,7 +334,7 @@ app.get('/undervalued', async (req, res) => {
         const r = settled[j];
         if (r.status !== 'fulfilled') continue;
         const traits = r.value;
-        if (!['Terrain', 'Origin Daydream', 'Origin Terraform'].includes(traits.mode)) continue;
+        // No mode filter — all modes included
         const pricing = estimatePrice(traits, floor);
         const { listedPrice } = batch[j];
         const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
