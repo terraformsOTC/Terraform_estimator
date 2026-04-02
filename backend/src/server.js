@@ -299,7 +299,9 @@ async function fetchOpenSeaListings(maxPages = 5) {
   }
 
   listings.sort((a, b) => a.listedPrice - b.listedPrice);
-  return listings;
+  // Deduplicate by tokenId — keep cheapest listing per token
+  const seen = new Set();
+  return listings.filter(l => seen.has(l.tokenId) ? false : seen.add(l.tokenId));
 }
 
 // GET /undervalued
