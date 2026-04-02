@@ -33,7 +33,7 @@ export default function UndervaluedView({ data, loading, error }) {
   return (
     <div>
       <div className="mb-6 text-xs opacity-50">
-        scanned {totalListingsScanned} listings · floor {floor} ETH · cached at {fetchedDate}
+        scanned {totalListingsScanned} listings · floor {floor?.toFixed(3)} ETH · cached at {fetchedDate}
       </div>
 
       <p className="mb-6 text-xs opacity-50">shows any parcels listed at a discount according to our model.</p>
