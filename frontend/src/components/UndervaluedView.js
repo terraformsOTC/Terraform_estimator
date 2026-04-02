@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, API_URL } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, CATEGORY_COLORS, API_URL } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -69,7 +69,7 @@ export default function UndervaluedView({ data, loading, error }) {
 function ParcelRow({ parcel, rank }) {
   const { tokenId, traits, pricing, listedPrice, discount } = parcel;
   const { zone, biome, level, chroma, mode, specialType } = traits;
-  const { estimatedValue } = pricing;
+  const { estimatedValue, zoneCategory } = pricing;
 
   const originBadge = SPECIAL_TYPE_BADGES[
     mode === 'Origin Daydream' ? 'Origin Daydream'
@@ -102,6 +102,11 @@ function ParcelRow({ parcel, rank }) {
       <td className="py-2 pr-4">
         <div className="flex items-center gap-1 flex-wrap">
           <span className="text-xs opacity-60">{zone}/B{biome}/L{level}/{chroma || 'Flow'}</span>
+          {zoneCategory && zoneCategory !== 'Floor' && (
+            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[zoneCategory], border: `1px solid ${CATEGORY_COLORS[zoneCategory]}`, opacity: 0.8 }}>
+              {zoneCategory.toLowerCase()}
+            </span>
+          )}
           {originBadge && <SpecialBadge config={originBadge} opacity={0.8} />}
           <AutoBadgeStack traits={traits} opacity={0.8} />
         </div>
