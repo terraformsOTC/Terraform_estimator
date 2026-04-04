@@ -2,6 +2,16 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Used by secondary pages (bargains, glossary) that don't manage wallet state themselves.
+// Connects via MetaMask and redirects to the main page with the address in the URL.
+export async function connectAndRedirect() {
+  if (typeof window.ethereum === 'undefined') return;
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (accounts[0]) window.location.href = `/?address=${accounts[0]}`;
+  } catch (_) {}
+}
+
 export function pickRandomWhale() {
   return WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
 }

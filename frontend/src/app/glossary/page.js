@@ -1,6 +1,6 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, pickRandomWhale, Footer } from '@/components/shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
 import Header from '@/components/Header';
 
 export default function GlossaryPage() {
@@ -10,7 +10,7 @@ export default function GlossaryPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={goRandomWhale} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={goRandomWhale} />
 
       <main className="flex-1 px-6 max-w-2xl">
         <h1 className="text-3xl mb-2">Glossary</h1>
