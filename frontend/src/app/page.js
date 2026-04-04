@@ -9,7 +9,7 @@ import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import UndervaluedView from '@/components/UndervaluedView';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, WHALE_WALLETS } from '@/components/shared';
+import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
 
 function PortfolioStats({ data }) {
   return (
@@ -153,31 +153,13 @@ export default function Home() {
     }
   }
 
-  function loadAddressWallet(addr) { return loadWalletByAddress(addr); }
-
   function loadRandomWhale() {
-    const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
-    return loadWalletByAddress(whale, { isWhale: true });
+    return loadWalletByAddress(pickRandomWhale(), { isWhale: true });
   }
 
-  async function loadUndervalued() {
+  async function loadUndervalued({ force = false } = {}) {
     setView('undervalued');
-    if (undervaluedData) return; // use cache until user explicitly refreshes
-    setLoading(true);
-    setUndervaluedError(null);
-    try {
-      const res = await fetch(`${API_URL}/undervalued`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setUndervaluedData(data);
-    } catch (err) {
-      setUndervaluedError(err.message || 'Failed to load undervalued parcels.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function refreshUndervalued() {
+    if (!force && undervaluedData) return;
     setUndervaluedData(null);
     setLoading(true);
     setUndervaluedError(null);
@@ -196,7 +178,8 @@ export default function Home() {
   return (
     <div className="content-wrapper">
       <Suspense fallback={null}>
-        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadAddressWallet} />
+        {/* empty dep array is intentional — runs once on mount to read initial URL params only */}
+        <TokenParamHandler onToken={(id) => { setView('search'); searchParcel(id); }} onAddress={loadWalletByAddress} />
       </Suspense>
       <Header
         walletAddress={walletAddress}
@@ -294,7 +277,7 @@ export default function Home() {
                 <div className="mb-4">
                   <button
                     className="btn-primary btn-sm text-xs"
-                    onClick={refreshUndervalued}
+                    onClick={() => loadUndervalued({ force: true })}
                   >
                     [refresh listings]
                   </button>
@@ -310,16 +293,7 @@ export default function Home() {
           </ErrorBoundary>
         </div>
       </main>
-      <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
-        Built with enthusiasm by{' '}
-        <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
-          TerraformsOTC
-        </a>
-        {' '}and Claude. Want help buying or selling a parcel? Contact{' '}
-        <a href="mailto:terraformsotc@protonmail.com">
-          terraformsotc@protonmail.com
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }

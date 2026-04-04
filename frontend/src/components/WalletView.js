@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, API_URL, getLevelCategory } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, API_URL, getLevelCategory } from './shared';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -29,7 +29,7 @@ export default function WalletView({ data, loading, address }) {
 
   const { sets, totalParcels, fetchedParcels } = data;
 
-  const cols = Math.min(6, Math.max(4, sortedParcels.length));
+  const cols = Math.min(6, sortedParcels.length);
 
   return (
     <div>
@@ -129,15 +129,7 @@ function ParcelCard({ parcel }) {
             )}
             {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
             <AutoBadgeStack traits={traits} opacity={0.8} />
-            {mysteryOutlier && (
-              <span className="text-xs px-1" style={{
-                color: mysteryOutlier === 'high' ? '#ffd700' : '#f87171',
-                border: `1px solid ${mysteryOutlier === 'high' ? '#ffd700' : '#f87171'}`,
-                opacity: 0.8,
-              }}>
-                {mysteryOutlier === 'high' ? 'high ???' : 'low ???'}
-              </span>
-            )}
+            <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
             {(mode === 'Origin Daydream' || mode === 'Origin Terraform') && (
               <SpecialBadge type={mode} opacity={0.8} />
             )}

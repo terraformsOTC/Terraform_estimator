@@ -304,9 +304,52 @@ async function fetchOpenSeaListings(maxPages = 5) {
   return listings.filter(l => seen.has(l.tokenId) ? false : seen.add(l.tokenId));
 }
 
+async function computeUndervalued() {
+  const now = Date.now();
+  const allListings = await fetchOpenSeaListings(2);
+  // Work from cheapest upward — most likely to contain undervalued parcels
+  const candidates = allListings.slice(0, 100);
+
+  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+
+  const results = [];
+  const BATCH_SIZE = 8;
+  for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+    const batch = candidates.slice(i, i + BATCH_SIZE);
+    const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
+    for (let j = 0; j < settled.length; j++) {
+      const r = settled[j];
+      if (r.status !== 'fulfilled') continue;
+      const traits = r.value;
+      // No mode filter — all modes included
+      const pricing = estimatePrice(traits, floor);
+      const { listedPrice } = batch[j];
+      const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
+      if (discount >= 0.01) {
+        results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
+      }
+    }
+  }
+
+  results.sort((a, b) => b.discount - a.discount);
+  const responseData = {
+    parcels: results.slice(0, 25),
+    floor,
+    floorIsLive,
+    totalListingsScanned: allListings.length,
+    fetchedAt: now,
+  };
+  undervaluedCache = { data: responseData, fetchedAt: now };
+  return responseData;
+}
+
+// In-flight guard: collapses concurrent cold-cache requests into a single computation.
+// Without this, simultaneous requests would each kick off the full 20–40s pipeline.
+let undervaluedInFlight = null;
+
 // GET /undervalued
 // Returns the top 25 minted parcels whose OpenSea list price is furthest below
-// the internal estimated value. Results are cached for 5 minutes.
+// the internal estimated value. Results are cached for 30 minutes.
 // On cold cache, expect ~20–40s while traits are fetched via RPC.
 app.get('/undervalued', async (req, res) => {
   try {
@@ -319,40 +362,10 @@ app.get('/undervalued', async (req, res) => {
       return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
     }
 
-    const allListings = await fetchOpenSeaListings(2);
-    // Work from cheapest upward — most likely to contain undervalued parcels
-    const candidates = allListings.slice(0, 100);
-
-    const { price: floor, isLive: floorIsLive } = await getFloorPrice();
-
-    const results = [];
-    const BATCH_SIZE = 8;
-    for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
-      const batch = candidates.slice(i, i + BATCH_SIZE);
-      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
-      for (let j = 0; j < settled.length; j++) {
-        const r = settled[j];
-        if (r.status !== 'fulfilled') continue;
-        const traits = r.value;
-        // No mode filter — all modes included
-        const pricing = estimatePrice(traits, floor);
-        const { listedPrice } = batch[j];
-        const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
-        if (discount >= 0.01) {
-          results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
-        }
-      }
+    if (!undervaluedInFlight) {
+      undervaluedInFlight = computeUndervalued().finally(() => { undervaluedInFlight = null; });
     }
-
-    results.sort((a, b) => b.discount - a.discount);
-    const responseData = {
-      parcels: results.slice(0, 25),
-      floor,
-      floorIsLive,
-      totalListingsScanned: allListings.length,
-      fetchedAt: now,
-    };
-    undervaluedCache = { data: responseData, fetchedAt: now };
+    const responseData = await undervaluedInFlight;
     res.json(responseData);
   } catch (err) {
     console.error('[undervalued]', err.message);
@@ -529,27 +542,34 @@ app.get('/wallet/:address', async (req, res) => {
       try {
         const resolved = await provider.resolveName(address);
         if (!resolved) {
-          return res.status(400).json({ error: `Could not resolve ENS name: ${address}` });
+          const safe = String(req.params.address).slice(0, 100).replace(/[<>"']/g, '');
+          return res.status(400).json({ error: `Could not resolve ENS name: ${safe}` });
         }
         address = resolved;
         console.log(`[wallet] ENS resolved: ${req.params.address} → ${address}`);
       } catch (ensErr) {
-        return res.status(400).json({ error: `Invalid address or unresolvable name: ${req.params.address}` });
+        const safe = String(req.params.address).slice(0, 100).replace(/[<>"']/g, '');
+        return res.status(400).json({ error: `Invalid address or unresolvable name: ${safe}` });
       }
     }
 
     const { contract } = getProvider();
     const balance = await withTimeout(contract.balanceOf(address));
     const count = Number(balance);
+    const MAX_WALLET_TOKENS = 500;
+    const fetchCount = Math.min(count, MAX_WALLET_TOKENS);
+    if (count > MAX_WALLET_TOKENS) {
+      console.warn(`[wallet] ${address}: balance=${count} exceeds cap, clamping to ${MAX_WALLET_TOKENS}`);
+    }
 
     const { price: liveFloor, isLive: floorIsLive } = await getFloorPrice();
 
-    if (count === 0) {
+    if (fetchCount === 0) {
       return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: liveFloor, floorIsLive });
     }
 
     const tokenIds = await withTimeout(
-      Promise.all(Array.from({ length: count }, (_, i) => contract.tokenOfOwnerByIndex(address, i))),
+      Promise.all(Array.from({ length: fetchCount }, (_, i) => contract.tokenOfOwnerByIndex(address, i))),
       30_000, // 30s for large wallets
     );
 
@@ -672,6 +692,7 @@ app.get('/unminted/search', async (req, res) => {
 });
 
 // GET /health
+app.use('/health', standardLimiter);
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // GET /floor

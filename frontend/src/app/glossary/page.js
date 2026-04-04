@@ -1,12 +1,11 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, WHALE_WALLETS } from '@/components/shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, pickRandomWhale, Footer } from '@/components/shared';
 import Header from '@/components/Header';
 
 export default function GlossaryPage() {
   function goRandomWhale() {
-    const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
-    window.location.href = `/?address=${whale}`;
+    window.location.href = `/?address=${pickRandomWhale()}`;
   }
 
   return (
@@ -158,16 +157,7 @@ export default function GlossaryPage() {
 
       </main>
 
-      <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
-        Built with enthusiasm by{' '}
-        <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
-          TerraformsOTC
-        </a>
-        {' '}and Claude. Want help buying or selling a parcel? Contact{' '}
-        <a href="mailto:terraformsotc@protonmail.com">
-          terraformsotc@protonmail.com
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
@@ -182,12 +172,11 @@ function Section({ title, children }) {
   );
 }
 
-function GlossaryRow({ badge, title, description }) {
+function GlossaryRow({ badge, description }) {
   return (
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-1">
         {badge}
-        {title && <p className="text-sm font-medium">{title}</p>}
       </div>
       <p className="text-sm opacity-65 leading-relaxed">{description}</p>
     </div>

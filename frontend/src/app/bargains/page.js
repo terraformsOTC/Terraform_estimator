@@ -3,12 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import UndervaluedView from '@/components/UndervaluedView';
-import { API_URL, WHALE_WALLETS } from '@/components/shared';
-
-function randomWhaleUrl() {
-  const whale = WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
-  return `/?address=${whale}`;
-}
+import { API_URL, pickRandomWhale, Footer } from '@/components/shared';
 
 export default function BargainsPage() {
   const [data, setData] = useState(null);
@@ -34,7 +29,7 @@ export default function BargainsPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={() => { window.location.href = randomWhaleUrl(); }} />
+      <Header onConnect={() => {}} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-2xl md:text-3xl">
@@ -55,16 +50,7 @@ export default function BargainsPage() {
           <UndervaluedView data={data} loading={loading} error={error} />
         </div>
       </main>
-      <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
-        Built with enthusiasm by{' '}
-        <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
-          TerraformsOTC
-        </a>
-        {' '}and Claude. Want help buying or selling a parcel? Contact{' '}
-        <a href="mailto:terraformsotc@protonmail.com">
-          terraformsotc@protonmail.com
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
