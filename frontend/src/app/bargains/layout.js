@@ -1,6 +1,9 @@
 export const metadata = {
   title: 'Bargains',
   description: 'Terraforms parcels currently listed below their estimated value — updated every 30 minutes.',
+  alternates: {
+    canonical: 'https://www.terraformestimator.xyz/bargains',
+  },
   openGraph: {
     title: 'Bargains | Terraform Estimator',
     description: 'Terraforms parcels currently listed below their estimated value — updated every 30 minutes.',

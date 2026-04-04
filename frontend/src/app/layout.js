@@ -10,6 +10,9 @@ export const metadata = {
     template: '%s | Terraform Estimator',
   },
   description: 'Estimate the value of any Terraforms by Mathcastles parcel. Covers all 11,104 parcels — minted and unminted.',
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
     siteName: 'Terraform Estimator',
     type: 'website',
