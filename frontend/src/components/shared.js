@@ -2,6 +2,35 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+export function pickRandomWhale() {
+  return WHALE_WALLETS[Math.floor(Math.random() * WHALE_WALLETS.length)];
+}
+
+export function Footer() {
+  return (
+    <footer className="px-6 mt-16 mb-6 text-xs opacity-40">
+      Built with enthusiasm by{' '}
+      <a href="https://x.com/TerraformsOTC" target="_blank" rel="noopener noreferrer">
+        TerraformsOTC
+      </a>
+      {' '}and Claude. Want help buying or selling a parcel? Contact{' '}
+      <a href="mailto:terraformsotc@protonmail.com">
+        terraformsotc@protonmail.com
+      </a>
+    </footer>
+  );
+}
+
+export function MysteryBadge({ outlier, opacity = 0.8 }) {
+  if (!outlier) return null;
+  const color = outlier === 'high' ? '#ffd700' : '#f87171';
+  return (
+    <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity }}>
+      {outlier === 'high' ? 'high ???' : 'low ???'}
+    </span>
+  );
+}
+
 export const WHALE_WALLETS = [
   '0x9ddbdcd3c5123e673e4b96992101f8ceafcd95a0',
   '0xb88f61e6fbda83fbfffabe364112137480398018',

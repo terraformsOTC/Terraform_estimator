@@ -49,8 +49,8 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     [animData?.seed, animData?.chars]
   );
 
-  // Stable per-instance id for scoped CSS keyframes
-  const instanceId = useMemo(() => `tf-${Math.random().toString(36).slice(2, 7)}`, []);
+  // Stable per-instance id for scoped CSS keyframes — useRef never re-initialises on remount
+  const instanceId = useRef(`tf-${Math.random().toString(36).slice(2, 7)}`).current;
 
   // Build set of animated classes from per-parcel data
   const animatedSet = useMemo(() => {
@@ -106,6 +106,16 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     return `${fontFaceRule}\n@keyframes ${instanceId}-x {\n${keyframeStops}\n}\n${animatedRules}`;
   }, [animData, instanceId]);
 
+  // Inject scoped CSS via textContent (safe) rather than JSX <style> interpolation.
+  // fontData is base64 from unminted-fonts.json — textContent prevents CSS breakout.
+  useEffect(() => {
+    if (!styleContent) return;
+    const el = document.createElement('style');
+    el.textContent = styleContent;
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [styleContent]);
+
   useEffect(() => {
     if (!animData || !containerRef.current) return;
     const { grid, resource: resourceRaw, chars } = animData;
@@ -119,7 +129,9 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
     const wrapAt = Math.max(mainSet.length, 1) * 4096;
     let airship = 0;
-    const timer = setInterval(() => {
+    let rafId;
+
+    function tick() {
       for (let row = 0; row < 32; row++) {
         for (let col = 0; col < 32; col++) {
           const idx  = row * 32 + col;
@@ -137,9 +149,11 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
         }
       }
       airship = (airship + 1) % wrapAt;
-    }, 10);
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
 
-    return () => clearInterval(timer);
+    return () => cancelAnimationFrame(rafId);
   }, [animData, mainSet]);
 
   // Guard after all hooks
@@ -158,8 +172,6 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
 
   return (
     <div style={{ width, height, flexShrink: 0 }}>
-      <style>{styleContent}</style>
-
       <div style={{
         transform: `scale(${scale})`,
         transformOrigin: 'top left',
