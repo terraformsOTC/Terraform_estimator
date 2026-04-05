@@ -346,6 +346,8 @@ async function computeUndervalued() {
 // In-flight guard: collapses concurrent cold-cache requests into a single computation.
 // Without this, simultaneous requests would each kick off the full 20–40s pipeline.
 let undervaluedInFlight = null;
+let undervaluedFailedAt = 0;
+const UNDERVALUED_BACKOFF_MS = 60_000;
 
 // GET /undervalued
 // Returns the top 25 minted parcels whose OpenSea list price is furthest below
@@ -362,12 +364,17 @@ app.get('/undervalued', async (req, res) => {
       return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
     }
 
+    if (!undervaluedInFlight && (now - undervaluedFailedAt) < UNDERVALUED_BACKOFF_MS) {
+      return res.status(503).json({ error: 'Undervalued data temporarily unavailable. Try again shortly.' });
+    }
+
     if (!undervaluedInFlight) {
       undervaluedInFlight = computeUndervalued().finally(() => { undervaluedInFlight = null; });
     }
     const responseData = await undervaluedInFlight;
     res.json(responseData);
   } catch (err) {
+    undervaluedFailedAt = Date.now();
     console.error('[undervalued]', err.message);
     res.status(500).json({ error: 'Failed to fetch undervalued parcels.' });
   }

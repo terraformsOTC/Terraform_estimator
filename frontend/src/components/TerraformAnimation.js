@@ -33,7 +33,7 @@ function buildMainSet(seed, chars) {
   if (SEED > 9970) {
     for (const u of UNI) charSet.push(...makeSet(u));
   } else if (SEED > 5000) {
-    charSet.push(...makeSet(UNI[Math.floor(SEED) % 3]));
+    charSet.push(...makeSet(UNI[SEED % 3]));
   }
   // mainSet = originalChars.reverse() → [char_a, char_b, ..., char_i]
   const mainSet = [...originalChars].reverse();
