@@ -1,7 +1,7 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Estimated Value = (Floor × ((zone_m + biome_m) / 2)
-//                   + (level_m × Floor) × chroma_m × mode_m)
+//   Terrain mode (equal-weight):  Floor × ((zone_m×0.5 + biome_m×0.5) + level_m) × chroma_m × mode_m × ...
+//   Daydream mode (zone-dominant): Floor × ((zone_m×0.85 + biome_m×0.15) + level_m) × chroma_m × mode_m × ...
 //                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m × gm_m × origin_mode_m
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
