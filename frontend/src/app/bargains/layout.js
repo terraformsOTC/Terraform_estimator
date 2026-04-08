@@ -1,19 +1,8 @@
-export const metadata = {
-  title: 'Bargains',
-  description: 'Terraforms parcels currently listed below their estimated value — updated every 30 minutes.',
-  alternates: {
-    canonical: 'https://www.terraformestimator.xyz/bargains',
-  },
-  openGraph: {
-    title: 'Bargains | Terraform Estimator',
-    description: 'Terraforms parcels currently listed below their estimated value — updated every 30 minutes.',
-    url: 'https://www.terraformestimator.xyz/bargains',
-  },
-  twitter: {
-    title: 'Bargains | Terraform Estimator',
-    description: 'Terraforms parcels currently listed below their estimated value — updated every 30 minutes.',
-  },
-};
+import { createPageMetadata } from '@/lib/metadata';
+
+const description = 'Shows any Terraforms parcels listed at a discount according to the Terraform Estimator valuation model — updated every 30 minutes.';
+
+export const metadata = createPageMetadata('Bargains', description, '/bargains');
 
 export default function BargainsLayout({ children }) {
   return children;

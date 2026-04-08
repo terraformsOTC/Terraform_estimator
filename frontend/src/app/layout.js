@@ -1,7 +1,6 @@
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
-
-const SITE_URL = 'https://www.terraformestimator.xyz';
+import { SITE_URL } from '@/lib/metadata';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
