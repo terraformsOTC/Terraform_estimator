@@ -264,6 +264,21 @@ const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY;
 const UNDERVALUED_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let undervaluedCache = { data: null, fetchedAt: 0 };
 
+// Fetch a single URL with exponential backoff on 429 / 5xx responses.
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, { ...options, signal: AbortSignal.timeout(10_000) });
+    if (res.status === 429 || res.status >= 500) {
+      if (attempt === maxRetries) throw new Error(`OpenSea API error: HTTP ${res.status}`);
+      const delay = Math.min(1000 * 2 ** attempt, 8_000);
+      console.warn(`[opensea] HTTP ${res.status} on attempt ${attempt + 1}, retrying in ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
+      continue;
+    }
+    return res;
+  }
+}
+
 // Fetch active listings from OpenSea for the Terraforms collection.
 // Returns array of { tokenId, listedPrice } sorted cheapest first.
 // Paginates up to `maxPages` pages (100 listings each).
@@ -276,9 +291,8 @@ async function fetchOpenSeaListings(maxPages = 5) {
     url.searchParams.set('limit', '100');
     if (next) url.searchParams.set('next', next);
 
-    const res = await fetch(url.toString(), {
+    const res = await fetchWithRetry(url.toString(), {
       headers: { 'X-API-KEY': OPENSEA_API_KEY, 'accept': 'application/json' },
-      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) throw new Error(`OpenSea API error: HTTP ${res.status}`);
     const data = await res.json();
@@ -547,7 +561,7 @@ app.get('/wallet/:address', async (req, res) => {
       // Attempt ENS resolution (supports .eth names including emoji ENS like 🐒.eth)
       const { provider } = getProvider();
       try {
-        const resolved = await provider.resolveName(address);
+        const resolved = await withTimeout(provider.resolveName(address), 10_000);
         if (!resolved) {
           const safe = String(req.params.address).slice(0, 100).replace(/[<>"']/g, '');
           return res.status(400).json({ error: `Could not resolve ENS name: ${safe}` });
@@ -711,6 +725,8 @@ app.get('/floor', async (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   console.log(`Terraform Estimator API on port ${PORT}`);
+  if (!process.env.ALCHEMY_API_KEY) console.warn('[startup] ALCHEMY_API_KEY not set — floor price will use hardcoded fallback');
+  if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — /undervalued endpoint disabled');
   try {
     const { provider } = getProvider();
     const network = await withTimeout(provider.getNetwork());
