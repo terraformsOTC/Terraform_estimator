@@ -361,9 +361,15 @@ function estimatePrice(traits, floorOverride) {
 
   // Daydream/Terraform modes: zone is the dominant trait, biome adds little premium
   const isDaydreamMode = ['Daydream', 'Origin Daydream', 'Terraform', 'Origin Terraform'].includes(mode);
+  const isOriginDaydream = mode === 'Origin Daydream';
+  // Origin Daydream: compress zone premium (factor 0.4) — floor zones unaffected,
+  // high-tier zones have reduced impact on valuation
+  const effectiveZoneMultiple = isOriginDaydream
+    ? Math.round((1 + (zoneMultiple - 1) * 0.4) * 1000) / 1000
+    : zoneMultiple;
   const zoneWeight  = isDaydreamMode ? 0.85 : 0.5;
   const biomeWeight = isDaydreamMode ? 0.15 : 0.5;
-  const zonebiomeAvg = zoneMultiple * zoneWeight + biomeMultiple * biomeWeight;
+  const zonebiomeAvg = effectiveZoneMultiple * zoneWeight + biomeMultiple * biomeWeight;
 
   // Trait premiums — applied on top of the level term
   const spineMultiple     = specialType === 'Spine'                        ? TRAIT_PREMIUMS['Spine']     : 1;
@@ -394,7 +400,7 @@ function estimatePrice(traits, floorOverride) {
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = isDaydreamMode
-    ? `${floor} × (${zoneMultiple}×0.85 + ${biomeMultiple}×0.15)`
+    ? `${floor} × (${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginDaydream && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
     : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
     formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma)`;
@@ -415,6 +421,7 @@ function estimatePrice(traits, floorOverride) {
     floor,
     isSpecial: false,
     zoneMultiple,
+    ...(isOriginDaydream ? { effectiveZoneMultiple } : {}),
     biomeMultiple,
     zonebiomeAvg: Math.round(zonebiomeAvg * 100) / 100,
     levelMultiple,
