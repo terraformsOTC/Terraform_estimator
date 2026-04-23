@@ -18,6 +18,12 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           >
             [bargains]
           </a>
+          <a
+            href="/sales"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+          >
+            [sales]
+          </a>
           <button
             onClick={onWhale}
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"

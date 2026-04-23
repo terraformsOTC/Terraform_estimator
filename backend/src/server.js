@@ -77,6 +77,7 @@ app.use('/image',       standardLimiter);
 app.use('/wallet',      walletLimiter);
 app.use('/floor',       standardLimiter);
 app.use('/undervalued', undervaluedLimiter);
+app.use('/sales',       undervaluedLimiter);
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const RPC_URL = process.env.RPC_URL;
@@ -391,6 +392,60 @@ app.get('/undervalued', async (req, res) => {
     undervaluedFailedAt = Date.now();
     console.error('[undervalued]', err.message);
     res.status(500).json({ error: 'Failed to fetch undervalued parcels.' });
+  }
+});
+
+// ─── OPENSEA RECENT SALES ─────────────────────────────────────────────────────
+// Live "sales vs. estimate" feed. Mirrors the caching + in-flight guard pattern
+// used by /undervalued above — cold-path fans out to RPC for traits on every
+// scanned sale, so without the guard a burst of requests would multiply load.
+const { computeRecentSales } = require('./sales');
+const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /undervalued
+const SALES_BACKOFF_MS = 60_000;
+let salesCache = { data: null, fetchedAt: 0 };
+let salesInFlight = null;
+let salesFailedAt = 0;
+
+// GET /sales
+// Returns up to 50 of the most recent OpenSea sales for the Terraforms
+// collection, each stamped with our current estimate + signed error
+// ((sale - estimate) / estimate). Non-ETH/WETH sales are counted but not
+// priced (surfaced as `skippedNonEth`).
+app.get('/sales', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (salesCache.data && (now - salesCache.fetchedAt) < SALES_CACHE_TTL_MS) {
+      return res.json(salesCache.data);
+    }
+
+    if (!OPENSEA_API_KEY) {
+      return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
+    }
+
+    if (!salesInFlight && (now - salesFailedAt) < SALES_BACKOFF_MS) {
+      return res.status(503).json({ error: 'Sales data temporarily unavailable. Try again shortly.' });
+    }
+
+    if (!salesInFlight) {
+      salesInFlight = computeRecentSales({
+        apiKey: OPENSEA_API_KEY,
+        fetchWithRetry,
+        getParcelTraits,
+        getFloorPrice,
+        limit: 50,
+      })
+        .then(data => {
+          salesCache = { data, fetchedAt: Date.now() };
+          return data;
+        })
+        .finally(() => { salesInFlight = null; });
+    }
+    const responseData = await salesInFlight;
+    res.json(responseData);
+  } catch (err) {
+    salesFailedAt = Date.now();
+    console.error('[sales]', err.message);
+    res.status(500).json({ error: 'Failed to fetch recent sales.' });
   }
 });
 

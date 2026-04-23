@@ -16,6 +16,11 @@
 
 const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 
+// Stamped onto sales records so accuracy/bias analysis can be segmented by
+// formula version once persistence lands. Bump when multipliers, weights, or
+// formula structure change (patch = data-only, minor = formula change).
+const PRICING_MODEL_VERSION = '2.0.0';
+
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
   // Mythical (individual)
@@ -494,4 +499,5 @@ module.exports = {
   estimatePrice,
   detectSets,
   FLOOR_PRICE_ETH,
+  PRICING_MODEL_VERSION,
 };
