@@ -9,7 +9,7 @@
 const { ethers } = require('ethers');
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
-const TOTAL_SUPPLY = 9999;
+const TOTAL_SUPPLY = 9911;
 const BATCH_SIZE = 10;   // concurrent RPC calls per batch
 const DELAY_MS = 100;    // ms between batches (be gentle with the RPC)
 

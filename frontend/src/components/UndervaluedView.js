@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, CATEGORY_COLORS, API_URL } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -68,7 +68,7 @@ export default function UndervaluedView({ data, loading, error }) {
 
 function ParcelRow({ parcel, rank }) {
   const { tokenId, traits, pricing, listedPrice, discount } = parcel;
-  const { zone, biome, level, chroma, mode, specialType } = traits;
+  const { zone, biome, level, chroma, mode, specialType, mysteryOutlier } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
 
   const specialBadge = SPECIAL_TYPE_BADGES[
@@ -114,6 +114,7 @@ function ParcelRow({ parcel, rank }) {
           )}
           {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
           <AutoBadgeStack traits={traits} opacity={0.8} />
+          <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
         </div>
       </td>
       <td className="py-2 pr-4 text-right">
