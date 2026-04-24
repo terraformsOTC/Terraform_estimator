@@ -83,7 +83,7 @@ export default function SalesView({ data, loading, error }) {
           <table className="text-sm border-collapse w-full min-w-[640px]">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
-                <th className="pb-3 pr-4 font-normal"></th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell"></th>
                 <th className="pb-3 pr-4 font-normal">parcel</th>
                 <th className="pb-3 pr-4 font-normal">traits</th>
                 <th className="pb-3 pr-4 font-normal text-right">sale</th>
@@ -126,7 +126,7 @@ function SaleRow({ sale }) {
       className="border-b"
       style={{ borderColor: 'rgba(232,232,232,0.08)' }}
     >
-      <td className="py-2 pr-4">
+      <td className="py-2 pr-4 hidden md:table-cell">
         <a href={`/?token=${tokenId}`}>
           <img
             src={`${API_URL}/image/${tokenId}`}
