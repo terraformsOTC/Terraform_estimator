@@ -504,10 +504,10 @@ async function getParcelTraits(tokenId) {
       isGodmode   = GODMODE_IDS.has(Number(tokenId));
       isLith0like = LITH0LIKE_IDS.has(Number(tokenId));
       isGm        = GM_IDS.has(Number(tokenId));
-      // S0 (Season 0) — V2 upgraded parcels with Antenna "On".
-      // The Antenna trait is only present and set to "On" for parcels upgraded during Season 0.
-      // (There is no on-chain Timestamp or S0 trait — the Explorer derives that display externally.)
-      isS0 = attrs.some(a => a.trait_type === 'Antenna' && a.value === 'On');
+      // S0 (Season 0) — V2 upgraded parcels whose Timestamp trait contains '[S0]'.
+      // Timestamp is authoritative; Antenna === 'On' does not correspond to S0.
+      const timestampAttr = attrs.find(a => a.trait_type === 'Timestamp')?.value || '';
+      isS0 = String(timestampAttr).includes('[S0]');
       // '???' trait — the watermark level, controlling how much of the parcel surface is flooded by
       // the liquid animation. Derived from Perlin Noise; locked on-chain but delegatable to an external
       // contract. Present on ~89% of tokens. Not used in pricing (collection-wide distribution, no

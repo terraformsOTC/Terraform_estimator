@@ -280,7 +280,7 @@ function getBiomeMultiple(biome) {
 }
 
 function getLevelMultiple(level) {
-  return LEVEL_MULTIPLES[level] ?? 1;
+  return LEVEL_MULTIPLES[level] ?? 0;
 }
 
 function getChromaMultiple(chroma) {

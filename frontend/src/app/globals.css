@@ -15,7 +15,7 @@
 
 html {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
+  font-size: 16.8px;
 }
 
 body {
@@ -86,7 +86,7 @@ a:hover {
 
 .btn-sm {
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: 15.6px;
   line-height: normal;
 }
 
@@ -98,7 +98,7 @@ input[type="search"] {
   border: 1px solid rgba(232, 232, 232, 0.3);
   color: var(--text-primary);
   font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
+  font-size: 15.6px;
   outline: none;
   transition: border-color 0.15s;
   padding: 4px 10px;
