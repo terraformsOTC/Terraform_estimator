@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, API_URL, getLevelCategory } from './shared';
+import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -29,7 +30,7 @@ export default function WalletView({ data, loading, address }) {
 
   const { sets, totalParcels, fetchedParcels } = data;
 
-  const cols = Math.min(6, sortedParcels.length);
+  const gridTemplate = getWalletGridTemplate(sortedParcels.length);
 
   return (
     <div>
@@ -64,7 +65,7 @@ export default function WalletView({ data, loading, address }) {
       ) : (
         <div
           className="grid w-full mt-4 gap-4"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+          style={{ gridTemplateColumns: gridTemplate }}
         >
           {sortedParcels.map(parcel => (
             <ParcelCard key={parcel.tokenId} parcel={parcel} />
