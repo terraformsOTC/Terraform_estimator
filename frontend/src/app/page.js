@@ -90,6 +90,30 @@ export default function Home() {
     setView('search');
   }
 
+  // Sync header + wallet view when the user switches accounts in their wallet extension.
+  // Without this, the short-address button in the header stays on the previously
+  // connected account until a page reload.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.ethereum?.on) return;
+    const handleAccountsChanged = (accounts) => {
+      const next = accounts?.[0];
+      if (!next) {
+        disconnectWallet();
+        return;
+      }
+      setWalletAddress((prev) => {
+        if (prev && prev.toLowerCase() === next.toLowerCase()) return prev;
+        loadWalletData(next);
+        setView('wallet');
+        return next;
+      });
+    };
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
+    return () => {
+      window.ethereum.removeListener?.('accountsChanged', handleAccountsChanged);
+    };
+  }, []);
+
   async function loadWalletData(address) {
     setLoading(true);
     setError(null);
@@ -191,16 +215,16 @@ export default function Home() {
         <div className="px-6 mb-6 block md:flex justify-between items-end">
           <div>
             <a
-              className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'search' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
+              className={`text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'search' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
               onClick={() => setView('search')}
             >
               Estimate
             </a>
             {walletAddress && (
               <>
-                <span className="text-2xl md:text-3xl"> / </span>
+                <span className="text-[1.35rem] md:text-[1.6875rem]"> / </span>
                 <a
-                  className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'wallet' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
+                  className={`text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'wallet' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
                   onClick={() => setView('wallet')}
                 >
                   My Parcels
@@ -209,9 +233,9 @@ export default function Home() {
             )}
             {whaleData && (
               <>
-                <span className="text-2xl md:text-3xl"> / </span>
+                <span className="text-[1.35rem] md:text-[1.6875rem]"> / </span>
                 <a
-                  className={`text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'whale' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
+                  className={`text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'whale' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
                   onClick={() => setView('whale')}
                 >
                   {isRandomWhale ? '🐋 Whale' : whaleIdentifier}
@@ -220,9 +244,9 @@ export default function Home() {
             )}
             {view === 'undervalued' && (
               <>
-                <span className="text-2xl md:text-3xl"> / </span>
+                <span className="text-[1.35rem] md:text-[1.6875rem]"> / </span>
                 <a
-                  className="text-2xl md:text-3xl inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link switch-option-link--selected"
+                  className="text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link switch-option-link--selected"
                 >
                   [bargains]
                 </a>
