@@ -30,7 +30,7 @@ export default function WalletView({ data, loading, address }) {
 
   const { sets, totalParcels, fetchedParcels } = data;
 
-  const gridTemplate = getWalletGridTemplate(sortedParcels.length);
+  const gridTemplate = getWalletGridTemplate();
 
   return (
     <div>

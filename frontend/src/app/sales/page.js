@@ -32,7 +32,7 @@ export default function SalesPage() {
       <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
       <main className="flex-1">
         <div className="px-6 mb-6">
-          <span className="text-2xl md:text-3xl">
+          <span className="text-[1.35rem] md:text-[1.6875rem]">
             <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
             <span> / </span>
             <span>[sales]</span>
