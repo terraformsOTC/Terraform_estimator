@@ -141,7 +141,7 @@ function ParcelRow({ parcel, rank }) {
           href={`${OPENSEA_BASE}/${tokenId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary btn-sm text-xs no-underline"
+          className="btn-primary btn-sm text-xs no-underline whitespace-nowrap"
         >
           [opensea ↗]
         </a>
