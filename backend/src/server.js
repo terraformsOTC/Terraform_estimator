@@ -840,9 +840,13 @@ async function buildWeeklyReportData() {
   const floorIsLive = salesResult.floorIsLive;
 
   // ── Weekly sales (past 7 days only) ──
-  const weeklySales = salesResult.sales.filter(
-    s => new Date(s.closingDate) >= sevenDaysAgo
-  );
+  // closingDate from OpenSea is a Unix timestamp in seconds — convert to ms for Date comparison.
+  const sevenDaysAgoMs = sevenDaysAgo.getTime();
+  const weeklySales = salesResult.sales.filter(s => {
+    if (!s.closingDate) return false;
+    const ms = typeof s.closingDate === 'number' ? s.closingDate * 1000 : new Date(s.closingDate).getTime();
+    return ms >= sevenDaysAgoMs;
+  });
   const weekly_sales_count = weeklySales.length;
   const weekly_volume_eth =
     Math.round(
@@ -868,7 +872,7 @@ async function buildWeeklyReportData() {
           : null,
       buyer_wallet: s.winner,
       seller_wallet: s.seller,
-      timestamp: s.closingDate,
+      timestamp: typeof s.closingDate === 'number' ? new Date(s.closingDate * 1000).toISOString() : s.closingDate,
     }));
 
   // ── Bargains: score listings against estimator formula ──
