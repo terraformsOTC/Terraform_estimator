@@ -110,7 +110,7 @@ function ParcelCard({ parcel }) {
       <div className="flex flex-col">
         <div className="flex justify-between items-center mt-1">
           <a href={`/?token=${tokenId}`}>{tokenId}</a>
-          <span className="flex items-center gap-1 text-sm">
+          <span className="hidden md:flex items-center gap-1 text-sm">
             <EthIcon width={8} height={13} />
             {estimatedValue.toFixed(3)}
           </span>
