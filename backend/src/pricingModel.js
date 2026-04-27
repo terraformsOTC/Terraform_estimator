@@ -19,7 +19,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.0.0';
+const PRICING_MODEL_VERSION = '2.1.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -388,7 +388,7 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
-  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.5 : 1;
+  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.15 : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
   // chroma multiplies into the level term; modeMultiple is no longer applied here
