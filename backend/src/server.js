@@ -777,6 +777,201 @@ app.get('/floor', async (req, res) => {
   res.json({ floor: price, isLive, fetchedAt });
 });
 
+// ─── WEEKLY REPORT DATA ────────────────────────────────────────────────────────
+
+async function fetchCollectorsCount() {
+  try {
+    const res = await fetchWithRetry(
+      'https://api.opensea.io/api/v2/collections/terraforms',
+      {
+        headers: {
+          'X-API-KEY': process.env.OPENSEA_API_KEY,
+          'Accept': 'application/json',
+        },
+      }
+    );
+    const data = await res.json();
+    return data.num_owners ?? null;
+  } catch (err) {
+    console.warn('[weekly-report] fetchCollectorsCount failed:', err.message);
+    return null;
+  }
+}
+
+async function fetchEthUsdPrice() {
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+      { signal: AbortSignal.timeout(5000) }
+    );
+    const data = await res.json();
+    return data?.ethereum?.usd ?? null;
+  } catch (err) {
+    console.warn('[weekly-report] fetchEthUsdPrice failed:', err.message);
+    return null;
+  }
+}
+
+let weeklyReportCache = null;
+let weeklyReportFetchedAt = 0;
+let weeklyReportInFlight = null;
+const WEEKLY_REPORT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function buildWeeklyReportData() {
+  const now = Date.now();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+  // Fan out all slow calls in parallel.
+  // fetchOpenSeaListings(2) = 2 pages × 100 = up to 200 listings (matches /undervalued).
+  // computeRecentSales limit matches what /sales already uses.
+  const [salesResult, listingsRaw, collectors, ethUsd] = await Promise.all([
+    computeRecentSales({
+      apiKey: process.env.OPENSEA_API_KEY,
+      fetchWithRetry,
+      getParcelTraits,
+      getFloorPrice,
+    }),
+    fetchOpenSeaListings(2),
+    fetchCollectorsCount(),
+    fetchEthUsdPrice(),
+  ]);
+
+  const floor = salesResult.floor;
+  const floorIsLive = salesResult.floorIsLive;
+
+  // ── Weekly sales (past 7 days only) ──
+  const weeklySales = salesResult.sales.filter(
+    s => new Date(s.closingDate) >= sevenDaysAgo
+  );
+  const weekly_sales_count = weeklySales.length;
+  const weekly_volume_eth =
+    Math.round(
+      weeklySales.reduce((sum, s) => sum + s.salePrice, 0) * 1000
+    ) / 1000;
+
+  // ── Top sales (highest price first, capped at 10) ──
+  const top_sales = [...weeklySales]
+    .sort((a, b) => b.salePrice - a.salePrice)
+    .slice(0, 10)
+    .map(s => ({
+      tokenId: s.tokenId,
+      zone: s.traits?.zone ?? null,
+      biome: s.traits?.biome ?? null,
+      mode: s.traits?.mode ?? null,
+      chroma: s.traits?.chroma ?? null,
+      specialType: s.traits?.specialType ?? null,
+      price_eth: s.salePrice,
+      estimated_value_eth: s.pricing?.estimatedValue ?? null,
+      price_to_estimate_ratio:
+        s.pricing?.estimatedValue
+          ? Math.round((s.salePrice / s.pricing.estimatedValue) * 100) / 100
+          : null,
+      buyer_wallet: s.winner,
+      seller_wallet: s.seller,
+      timestamp: s.closingDate,
+    }));
+
+  // ── Bargains: score listings against estimator formula ──
+  // Same scoring logic as /undervalued, just returning top 10 instead of 25.
+  // Process cheapest 100 listings only (same cap as /undervalued).
+  const cheapest100 = listingsRaw.slice(0, 100);
+
+  const BATCH = 8;
+  const scored = [];
+  for (let i = 0; i < cheapest100.length; i += BATCH) {
+    const batch = cheapest100.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(async ({ tokenId, listedPrice }) => {
+        try {
+          const traits = await getParcelTraits(tokenId);
+          const pricing = estimatePrice(traits, floor);
+          const discount_pct = Math.round(
+            (1 - listedPrice / pricing.estimatedValue) * 100
+          );
+          return { tokenId, traits, pricing, listedPrice, discount_pct };
+        } catch {
+          return null;
+        }
+      })
+    );
+    scored.push(...results);
+  }
+
+  const bargains = scored
+    .filter(l => l !== null && l.discount_pct > 0)
+    .sort((a, b) => b.discount_pct - a.discount_pct)
+    .slice(0, 10)
+    .map(l => ({
+      tokenId: l.tokenId,
+      zone: l.traits.zone,
+      biome: l.traits.biome,
+      mode: l.traits.mode,
+      chroma: l.traits.chroma,
+      specialType: l.traits.specialType ?? null,
+      list_price_eth: l.listedPrice,
+      estimated_value_eth: l.pricing.estimatedValue,
+      discount_pct: l.discount_pct,
+    }));
+
+  const floor_usd = ethUsd ? Math.round(floor * ethUsd) : null;
+
+  // listingsRaw is capped at 200 (2 pages). If the true listing count exceeds
+  // 200 this will undercount. Acceptable given report usage.
+  const parcels_listed = listingsRaw.length;
+
+  const reportDate = new Date();
+
+  return {
+    period: {
+      from: sevenDaysAgo.toISOString().slice(0, 10),
+      to: reportDate.toISOString().slice(0, 10),
+    },
+    market: {
+      floor_eth: floor,
+      floor_usd,
+      parcels_listed,
+      collectors,
+      weekly_sales_count,
+      weekly_volume_eth,
+      floorIsLive,
+    },
+    top_sales,
+    bargains,
+    fetchedAt: reportDate.toISOString(),
+  };
+}
+
+app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
+  try {
+    const now = Date.now();
+
+    if (weeklyReportCache && now - weeklyReportFetchedAt < WEEKLY_REPORT_CACHE_TTL) {
+      return res.json(weeklyReportCache);
+    }
+
+    if (!weeklyReportInFlight) {
+      weeklyReportInFlight = buildWeeklyReportData()
+        .then(data => {
+          weeklyReportCache = data;
+          weeklyReportFetchedAt = Date.now();
+          return data;
+        })
+        .finally(() => {
+          weeklyReportInFlight = null;
+        });
+    }
+
+    const data = await weeklyReportInFlight;
+    res.json(data);
+  } catch (err) {
+    console.error('[weekly-report-data] error:', err);
+    res.status(500).json({
+      error: 'Failed to build weekly report data',
+      detail: err.message,
+    });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   console.log(`Terraform Estimator API on port ${PORT}`);
