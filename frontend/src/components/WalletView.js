@@ -108,37 +108,33 @@ function ParcelCard({ parcel }) {
         />
       </div>
       <div className="flex flex-col">
-        <div className="flex flex-col mt-1">
-          <a href={`/?token=${tokenId}`}>
-            {tokenId}
-          </a>
-          <p className="text-xs opacity-75">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
-        </div>
         <div className="flex justify-between items-center mt-1">
-          <div className="flex items-center gap-1 flex-wrap">
-            {showCategoryBadge && (
-              <span
-                className="text-xs px-1"
-                style={{
-                  color: CATEGORY_COLORS[topCategory],
-                  border: `1px solid ${CATEGORY_COLORS[topCategory]}`,
-                  opacity: 0.8
-                }}
-              >
-                {topCategory}
-              </span>
-            )}
-            {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
-            <AutoBadgeStack traits={traits} opacity={0.8} />
-            <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
-            {(mode === 'Origin Daydream' || mode === 'Origin Terraform') && (
-              <SpecialBadge type={mode} opacity={0.8} />
-            )}
-          </div>
+          <a href={`/?token=${tokenId}`}>{tokenId}</a>
           <span className="flex items-center gap-1 text-sm">
             <EthIcon width={8} height={13} />
             {estimatedValue.toFixed(3)}
           </span>
+        </div>
+        <p className="hidden md:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
+        <div className="hidden md:flex items-center gap-1 flex-wrap mt-1">
+          {showCategoryBadge && (
+            <span
+              className="text-xs px-1"
+              style={{
+                color: CATEGORY_COLORS[topCategory],
+                border: `1px solid ${CATEGORY_COLORS[topCategory]}`,
+                opacity: 0.8
+              }}
+            >
+              {topCategory}
+            </span>
+          )}
+          {specialBadge      && <SpecialBadge config={specialBadge} opacity={0.8} />}
+          <AutoBadgeStack traits={traits} opacity={0.8} />
+          <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
+          {(mode === 'Origin Daydream' || mode === 'Origin Terraform') && (
+            <SpecialBadge type={mode} opacity={0.8} />
+          )}
         </div>
       </div>
     </div>

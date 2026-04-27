@@ -40,7 +40,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             href="https://terraformexplorer.xyz"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
           >
             [tf explorer ↗]
           </a>
@@ -48,7 +48,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             href="https://www.terraformlore.xyz"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
           >
             [lore ↗]
           </a>
