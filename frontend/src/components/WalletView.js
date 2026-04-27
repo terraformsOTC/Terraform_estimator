@@ -110,13 +110,13 @@ function ParcelCard({ parcel }) {
       <div className="flex flex-col">
         <div className="flex justify-between items-center mt-1">
           <a href={`/?token=${tokenId}`}>{tokenId}</a>
-          <span className="hidden md:flex items-center gap-1 text-sm">
+          <span className="hidden lg:flex items-center gap-1 text-sm">
             <EthIcon width={8} height={13} />
             {estimatedValue.toFixed(3)}
           </span>
         </div>
-        <p className="hidden md:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
-        <div className="hidden md:flex items-center gap-1 flex-wrap mt-1">
+        <p className="hidden lg:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
+        <div className="hidden lg:flex items-center gap-1 flex-wrap mt-1">
           {showCategoryBadge && (
             <span
               className="text-xs px-1"
