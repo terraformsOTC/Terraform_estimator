@@ -780,20 +780,36 @@ app.get('/floor', async (req, res) => {
 // ─── WEEKLY REPORT DATA ────────────────────────────────────────────────────────
 
 async function fetchCollectorsCount() {
+  // Try 1: Etherscan V2 tokeninfo (requires ETHERSCAN_API_KEY)
   try {
-    // Etherscan tokeninfo API — free tier works rate-limited without a key.
-    // Add ETHERSCAN_API_KEY env var to raise the limit (free key at etherscan.io).
-    const apiKey = process.env.ETHERSCAN_API_KEY || '';
-    const url = `https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=${TERRAFORMS_ADDRESS}${apiKey ? `&apikey=${apiKey}` : ''}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    if (data.status !== '1' || !data.result?.[0]) return null;
-    const count = parseInt(data.result[0].holdersCount, 10);
-    return Number.isFinite(count) ? count : null;
+    const apiKey = process.env.ETHERSCAN_API_KEY;
+    if (apiKey) {
+      const url = `https://api.etherscan.io/v2/api?chainid=1&module=token&action=tokeninfo&contractaddress=${TERRAFORMS_ADDRESS}&apikey=${apiKey}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const data = await res.json();
+      console.log('[weekly-report] Etherscan tokeninfo status:', data.status, 'fields:', data.result?.[0] ? Object.keys(data.result[0]).join(',') : 'no result');
+      const count = parseInt(data.result?.[0]?.holdersCount, 10);
+      if (Number.isFinite(count)) return count;
+    }
   } catch (err) {
-    console.warn('[weekly-report] fetchCollectorsCount failed:', err.message);
-    return null;
+    console.warn('[weekly-report] Etherscan tokeninfo failed:', err.message);
   }
+
+  // Try 2: OpenSea collection stats → total.num_owners
+  try {
+    const res = await fetchWithRetry(
+      'https://api.opensea.io/api/v2/collections/terraforms/stats',
+      { headers: { 'X-API-KEY': process.env.OPENSEA_API_KEY, 'Accept': 'application/json' } }
+    );
+    const data = await res.json();
+    console.log('[weekly-report] OpenSea stats keys:', Object.keys(data).join(','));
+    const count = data?.total?.num_owners ?? data?.num_owners ?? null;
+    if (count != null) return parseInt(count, 10);
+  } catch (err) {
+    console.warn('[weekly-report] OpenSea stats failed:', err.message);
+  }
+
+  return null;
 }
 
 async function fetchEthUsdPrice() {
