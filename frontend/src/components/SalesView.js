@@ -31,7 +31,7 @@ function formatRelative(closingDate) {
   return `${Math.floor(secs / 86400)}d ago`;
 }
 
-export default function SalesView({ data, loading, error }) {
+export default function SalesView({ data, loading, error, ethUsd }) {
   if (loading) {
     return (
       <div className="text-sm opacity-75">
@@ -62,7 +62,7 @@ export default function SalesView({ data, loading, error }) {
       <div className="mb-6 text-xs opacity-50">
         scanned {totalSalesScanned} sales
         {skippedNonEth > 0 ? ` · skipped ${skippedNonEth} non-ETH` : ''}
-        {' · '}floor {floor?.toFixed(3)} ETH
+        {' · '}floor {floor?.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
         {' · '}cached at {fetchedDate}
         {meanError != null && (
           <>
