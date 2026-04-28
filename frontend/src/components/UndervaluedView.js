@@ -10,7 +10,7 @@ function discountColor(discount) {
   return '#d1fae5';                      // <20% — pale green
 }
 
-export default function UndervaluedView({ data, loading, error }) {
+export default function UndervaluedView({ data, loading, error, ethUsd }) {
   if (loading) {
     return (
       <div className="text-sm opacity-75">
@@ -33,7 +33,7 @@ export default function UndervaluedView({ data, loading, error }) {
   return (
     <div>
       <div className="mb-6 text-xs opacity-50">
-        scanned {totalListingsScanned} listings · floor {floor?.toFixed(3)} ETH · cached at {fetchedDate}
+        scanned {totalListingsScanned} listings · floor {floor?.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''} · cached at {fetchedDate}
       </div>
 
       <p className="mb-6 text-xs opacity-50">shows any parcels listed at a discount according to our model.</p>

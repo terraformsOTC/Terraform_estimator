@@ -9,6 +9,14 @@ export default function SalesPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ethUsd, setEthUsd] = useState(null);
+
+  useEffect(() => {
+    fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
+      .then(r => r.json())
+      .then(d => { const p = parseFloat(d?.data?.amount); if (Number.isFinite(p)) setEthUsd(p); })
+      .catch(() => {});
+  }, []);
 
   async function fetchData() {
     setLoading(true);
@@ -47,7 +55,7 @@ export default function SalesPage() {
               </button>
             </div>
           )}
-          <SalesView data={data} loading={loading} error={error} />
+          <SalesView data={data} loading={loading} error={error} ethUsd={ethUsd} />
         </div>
       </main>
       <Footer />

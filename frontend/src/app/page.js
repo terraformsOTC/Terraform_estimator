@@ -67,7 +67,15 @@ export default function Home() {
   const [undervaluedError, setUndervaluedError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [ethUsd, setEthUsd] = useState(null);
   const walletFetchId = useRef(0);
+
+  useEffect(() => {
+    fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
+      .then(r => r.json())
+      .then(d => { const p = parseFloat(d?.data?.amount); if (Number.isFinite(p)) setEthUsd(p); })
+      .catch(() => {});
+  }, []);
 
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
@@ -268,12 +276,12 @@ export default function Home() {
               <ParcelSearch onSearch={searchParcel} loading={loading} />
               {searchResult && !loading && (
                 <div className="mt-8">
-                  <ParcelResult parcel={searchResult} />
+                  <ParcelResult parcel={searchResult} ethUsd={ethUsd} />
                 </div>
               )}
               {unmintedResult && !loading && (
                 <div className="mt-8">
-                  <UnmintedResult parcel={unmintedResult} />
+                  <UnmintedResult parcel={unmintedResult} ethUsd={ethUsd} />
                 </div>
               )}
             </>
@@ -311,6 +319,7 @@ export default function Home() {
                 data={undervaluedData}
                 loading={loading}
                 error={undervaluedError}
+                ethUsd={ethUsd}
               />
             </>
           )}
