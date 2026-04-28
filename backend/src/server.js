@@ -781,18 +781,15 @@ app.get('/floor', async (req, res) => {
 
 async function fetchCollectorsCount() {
   try {
-    const res = await fetch(
-      `https://etherscan.io/token/${TERRAFORMS_ADDRESS}`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(8000),
-      }
-    );
-    const html = await res.text();
-    // Etherscan renders "X,XXX addresses" in the token overview section
-    const m = html.match(/([\d,]+)\s+address/i);
-    if (!m) return null;
-    return parseInt(m[1].replace(/,/g, ''), 10);
+    // Etherscan tokeninfo API — free tier works rate-limited without a key.
+    // Add ETHERSCAN_API_KEY env var to raise the limit (free key at etherscan.io).
+    const apiKey = process.env.ETHERSCAN_API_KEY || '';
+    const url = `https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=${TERRAFORMS_ADDRESS}${apiKey ? `&apikey=${apiKey}` : ''}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.status !== '1' || !data.result?.[0]) return null;
+    const count = parseInt(data.result[0].holdersCount, 10);
+    return Number.isFinite(count) ? count : null;
   } catch (err) {
     console.warn('[weekly-report] fetchCollectorsCount failed:', err.message);
     return null;
