@@ -781,17 +781,18 @@ app.get('/floor', async (req, res) => {
 
 async function fetchCollectorsCount() {
   try {
-    const res = await fetchWithRetry(
-      'https://api.opensea.io/api/v2/collections/terraforms',
+    const res = await fetch(
+      `https://etherscan.io/token/${TERRAFORMS_ADDRESS}`,
       {
-        headers: {
-          'X-API-KEY': process.env.OPENSEA_API_KEY,
-          'Accept': 'application/json',
-        },
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(8000),
       }
     );
-    const data = await res.json();
-    return data.num_owners ?? null;
+    const html = await res.text();
+    // Etherscan renders "X,XXX addresses" in the token overview section
+    const m = html.match(/([\d,]+)\s+address/i);
+    if (!m) return null;
+    return parseInt(m[1].replace(/,/g, ''), 10);
   } catch (err) {
     console.warn('[weekly-report] fetchCollectorsCount failed:', err.message);
     return null;
@@ -800,12 +801,14 @@ async function fetchCollectorsCount() {
 
 async function fetchEthUsdPrice() {
   try {
+    // Coinbase public API — no key required, no rate limit
     const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+      'https://api.coinbase.com/v2/prices/ETH-USD/spot',
       { signal: AbortSignal.timeout(5000) }
     );
     const data = await res.json();
-    return data?.ethereum?.usd ?? null;
+    const price = parseFloat(data?.data?.amount);
+    return Number.isFinite(price) ? price : null;
   } catch (err) {
     console.warn('[weekly-report] fetchEthUsdPrice failed:', err.message);
     return null;
@@ -836,7 +839,9 @@ async function buildWeeklyReportData() {
     fetchEthUsdPrice(),
   ]);
 
-  const floor = salesResult.floor;
+  // Use cheapest active OpenSea listing as the floor — already fetched, no extra call.
+  // Fall back to Alchemy floor if listings came back empty.
+  const floor = listingsRaw[0]?.listedPrice ?? salesResult.floor;
   const floorIsLive = salesResult.floorIsLive;
 
   // ── Weekly sales (past 7 days only) ──
@@ -918,6 +923,7 @@ async function buildWeeklyReportData() {
     }));
 
   const floor_usd = ethUsd ? Math.round(floor * ethUsd) : null;
+  const cheapest_listing = listingsRaw[0] ?? null;
 
   // listingsRaw is capped at 200 (2 pages). If the true listing count exceeds
   // 200 this will undercount. Acceptable given report usage.
@@ -933,11 +939,11 @@ async function buildWeeklyReportData() {
     market: {
       floor_eth: floor,
       floor_usd,
+      floor_token_id: cheapest_listing?.tokenId ?? null,
       parcels_listed,
       collectors,
       weekly_sales_count,
       weekly_volume_eth,
-      floorIsLive,
     },
     top_sales,
     bargains,
