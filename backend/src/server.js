@@ -107,8 +107,10 @@ function getProvider() {
 // Max 500 entries (~24MB worst-case); oldest entry evicted when full.
 const TOKEN_URI_CACHE_MAX = 500;
 const TOKEN_HTML_CACHE_MAX = 500;
-const tokenUriCache = new Map(); // Map<tokenId, uri> — insertion order = LRU order
-const tokenHtmlCache = new Map(); // Map<tokenId, html> — same LRU pattern for tokenHTML
+const tokenUriCache = new Map();    // Map<tokenId, uri> — insertion order = LRU order
+const tokenHtmlCache = new Map();   // Map<tokenId, html> — same LRU pattern for tokenHTML
+const tokenUriInFlight = new Map(); // Map<tokenId, Promise> — dedup concurrent cold-cache fetches
+const tokenHtmlInFlight = new Map();
 
 const RPC_TIMEOUT_MS = 15_000; // 15s timeout for contract calls
 
@@ -122,20 +124,24 @@ function withTimeout(promise, ms = RPC_TIMEOUT_MS) {
 async function getCachedTokenURI(tokenId) {
   const key = Number(tokenId);
   if (tokenUriCache.has(key)) {
-    // Refresh insertion order (LRU hit)
     const uri = tokenUriCache.get(key);
     tokenUriCache.delete(key);
     tokenUriCache.set(key, uri);
     return uri;
   }
+  if (tokenUriInFlight.has(key)) return tokenUriInFlight.get(key);
   const { contract } = getProvider();
-  const uri = await withTimeout(contract.tokenURI(tokenId));
-  if (tokenUriCache.size >= TOKEN_URI_CACHE_MAX) {
-    // Evict oldest entry (first key in insertion order)
-    tokenUriCache.delete(tokenUriCache.keys().next().value);
-  }
-  tokenUriCache.set(key, uri);
-  return uri;
+  const p = withTimeout(contract.tokenURI(tokenId))
+    .then(uri => {
+      if (tokenUriCache.size >= TOKEN_URI_CACHE_MAX) {
+        tokenUriCache.delete(tokenUriCache.keys().next().value);
+      }
+      tokenUriCache.set(key, uri);
+      return uri;
+    })
+    .finally(() => tokenUriInFlight.delete(key));
+  tokenUriInFlight.set(key, p);
+  return p;
 }
 
 async function getCachedTokenHTML(tokenId) {
@@ -146,13 +152,19 @@ async function getCachedTokenHTML(tokenId) {
     tokenHtmlCache.set(key, html);
     return html;
   }
+  if (tokenHtmlInFlight.has(key)) return tokenHtmlInFlight.get(key);
   const { contract } = getProvider();
-  const html = await withTimeout(contract.tokenHTML(tokenId));
-  if (tokenHtmlCache.size >= TOKEN_HTML_CACHE_MAX) {
-    tokenHtmlCache.delete(tokenHtmlCache.keys().next().value);
-  }
-  tokenHtmlCache.set(key, html);
-  return html;
+  const p = withTimeout(contract.tokenHTML(tokenId))
+    .then(html => {
+      if (tokenHtmlCache.size >= TOKEN_HTML_CACHE_MAX) {
+        tokenHtmlCache.delete(tokenHtmlCache.keys().next().value);
+      }
+      tokenHtmlCache.set(key, html);
+      return html;
+    })
+    .finally(() => tokenHtmlInFlight.delete(key));
+  tokenHtmlInFlight.set(key, p);
+  return p;
 }
 
 // Detect special type from metadata attributes
@@ -773,8 +785,13 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // GET /floor
 app.get('/floor', async (req, res) => {
-  const { price, isLive, fetchedAt } = await getFloorPrice();
-  res.json({ floor: price, isLive, fetchedAt });
+  try {
+    const { price, isLive, fetchedAt } = await getFloorPrice();
+    res.json({ floor: price, isLive, fetchedAt });
+  } catch (err) {
+    console.error('[floor]', err.message);
+    res.status(500).json({ error: 'Failed to fetch floor price.' });
+  }
 });
 
 // ─── WEEKLY REPORT DATA ────────────────────────────────────────────────────────
@@ -787,7 +804,6 @@ async function fetchCollectorsCount() {
       const url = `https://api.etherscan.io/v2/api?chainid=1&module=token&action=tokeninfo&contractaddress=${TERRAFORMS_ADDRESS}&apikey=${apiKey}`;
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
-      console.log('[weekly-report] Etherscan tokeninfo status:', data.status, 'fields:', data.result?.[0] ? Object.keys(data.result[0]).join(',') : 'no result');
       const count = parseInt(data.result?.[0]?.holdersCount, 10);
       if (Number.isFinite(count)) return count;
     }
@@ -799,10 +815,9 @@ async function fetchCollectorsCount() {
   try {
     const res = await fetchWithRetry(
       'https://api.opensea.io/api/v2/collections/terraforms/stats',
-      { headers: { 'X-API-KEY': process.env.OPENSEA_API_KEY, 'Accept': 'application/json' } }
+      { headers: { 'X-API-KEY': OPENSEA_API_KEY, 'Accept': 'application/json' } }
     );
     const data = await res.json();
-    console.log('[weekly-report] OpenSea stats keys:', Object.keys(data).join(','));
     const count = data?.total?.num_owners ?? data?.num_owners ?? null;
     if (count != null) return parseInt(count, 10);
   } catch (err) {
@@ -840,9 +855,10 @@ async function buildWeeklyReportData() {
   // Fan out all slow calls in parallel.
   // fetchOpenSeaListings(2) = 2 pages × 100 = up to 200 listings (matches /undervalued).
   // computeRecentSales limit matches what /sales already uses.
-  const [salesResult, listingsRaw, collectors, ethUsd] = await Promise.all([
+  // Sales is load-bearing — anything else can degrade gracefully.
+  const [salesRes, listingsRes, collectorsRes, ethUsdRes] = await Promise.allSettled([
     computeRecentSales({
-      apiKey: process.env.OPENSEA_API_KEY,
+      apiKey: OPENSEA_API_KEY,
       fetchWithRetry,
       getParcelTraits,
       getFloorPrice,
@@ -851,6 +867,13 @@ async function buildWeeklyReportData() {
     fetchCollectorsCount(),
     fetchEthUsdPrice(),
   ]);
+
+  if (salesRes.status === 'rejected') throw salesRes.reason;
+  const salesResult = salesRes.value;
+  const listingsRaw = listingsRes.status === 'fulfilled' ? listingsRes.value : [];
+  const collectors  = collectorsRes.status === 'fulfilled' ? collectorsRes.value : null;
+  const ethUsd      = ethUsdRes.status === 'fulfilled' ? ethUsdRes.value : null;
+  if (listingsRes.status === 'rejected') console.warn('[weekly-report] listings fetch failed:', listingsRes.reason?.message);
 
   // Use cheapest active OpenSea listing as the floor — already fetched, no extra call.
   // Fall back to Alchemy floor if listings came back empty.
@@ -988,10 +1011,7 @@ app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('[weekly-report-data] error:', err);
-    res.status(500).json({
-      error: 'Failed to build weekly report data',
-      detail: err.message,
-    });
+    res.status(500).json({ error: 'Failed to build weekly report data.' });
   }
 });
 

@@ -69,6 +69,8 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [ethUsd, setEthUsd] = useState(null);
   const walletFetchId = useRef(0);
+  const walletAddressRef = useRef(walletAddress);
+  useEffect(() => { walletAddressRef.current = walletAddress; }, [walletAddress]);
 
   useEffect(() => {
     fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
@@ -109,12 +111,11 @@ export default function Home() {
         disconnectWallet();
         return;
       }
-      setWalletAddress((prev) => {
-        if (prev && prev.toLowerCase() === next.toLowerCase()) return prev;
-        loadWalletData(next);
-        setView('wallet');
-        return next;
-      });
+      const prev = walletAddressRef.current;
+      if (prev && prev.toLowerCase() === next.toLowerCase()) return;
+      setWalletAddress(next);
+      setView('wallet');
+      loadWalletData(next);
     };
     window.ethereum.on('accountsChanged', handleAccountsChanged);
     return () => {
@@ -126,7 +127,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/wallet/${address}`);
+      const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(address)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWalletData(data);

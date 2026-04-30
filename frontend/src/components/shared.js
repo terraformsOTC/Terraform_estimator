@@ -9,7 +9,10 @@ export async function connectAndRedirect() {
   try {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     if (accounts[0]) window.location.href = `/?address=${accounts[0]}`;
-  } catch (_) {}
+  } catch (err) {
+    // 4001 = user rejected — silent. Other codes are infrastructure failures worth logging.
+    if (err?.code !== 4001) console.warn('[connectAndRedirect]', err?.message || err);
+  }
 }
 
 export function pickRandomWhale() {
