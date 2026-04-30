@@ -12,6 +12,17 @@ const { estimatePrice, PRICING_MODEL_VERSION } = require('./pricingModel');
 
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
 
+// OpenSea returns closing_date / event_timestamp as either a Unix integer
+// (seconds) or an ISO 8601 string depending on endpoint version. Normalise
+// to an integer (Unix seconds) so sort arithmetic and formatRelative work.
+function toUnixSeconds(val) {
+  if (val == null) return null;
+  const n = Number(val);
+  if (Number.isFinite(n)) return n;
+  const ms = Date.parse(val);
+  return Number.isFinite(ms) ? Math.floor(ms / 1000) : null;
+}
+
 // Paginate OpenSea sale events. Returns normalized records sorted newest first.
 // Accepts fetchWithRetry (from server.js) as the HTTP wrapper so we reuse its
 // 429/5xx backoff + 10s timeout behavior.
@@ -50,7 +61,7 @@ async function fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages = 3, limit =
       const salePrice = Number(rawQty) / Math.pow(10, decimals);
       if (!Number.isFinite(salePrice) || salePrice <= 0) continue;
 
-      const closingDate = ev.closing_date ?? ev.event_timestamp ?? null;
+      const closingDate = toUnixSeconds(ev.closing_date ?? ev.event_timestamp ?? null);
       const eventId = ev.order_hash || ev.transaction || ev.event_timestamp + '-' + tokenId;
 
       sales.push({

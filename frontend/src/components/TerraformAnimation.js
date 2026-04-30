@@ -128,10 +128,17 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     if (domCells.length !== 1024) return;
 
     const wrapAt = Math.max(mainSet.length, 1) * 4096;
+    const FRAME_MS = 1000 / 30; // cap at 30fps — visually identical, halves cost on 120Hz displays
     let airship = 0;
+    let lastTick = 0;
     let rafId;
 
-    function tick() {
+    function tick(timestamp) {
+      if (timestamp - lastTick < FRAME_MS) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      lastTick = timestamp;
       for (let row = 0; row < 32; row++) {
         for (let col = 0; col < 32; col++) {
           const idx  = row * 32 + col;
