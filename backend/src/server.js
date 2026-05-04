@@ -334,15 +334,12 @@ async function fetchOpenSeaListings(maxPages = 5) {
 async function computeUndervalued() {
   const now = Date.now();
   const allListings = await fetchOpenSeaListings(2);
-  // Work from cheapest upward — most likely to contain undervalued parcels
-  const candidates = allListings.slice(0, 100);
-
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
   const results = [];
   const BATCH_SIZE = 8;
-  for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
-    const batch = candidates.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < allListings.length; i += BATCH_SIZE) {
+    const batch = allListings.slice(i, i + BATCH_SIZE);
     const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
     for (let j = 0; j < settled.length; j++) {
       const r = settled[j];
