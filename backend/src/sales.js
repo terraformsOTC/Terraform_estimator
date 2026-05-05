@@ -91,6 +91,7 @@ async function computeRecentSales({
   fetchWithRetry,
   getParcelTraits,
   getFloorPrice,
+  floorAt,
   limit = 50,
 }) {
   const now = Date.now();
@@ -101,7 +102,7 @@ async function computeRecentSales({
   const pricedSales = allSales.filter(s => ETH_LIKE.has(s.currency));
   const skippedNonEth = allSales.length - pricedSales.length;
 
-  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+  const { price: currentFloor, isLive: floorIsLive } = await getFloorPrice();
 
   // Cap the trait fan-out. 50 is enough for a homepage-style feed and keeps
   // cold-path latency comparable to /undervalued.
@@ -116,8 +117,12 @@ async function computeRecentSales({
       const r = settled[j];
       if (r.status !== 'fulfilled') continue;
       const traits = r.value;
-      const pricing = estimatePrice(traits, floor);
       const sale = batch[j];
+      // Anchor estimate to floor at time of sale when history is available.
+      // Falls back to current floor when ts predates history or floorAt is missing.
+      const historicalFloor = floorAt ? floorAt(sale.closingDate) : null;
+      const saleFloor = historicalFloor ?? currentFloor;
+      const pricing = estimatePrice(traits, saleFloor);
       const signedError = pricing.estimatedValue > 0
         ? (sale.salePrice - pricing.estimatedValue) / pricing.estimatedValue
         : null;
@@ -127,14 +132,15 @@ async function computeRecentSales({
         pricing,
         signedError,
         pricingModelVersion: PRICING_MODEL_VERSION,
-        floorAtSale: floor,
+        floorAtSale: saleFloor,
+        floorAtSaleSource: historicalFloor != null ? 'history' : 'current',
       });
     }
   }
 
   return {
     sales: results,
-    floor,
+    floor: currentFloor,
     floorIsLive,
     totalSalesScanned: allSales.length,
     skippedNonEth,

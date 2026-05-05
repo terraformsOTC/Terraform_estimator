@@ -31,6 +31,7 @@ Backend: `:3001` | Frontend: `:3000`
 - `pricingModel.js` — All pricing logic. Floor price constant at line 4. Formula: `Floor × (zone_mult + biome_mult) / 2`. Handles Godmode, Plague, X-Seed, Y-Seed, Lith0 special tokens.
 - `special-tokens.json` — Minted special parcel overrides.
 - `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/isS0). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
+- `floor-history.json` — Time-series of `{ts, floor}` samples written by `.githooks/pre-push`. Used by `/sales` to anchor estimates to the floor at time of sale. See "Floor Price History" below.
 - `unminted-parcels.json` — 1193 unminted parcels with all traits and `specialType` field.
 - `unminted-animation.json` — Per-parcel animation data (grid, chars, fonts, CSS).
 - `unminted-fonts.json` — 94 base64 WOFF2 fonts indexed by `fontIndex`.
@@ -58,6 +59,15 @@ Manual list only — `special-tokens.json` for minted, `specialType` field in `u
 
 ### Seed Extraction (Minted)
 Uses `tokenHTML(uint256)` contract call (not `tokenURI`) — the SVG has no SEED, the HTML does. Result is LRU-cached.
+
+### Floor Price History
+`backend/src/floor-history.json` is an append-only time-series of `{ts, floor}` samples used by `/sales` to anchor each sale's estimate to the floor in effect at sale time, instead of the current floor (which would otherwise make every past sale look retroactively under/overvalued as the floor moves).
+
+Samples are written by **`.githooks/pre-push`**, which runs `backend/scripts/append-floor-history.js` before any push to main. The hook fetches the live Alchemy floor, appends a sample, creates a follow-up commit, and asks you to re-run `git push` so the new commit ships with the deploy. One-time enable:
+```bash
+git config core.hooksPath .githooks
+```
+Sampling cadence equals push cadence — sales between two pushes resolve to the floor at the earlier push (nearest-prior). Sales that predate all history fall back to the current live floor (`floorAtSaleSource: 'current'` on the response).
 
 ### Minted Traits Snapshot
 `minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, isS0). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.

@@ -289,6 +289,40 @@ function getSnapshotTraits(tokenId) {
   };
 }
 
+// ─── FLOOR PRICE HISTORY ──────────────────────────────────────────────────────
+// Time-series of floor samples written by .githooks/pre-push (one entry per
+// push to main). Used by /sales to anchor each sale's estimate to the floor
+// in effect at the time of sale, rather than the current floor.
+//
+// Format: [{ ts: <unix seconds>, floor: <ETH> }] sorted ascending by ts.
+let FLOOR_HISTORY = [];
+try {
+  FLOOR_HISTORY = require('./floor-history.json');
+  if (!Array.isArray(FLOOR_HISTORY)) FLOOR_HISTORY = [];
+  // Defensive sort — the hook writes in chronological order but a manual
+  // edit could leave the file unsorted, which would break floorAt's bsearch.
+  FLOOR_HISTORY = FLOOR_HISTORY.filter(e => typeof e?.ts === 'number' && typeof e?.floor === 'number')
+    .sort((a, b) => a.ts - b.ts);
+  console.log(`[floor-history] Loaded ${FLOOR_HISTORY.length} floor samples`);
+} catch {
+  console.warn('[floor-history] floor-history.json not found — /sales will use current floor for all sales');
+}
+
+// Resolve the floor price at a given Unix-seconds timestamp using nearest-prior
+// matching against FLOOR_HISTORY. Returns null if no prior sample exists; caller
+// should fall back to the current live floor in that case.
+function floorAt(tsSeconds) {
+  if (!Number.isFinite(tsSeconds) || FLOOR_HISTORY.length === 0) return null;
+  // Binary search for the largest entry with ts <= tsSeconds.
+  let lo = 0, hi = FLOOR_HISTORY.length - 1, found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (FLOOR_HISTORY[mid].ts <= tsSeconds) { found = mid; lo = mid + 1; }
+    else hi = mid - 1;
+  }
+  return found === -1 ? null : FLOOR_HISTORY[found].floor;
+}
+
 // ─── LIVE FLOOR PRICE (Alchemy NFT API) ────────────────────────────────────────
 const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
@@ -522,6 +556,7 @@ app.get('/sales', async (req, res) => {
         fetchWithRetry,
         getParcelTraits,
         getFloorPrice,
+        floorAt,
         limit: 50,
       })
         .then(data => {
@@ -940,6 +975,7 @@ async function buildWeeklyReportData() {
       fetchWithRetry,
       getParcelTraits,
       getFloorPrice,
+      floorAt,
     }),
     fetchOpenSeaListings(2),
     fetchCollectorsCount(),

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Pre-push hook: append the current Terraforms floor price to backend/src/floor-history.json
+# so every Render redeploy carries the latest sample.
+#
+# Behavior:
+#   1. Run scripts/append-floor-history.js (no-op if Alchemy is unreachable).
+#   2. If the JSON changed, create a new commit and instruct the user to re-run push.
+#   3. If nothing changed, exit 0 — the push proceeds normally.
+#
+# Setup (one-time): git config core.hooksPath .githooks
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+HISTORY_FILE="$REPO_ROOT/backend/src/floor-history.json"
+SCRIPT="$REPO_ROOT/backend/scripts/append-floor-history.js"
+ENV_FILE="$REPO_ROOT/backend/.env"
+
+if [ ! -f "$SCRIPT" ]; then
+  echo "[pre-push] $SCRIPT not found — skipping floor history append." >&2
+  exit 0
+fi
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "[pre-push] $ENV_FILE not found — skipping floor history append." >&2
+  exit 0
+fi
+
+# Snapshot the file's mtime so we can detect a change (the script also short-
+# circuits on duplicate samples within MIN_GAP_SECONDS).
+BEFORE_HASH="$(git hash-object "$HISTORY_FILE" 2>/dev/null || echo "")"
+
+node --env-file="$ENV_FILE" "$SCRIPT" || {
+  echo "[pre-push] Floor history append failed — proceeding with push." >&2
+  exit 0
+}
+
+AFTER_HASH="$(git hash-object "$HISTORY_FILE" 2>/dev/null || echo "")"
+
+if [ "$BEFORE_HASH" = "$AFTER_HASH" ]; then
+  exit 0
+fi
+
+git add "$HISTORY_FILE"
+git commit -m "data: append floor history snapshot" --no-verify
+
+echo "" >&2
+echo "[pre-push] Floor history updated and committed." >&2
+echo "[pre-push] Re-run 'git push' to include the new commit." >&2
+exit 1
