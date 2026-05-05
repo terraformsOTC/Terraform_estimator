@@ -30,6 +30,7 @@ Backend: `:3001` | Frontend: `:3000`
 - `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `CORS_ORIGIN` env var.
 - `pricingModel.js` — All pricing logic. Floor price constant at line 4. Formula: `Floor × (zone_mult + biome_mult) / 2`. Handles Godmode, Plague, X-Seed, Y-Seed, Lith0 special tokens.
 - `special-tokens.json` — Minted special parcel overrides.
+- `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/isS0). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
 - `unminted-parcels.json` — 1193 unminted parcels with all traits and `specialType` field.
 - `unminted-animation.json` — Per-parcel animation data (grid, chars, fonts, CSS).
 - `unminted-fonts.json` — 94 base64 WOFF2 fonts indexed by `fontIndex`.
@@ -57,6 +58,17 @@ Manual list only — `special-tokens.json` for minted, `specialType` field in `u
 
 ### Seed Extraction (Minted)
 Uses `tokenHTML(uint256)` contract call (not `tokenURI`) — the SVG has no SEED, the HTML does. Result is LRU-cached.
+
+### Minted Traits Snapshot
+`minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, isS0). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.
+
+Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`) are applied at query time via `getSnapshotTraits` in `server.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` take effect without re-baking.
+
+**Refresh cadence**: chroma, mode, level, and mysteryValue can change on-chain when parcels are upgraded/terraformed. Stale traits skew estimates (worst case: a parcel that becomes Plague after the bake won't get the 5x specialType). Re-bake periodically:
+```bash
+cd backend && npm run bake-traits   # ~22 min, resumable, batches of 8
+```
+Then commit the updated `minted-traits.json`.
 
 ## On-Chain Trait Attributes
 

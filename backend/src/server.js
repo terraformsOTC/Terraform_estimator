@@ -994,34 +994,35 @@ async function buildWeeklyReportData() {
       timestamp: typeof s.closingDate === 'number' ? new Date(s.closingDate * 1000).toISOString() : s.closingDate,
     }));
 
-  // ── Bargains: score listings against estimator formula ──
-  // Same scoring logic as /undervalued, just returning top 10 instead of 25.
-  // Process cheapest 100 listings only (same cap as /undervalued).
-  const cheapest100 = listingsRaw.slice(0, 100);
-
-  const BATCH = 8;
+  // ── Bargains: score every listing against estimator formula ──
+  // Same approach as /undervalued: snapshot first, RPC fallback for misses.
   const scored = [];
-  for (let i = 0; i < cheapest100.length; i += BATCH) {
-    const batch = cheapest100.slice(i, i + BATCH);
-    const results = await Promise.all(
-      batch.map(async ({ tokenId, listedPrice }) => {
-        try {
-          const traits = await getParcelTraits(tokenId);
-          const pricing = estimatePrice(traits, floor);
-          const discount_pct = Math.round(
-            (1 - listedPrice / pricing.estimatedValue) * 100
-          );
-          return { tokenId, traits, pricing, listedPrice, discount_pct };
-        } catch {
-          return null;
-        }
-      })
-    );
-    scored.push(...results);
+  const scoreListing = (traits, listedPrice) => {
+    const pricing = estimatePrice(traits, floor);
+    const discount_pct = Math.round((1 - listedPrice / pricing.estimatedValue) * 100);
+    scored.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount_pct });
+  };
+
+  const needRpc = [];
+  for (const l of listingsRaw) {
+    const traits = getSnapshotTraits(l.tokenId);
+    if (traits) scoreListing(traits, l.listedPrice);
+    else needRpc.push(l);
+  }
+
+  if (needRpc.length > 0) {
+    const BATCH = 8;
+    for (let i = 0; i < needRpc.length; i += BATCH) {
+      const batch = needRpc.slice(i, i + BATCH);
+      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
+      for (let j = 0; j < settled.length; j++) {
+        if (settled[j].status === 'fulfilled') scoreListing(settled[j].value, batch[j].listedPrice);
+      }
+    }
   }
 
   const bargains = scored
-    .filter(l => l !== null && l.discount_pct > 0)
+    .filter(l => l.discount_pct > 0)
     .sort((a, b) => b.discount_pct - a.discount_pct)
     .slice(0, 10)
     .map(l => ({
