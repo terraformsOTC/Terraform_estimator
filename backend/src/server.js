@@ -239,6 +239,56 @@ function mysteryOutlierFlag(value) {
   return null;
 }
 
+// ─── MINTED TRAITS SNAPSHOT ───────────────────────────────────────────────────
+// Pre-baked attribute-derived traits for all 9911 minted parcels.
+// Source: backend/scripts/bake-minted-traits.js (one-shot scan, committed to repo).
+// Used by /undervalued to skip ~9911 RPC trait fetches on cold compute.
+//
+// We store only attribute-derived fields. Lookup-derived fields (specialType,
+// isOneOfOne, isGodmode, isLith0like, isGm) are applied at query time so
+// changes to special-tokens.json / one-of-one-ids.json take effect immediately.
+let MINTED_TRAITS_SNAPSHOT = null;
+try {
+  const snapshot = require('./minted-traits.json');
+  MINTED_TRAITS_SNAPSHOT = new Map(snapshot.map(r => [r.tokenId, r]));
+  console.log(`[snapshot] Loaded minted traits for ${MINTED_TRAITS_SNAPSHOT.size} tokens`);
+} catch {
+  console.warn('[snapshot] minted-traits.json not found — /undervalued will fall back to RPC for every token');
+}
+
+// Augment a snapshot record with lookup-derived fields. Returns a full trait
+// object matching getParcelTraits' shape (minus seed/x/y, which are not used
+// by /undervalued). Returns null if the tokenId isn't in the snapshot.
+function getSnapshotTraits(tokenId) {
+  if (!MINTED_TRAITS_SNAPSHOT) return null;
+  const id = Number(tokenId);
+  const rec = MINTED_TRAITS_SNAPSHOT.get(id);
+  if (!rec) return null;
+
+  const plagueFromChroma = rec.chroma === 'Plague' ? 'Plague' : null;
+  const specialType = SPECIAL_TOKEN_LOOKUP[id] || plagueFromChroma || null;
+
+  return {
+    tokenId: id,
+    zone: rec.zone,
+    level: rec.level,
+    biome: rec.biome,
+    chroma: rec.chroma,
+    mode: rec.mode,
+    specialType,
+    isOneOfOne: ONE_OF_ONE_IDS.has(id),
+    isGodmode: GODMODE_IDS.has(id),
+    isS0: rec.isS0,
+    isLith0like: LITH0LIKE_IDS.has(id),
+    isGm: GM_IDS.has(id),
+    mysteryValue: rec.mysteryValue,
+    mysteryOutlier: mysteryOutlierFlag(rec.mysteryValue),
+    seed: null,
+    x: null,
+    y: null,
+  };
+}
+
 // ─── LIVE FLOOR PRICE (Alchemy NFT API) ────────────────────────────────────────
 const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
@@ -336,21 +386,35 @@ async function computeUndervalued() {
   const allListings = await fetchOpenSeaListings(2);
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
+  // Resolve traits from the baked snapshot first; fall back to RPC for any tokenIds
+  // not in the snapshot (handles edge cases like out-of-range tokens or post-bake mints).
+  const fromSnapshot = [];
+  const needRpc = [];
+  for (const l of allListings) {
+    const traits = getSnapshotTraits(l.tokenId);
+    if (traits) fromSnapshot.push({ traits, listing: l });
+    else needRpc.push(l);
+  }
+
   const results = [];
-  const BATCH_SIZE = 8;
-  for (let i = 0; i < allListings.length; i += BATCH_SIZE) {
-    const batch = allListings.slice(i, i + BATCH_SIZE);
-    const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
-    for (let j = 0; j < settled.length; j++) {
-      const r = settled[j];
-      if (r.status !== 'fulfilled') continue;
-      const traits = r.value;
-      // No mode filter — all modes included
-      const pricing = estimatePrice(traits, floor);
-      const { listedPrice } = batch[j];
-      const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
-      if (discount >= 0.01) {
-        results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
+  const score = (traits, listedPrice) => {
+    const pricing = estimatePrice(traits, floor);
+    const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
+    if (discount >= 0.01) {
+      results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
+    }
+  };
+
+  for (const { traits, listing } of fromSnapshot) score(traits, listing.listedPrice);
+
+  if (needRpc.length > 0) {
+    console.log(`[undervalued] ${fromSnapshot.length} from snapshot, ${needRpc.length} via RPC fallback`);
+    const BATCH_SIZE = 8;
+    for (let i = 0; i < needRpc.length; i += BATCH_SIZE) {
+      const batch = needRpc.slice(i, i + BATCH_SIZE);
+      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
+      for (let j = 0; j < settled.length; j++) {
+        if (settled[j].status === 'fulfilled') score(settled[j].value, batch[j].listedPrice);
       }
     }
   }
@@ -373,14 +437,31 @@ let undervaluedInFlight = null;
 let undervaluedFailedAt = 0;
 const UNDERVALUED_BACKOFF_MS = 60_000;
 
+// Kick off a background refresh if one isn't already running. Caller does not await.
+function triggerUndervaluedRefresh() {
+  if (undervaluedInFlight) return;
+  if (!OPENSEA_API_KEY) return;
+  if (Date.now() - undervaluedFailedAt < UNDERVALUED_BACKOFF_MS) return;
+  undervaluedInFlight = computeUndervalued()
+    .catch(err => {
+      undervaluedFailedAt = Date.now();
+      console.error('[undervalued] background refresh failed:', err.message);
+    })
+    .finally(() => { undervaluedInFlight = null; });
+}
+
 // GET /undervalued
-// Returns the top 25 minted parcels whose OpenSea list price is furthest below
-// the internal estimated value. Results are cached for 30 minutes.
-// On cold cache, expect ~20–40s while traits are fetched via RPC.
+// Stale-while-revalidate: if cached data exists, return it immediately.
+// If the cache is stale, kick off a background refresh — the next request
+// after it completes will get fresh data. Only blocks on a truly cold cache.
 app.get('/undervalued', async (req, res) => {
   try {
     const now = Date.now();
-    if (undervaluedCache.data && (now - undervaluedCache.fetchedAt) < UNDERVALUED_CACHE_TTL_MS) {
+    const hasCache = !!undervaluedCache.data;
+    const isStale = hasCache && (now - undervaluedCache.fetchedAt) >= UNDERVALUED_CACHE_TTL_MS;
+
+    if (hasCache) {
+      if (isStale) triggerUndervaluedRefresh();
       return res.json(undervaluedCache.data);
     }
 
