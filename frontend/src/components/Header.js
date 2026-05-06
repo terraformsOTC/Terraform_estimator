@@ -28,7 +28,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             onClick={onWhale}
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline bg-transparent border-none cursor-pointer p-0 font-inherit"
           >
-            [view random collector]
+            [random collector]
           </button>
           <a
             href="/glossary"
@@ -43,6 +43,14 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
           >
             [tf explorer ↗]
+          </a>
+          <a
+            href="https://terraformmandala.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
+          >
+            [mandala generator ↗]
           </a>
           <a
             href="https://www.terraformlore.xyz"
