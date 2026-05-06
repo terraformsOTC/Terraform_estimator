@@ -50,7 +50,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             rel="noopener noreferrer"
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
           >
-            [mandala generator ↗]
+            [mandala tool ↗]
           </a>
           <a
             href="https://www.terraformlore.xyz"

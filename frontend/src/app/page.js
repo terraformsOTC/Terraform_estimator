@@ -13,19 +13,25 @@ import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
 
 function PortfolioStats({ data }) {
   return (
-    <div className="text-left md:text-right whitespace-nowrap">
-      <div className="flex justify-start md:justify-end gap-6 font-semibold">
-        <span>Parcels</span>
-        <span>Estimated collection value</span>
-        {data.sets?.length > 0 && <span>Sets</span>}
-      </div>
-      <div className="flex justify-start md:justify-end gap-6">
-        <span>{data.totalParcels}</span>
-        <span className="flex items-center gap-1">
-          <EthIcon />
-          {data.totalEstimatedValue.toFixed(2)}
-        </span>
-        {data.sets?.length > 0 && <span>{data.sets.length}</span>}
+    <div className="text-left md:text-right">
+      <div className="flex text-left md:text-right gap-6 whitespace-nowrap">
+        <div>
+          <p className="font-semibold">Parcels</p>
+          <span>{data.totalParcels}</span>
+        </div>
+        <div>
+          <p className="font-semibold">Estimated collection value</p>
+          <span className="flex items-center md:justify-end gap-1">
+            <EthIcon />
+            {data.totalEstimatedValue.toFixed(2)}
+          </span>
+        </div>
+        {data.sets?.length > 0 && (
+          <div>
+            <p className="font-semibold">Sets</p>
+            <span>{data.sets.length}</span>
+          </div>
+        )}
       </div>
     </div>
   );
