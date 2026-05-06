@@ -227,7 +227,7 @@ export default function Home() {
               className={`text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'search' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
               onClick={() => setView('search')}
             >
-              Estimate
+              parcel valuation estimate
             </a>
             {walletAddress && (
               <>
