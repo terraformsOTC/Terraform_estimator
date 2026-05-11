@@ -15,10 +15,20 @@ function timeAgo(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function bargainColor(discount) {
-  if (discount >= 0.4) return '#4ade80';
-  if (discount >= 0.2) return '#86efac';
-  return '#d1fae5';
+// discount > 0 → bargain (green), discount < 0 → overpriced (red)
+// Mirrors errorColor in SalesView: pass -discount so positive = over-estimate = red.
+function vsModelColor(discount) {
+  const sig = -discount; // positive when overpriced
+  const mag = Math.abs(sig);
+  if (mag < 0.05) return 'rgba(232,232,232,0.5)';
+  if (sig < 0) {
+    if (mag >= 0.4) return '#4ade80';
+    if (mag >= 0.2) return '#86efac';
+    return '#d1fae5';
+  }
+  if (mag >= 0.4) return '#f87171';
+  if (mag >= 0.2) return '#fca5a5';
+  return '#fecaca';
 }
 
 export default function ListingsView({ data, loading, error }) {
@@ -72,14 +82,14 @@ export default function ListingsView({ data, loading, error }) {
             onClick={() => setSort('price')}
             className={`btn-primary btn-sm text-xs${sort === 'price' ? '' : ' opacity-40'}`}
           >
-            [price ↑]
+            [price]
           </button>
         </div>
         <button
           onClick={() => setBargainsOnly(v => !v)}
           className={`btn-primary btn-sm text-xs${bargainsOnly ? '' : ' opacity-40'}`}
         >
-          {bargainsOnly ? '[bargains only ✓]' : '[show bargains only]'}
+          {bargainsOnly ? '[bargains only]' : '[show bargains only]'}
         </button>
       </div>
 
@@ -123,7 +133,8 @@ function ListingRow({ parcel }) {
     : specialType
   ];
 
-  const isBargain = discount > 0;
+  const color = vsModelColor(discount);
+  const sign = discount >= 0 ? '-' : '+';
   const vsModelPct = (Math.abs(discount) * 100).toFixed(1);
 
   return (
@@ -178,16 +189,12 @@ function ListingRow({ parcel }) {
         </span>
       </td>
       <td className="py-2 pr-4 text-right">
-        {isBargain ? (
-          <span
-            className="text-xs px-1 font-medium"
-            style={{ color: bargainColor(discount), border: `1px solid ${bargainColor(discount)}`, opacity: 0.9 }}
-          >
-            -{vsModelPct}%
-          </span>
-        ) : (
-          <span className="text-xs opacity-30">+{vsModelPct}%</span>
-        )}
+        <span
+          className="text-xs px-1 font-medium"
+          style={{ color, border: `1px solid ${color}`, opacity: 0.9 }}
+        >
+          {sign}{vsModelPct}%
+        </span>
       </td>
       <td className="py-2 text-right">
         <a
