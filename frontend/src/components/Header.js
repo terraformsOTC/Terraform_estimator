@@ -13,10 +13,10 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
         </div>
         <div className="flex items-center gap-4">
           <a
-            href="/bargains"
+            href="/listings"
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline"
           >
-            [bargains]
+            [listings]
           </a>
           <a
             href="/sales"

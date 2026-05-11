@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import UndervaluedView from '@/components/UndervaluedView';
+import ListingsView from '@/components/ListingsView';
 import { API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
 
-export default function BargainsPage() {
+export default function ListingsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,7 +14,7 @@ export default function BargainsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/undervalued`);
+      const res = await fetch(`${API_URL}/listings`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setData(json);
@@ -35,7 +35,7 @@ export default function BargainsPage() {
           <span className="text-[1.35rem] md:text-[1.6875rem]">
             <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
             <span> / </span>
-            <span>[bargains]</span>
+            <span>[listings]</span>
           </span>
         </div>
 
@@ -47,7 +47,7 @@ export default function BargainsPage() {
               </button>
             </div>
           )}
-          <UndervaluedView data={data} loading={loading} error={error} />
+          <ListingsView data={data} loading={loading} error={error} />
         </div>
       </main>
       <Footer />

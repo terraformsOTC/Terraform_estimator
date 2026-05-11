@@ -377,13 +377,15 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 }
 
 // Fetch active listings from OpenSea for the Terraforms collection.
-// Returns array of { tokenId, listedPrice } sorted cheapest first.
-// Paginates up to `maxPages` pages (100 listings each).
-async function fetchOpenSeaListings(maxPages = 5) {
+// Returns array of { tokenId, listedPrice, listedAt } sorted cheapest first.
+// Paginates until cursor is exhausted, capped at SAFETY_MAX_PAGES.
+// Pass maxPages to limit depth (e.g. computeUndervalued uses maxPages=2).
+async function fetchOpenSeaListings(maxPages = Infinity) {
+  const SAFETY_MAX_PAGES = 50;
   const listings = [];
   let next = null;
 
-  for (let page = 0; page < maxPages; page++) {
+  for (let page = 0; page < maxPages && page < SAFETY_MAX_PAGES; page++) {
     const url = new URL('https://api.opensea.io/api/v2/listings/collection/terraforms/all');
     url.searchParams.set('limit', '100');
     if (next) url.searchParams.set('next', next);
@@ -402,7 +404,8 @@ async function fetchOpenSeaListings(maxPages = 5) {
       // Only minted parcels (1–9911); skip bundles and non-ETH listings
       if (!tokenId || !priceVal || tokenId < 1 || tokenId > 9911) continue;
       const listedPrice = Number(priceVal) / Math.pow(10, decimals);
-      listings.push({ tokenId, listedPrice });
+      const listedAt = parseInt(listing.protocol_data?.parameters?.startTime, 10) || null;
+      listings.push({ tokenId, listedPrice, listedAt });
     }
 
     next = data.next;
@@ -516,6 +519,100 @@ app.get('/undervalued', async (req, res) => {
     undervaluedFailedAt = Date.now();
     console.error('[undervalued]', err.message);
     res.status(500).json({ error: 'Failed to fetch undervalued parcels.' });
+  }
+});
+
+// ─── ALL LISTINGS ─────────────────────────────────────────────────────────────
+// Fetches every active listing (paginate until exhausted), scores each against
+// the pricing model, and returns the full dataset so the frontend can sort/filter.
+const LISTINGS_CACHE_TTL_MS = 30 * 60 * 1000;
+let listingsCache = { data: null, fetchedAt: 0 };
+let listingsInFlight = null;
+let listingsFailedAt = 0;
+const LISTINGS_BACKOFF_MS = 60_000;
+
+async function computeAllListings() {
+  const now = Date.now();
+  const allListings = await fetchOpenSeaListings(); // paginate until cursor exhausted
+  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+
+  const fromSnapshot = [];
+  const needRpc = [];
+  for (const l of allListings) {
+    const traits = getSnapshotTraits(l.tokenId);
+    if (traits) fromSnapshot.push({ traits, listing: l });
+    else needRpc.push(l);
+  }
+
+  const results = [];
+  const score = (traits, listing) => {
+    const pricing = estimatePrice(traits, floor);
+    const discount = (pricing.estimatedValue - listing.listedPrice) / pricing.estimatedValue;
+    results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice: listing.listedPrice, listedAt: listing.listedAt, discount });
+  };
+
+  for (const { traits, listing } of fromSnapshot) score(traits, listing);
+
+  if (needRpc.length > 0) {
+    console.log(`[listings] ${fromSnapshot.length} from snapshot, ${needRpc.length} via RPC fallback`);
+    const BATCH_SIZE = 8;
+    for (let i = 0; i < needRpc.length; i += BATCH_SIZE) {
+      const batch = needRpc.slice(i, i + BATCH_SIZE);
+      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
+      for (let j = 0; j < settled.length; j++) {
+        if (settled[j].status === 'fulfilled') score(settled[j].value, batch[j]);
+      }
+    }
+  }
+
+  return { parcels: results, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
+}
+
+function triggerListingsRefresh() {
+  if (listingsInFlight) return;
+  if (!OPENSEA_API_KEY) return;
+  if (Date.now() - listingsFailedAt < LISTINGS_BACKOFF_MS) return;
+  listingsInFlight = computeAllListings()
+    .then(data => { listingsCache = { data, fetchedAt: Date.now() }; return data; })
+    .catch(err => { listingsFailedAt = Date.now(); console.error('[listings] background refresh failed:', err.message); })
+    .finally(() => { listingsInFlight = null; });
+}
+
+app.use('/listings', undervaluedLimiter);
+
+// GET /listings
+// Returns all active OpenSea listings scored against the pricing model.
+// Stale-while-revalidate: serves cached data immediately if available; refreshes in background when stale.
+app.get('/listings', async (req, res) => {
+  try {
+    const now = Date.now();
+    const hasCache = !!listingsCache.data;
+    const isStale = hasCache && (now - listingsCache.fetchedAt) >= LISTINGS_CACHE_TTL_MS;
+
+    if (hasCache) {
+      if (isStale) triggerListingsRefresh();
+      return res.json(listingsCache.data);
+    }
+
+    if (!OPENSEA_API_KEY) {
+      return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
+    }
+
+    if (!listingsInFlight && (now - listingsFailedAt) < LISTINGS_BACKOFF_MS) {
+      return res.status(503).json({ error: 'Listings data temporarily unavailable. Try again shortly.' });
+    }
+
+    if (!listingsInFlight) {
+      listingsInFlight = computeAllListings()
+        .then(data => { listingsCache = { data, fetchedAt: Date.now() }; return data; })
+        .finally(() => { listingsInFlight = null; });
+    }
+    const responseData = await listingsInFlight;
+    res.json(responseData);
+  } catch (err) {
+    listingsFailedAt = Date.now();
+    console.error('[listings]', err.message);
+    res.status(500).json({ error: 'Failed to fetch listings.' });
   }
 });
 

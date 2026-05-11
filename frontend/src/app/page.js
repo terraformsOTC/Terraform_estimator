@@ -7,7 +7,6 @@ import ParcelSearch from '@/components/ParcelSearch';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
-import UndervaluedView from '@/components/UndervaluedView';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
 
@@ -56,15 +55,13 @@ function TokenParamHandler({ onToken, onAddress }) {
 
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale' | 'undervalued'
+  const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale'
   const [searchResult, setSearchResult] = useState(null);
   const [unmintedResult, setUnmintedResult] = useState(null);
   const [walletData, setWalletData] = useState(null);
   const [whaleIdentifier, setWhaleIdentifier] = useState(null);
   const [whaleData, setWhaleData] = useState(null);
   const [isRandomWhale, setIsRandomWhale] = useState(false);
-  const [undervaluedData, setUndervaluedData] = useState(null);
-  const [undervaluedError, setUndervaluedError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ethUsd, setEthUsd] = useState(null);
@@ -190,23 +187,6 @@ export default function Home() {
     return loadWalletByAddress(pickRandomWhale(), { isWhale: true });
   }
 
-  async function loadUndervalued({ force = false } = {}) {
-    setView('undervalued');
-    if (!force && undervaluedData) return;
-    setUndervaluedData(null);
-    setLoading(true);
-    setUndervaluedError(null);
-    try {
-      const res = await fetch(`${API_URL}/undervalued`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setUndervaluedData(data);
-    } catch (err) {
-      setUndervaluedError(err.message || 'Failed to load undervalued parcels.');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="content-wrapper">
@@ -248,16 +228,6 @@ export default function Home() {
                   onClick={() => setView('whale')}
                 >
                   {isRandomWhale ? '🐋 Whale' : whaleIdentifier}
-                </a>
-              </>
-            )}
-            {view === 'undervalued' && (
-              <>
-                <span className="text-[1.35rem] md:text-[1.6875rem]"> / </span>
-                <a
-                  className="text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link switch-option-link--selected"
-                >
-                  [bargains]
                 </a>
               </>
             )}
@@ -304,26 +274,6 @@ export default function Home() {
             />
           )}
 
-          {view === 'undervalued' && (
-            <>
-              {undervaluedData && !loading && (
-                <div className="mb-4">
-                  <button
-                    className="btn-primary btn-sm text-xs"
-                    onClick={() => loadUndervalued({ force: true })}
-                  >
-                    [refresh listings]
-                  </button>
-                </div>
-              )}
-              <UndervaluedView
-                data={undervaluedData}
-                loading={loading}
-                error={undervaluedError}
-                ethUsd={ethUsd}
-              />
-            </>
-          )}
           </ErrorBoundary>
         </div>
       </main>
