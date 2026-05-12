@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, API_URL, getLevelCategory } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, API_URL, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { useMoneySword } from '@/contexts/MoneySword';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 
 const ATTAINABILITY_COLORS = {
@@ -81,6 +82,8 @@ function ParcelCard({ parcel }) {
   const { tokenId, traits, pricing } = parcel;
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
+  const [moneySword] = useMoneySword();
+  const displayValue = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
 
@@ -112,7 +115,7 @@ function ParcelCard({ parcel }) {
           <a href={`/?token=${tokenId}`}>{tokenId}</a>
           <span className="hidden lg:flex items-center gap-1 text-sm">
             <EthIcon width={8} height={13} />
-            {estimatedValue.toFixed(3)}
+            {displayValue.toFixed(3)}
           </span>
         </div>
         <p className="hidden lg:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>

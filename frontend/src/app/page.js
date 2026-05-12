@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
@@ -8,9 +8,15 @@ import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
+import { EthIcon, API_URL, pickRandomWhale, Footer, getMoneySwordMultiplier } from '@/components/shared';
+import { useMoneySword } from '@/contexts/MoneySword';
 
 function PortfolioStats({ data }) {
+  const [moneySword] = useMoneySword();
+  const displayTotal = useMemo(() => {
+    if (!moneySword || !data.parcels) return data.totalEstimatedValue;
+    return data.parcels.reduce((sum, p) => sum + p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level), 0);
+  }, [data, moneySword]);
   return (
     <div className="text-left md:text-right">
       <div className="flex text-left md:text-right gap-6 whitespace-nowrap">
@@ -22,7 +28,7 @@ function PortfolioStats({ data }) {
           <p className="font-semibold">Estimated collection value</p>
           <span className="flex items-center md:justify-end gap-1">
             <EthIcon />
-            {data.totalEstimatedValue.toFixed(2)}
+            {displayTotal.toFixed(2)}
           </span>
         </div>
         {data.sets?.length > 0 && (

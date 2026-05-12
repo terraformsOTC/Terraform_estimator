@@ -1,6 +1,7 @@
 'use client';
 
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, CATEGORY_COLORS, API_URL } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, CATEGORY_COLORS, API_URL, getMoneySwordMultiplier } from './shared';
+import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -32,6 +33,8 @@ function formatRelative(closingDate) {
 }
 
 export default function SalesView({ data, loading, error, ethUsd }) {
+  const [moneySword] = useMoneySword();
+
   if (loading) {
     return (
       <div className="text-sm opacity-75">
@@ -48,8 +51,18 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 
   if (!data) return null;
 
-  const { sales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
+  const { sales: rawSales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
+
+  const sales = moneySword
+    ? (rawSales || []).map(s => {
+        const est = s.pricing?.estimatedValue;
+        if (!est) return s;
+        const adjEst = est * getMoneySwordMultiplier(s.pricing, s.traits?.level);
+        const adjError = typeof s.salePrice === 'number' ? (s.salePrice - adjEst) / adjEst : s.signedError;
+        return { ...s, pricing: { ...s.pricing, estimatedValue: adjEst }, signedError: adjError };
+      })
+    : rawSales;
 
   // Collection-wide mean signed error — quick eyeball of model bias.
   const priced = (sales || []).filter(s => typeof s.signedError === 'number');

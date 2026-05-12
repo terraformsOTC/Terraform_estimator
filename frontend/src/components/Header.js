@@ -1,9 +1,13 @@
 'use client';
 
+import { useMoneySword } from '@/contexts/MoneySword';
+
 export default function Header({ walletAddress, onConnect, onDisconnect, onWhale }) {
   const short = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
     : null;
+
+  const [moneySword, toggleMoneySword] = useMoneySword();
 
   return (
     <header className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
@@ -42,7 +46,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             rel="noopener noreferrer"
             className="text-sm opacity-60 hover:opacity-100 transition-opacity no-underline hidden md:inline whitespace-nowrap"
           >
-            [tf explorer ↗]
+            [explorer ↗]
           </a>
           <a
             href="https://terraformmandala.xyz"
@@ -60,6 +64,13 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           >
             [lore ↗]
           </a>
+          <button
+            onClick={toggleMoneySword}
+            title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
+            className={`bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
+          >
+            🗡
+          </button>
           {walletAddress ? (
             <button
               className="btn-primary btn-sm"
@@ -75,6 +86,11 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           )}
         </div>
       </nav>
+      {moneySword && (
+        <p className="text-xs opacity-50 mt-2">
+          🗡 One or more collectors has the money sword, no parcel is safe. All estimates are increased.
+        </p>
+      )}
     </header>
   );
 }

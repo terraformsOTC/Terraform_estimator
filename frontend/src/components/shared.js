@@ -191,6 +191,21 @@ export function getLevelCategory(level) {
   return null;
 }
 
+const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };
+
+export function getMoneySwordMultiplier(pricing, level) {
+  if (!pricing) return 1.0;
+  if (pricing.isSpecial) return 1.35;
+  const levelCat = getLevelCategory(level);
+  const topCat = [pricing.zoneCategory, pricing.biomeCategory, levelCat]
+    .filter(Boolean)
+    .sort((a, b) => (CATEGORY_ORDER[a] ?? 99) - (CATEGORY_ORDER[b] ?? 99))[0];
+  if (topCat === 'Mythical') return 1.5;
+  if (topCat === 'Rare')     return 1.4;
+  if (topCat === 'Premium')  return 1.3;
+  return 1.0;
+}
+
 // ─── Shared trait row components ─────────────────────────────────────────────
 // Used in both ParcelResult and UnmintedResult
 

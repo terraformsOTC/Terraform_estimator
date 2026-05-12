@@ -1,12 +1,15 @@
 'use client';
 
-import { EthIcon, SpecialBadge, AutoBadgeStack, TraitRow, SimpleRow, MysteryRow, getLevelCategory } from './shared';
+import { EthIcon, SpecialBadge, AutoBadgeStack, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { useMoneySword } from '@/contexts/MoneySword';
 import TerraformAnimation from './TerraformAnimation';
 
 export default function UnmintedResult({ parcel, ethUsd }) {
   const { traits, pricing, animData } = parcel;
   const { id, level, x, y, biome, zone, chroma, seed, mysteryValue, mysteryOutlier, specialType } = traits;
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
+  const [moneySword] = useMoneySword();
+  const displayValue = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
 
@@ -25,7 +28,7 @@ export default function UnmintedResult({ parcel, ethUsd }) {
           <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
           <div className="flex items-center gap-2">
             <EthIcon />
-            <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
+            <span className="text-3xl">{displayValue.toFixed(3)}</span>
           </div>
           <p className="text-xs opacity-55 mt-1">floor: {floor} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}</p>
           {isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}

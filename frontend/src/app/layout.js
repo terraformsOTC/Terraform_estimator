@@ -1,6 +1,7 @@
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
 import { SITE_URL } from '@/lib/metadata';
+import ClientProviders from '@/components/ClientProviders';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -33,7 +34,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
       <body>
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
         <Analytics />
       </body>
     </html>

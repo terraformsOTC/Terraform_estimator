@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getMoneySwordMultiplier } from './shared';
+import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -32,12 +33,17 @@ function vsModelColor(discount) {
 }
 
 export default function ListingsView({ data, loading, error }) {
+  const [moneySword] = useMoneySword();
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
 
   const sorted = useMemo(() => {
     if (!data?.parcels) return [];
-    const list = bargainsOnly ? data.parcels.filter(p => p.discount > 0) : data.parcels;
+    const isBargain = (p) => {
+      if (!moneySword) return p.discount > 0;
+      return p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level) > p.listedPrice;
+    };
+    const list = bargainsOnly ? data.parcels.filter(isBargain) : data.parcels;
     if (sort === 'price') return [...list].sort((a, b) => a.listedPrice - b.listedPrice);
     return [...list].sort((a, b) => {
       if (!a.listedAt && !b.listedAt) return 0;
@@ -45,7 +51,7 @@ export default function ListingsView({ data, loading, error }) {
       if (!b.listedAt) return -1;
       return b.listedAt - a.listedAt;
     });
-  }, [data, sort, bargainsOnly]);
+  }, [data, sort, bargainsOnly, moneySword]);
 
   if (loading) {
     return (
@@ -126,6 +132,10 @@ function ListingRow({ parcel }) {
   const { tokenId, traits, pricing, listedPrice, listedAt, discount } = parcel;
   const { zone, biome, level, chroma, mode, specialType, mysteryOutlier } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
+  const [moneySword] = useMoneySword();
+
+  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, traits.level) : estimatedValue;
+  const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
 
   const specialBadge = SPECIAL_TYPE_BADGES[
     mode === 'Origin Daydream' ? 'Origin Daydream'
@@ -133,9 +143,9 @@ function ListingRow({ parcel }) {
     : specialType
   ];
 
-  const color = vsModelColor(discount);
-  const sign = discount >= 0 ? '-' : '+';
-  const vsModelPct = (Math.abs(discount) * 100).toFixed(1);
+  const color = vsModelColor(adjDiscount);
+  const sign = adjDiscount >= 0 ? '-' : '+';
+  const vsModelPct = (Math.abs(adjDiscount) * 100).toFixed(1);
 
   return (
     <tr className="border-b" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -185,7 +195,7 @@ function ListingRow({ parcel }) {
       <td className="py-2 pr-4 text-right">
         <span className="flex items-center justify-end gap-1">
           <EthIcon width={8} height={13} />
-          {estimatedValue.toFixed(3)}
+          {adjEst.toFixed(3)}
         </span>
       </td>
       <td className="py-2 pr-4 text-right">
