@@ -68,6 +68,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             onClick={toggleMoneySword}
             title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
             className={`bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
+            style={{ fontSize: '1.1em' }}
           >
             🗡
           </button>

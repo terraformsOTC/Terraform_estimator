@@ -203,7 +203,7 @@ export function getMoneySwordMultiplier(pricing, level) {
   if (topCat === 'Mythical') return 1.5;
   if (topCat === 'Rare')     return 1.4;
   if (topCat === 'Premium')  return 1.3;
-  return 1.0;
+  return 1.2;
 }
 
 // ─── Shared trait row components ─────────────────────────────────────────────
