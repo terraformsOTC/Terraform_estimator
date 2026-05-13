@@ -45,6 +45,14 @@ export default function ListingsView({ data, loading, error }) {
     };
     const list = bargainsOnly ? data.parcels.filter(isBargain) : data.parcels;
     if (sort === 'price') return [...list].sort((a, b) => a.listedPrice - b.listedPrice);
+    if (sort === 'discount') {
+      const adjDiscount = (p) => {
+        if (!moneySword) return p.discount;
+        const adj = p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level);
+        return (adj - p.listedPrice) / adj;
+      };
+      return [...list].sort((a, b) => adjDiscount(b) - adjDiscount(a));
+    }
     return [...list].sort((a, b) => {
       if (!a.listedAt && !b.listedAt) return 0;
       if (!a.listedAt) return 1;
@@ -89,6 +97,12 @@ export default function ListingsView({ data, loading, error }) {
             className={`btn-primary btn-sm text-xs${sort === 'price' ? '' : ' opacity-40'}`}
           >
             [price]
+          </button>
+          <button
+            onClick={() => setSort('discount')}
+            className={`btn-primary btn-sm text-xs${sort === 'discount' ? '' : ' opacity-40'}`}
+          >
+            [discount]
           </button>
         </div>
         <button
