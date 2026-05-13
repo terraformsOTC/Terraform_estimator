@@ -89,7 +89,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
       </nav>
       {moneySword && (
         <p className="text-xs opacity-50 mt-2">
-          🗡 One or more collectors has the money sword, no parcel is safe. All estimates are increased.
+          🗡 One or more nerds has the money sword, there is an uncomfortable amount of competition for parcels. All estimates are increased.
         </p>
       )}
     </header>
