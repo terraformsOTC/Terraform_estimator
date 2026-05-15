@@ -2,7 +2,7 @@
 // Formula (standard parcels):
 //   Terrain mode (equal-weight):  Floor × ((zone_m×0.5 + biome_m×0.5) + level_m) × chroma_m × mode_m × ...
 //   Daydream mode (zone-dominant): Floor × ((zone_m×0.85 + biome_m×0.15) + level_m) × chroma_m × mode_m × ...
-//                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m × gm_m × origin_mode_m
+//                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m × gm_m × origin_mode_m × biome0_zone_tier_m
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
@@ -19,7 +19,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.1.0';
+const PRICING_MODEL_VERSION = '2.2.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -162,11 +162,22 @@ const GODMODE_MULTIPLE = 45;
 
 // X-Seed / Y-Seed zone tier multipliers (zone only — biome ignored for seeds)
 const SEED_ZONE_TIER_MULTIPLES = {
-  "Mythical": 2,
-  "Rare":     1.5,
-  "Premium":  1.25,
-  "Uncommon": 1.1,
+  "Mythical": 2.5,
+  "Rare":     1.7,
+  "Premium":  1.4,
+  "Uncommon": 1.2,
   "Floor":    1,
+};
+
+// Biome 0 (standard formula path — not Lith0) zone-tier bump applied as a
+// trait premium on the final estimate. Floor-zone biome 0 parcels unchanged;
+// higher-tier zones get a multiplicative boost.
+const BIOME0_ZONE_TIER_BUMP = {
+  "Mythical": 1.40,
+  "Rare":     1.25,
+  "Premium":  1.15,
+  "Uncommon": 1.05,
+  "Floor":    1.00,
 };
 
 // ─── TRAIT PREMIUMS ────────────────────────────────────────────────────────────
@@ -183,13 +194,13 @@ const TRAIT_PREMIUMS = {
 };
 
 // ─── LITH0-LIKE PREMIUMS (per-token) ─────────────────────────────────────────
-// All tokens: 1.5x
+// All tokens: 1.8x
 const LITH0LIKE_PREMIUMS = {
-  3124: 1.5,
-  3218: 1.5,
-  6005: 1.5,
-  6512: 1.5,
-  9427: 1.5,
+  3124: 1.8,
+  3218: 1.8,
+  6005: 1.8,
+  6512: 1.8,
+  9427: 1.8,
 };
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
@@ -366,11 +377,12 @@ function estimatePrice(traits, floorOverride) {
 
   // Daydream/Terraform modes: zone is the dominant trait, biome adds little premium
   const isDaydreamMode = ['Daydream', 'Origin Daydream', 'Terraform', 'Origin Terraform'].includes(mode);
-  const isOriginDaydream = mode === 'Origin Daydream';
-  // Origin Daydream: compress zone premium (factor 0.4) — floor zones unaffected,
-  // high-tier zones have reduced impact on valuation
-  const effectiveZoneMultiple = isOriginDaydream
-    ? Math.round((1 + (zoneMultiple - 1) * 0.4) * 1000) / 1000
+  // Origin Daydream / Origin Terraform share treatment (terraform mode is a
+  // committed daydream). Compress zone premium (factor 0.5) — floor zones
+  // unaffected, high-tier zones have reduced impact on valuation.
+  const isOriginMode = mode === 'Origin Daydream' || mode === 'Origin Terraform';
+  const effectiveZoneMultiple = isOriginMode
+    ? Math.round((1 + (zoneMultiple - 1) * 0.5) * 1000) / 1000
     : zoneMultiple;
   const zoneWeight  = isDaydreamMode ? 0.85 : 0.5;
   const biomeWeight = isDaydreamMode ? 0.15 : 0.5;
@@ -389,12 +401,16 @@ function estimatePrice(traits, floorOverride) {
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
   const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.15 : 1;
+  const zoneCategory       = getCategoryFromMultiple(zoneMultiple);
+  // Biome 0 (standard formula path only — Lith0 / X-Seed / Y-Seed return early
+  // before reaching here) gets a multiplicative bump tied to the zone's tier.
+  const biome0ZoneTierBump = biome === 0 ? (BIOME0_ZONE_TIER_BUMP[zoneCategory] ?? 1) : 1;
 
   // Additive formula: base zone/biome value + level premium (0 for mid-levels)
   // chroma multiplies into the level term; modeMultiple is no longer applied here
   const baseValue      = floor * zonebiomeAvg;
   const levelValue     = levelMultiple * floor * chromaMultiple;
-  const rawEstimate    = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple;
+  const rawEstimate    = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple * biome0ZoneTierBump;
 
   // For standard Daydream/Terraform: compress the premium above floor.
   // Never goes below floor. Origin variants are unaffected (handled by originModeMultiple).
@@ -405,7 +421,7 @@ function estimatePrice(traits, floorOverride) {
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
   let formula = isDaydreamMode
-    ? `${floor} × (${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginDaydream && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
+    ? `${floor} × (${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginMode && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
     : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
     formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma)`;
@@ -419,6 +435,7 @@ function estimatePrice(traits, floorOverride) {
   if (lith0likeMultiple !== 1) formula += ` × ${lith0likeMultiple}(lith-0like)`;
   if (gmMultiple         !== 1) formula += ` × ${gmMultiple}(gm)`;
   if (originModeMultiple !== 1) formula += ` × ${originModeMultiple}(${mode.toLowerCase()})`;
+  if (biome0ZoneTierBump !== 1) formula += ` × ${biome0ZoneTierBump}(biome0 zone tier)`;
   if (isStandardDaydreamMode) formula += ` → floor + premium×${DAYDREAM_PREMIUM_DISCOUNT} (daydream discount)`;
 
   return {
@@ -426,7 +443,7 @@ function estimatePrice(traits, floorOverride) {
     floor,
     isSpecial: false,
     zoneMultiple,
-    ...(isOriginDaydream ? { effectiveZoneMultiple } : {}),
+    ...(isOriginMode ? { effectiveZoneMultiple } : {}),
     biomeMultiple,
     zonebiomeAvg: Math.round(zonebiomeAvg * 100) / 100,
     levelMultiple,
@@ -441,8 +458,9 @@ function estimatePrice(traits, floorOverride) {
     lith0likeMultiple,
     gmMultiple,
     originModeMultiple,
+    biome0ZoneTierBump,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
-    zoneCategory: getCategoryFromMultiple(zoneMultiple),
+    zoneCategory,
     biomeCategory: BIOME_CATEGORY_OVERRIDES[biome] ?? getCategoryFromMultiple(biomeMultiple),
     formula,
   };
