@@ -989,6 +989,140 @@ app.get('/unminted/search', async (req, res) => {
   }
 });
 
+// ─── TRAITS BROWSE ─────────────────────────────────────────────────────────────
+// Find every parcel (minted + unminted) matching a given special trait, e.g.
+// every Mesa parcel, every Lith0-like, every Penthouse. Index is built on
+// first request and cached for the process lifetime — underlying data
+// (snapshot + curated id sets) is static.
+const TRAIT_TYPES = [
+  { type: 'godmode',          label: 'Godmode',          group: 'special' },
+  { type: 'origin-daydream',  label: 'Origin Daydream',  group: 'mode' },
+  { type: 'origin-terraform', label: 'Origin Terraform', group: 'mode' },
+  { type: 'plague',           label: 'Plague',           group: 'special' },
+  { type: 'x-seed',           label: 'X-Seed',           group: 'special' },
+  { type: 'y-seed',           label: 'Y-Seed',           group: 'special' },
+  { type: 'lith0',            label: 'Lith0',            group: 'special' },
+  { type: 'spine',            label: 'Spine',            group: 'special' },
+  { type: '1of1',             label: '1 of 1',           group: 'special' },
+  { type: 's0',               label: 'S0',               group: 'special' },
+  { type: 'biome0',           label: 'Biome 0',          group: 'visual' },
+  { type: 'lith0like',        label: 'Lith0-like',       group: 'visual' },
+  { type: 'mesa',             label: 'Mesa',             group: 'visual' },
+  { type: 'matrix',           label: 'Matrix',           group: 'visual' },
+  { type: 'big-grass',        label: 'Big Grass',        group: 'visual' },
+  { type: 'little-grass',     label: 'Little Grass',     group: 'visual' },
+  { type: 'heartbeat',        label: 'Heartbeat',        group: 'visual' },
+  { type: 'gm',               label: 'gm',               group: 'visual' },
+  { type: 'basement',         label: 'Basement',         group: 'level' },
+  { type: 'penthouse',        label: 'Penthouse',        group: 'level' },
+];
+
+// Mirrors AutoBadgeStack / hasBadges logic in frontend/src/components/shared.js.
+// Keep in sync — drift between the two is what causes badge-vs-search disagreements.
+function matchesTrait(traits, type) {
+  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue } = traits;
+  const isTerrain = mode === 'Terrain';
+  switch (type) {
+    case 'godmode':          return !!isGodmode;
+    case 'origin-daydream':  return mode === 'Origin Daydream';
+    case 'origin-terraform': return mode === 'Origin Terraform';
+    case 'plague':           return specialType === 'Plague';
+    case 'x-seed':           return specialType === 'X-Seed';
+    case 'y-seed':           return specialType === 'Y-Seed';
+    case 'lith0':            return specialType === 'Lith0';
+    case 'spine':            return specialType === 'Spine';
+    case '1of1':             return !!isOneOfOne;
+    case 's0':               return !!isS0;
+    case 'biome0':           return biome === 0 && specialType !== 'Lith0';
+    case 'lith0like':        return !!isLith0like;
+    case 'mesa':             return isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000;
+    case 'matrix':           return isTerrain && biome === 58 && zone === 'Intro Forest';
+    case 'big-grass':        return isTerrain && biome === 42;
+    case 'little-grass':     return isTerrain && biome === 65;
+    case 'heartbeat':        return isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
+    case 'gm':               return !!isGm;
+    case 'basement':         return level === 1;
+    case 'penthouse':        return level === 20;
+    default: return false;
+  }
+}
+
+// Unminted parcels store specialType directly (1of1, Spine, Lith0, etc.) but
+// no isOneOfOne/isGm flags — derive them so matchesTrait can use one shape.
+function augmentUnmintedTraits(parcel) {
+  const isGm = parcel.biome === 71 && parcel.mode === 'Terrain'
+    && parcel.mysteryValue != null && parcel.mysteryValue < MYSTERY_P5;
+  return {
+    ...parcel,
+    isS0: false,
+    isGodmode: false,
+    isOneOfOne: parcel.specialType === '1of1',
+    isLith0like: false,
+    isGm,
+  };
+}
+
+let TRAITS_INDEX = null;
+function getTraitsIndex() {
+  if (TRAITS_INDEX) return TRAITS_INDEX;
+  const t0 = Date.now();
+  const index = {};
+  for (const t of TRAIT_TYPES) index[t.type] = { ...t, parcels: [] };
+
+  if (MINTED_TRAITS_SNAPSHOT) {
+    for (const tokenId of MINTED_TRAITS_SNAPSHOT.keys()) {
+      const traits = getSnapshotTraits(tokenId);
+      if (!traits) continue;
+      for (const t of TRAIT_TYPES) {
+        if (matchesTrait(traits, t.type)) {
+          index[t.type].parcels.push({ tokenId, traits, isUnminted: false });
+        }
+      }
+    }
+  }
+
+  for (const parcel of UNMINTED_PARCELS) {
+    const traits = augmentUnmintedTraits(parcel);
+    const tokenId = 9911 + parcel.id;
+    for (const t of TRAIT_TYPES) {
+      if (matchesTrait(traits, t.type)) {
+        index[t.type].parcels.push({ tokenId, unmintedId: parcel.id, traits, isUnminted: true });
+      }
+    }
+  }
+
+  for (const t of TRAIT_TYPES) {
+    index[t.type].parcels.sort((a, b) => a.tokenId - b.tokenId);
+  }
+
+  TRAITS_INDEX = index;
+  console.log(`[traits] Built trait index in ${Date.now() - t0}ms`);
+  return TRAITS_INDEX;
+}
+
+app.use('/traits', standardLimiter);
+
+// GET /traits — list of trait types with parcel counts
+app.get('/traits', (_req, res) => {
+  const index = getTraitsIndex();
+  const types = TRAIT_TYPES.map(t => ({ ...t, count: index[t.type].parcels.length }));
+  res.json({ types });
+});
+
+// GET /traits/:type — all parcels matching the trait, sorted by tokenId
+app.get('/traits/:type', (req, res) => {
+  const validType = TRAIT_TYPES.find(t => t.type === req.params.type);
+  if (!validType) return res.status(404).json({ error: 'Unknown trait type' });
+  const entry = getTraitsIndex()[validType.type];
+  res.json({
+    type: entry.type,
+    label: entry.label,
+    group: entry.group,
+    count: entry.parcels.length,
+    parcels: entry.parcels,
+  });
+});
+
 // GET /health
 app.use('/health', standardLimiter);
 app.get('/health', (_req, res) => res.json({ ok: true }));

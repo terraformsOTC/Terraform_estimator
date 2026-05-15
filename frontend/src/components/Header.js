@@ -43,6 +43,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
     { label: '[sales]', href: '/sales' },
     { label: '[random collector]', onClick: handleWhale },
     { label: '[glossary]', href: '/glossary' },
+    { label: '[traits]', href: '/traits' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
     { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
