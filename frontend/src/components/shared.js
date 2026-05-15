@@ -97,6 +97,37 @@ export const WHALE_WALLETS = [
   '0xcb14228737c6b38C0d060bf7Cf5FF8f9090936fc',
 ].map(a => a.toLowerCase());
 
+// Maps on-chain zone name → slug at https://www.terraformlore.xyz/zones/<slug>.
+// Zones not in this map have no lore page (e.g. [HOME], Valeria, Dynacrypts,
+// Cradle, pfpfpfpbbx80, [BOSS], [WEN]) — getZoneLoreUrl returns null for them.
+// Slugs match the lore site's URL structure scraped 2026-05-15; most are
+// lowercase(strip-brackets, spaces→hyphens), but Kippsun is spelled "kippsunn".
+const ZONE_LORE_SLUGS = {
+  'Shahra': 'shahra', 'Antenna': 'antenna', 'Aetherking': 'aetherking',
+  'Gemina': 'gemina', '[SOON]': 'soon', 'Dread': 'dread', '[SUN]': 'sun',
+  'Royal': 'royal', 'Killscreen': 'killscreen', '[NOV]': 'nov', 'Avidana': 'avidana',
+  'Mould': 'mould', 'First Earth': 'first-earth', 'Tetsu': 'tetsu', 'Aria': 'aria', 'Xleph': 'xleph',
+  'Uwo': 'uwo', 'Mori': 'mori', 'Radiant': 'radiant', 'Venmon': 'venmon', 'Promiselands': 'promiselands',
+  'Greysunn': 'greysunn', 'Treasure': 'treasure',
+  'Dhampir': 'dhampir', 'Rocket': 'rocket', 'Mt Zuka': 'mt-zuka', 'Jadeite': 'jadeite',
+  'Intro Forest': 'intro-forest',
+  'Bubble': 'bubble', 'Kippsun': 'kippsunn', 'Everglades': 'everglades',
+  'Muxtai X1': 'muxtai-x1', 'Toad': 'toad', 'Angel': 'angel',
+  'Pepo': 'pepo', 'Wastelands': 'wastelands', '[BLOOD]': 'blood',
+  'Blushing': 'blushing', 'Ender': 'ender', 'Akileaf': 'akileaf',
+  '[NEON]': 'neon', 'Calyx': 'calyx', 'Zerinia': 'zerinia', 'Palace': 'palace',
+  '[CUR2]': 'cur2', '[DARK]': 'dark', 'Warp': 'warp', 'Blossom': 'blossom', 'Linosim': 'linosim',
+  '[HYCA]': 'hyca', '[YUNA]': 'yuna', '[MENU]': 'menu', 'Alto': 'alto', 'Kairo': 'kairo',
+  '[MOON]': 'moon', '[SEP]': 'sep', 'Shiro': 'shiro', 'Mirage': 'mirage', 'Grove': 'grove',
+  'Hyphae': 'hyphae', 'Mecha': 'mecha', 'Riso': 'riso', 'Exduo': 'exduo', 'Arc': 'arc',
+  'Nightrose': 'nightrose', 'Hypermage': 'hypermage', 'Holo': 'holo', 'Ouallada': 'ouallada',
+};
+
+export function getZoneLoreUrl(zone) {
+  const slug = ZONE_LORE_SLUGS[zone];
+  return slug ? `https://www.terraformlore.xyz/zones/${slug}` : null;
+}
+
 export const CATEGORY_COLORS = {
   Mythical: '#ffe401',
   Rare: '#84488b',

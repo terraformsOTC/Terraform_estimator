@@ -84,8 +84,16 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
   return (
     <header ref={containerRef} className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
       <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
+          <button
+            onClick={toggleMoneySword}
+            title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
+            className={`bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
+            style={{ fontSize: '1.1em' }}
+          >
+            🗡
+          </button>
         </div>
         <div className="flex items-center gap-4">
           {navItems.map((item) => renderNavItem(item, desktopClasses(item), false))}
@@ -96,14 +104,6 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             className="text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer p-0 font-inherit md:hidden"
           >
             {`[${menuOpen ? 'close' : 'menu'}]`}
-          </button>
-          <button
-            onClick={toggleMoneySword}
-            title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
-            className={`bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
-            style={{ fontSize: '1.1em' }}
-          >
-            🗡
           </button>
           {walletAddress ? (
             <button

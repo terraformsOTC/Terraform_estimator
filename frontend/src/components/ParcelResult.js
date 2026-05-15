@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier, getZoneLoreUrl } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 export default function ParcelResult({ parcel, ethUsd }) {
@@ -52,7 +52,7 @@ export default function ParcelResult({ parcel, ethUsd }) {
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} mysteryValue={mysteryValue} />
         </div>
 
-        <ExternalLinks tokenId={tokenId} />
+        <ExternalLinks tokenId={tokenId} zone={zone} />
       </div>
     </div>
   );
@@ -103,7 +103,8 @@ function ParcelImage({ tokenId }) {
   );
 }
 
-function ExternalLinks({ tokenId }) {
+function ExternalLinks({ tokenId, zone }) {
+  const loreUrl = getZoneLoreUrl(zone);
   return (
     <div className="flex gap-2 mt-1 flex-wrap">
       <a href={`https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
@@ -112,6 +113,11 @@ function ExternalLinks({ tokenId }) {
       <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
         [explorer ↗]
       </a>
+      {loreUrl && (
+        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+          [lore ↗]
+        </a>
+      )}
     </div>
   );
 }

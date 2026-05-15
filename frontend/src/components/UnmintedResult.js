@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SpecialBadge, AutoBadgeStack, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { EthIcon, SpecialBadge, AutoBadgeStack, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier, getZoneLoreUrl } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 import TerraformAnimation from './TerraformAnimation';
 
@@ -51,7 +51,7 @@ export default function UnmintedResult({ parcel, ethUsd }) {
           <UnmintedSpecialRow traits={traits} />
         </div>
 
-        <UnmintedLinks level={level} x={x} y={y} />
+        <UnmintedLinks level={level} x={x} y={y} zone={zone} />
       </div>
     </div>
   );
@@ -75,13 +75,19 @@ function UnmintedAnimation({ animData }) {
   return <TerraformAnimation animData={animData} width={277} height={400} />;
 }
 
-function UnmintedLinks({ level, x, y }) {
+function UnmintedLinks({ level, x, y, zone }) {
   const terrafansUrl = `https://terrafans.xyz/all/index.php?level=${level}&x=${x}&y=${y}`;
+  const loreUrl = getZoneLoreUrl(zone);
   return (
     <div className="flex gap-2 mt-1 flex-wrap">
       <a href={terrafansUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
         [terrafans ↗]
       </a>
+      {loreUrl && (
+        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+          [lore ↗]
+        </a>
+      )}
     </div>
   );
 }
