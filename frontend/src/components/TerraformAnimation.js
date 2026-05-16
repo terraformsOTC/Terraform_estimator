@@ -127,33 +127,40 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     const domCells  = containerRef.current.querySelectorAll('[data-cell]');
     if (domCells.length !== 1024) return;
 
-    const wrapAt = Math.max(mainSet.length, 1) * 4096;
-    const FRAME_MS = 1000 / 30; // cap at 30fps — visually identical, halves cost on 120Hz displays
+    // Split cells into static (set once) and animated (updated each tick).
+    // Air cells (h === 9) and below-waterline cells never change — writing
+    // their textContent every frame was the main source of jitter.
+    const animatedCells = []; // { cell, baseOffset } — baseOffset = h + 0.5*row + 0.1*DIRECTION*col
+    for (let row = 0; row < 32; row++) {
+      for (let col = 0; col < 32; col++) {
+        const idx = row * 32 + col;
+        const cell = domCells[idx];
+        const h = heights[idx];
+        if (h === 9) {
+          cell.textContent = ' ';
+        } else if (h > waterline) {
+          animatedCells.push({ cell, baseOffset: h + 0.5 * row + 0.1 * DIRECTION * col });
+        } else {
+          cell.textContent = chars?.[gridClasses[idx]] || FALLBACK_CHAR;
+        }
+      }
+    }
+
+    const setLen = Math.max(mainSet.length, 1);
+    const wrapAt = setLen * 4096;
+    // Step every other rAF (~30fps on 60Hz, ~60fps on 120Hz). Consistent rAF
+    // quantum gives stable pacing — the timestamp-delta throttle drifted.
     let airship = 0;
-    let lastTick = 0;
+    let skip = false;
     let rafId;
 
-    function tick(timestamp) {
-      if (timestamp - lastTick < FRAME_MS) {
-        rafId = requestAnimationFrame(tick);
-        return;
-      }
-      lastTick = timestamp;
-      for (let row = 0; row < 32; row++) {
-        for (let col = 0; col < 32; col++) {
-          const idx  = row * 32 + col;
-          const cell = domCells[idx];
-          const h    = heights[idx];
-          const cls  = gridClasses[idx];
-          if (h === 9) { cell.textContent = ' '; continue; }
-          if (h > waterline) {
-            const rawIdx = Math.floor(0.25 * airship + (h + 0.5 * row + 0.1 * DIRECTION * col));
-            cell.textContent = mainSet[((rawIdx % mainSet.length) + mainSet.length) % mainSet.length];
-          } else {
-            // Below waterline: static PHP-initial char for this class (varies by seed)
-            cell.textContent = chars?.[cls] || FALLBACK_CHAR;
-          }
-        }
+    function tick() {
+      skip = !skip;
+      if (skip) { rafId = requestAnimationFrame(tick); return; }
+      for (let i = 0; i < animatedCells.length; i++) {
+        const { cell, baseOffset } = animatedCells[i];
+        const rawIdx = Math.floor(0.25 * airship + baseOffset);
+        cell.textContent = mainSet[((rawIdx % setLen) + setLen) % setLen];
       }
       airship = (airship + 1) % wrapAt;
       rafId = requestAnimationFrame(tick);
