@@ -91,14 +91,22 @@ const TERRAFORMS_ABI = [
   'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
 ];
 
-let provider, contract;
+// Separate Antenna contract (V2 upgrade). Reverts when called on a tokenId
+// that has never had its antenna modified, so guard with antennaOn first.
+const ANTENNA_ADDRESS = '0x331512A28A4cF80221aF949B5d43041fF0FC7f01';
+const ANTENNA_ABI = [
+  'function getFirstAntennaModification(uint256 tokenId) view returns (tuple(uint8 modification, address satellite, uint256 timestamp))',
+];
+
+let provider, contract, antennaContract;
 
 function getProvider() {
   if (!provider) {
     provider = new ethers.JsonRpcProvider(RPC_URL);
     contract = new ethers.Contract(TERRAFORMS_ADDRESS, TERRAFORMS_ABI, provider);
+    antennaContract = new ethers.Contract(ANTENNA_ADDRESS, ANTENNA_ABI, provider);
   }
-  return { provider, contract };
+  return { provider, contract, antennaContract };
 }
 
 // ─── tokenURI LRU CACHE ─────────────────────────────────────────────────────
@@ -256,6 +264,19 @@ try {
   console.warn('[snapshot] minted-traits.json not found — /undervalued will fall back to RPC for every token');
 }
 
+// S0 (Season 0) window — parcels whose antenna was first turned on inside the
+// V2 contract launch window AND currently have the Antenna trait on.
+// Source: getFirstAntennaModification(tokenId).timestamp on the Antenna
+// contract (0x331512...7f01). Stored as antennaFirstTs (unix seconds, 0 if
+// never modified).
+const S0_ANTENNA_TS_MIN = 1703376000; // 2023-12-24 00:00:00 UTC
+const S0_ANTENNA_TS_MAX = 1705190399; // 2024-01-13 23:59:59 UTC
+
+function computeIsS0(antennaOn, antennaFirstTs) {
+  if (!antennaOn || !antennaFirstTs) return false;
+  return antennaFirstTs >= S0_ANTENNA_TS_MIN && antennaFirstTs <= S0_ANTENNA_TS_MAX;
+}
+
 // Augment a snapshot record with lookup-derived fields. Returns a full trait
 // object matching getParcelTraits' shape (minus seed/x/y, which are not used
 // by /undervalued). Returns null if the tokenId isn't in the snapshot.
@@ -278,7 +299,7 @@ function getSnapshotTraits(tokenId) {
     specialType,
     isOneOfOne: ONE_OF_ONE_IDS.has(id),
     isGodmode: GODMODE_IDS.has(id),
-    isS0: rec.isS0,
+    isS0: computeIsS0(rec.antennaOn, rec.antennaFirstTs),
     isLith0like: LITH0LIKE_IDS.has(id),
     isGm: GM_IDS.has(id),
     mysteryValue: rec.mysteryValue,
@@ -726,10 +747,21 @@ async function getParcelTraits(tokenId) {
       isGodmode   = GODMODE_IDS.has(Number(tokenId));
       isLith0like = LITH0LIKE_IDS.has(Number(tokenId));
       isGm        = GM_IDS.has(Number(tokenId));
-      // S0 (Season 0) — V2 upgraded parcels whose Timestamp trait contains '[S0]'.
-      // Timestamp is authoritative; Antenna === 'On' does not correspond to S0.
-      const timestampAttr = attrs.find(a => a.trait_type === 'Timestamp')?.value || '';
-      isS0 = String(timestampAttr).includes('[S0]');
+      // S0 (Season 0) — parcels whose antenna was first turned on during the
+      // V2 launch window (2023-12-24 → 2024-01-13 UTC). Antenna activation
+      // timestamps live on a separate contract; query only when currently on.
+      const antennaOn = attrs.find(a => a.trait_type === 'Antenna')?.value === 'On';
+      let antennaFirstTs = 0;
+      if (antennaOn) {
+        try {
+          const { antennaContract: ac } = getProvider();
+          const rec = await withTimeout(ac.getFirstAntennaModification(tokenId));
+          antennaFirstTs = Number(rec[2]);
+        } catch (err) {
+          // Reverts with "No antenna modifications" if never modified — leave at 0.
+        }
+      }
+      isS0 = computeIsS0(antennaOn, antennaFirstTs);
       // '???' trait — the watermark level, controlling how much of the parcel surface is flooded by
       // the liquid animation. Derived from Perlin Noise; locked on-chain but delegatable to an external
       // contract. Present on ~89% of tokens. Not used in pricing (collection-wide distribution, no

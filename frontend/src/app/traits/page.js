@@ -31,8 +31,8 @@ const BADGE_KEY = {
 const GROUPS = [
   { key: 'special', label: 'Special Types' },
   { key: 'mode',    label: 'Origin Modes' },
-  { key: 'visual',  label: 'Auto-Detected Visual Traits' },
-  { key: 'level',   label: 'Level Extremes' },
+  { key: 'visual',  label: 'Visual Traits' },
+  { key: 'level',   label: 'Level Dependent' },
 ];
 
 export default function TraitsIndexPage() {
@@ -89,7 +89,6 @@ function TraitRow({ trait }) {
     <>
       <div className="flex items-center gap-3">
         <SpecialBadge type={BADGE_KEY[trait.type]} />
-        <span className="text-sm">{trait.label}</span>
       </div>
       <span className="text-xs opacity-55">
         {trait.count} {trait.count === 1 ? 'parcel' : 'parcels'}

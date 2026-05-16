@@ -8,10 +8,12 @@
 // Resumable: re-reads existing JSON and only fetches missing tokenIds.
 // Writes incrementally every 50 tokens so progress isn't lost on Ctrl-C.
 //
-// We bake only the raw attribute-derived fields (zone/biome/level/chroma/mode
-// /mysteryValue/isS0). Lookup-derived fields (specialType, isOneOfOne,
-// isGodmode, isLith0like, isGm) are applied at query time so changes to
-// special-tokens.json / one-of-one-ids.json take effect without re-baking.
+// We bake raw attribute-derived fields (zone/biome/level/chroma/mode/
+// mysteryValue/antennaOn) plus the antenna activation timestamp from the
+// Antenna contract (antennaFirstTs — seconds since epoch, 0 if never modified).
+// Lookup-derived fields (specialType, isOneOfOne, isGodmode, isLith0like,
+// isGm, isS0) are applied at query time so window/curation changes take
+// effect without re-baking.
 //
 // Skipped (only needed for /estimate, not bargains):
 //   - tokenHTML (seed)
@@ -22,13 +24,19 @@ const fs = require('fs');
 const path = require('path');
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
+const ANTENNA_ADDRESS    = '0x331512A28A4cF80221aF949B5d43041fF0FC7f01';
 const TOTAL_SUPPLY = 9911;
 const BATCH_SIZE = 8;
 const DELAY_MS = 50;
 const FLUSH_EVERY = 50;
 const OUT_PATH = path.join(__dirname, '..', 'src', 'minted-traits.json');
 
-const ABI = ['function tokenURI(uint256 tokenId) view returns (string)'];
+const TERRAFORMS_ABI = [
+  'function tokenURI(uint256 tokenId) view returns (string)',
+];
+const ANTENNA_ABI = [
+  'function getFirstAntennaModification(uint256 tokenId) view returns (tuple(uint8 modification, address satellite, uint256 timestamp))',
+];
 
 function extractAttrs(uri) {
   if (!uri.startsWith('data:application/json;base64,')) return null;
@@ -36,14 +44,14 @@ function extractAttrs(uri) {
   return json.attributes || [];
 }
 
-function buildTraitRecord(tokenId, attrs) {
+function buildTraitRecord(tokenId, attrs, antennaFirstTs) {
   const findVal = (name) => attrs.find(a => a.trait_type === name)?.value;
   const zoneVal = findVal('Zone');
   const levelVal = findVal('Level');
   const biomeVal = findVal('Biome');
   const chromaVal = findVal('Chroma');
   const modeVal = findVal('Mode');
-  const tsVal = findVal('Timestamp');
+  const antennaVal = findVal('Antenna');
   const mysteryRaw = findVal('???');
   return {
     tokenId,
@@ -53,7 +61,8 @@ function buildTraitRecord(tokenId, attrs) {
     chroma: chromaVal || 'Flow',
     mode: modeVal || 'Terrain',
     mysteryValue: mysteryRaw != null ? Number(mysteryRaw) : null,
-    isS0: String(tsVal || '').includes('[S0]'),
+    antennaOn: antennaVal === 'On',
+    antennaFirstTs,
   };
 }
 
@@ -81,15 +90,18 @@ async function main() {
   if (!rpcUrl) throw new Error('RPC_URL not set — run with --env-file=../.env');
 
   const provider = new ethers.JsonRpcProvider(rpcUrl);
-  const contract = new ethers.Contract(TERRAFORMS_ADDRESS, ABI, provider);
+  const terraforms = new ethers.Contract(TERRAFORMS_ADDRESS, TERRAFORMS_ABI, provider);
+  const antenna    = new ethers.Contract(ANTENNA_ADDRESS,    ANTENNA_ABI,    provider);
 
   const existing = loadExisting();
   const startCount = Object.keys(existing).length;
   console.log(`[bake] Loaded ${startCount} existing records from ${OUT_PATH}`);
 
+  // Re-fetch if record is missing OR was baked before antennaFirstTs was added.
   const todo = [];
   for (let id = 1; id <= TOTAL_SUPPLY; id++) {
-    if (!existing[id]) todo.push(id);
+    const r = existing[id];
+    if (!r || r.antennaOn == null || r.antennaFirstTs == null) todo.push(id);
   }
   console.log(`[bake] ${todo.length} tokens remaining to fetch`);
   if (todo.length === 0) {
@@ -106,10 +118,22 @@ async function main() {
     const batch = todo.slice(i, i + BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(async (tokenId) => {
-        const uri = await contract.tokenURI(tokenId);
+        const uri = await terraforms.tokenURI(tokenId);
         const attrs = extractAttrs(uri);
         if (!attrs) throw new Error('Unexpected tokenURI format');
-        return buildTraitRecord(tokenId, attrs);
+        // Only query the antenna contract when the tokenURI says Antenna is On —
+        // calling getFirstAntennaModification on a never-modified parcel reverts.
+        const antennaVal = attrs.find(a => a.trait_type === 'Antenna')?.value;
+        let antennaFirstTs = 0;
+        if (antennaVal === 'On') {
+          try {
+            const rec = await antenna.getFirstAntennaModification(tokenId);
+            antennaFirstTs = Number(rec[2]);
+          } catch (err) {
+            // Reverts with "No antenna modifications" — leave at 0.
+          }
+        }
+        return buildTraitRecord(tokenId, attrs, antennaFirstTs);
       })
     );
 

@@ -30,7 +30,7 @@ Backend: `:3001` | Frontend: `:3000`
 - `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `CORS_ORIGIN` env var.
 - `pricingModel.js` — All pricing logic. Floor price constant at line 4. Formula: `Floor × (zone_mult + biome_mult) / 2`. Handles Godmode, Plague, X-Seed, Y-Seed, Lith0 special tokens.
 - `special-tokens.json` — Minted special parcel overrides.
-- `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/isS0). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
+- `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/antennaOn/antennaFirstTs). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
 - `floor-history.json` — Time-series of `{ts, floor}` samples written by `.githooks/pre-push`. Used by `/sales` to anchor estimates to the floor at time of sale. See "Floor Price History" below.
 - `unminted-parcels.json` — 1193 unminted parcels with all traits and `specialType` field.
 - `unminted-animation.json` — Per-parcel animation data (grid, chars, fonts, CSS).
@@ -70,9 +70,9 @@ git config core.hooksPath .githooks
 Sampling cadence equals push cadence — sales between two pushes resolve to the floor at the earlier push (nearest-prior). Sales that predate all history fall back to the current live floor (`floorAtSaleSource: 'current'` on the response).
 
 ### Minted Traits Snapshot
-`minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, isS0). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.
+`minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, antennaOn, antennaFirstTs). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.
 
-Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`) are applied at query time via `getSnapshotTraits` in `server.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` take effect without re-baking.
+Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`, `isS0`) are applied at query time via `getSnapshotTraits` in `server.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` / S0 window bounds take effect without re-baking. `isS0` is true when `antennaOn === true` AND `antennaFirstTs` falls inside `[S0_ANTENNA_TS_MIN, S0_ANTENNA_TS_MAX]` (currently the V2 launch window 2023-12-24 → 2024-01-13 UTC). `antennaFirstTs` is read from `getFirstAntennaModification(tokenId).timestamp` on the Antenna contract `0x331512A28A4cF80221aF949B5d43041fF0FC7f01` — the V2 antenna state lives on a separate contract from the original Terraforms contract.
 
 **Refresh cadence**: chroma, mode, level, and mysteryValue can change on-chain when parcels are upgraded/terraformed. Stale traits skew estimates (worst case: a parcel that becomes Plague after the bake won't get the 5x specialType). Re-bake periodically:
 ```bash

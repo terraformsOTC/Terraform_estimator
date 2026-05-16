@@ -2,6 +2,7 @@
 
 import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
 import Header from '@/components/Header';
+import { TRAIT_DESCRIPTIONS } from '@/lib/traitDescriptions';
 
 export default function GlossaryPage() {
   function goRandomWhale() {
@@ -50,42 +51,15 @@ export default function GlossaryPage() {
           <p className="text-sm opacity-65 mb-4">
             Special parcels have rare properties that override or supplement the standard zone/biome/level valuation formula. Most are priced as a multiple of the collection floor.
           </p>
-          <GlossaryRow
-            badge={<SpecialBadge type="Godmode" />}
-            description="Origin Daydream (or potentially Origin Terraform) parcels that are not only X-Seed, but are in the highest possible range for seed values, which is between 9970 and 9999. Godmode parcels have a unique animation style that cycles through the entire possible character set, in the daydream format."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Origin Daydream" />}
-            description="Parcels that were specially minted by certain contributors and community members when the Terraforms collection launched in 2021. As each parcel going from terrain into daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin Daydream parcels also set the initial window of time before the Hypercastle would begin to decay."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Origin Terraform" />}
-            description="An Origin Daydream parcel that has had a drawing committed to it onchain, changing it into a Terraform. Like standard terraform mode parcels, this can be reverted."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Plague" />}
-            description="Tokens with the Plague chroma — the rarest chroma type, and still a mystery. We do not yet know how they could possibly interact with the rest of the Hypercastle, or if they have some other function. Easily identified by their animation style and warped zone colour palettes."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="X-Seed" />}
-            description="Parcels that animate through the full onchain character set instead of a specific biome's. Applies to Origin Daydream parcels with Seed > 9000 and Terrain parcels with Seed > 9970."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Y-Seed" />}
-            description="Parcels that animate with 1 of 3 possible additional character sets instead of a specific biome's. Applies to parcels with Seed > 9950 and ≤ 9970."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Lith0" />}
-            description="Parcels with an animation style evocative of lithography. This is created by the intersection of biome 0 and duotone, non-alternating, zone colour palettes."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Spine" />}
-            description={<>These parcels form the central axis up and down the Hypercastle&apos;s 20 levels, with 4 parcels to each level. They have also been used to host a collection of artwork uploaded by the Mathcastles community — learn more at <a href="https://terrafans.xyz/spine/index.php" target="_blank" rel="noopener noreferrer" style={{opacity:1}}>terrafans.xyz/spine</a>.</>}
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="1of1" />}
-            description="Parcels with a unique zone and biome combination. The site draws from both the unminted and minted parcels to determine this trait, so there may be differences between what is shown here as &quot;1 of 1&quot; and other resources such as terraformexplorer. These differences will resolve when the remaining parcels are minted."
-          />
+          <GlossaryRow badge={<SpecialBadge type="Godmode" />}         description={TRAIT_DESCRIPTIONS['godmode']} />
+          <GlossaryRow badge={<SpecialBadge type="Origin Daydream" />} description={TRAIT_DESCRIPTIONS['origin-daydream']} />
+          <GlossaryRow badge={<SpecialBadge type="Origin Terraform" />} description={TRAIT_DESCRIPTIONS['origin-terraform']} />
+          <GlossaryRow badge={<SpecialBadge type="Plague" />}          description={TRAIT_DESCRIPTIONS['plague']} />
+          <GlossaryRow badge={<SpecialBadge type="X-Seed" />}          description={TRAIT_DESCRIPTIONS['x-seed']} />
+          <GlossaryRow badge={<SpecialBadge type="Y-Seed" />}          description={TRAIT_DESCRIPTIONS['y-seed']} />
+          <GlossaryRow badge={<SpecialBadge type="Lith0" />}           description={TRAIT_DESCRIPTIONS['lith0']} />
+          <GlossaryRow badge={<SpecialBadge type="Spine" />}           description={TRAIT_DESCRIPTIONS['spine']} />
+          <GlossaryRow badge={<SpecialBadge type="1of1" />}            description={TRAIT_DESCRIPTIONS['1of1']} />
         </Section>
 
         {/* ── MISC TRAITS ──────────────────────────────────────────── */}
@@ -93,18 +67,9 @@ export default function GlossaryPage() {
           <p className="text-sm opacity-65 mb-4">
             Additional properties appearing on certain parcels valued by collectors.
           </p>
-          <GlossaryRow
-            badge={<SpecialBadge type="S0" />}
-            description="Stands for &quot;Season 0&quot;. These are parcels that upgraded to the V2 contract and turned the Antenna function on within a certain time window. Season 0 parcels may be able to capture special broadcasts in future."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Biome0" />}
-            description="Biome 0 parcels are sought after by collectors for their unique animation style which is completely filled out, leaving no gaps like other biomes do."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Lith0like" />}
-            description="A Lith0 look-alike. In order to have this trait the opening frame of a parcel's animation cycle must be a flat, single block of colour."
-          />
+          <GlossaryRow badge={<SpecialBadge type="S0" />}          description={TRAIT_DESCRIPTIONS['s0']} />
+          <GlossaryRow badge={<SpecialBadge type="Biome0" />}      description={TRAIT_DESCRIPTIONS['biome0']} />
+          <GlossaryRow badge={<SpecialBadge type="Lith0like" />}   description={TRAIT_DESCRIPTIONS['lith0like']} />
           <GlossaryRow
             badge={<CategoryBadge label="high ???" color="#ffd700" />}
             description="Parcels with a ??? value above 50,000. We still do not fully understand what this trait does, but it appears visually on parcels as a &quot;water level&quot; for cycling characters in the animation. This may be a resource that could be &quot;tapped&quot; in the future."
@@ -113,42 +78,18 @@ export default function GlossaryPage() {
             badge={<CategoryBadge label="low ???" color="#f87171" />}
             description="Parcels with a ??? value below 20,000. These are recognisable for their low &quot;water level&quot; of animated cycling characters, and are rarer than their high ??? value counterparts."
           />
-          <GlossaryRow
-            badge={<SpecialBadge type="Mesa" />}
-            description="Biome 39 parcels in terrain mode with a ??? value under 30,000. This is the only biome in the collection with gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="gm" />}
-            description="Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean &quot;gm&quot; in the heightmap animation."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Matrix" />}
-            description="Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="BigGrass" />}
-            description="Terrain mode parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="LittleGrass" />}
-            description="Terrain mode parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Heartbeat" />}
-            description="Terrain mode parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle."
-          />
+          <GlossaryRow badge={<SpecialBadge type="Mesa" />}        description={TRAIT_DESCRIPTIONS['mesa']} />
+          <GlossaryRow badge={<SpecialBadge type="gm" />}          description={TRAIT_DESCRIPTIONS['gm']} />
+          <GlossaryRow badge={<SpecialBadge type="Matrix" />}      description={TRAIT_DESCRIPTIONS['matrix']} />
+          <GlossaryRow badge={<SpecialBadge type="BigGrass" />}    description={TRAIT_DESCRIPTIONS['big-grass']} />
+          <GlossaryRow badge={<SpecialBadge type="LittleGrass" />} description={TRAIT_DESCRIPTIONS['little-grass']} />
+          <GlossaryRow badge={<SpecialBadge type="Heartbeat" />}   description={TRAIT_DESCRIPTIONS['heartbeat']} />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
             description="[redacted]"
           />
-          <GlossaryRow
-            badge={<SpecialBadge type="Penthouse" />}
-            description="Parcels on level 20, the top of the Hypercastle."
-          />
-          <GlossaryRow
-            badge={<SpecialBadge type="Basement" />}
-            description="Parcels on level 1, the bottom of the Hypercastle."
-          />
+          <GlossaryRow badge={<SpecialBadge type="Penthouse" />}   description={TRAIT_DESCRIPTIONS['penthouse']} />
+          <GlossaryRow badge={<SpecialBadge type="Basement" />}    description={TRAIT_DESCRIPTIONS['basement']} />
           <GlossaryRow
             badge={<SpecialBadge type="Unminted" />}
             description="1,193 parcels are not yet minted. However thanks to the deterministic nature of the Terraforms smart contracts, we can infer their traits: zone, biome, level, chroma etc. This means we can still estimate their value, and even render the animations. We do not know when these remaining parcels will be minted."

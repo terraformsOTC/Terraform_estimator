@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import TraitsResultView from '@/components/TraitsResultView';
 import { API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { TRAIT_DESCRIPTIONS } from '@/lib/traitDescriptions';
 
 export default function TraitsDetailPage({ params }) {
   const { type } = params;
@@ -41,6 +42,9 @@ export default function TraitsDetailPage({ params }) {
         {!data && !error && <p className="text-sm opacity-60">[loading parcels...]</p>}
         {data && (
           <>
+            {TRAIT_DESCRIPTIONS[type] && (
+              <p className="opacity-65 text-sm mb-4 leading-relaxed">{TRAIT_DESCRIPTIONS[type]}</p>
+            )}
             <p className="opacity-55 text-sm mb-2">
               {data.count} {data.count === 1 ? 'parcel' : 'parcels'} matching this trait, sorted by token ID. Click any to view details.
             </p>
