@@ -11,6 +11,8 @@
     "mysteryValue": 33178,
     "mysteryOutlier": null,
     "specialType": "1of1",
+    "isSynchro": true,
+    "_note": "Synchro tag applied manually. Current tokenId 9912 is its position in the unminted queue (unmintedId 1); the on-chain tokenId assigned at mint may differ.",
     "mode": "Terrain"
   },
   {

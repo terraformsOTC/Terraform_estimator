@@ -58,13 +58,14 @@ export default function UnmintedResult({ parcel, ethUsd }) {
 }
 
 function UnmintedSpecialRow({ traits }) {
-  const { specialType } = traits;
+  const { specialType, isSynchro } = traits;
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
       <div className="flex items-center gap-2 flex-wrap justify-end">
         <SpecialBadge type="Unminted" />
         {specialType && <SpecialBadge type={specialType} />}
+        {isSynchro && <SpecialBadge type="Synchro" />}
         <AutoBadgeStack traits={traits} />
       </div>
     </div>
