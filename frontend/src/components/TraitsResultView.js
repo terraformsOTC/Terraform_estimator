@@ -2,6 +2,7 @@
 
 import { API_URL, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
+import UnmintedStaticThumb from './UnmintedStaticThumb';
 
 const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, 'Uncommon': 3, Floor: 4 };
 
@@ -81,15 +82,9 @@ function MintedThumbnail({ tokenId }) {
   );
 }
 
-// Static placeholder — rendering 100+ animated unminted parcels with TerraformAnimation
-// would be too heavy. The card links through to /?token=X where the full animation runs.
+// Lazy-loaded static frame of the parcel animation, dimmed with an [unminted]
+// #id overlay. IntersectionObserver in the component defers fetches until the
+// card scrolls near the viewport, and fonts dedupe globally by fontIndex.
 function UnmintedThumbnail({ unmintedId }) {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center text-center" style={{ backgroundColor: 'rgba(232,232,232,0.04)', border: '1px solid rgba(232,232,232,0.08)' }}>
-      <div>
-        <div className="text-xs opacity-60 mb-1">[unminted]</div>
-        <div className="text-xs opacity-40">#{unmintedId}</div>
-      </div>
-    </div>
-  );
+  return <UnmintedStaticThumb unmintedId={unmintedId} />;
 }

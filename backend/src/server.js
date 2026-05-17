@@ -957,20 +957,40 @@ const UNMINTED_PARCELS = require('./unminted-parcels.json');
 const UNMINTED_LOOKUP    = new Map(UNMINTED_PARCELS.map(p => [`${p.level}/${p.x}/${p.y}`, p]));
 const UNMINTED_ID_LOOKUP = new Map(UNMINTED_PARCELS.map(p => [p.id, p]));
 
-// Animation data (grid + colors per parcel) — optional, loaded separately
+// Animation data (grid + colors per parcel) — optional, loaded separately.
+// UNMINTED_ANIM_LOOKUP: keyed by coord, includes inline fontData (used by
+//   /unminted/search to serve the full preview in one round-trip).
+// UNMINTED_ANIM_BY_ID: keyed by sequential id, fontIndex only (used by
+//   /unminted/anim/:id for thumbnail cards — payload stays ~2KB).
+// UNMINTED_FONT_ARRAY: served on-demand via /unminted/font/:idx so thumb
+//   cards can dedupe font fetches by index.
 let UNMINTED_ANIM_LOOKUP = new Map();
+let UNMINTED_ANIM_BY_ID  = new Map();
+let UNMINTED_FONT_ARRAY  = [];
 try {
   const animData = require('./unminted-animation.json');
-  let fontArray = [];
-  try { fontArray = require('./unminted-fonts.json'); } catch(_) {}
-  UNMINTED_ANIM_LOOKUP = new Map(animData.map(p => [`${p.level}/${p.x}/${p.y}`, {
-    grid: p.grid, colors: p.colors, seed: p.seed, resource: p.resource,
-    chars: p.chars || {},
-    fontSize: p.fontSize || 15,
-    fontWeight: p.fontWeight || null,
-    animClasses: p.animClasses || [],
-    fontData: p.fontIndex != null ? fontArray[p.fontIndex] : null,
-  }]));
+  try { UNMINTED_FONT_ARRAY = require('./unminted-fonts.json'); } catch(_) {}
+  for (const p of animData) {
+    const light = {
+      grid: p.grid, colors: p.colors, seed: p.seed, resource: p.resource,
+      chars: p.chars || {},
+      fontSize: p.fontSize || 15,
+      fontWeight: p.fontWeight || null,
+      animClasses: p.animClasses || [],
+      fontIndex: p.fontIndex ?? null,
+    };
+    UNMINTED_ANIM_LOOKUP.set(`${p.level}/${p.x}/${p.y}`, {
+      ...light,
+      fontData: light.fontIndex != null ? UNMINTED_FONT_ARRAY[light.fontIndex] : null,
+    });
+  }
+  for (const parcel of UNMINTED_PARCELS) {
+    const full = UNMINTED_ANIM_LOOKUP.get(`${parcel.level}/${parcel.x}/${parcel.y}`);
+    if (full) {
+      const { fontData, ...rest } = full;
+      UNMINTED_ANIM_BY_ID.set(parcel.id, rest);
+    }
+  }
   console.log(`[startup] Animation data loaded for ${UNMINTED_ANIM_LOOKUP.size} unminted parcels`);
 } catch(e) {
   console.warn('[startup] unminted-animation.json not found — animations disabled');
@@ -1019,6 +1039,28 @@ app.get('/unminted/search', async (req, res) => {
     console.error('[unminted/search]', err.message);
     res.status(500).json({ error: 'Failed to fetch unminted parcel data.' });
   }
+});
+
+// Lightweight per-parcel anim data for thumbnail cards — no fontData inline
+// (fonts are fetched separately so duplicates dedupe across cards).
+app.get('/unminted/anim/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'invalid id' });
+  const data = UNMINTED_ANIM_BY_ID.get(id);
+  if (!data) return res.status(404).json({ error: 'not found' });
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.json(data);
+});
+
+// One font (by index 0..93) as base64 woff2. Heavily cached — the 94 fonts
+// are static, deployed with the build.
+app.get('/unminted/font/:idx', (req, res) => {
+  const idx = parseInt(req.params.idx, 10);
+  if (isNaN(idx) || idx < 0 || idx >= UNMINTED_FONT_ARRAY.length) {
+    return res.status(404).json({ error: 'not found' });
+  }
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  res.json({ fontData: UNMINTED_FONT_ARRAY[idx] });
 });
 
 // ─── TRAITS BROWSE ─────────────────────────────────────────────────────────────
