@@ -11,6 +11,8 @@
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
 //   X-Seed / Y-Seed:  Floor × special_multiple × seed_zone_tier_m  (zone tier only, biome ignored)
+//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.95)  (zone tier removed, 5% dampening)
+//                     Origin variants and Terrain unchanged.
 //   Lith0:            Floor × 18x × [1.1x if 1of1]
 // Spine and 1of1 use the standard formula with a multiplier premium appended.
 
@@ -19,7 +21,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.2.0';
+const PRICING_MODEL_VERSION = '2.5.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -173,10 +175,10 @@ const SEED_ZONE_TIER_MULTIPLES = {
 // trait premium on the final estimate. Floor-zone biome 0 parcels unchanged;
 // higher-tier zones get a multiplicative boost.
 const BIOME0_ZONE_TIER_BUMP = {
-  "Mythical": 1.40,
-  "Rare":     1.25,
-  "Premium":  1.15,
-  "Uncommon": 1.05,
+  "Mythical": 1.75,
+  "Rare":     1.50,
+  "Premium":  1.25,
+  "Uncommon": 1.10,
   "Floor":    1.00,
 };
 
@@ -324,18 +326,25 @@ function estimatePrice(traits, floorOverride) {
   if (specialType && SPECIAL_TYPES[specialType] != null) {
     const baseMultiple = SPECIAL_TYPES[specialType];
 
-    // X-Seed / Y-Seed: apply zone tier multiplier on top of base multiple (biome ignored)
+    // X-Seed / Y-Seed: apply zone tier multiplier on top of base multiple (biome ignored).
+    // Daydream/Terraform upgrades dampen the seed: 5% discount on base, zone tier dropped.
+    // Origin variants and Terrain mode keep the standard zone-tier formula.
     if (specialType === 'X-Seed' || specialType === 'Y-Seed') {
+      const isDampenedMode = mode === 'Daydream' || mode === 'Terraform';
       const zoneCategory = getCategoryFromMultiple(getZoneMultiple(zone));
-      const seedZoneTier = SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1;
-      const specialMultiple = Math.round(baseMultiple * seedZoneTier * 1000) / 1000;
+      const seedZoneTier = isDampenedMode ? 1 : (SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1);
+      const dampening = isDampenedMode ? 0.95 : 1;
+      const effectiveBase = Math.round(baseMultiple * dampening * 1000) / 1000;
+      const specialMultiple = Math.round(effectiveBase * seedZoneTier * 1000) / 1000;
       return {
         estimatedValue: Math.round(floor * specialMultiple * 1000) / 1000,
         floor,
         isSpecial: true,
         specialType,
         specialMultiple,
-        formula: `${floor} ETH × ${baseMultiple}x (${specialType}) × ${seedZoneTier}x (${zoneCategory} zone: ${zone})`,
+        formula: isDampenedMode
+          ? `${floor} ETH × (${baseMultiple} × ${dampening}) (${specialType}, ${mode} dampened) × 1x (zone tier removed)`
+          : `${floor} ETH × ${baseMultiple}x (${specialType}) × ${seedZoneTier}x (${zoneCategory} zone: ${zone})`,
       };
     }
 
@@ -369,9 +378,10 @@ function estimatePrice(traits, floorOverride) {
   const zoneMultiple = getZoneMultiple(zone);
   const biomeMultiple = getBiomeMultiple(biome);
   const levelMultiple = getLevelMultiple(level);
-  // Biome 0 + Flow chroma gets a 1.1x boost (Flow is otherwise 1x)
-  const chromaMultiple = (biome === 0 && (chroma === 'Flow' || !chroma))
-    ? 1.1
+  // Biome 0 + Flow chroma + Terrain mode gets a 1.2x boost (Flow is otherwise 1x).
+  // Daydream/Terraform/Origin variants on biome 0 + Flow fall back to standard 1x.
+  const chromaMultiple = (biome === 0 && (chroma === 'Flow' || !chroma) && mode === 'Terrain')
+    ? 1.2
     : getChromaMultiple(chroma);
   const modeMultiple = getModeMultiple(mode);
 
@@ -406,11 +416,12 @@ function estimatePrice(traits, floorOverride) {
   // before reaching here) gets a multiplicative bump tied to the zone's tier.
   const biome0ZoneTierBump = biome === 0 ? (BIOME0_ZONE_TIER_BUMP[zoneCategory] ?? 1) : 1;
 
-  // Additive formula: base zone/biome value + level premium (0 for mid-levels)
-  // chroma multiplies into the level term; modeMultiple is no longer applied here
+  // Additive formula: base zone/biome value + level premium (0 for mid-levels).
+  // chroma multiplies the entire estimate (base + level), not just the level term —
+  // so the biome-0 Flow bump and standard Pulse/Hyper boosts affect every parcel.
   const baseValue      = floor * zonebiomeAvg;
-  const levelValue     = levelMultiple * floor * chromaMultiple;
-  const rawEstimate    = (baseValue + levelValue) * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple * biome0ZoneTierBump;
+  const levelValue     = levelMultiple * floor;
+  const rawEstimate    = (baseValue + levelValue) * chromaMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple * biome0ZoneTierBump;
 
   // For standard Daydream/Terraform: compress the premium above floor.
   // Never goes below floor. Origin variants are unaffected (handled by originModeMultiple).
@@ -424,8 +435,9 @@ function estimatePrice(traits, floorOverride) {
     ? `${floor} × (${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginMode && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
     : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
   if (levelMultiple > 0) {
-    formula += ` + (${levelMultiple} × ${floor})(lvl) × ${chromaMultiple}(chroma)`;
+    formula += ` + (${levelMultiple} × ${floor})(lvl)`;
   }
+  if (chromaMultiple    !== 1) formula += ` × ${chromaMultiple}(chroma)`;
   if (spineMultiple     !== 1) formula += ` × ${spineMultiple}(spine)`;
   if (oneOf1Multiple    !== 1) formula += ` × ${oneOf1Multiple}(1of1)`;
   if (s0Multiple        !== 1) formula += ` × ${s0Multiple}(s0)`;
