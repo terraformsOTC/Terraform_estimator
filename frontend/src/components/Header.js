@@ -84,14 +84,14 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
 
   return (
     <header ref={containerRef} className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
-      <nav className="flex flex-row justify-between items-center" style={{ minHeight: '36px' }}>
-        <div>
+      <nav className="flex flex-row justify-between items-center gap-3" style={{ minHeight: '36px' }}>
+        <div className="flex items-center whitespace-nowrap">
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
           <button
             onClick={toggleMoneySword}
             title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
-            className={`ml-2 bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
-            style={{ fontSize: '1.1em', verticalAlign: 'middle' }}
+            className={`ml-2 bg-transparent border-none cursor-pointer p-0 font-inherit leading-none transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
+            style={{ fontSize: '1.1em' }}
           >
             🗡
           </button>
@@ -102,21 +102,21 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             onClick={() => setMenuOpen((o) => !o)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer p-0 font-inherit md:hidden"
+            className="text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer p-0 font-inherit md:hidden whitespace-nowrap"
           >
             {`[${menuOpen ? 'close' : 'menu'}]`}
           </button>
           {walletAddress ? (
             <button
-              className="btn-primary btn-sm"
+              className="btn-primary btn-sm whitespace-nowrap"
               onClick={onDisconnect}
               title="Click to disconnect"
             >
               {short}
             </button>
           ) : (
-            <button className="btn-primary btn-sm" onClick={onConnect}>
-              connect wallet
+            <button className="btn-primary btn-sm whitespace-nowrap" onClick={onConnect}>
+              connect<span className="hidden md:inline"> wallet</span>
             </button>
           )}
         </div>
