@@ -130,7 +130,8 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     // Split cells into static (set once) and animated (updated each tick).
     // Air cells (h === 9) and below-waterline cells never change — writing
     // their textContent every frame was the main source of jitter.
-    const animatedCells = []; // { cell, baseOffset } — baseOffset = h + 0.5*row + 0.1*DIRECTION*col
+    // baseOffset mirrors on-chain Terrain: h + 0.5*col + 0.1*DIRECTION*row.
+    const animatedCells = [];
     for (let row = 0; row < 32; row++) {
       for (let col = 0; col < 32; col++) {
         const idx = row * 32 + col;
@@ -139,7 +140,7 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
         if (h === 9) {
           cell.textContent = ' ';
         } else if (h > waterline) {
-          animatedCells.push({ cell, baseOffset: h + 0.5 * row + 0.1 * DIRECTION * col });
+          animatedCells.push({ cell, baseOffset: h + 0.5 * col + 0.1 * DIRECTION * row });
         } else {
           cell.textContent = chars?.[gridClasses[idx]] || FALLBACK_CHAR;
         }
@@ -147,22 +148,19 @@ export default function TerraformAnimation({ animData, width = 200, height = 288
     }
 
     const setLen = Math.max(mainSet.length, 1);
-    const wrapAt = setLen * 4096;
-    // Step every other rAF (~30fps on 60Hz, ~60fps on 120Hz). Consistent rAF
-    // quantum gives stable pacing — the timestamp-delta throttle drifted.
-    let airship = 0;
-    let skip = false;
+    // Mirror on-chain terraLoop: airship = 0.1 * elapsedMs, idx step = airship*0.125.
+    // Absolute-time formula — no drift, matches iframe pacing exactly.
+    let startTime = 0;
     let rafId;
 
-    function tick() {
-      skip = !skip;
-      if (skip) { rafId = requestAnimationFrame(tick); return; }
+    function tick(now) {
+      if (!startTime) startTime = now;
+      const airship = 0.1 * (now - startTime);
       for (let i = 0; i < animatedCells.length; i++) {
         const { cell, baseOffset } = animatedCells[i];
-        const rawIdx = Math.floor(0.25 * airship + baseOffset);
+        const rawIdx = Math.floor(airship * 0.125 + baseOffset);
         cell.textContent = mainSet[((rawIdx % setLen) + setLen) % setLen];
       }
-      airship = (airship + 1) % wrapAt;
       rafId = requestAnimationFrame(tick);
     }
     rafId = requestAnimationFrame(tick);
