@@ -16,8 +16,10 @@ const path = require('path');
 const CONTRACT = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const HISTORY_PATH = path.join(__dirname, '..', 'src', 'floor-history.json');
 
-// Skip a write if the most recent entry is younger than this and unchanged —
-// avoids writing a duplicate sample if the hook fires twice in quick succession.
+// Skip a write if the most recent entry is younger than this. Time-only
+// dedupe — Alchemy returns slightly different floor values across calls
+// (e.g. 0.31212 vs 0.3121025), so an exact-equality check on floor never
+// triggered when the hook fired twice in quick succession from re-pushes.
 const MIN_GAP_SECONDS = 60;
 
 async function main() {
@@ -55,8 +57,8 @@ async function main() {
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const last = history[history.length - 1];
-  if (last && last.floor === floor && nowSeconds - last.ts < MIN_GAP_SECONDS) {
-    console.log(`[floor-history] Skipping duplicate (last sample ${nowSeconds - last.ts}s ago, same floor ${floor}).`);
+  if (last && nowSeconds - last.ts < MIN_GAP_SECONDS) {
+    console.log(`[floor-history] Skipping (last sample ${nowSeconds - last.ts}s ago, current floor ${floor}).`);
     return;
   }
 
