@@ -11,7 +11,7 @@
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
 //   X-Seed / Y-Seed:  Floor × special_multiple × seed_zone_tier_m  (zone tier only, biome ignored)
-//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.95)  (zone tier removed, 5% dampening)
+//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.9)  (zone tier removed, 10% dampening)
 //                     Origin variants and Terrain unchanged.
 //   Lith0:            Floor × 18x × [1.1x if 1of1]
 // Spine and 1of1 use the standard formula with a multiplier premium appended.
@@ -21,7 +21,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.5.0';
+const PRICING_MODEL_VERSION = '2.7.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -327,13 +327,13 @@ function estimatePrice(traits, floorOverride) {
     const baseMultiple = SPECIAL_TYPES[specialType];
 
     // X-Seed / Y-Seed: apply zone tier multiplier on top of base multiple (biome ignored).
-    // Daydream/Terraform upgrades dampen the seed: 5% discount on base, zone tier dropped.
+    // Daydream/Terraform upgrades dampen the seed: 10% discount on base, zone tier dropped.
     // Origin variants and Terrain mode keep the standard zone-tier formula.
     if (specialType === 'X-Seed' || specialType === 'Y-Seed') {
       const isDampenedMode = mode === 'Daydream' || mode === 'Terraform';
       const zoneCategory = getCategoryFromMultiple(getZoneMultiple(zone));
       const seedZoneTier = isDampenedMode ? 1 : (SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1);
-      const dampening = isDampenedMode ? 0.95 : 1;
+      const dampening = isDampenedMode ? 0.9 : 1;
       const effectiveBase = Math.round(baseMultiple * dampening * 1000) / 1000;
       const specialMultiple = Math.round(effectiveBase * seedZoneTier * 1000) / 1000;
       return {
@@ -410,7 +410,7 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
-  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.15 : 1;
+  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.1 : 1;
   const zoneCategory       = getCategoryFromMultiple(zoneMultiple);
   // Biome 0 (standard formula path only — Lith0 / X-Seed / Y-Seed return early
   // before reaching here) gets a multiplicative bump tied to the zone's tier.
