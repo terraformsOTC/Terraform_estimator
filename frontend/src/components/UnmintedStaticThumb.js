@@ -33,6 +33,20 @@ function buildMainSet(seed, chars) {
   return SEED > 9950 ? charSet : mainSet;
 }
 
+// Rec. 601 perceptual luminance — used to pick a contrasting overlay text
+// color so the [unminted] label reads on both dark and light parcel bgs
+// (e.g. Hyphae's near-white bg drowned white text).
+function bgLuminance(hex) {
+  if (!hex) return 0;
+  let s = String(hex).replace('#', '');
+  if (s.length === 3) s = s.split('').map((c) => c + c).join('');
+  if (s.length !== 6) return 0;
+  const r = parseInt(s.slice(0, 2), 16) / 255;
+  const g = parseInt(s.slice(2, 4), 16) / 255;
+  const b = parseInt(s.slice(4, 6), 16) / 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
 // Placeholder shown before anim data arrives (and on load failure).
 function Placeholder({ unmintedId }) {
   return (
@@ -146,6 +160,13 @@ export default function UnmintedStaticThumb({ unmintedId }) {
   const parcelFontSize = animData?.fontSize || 15;
   const parcelFontWeight = animData?.fontWeight || 'normal';
   const fontFamilyCss = fontFamily ? `'${fontFamily}', monospace` : "'MathcastlesRemix-Regular', monospace";
+  // Threshold tuned by eye against Hyphae (#1009, ~white bg) and Mould
+  // (#1121, mid-gray). 0.6 puts the cutoff comfortably above mid-gray.
+  const isBgLight = bgLuminance(bgColor) > 0.6;
+  const overlayTextColor = isBgLight ? '#1f1f1f' : '#eee8de';
+  const overlayGradient = isBgLight
+    ? 'linear-gradient(180deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.55) 100%)'
+    : 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%)';
 
   // Root stays mounted across the loading→loaded transition so the observers
   // attached to rootRef don't churn. Content swaps inside.
@@ -199,14 +220,15 @@ export default function UnmintedStaticThumb({ unmintedId }) {
             </div>
           </div>
 
-          {/* Overlay: [unminted] #id, centered, with bottom gradient for legibility. */}
+          {/* Overlay: [unminted] #id, centered. Text color + bottom-fade
+              direction flip to match the parcel's bg luminance. */}
           <div
             className="absolute inset-0 flex items-center justify-center text-center pointer-events-none"
-            style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%)' }}
+            style={{ background: overlayGradient }}
           >
             <div>
-              <div className="text-xs mb-1" style={{ color: '#eee8de', opacity: 0.95 }}>[unminted]</div>
-              <div className="text-xs" style={{ color: '#eee8de', opacity: 0.8 }}>#{unmintedId}</div>
+              <div className="text-xs mb-1" style={{ color: overlayTextColor, opacity: 0.95 }}>[unminted]</div>
+              <div className="text-xs" style={{ color: overlayTextColor, opacity: 0.8 }}>#{unmintedId}</div>
             </div>
           </div>
         </>
