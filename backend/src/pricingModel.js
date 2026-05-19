@@ -489,40 +489,39 @@ function detectSets(parcels) {
   const ALL_ZONES = Object.keys(ZONE_MULTIPLES);
   const ALL_BIOMES = Object.keys(BIOME_MULTIPLES).map(Number);
 
-  const qualified = [];
-
-  for (const [setName, setDef] of Object.entries(SETS)) {
-    let qualifies = false;
+  return Object.entries(SETS).map(([setName, setDef]) => {
+    let missingItems = [];
 
     if (setDef.requiredSpecialTypes) {
-      // Check specials + origin mode + optional biomes (e.g. Grail set requires biome 0)
-      const hasSpecials = setDef.requiredSpecialTypes.every(t => ownedSpecialTypes.has(t));
-      const hasOrigin = setDef.requiredModes.some(m => ownedModes.has(m));
-      const hasBiomes = !setDef.requiredBiomes || setDef.requiredBiomes.every(b => ownedBiomes.has(b));
-      qualifies = hasSpecials && hasOrigin && hasBiomes;
+      const missingSpecials = setDef.requiredSpecialTypes.filter(t => !ownedSpecialTypes.has(t));
+      const missingOrigin = setDef.requiredModes.some(m => ownedModes.has(m))
+        ? [] : ['Origin Daydream or Terraform'];
+      const missingBiomesHere = (setDef.requiredBiomes || [])
+        .filter(b => !ownedBiomes.has(b)).map(b => `biome ${b}`);
+      missingItems = [...missingSpecials, ...missingOrigin, ...missingBiomesHere];
     } else if (setDef.requiredBiomes) {
-      qualifies = setDef.requiredBiomes.every(b => ownedBiomes.has(b));
+      missingItems = setDef.requiredBiomes.filter(b => !ownedBiomes.has(b)).map(b => `biome ${b}`);
     } else if (setDef.requiredZones) {
-      qualifies = setDef.requiredZones.every(z => ownedZones.has(z));
+      missingItems = setDef.requiredZones.filter(z => !ownedZones.has(z));
     } else if (setDef.requiredLevels) {
-      qualifies = setDef.requiredLevels.every(l => ownedLevels.has(l));
+      missingItems = setDef.requiredLevels.filter(l => !ownedLevels.has(l)).map(l => `L${l}`);
     } else if (setDef.allZones) {
-      qualifies = ALL_ZONES.every(z => ownedZones.has(z));
+      missingItems = ALL_ZONES.filter(z => !ownedZones.has(z));
     } else if (setDef.allBiomes) {
-      qualifies = ALL_BIOMES.every(b => ownedBiomes.has(b));
+      missingItems = ALL_BIOMES.filter(b => !ownedBiomes.has(b)).map(b => `biome ${b}`);
     }
 
-    if (qualifies) {
-      qualified.push({
-        name: setName,
-        description: setDef.description,
-        attainability: setDef.attainability,
-        bottleneck: setDef.bottleneck,
-      });
-    }
-  }
-
-  return qualified;
+    const missingCount = missingItems.length;
+    return {
+      name: setName,
+      description: setDef.description,
+      attainability: setDef.attainability,
+      bottleneck: setDef.bottleneck,
+      completed: missingCount === 0,
+      missingCount,
+      missingItems: missingCount > 0 && missingCount <= 5 ? missingItems.map(String) : null,
+    };
+  });
 }
 
 module.exports = {

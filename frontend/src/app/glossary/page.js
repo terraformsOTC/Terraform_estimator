@@ -52,8 +52,10 @@ export default function GlossaryPage() {
             Special parcels have rare properties that override or supplement the standard zone/biome/level valuation formula. Most are priced as a multiple of the collection floor.
           </p>
           <GlossaryRow badge={<SpecialBadge type="Godmode" />}         description={TRAIT_DESCRIPTIONS['godmode']} />
-          <GlossaryRow badge={<SpecialBadge type="Origin Daydream" />} description={TRAIT_DESCRIPTIONS['origin-daydream']} />
-          <GlossaryRow badge={<SpecialBadge type="Origin Terraform" />} description={TRAIT_DESCRIPTIONS['origin-terraform']} />
+          <GlossaryRow
+            badge={<CategoryBadge label="origin mint" color="#ffaa00" />}
+            description="An origin daydream or terraform mode parcel. These were specially allocated to certain contributors and community members when Terraforms launched in 2021. As each parcel going from terrain to daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin mints also calibrated the initial time before the Hypercastle would start to decay. As switching between terraform and daydream mode is reversible, we've decided to group both terraform and daydream modes together to avoid misleading rarity stats."
+          />
           <GlossaryRow badge={<SpecialBadge type="Plague" />}          description={TRAIT_DESCRIPTIONS['plague']} />
           <GlossaryRow badge={<SpecialBadge type="X-Seed" />}          description={TRAIT_DESCRIPTIONS['x-seed']} />
           <GlossaryRow badge={<SpecialBadge type="Y-Seed" />}          description={TRAIT_DESCRIPTIONS['y-seed']} />
@@ -96,6 +98,16 @@ export default function GlossaryPage() {
           />
         </Section>
 
+        {/* ── COLLECTION SETS ──────────────────────────────────── */}
+        <Section title="Collection Sets">
+          <p className="text-sm opacity-65 mb-6">
+            Sets are groupings of parcels built around a common theme or variable in the collection. Some are easy to complete, whilst others are almost impossible. The estimator automatically detects which sets you hold, and how close you are to completing others, when you view your collection.
+          </p>
+          {SETS_GLOSSARY.map(set => (
+            <SetGlossaryRow key={set.name} {...set} />
+          ))}
+        </Section>
+
       </main>
 
       <Footer />
@@ -129,6 +141,31 @@ function CategoryBadge({ label, color }) {
     <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
       {label}
     </span>
+  );
+}
+
+const SETS_GLOSSARY = [
+  { name: 'Chess biome set',  color: '#34d399', description: 'One parcel each from biomes 85, 39, 26, 27, and 38. These biomes all have various chess piece unicode characters in their animations.' },
+  { name: 'Binary biome set', color: '#34d399', description: 'One parcel each of biomes 54, 58, and 89. These biomes all have binary 0/1 characters in their animations.' },
+  { name: 'Blocky biome set', color: '#60a5fa', description: 'One parcel from the first 16 biomes, including biome 0. These parcels are all made up of various "blocky" unicode characters, that create very distinctive and recognisable animations.' },
+  { name: '[DUOTONE] set',    color: '#60a5fa', description: 'One parcel from each of the 15 duotone zones. These zones are all easily identified by their square bracket naming convention (e.g. [BLOOD], [MOON], [SOON]) and are distinct for their two-colour animations.' },
+  { name: 'Polychrome set',   color: '#c084fc', description: 'One parcel from each of the 59 multicoloured zones. These are easily identified by their standard case names without brackets.' },
+  { name: 'Full level set',   color: '#c084fc', description: 'One parcel at each of the 20 levels of the Hypercastle (L1–L20). Parcels in the top and the bottom of the Hypercastle are the most difficult to acquire.' },
+  { name: 'Grail set',        color: '#c084fc', description: 'One parcel from each of special parcel types: X-Seed, Y-Seed, Plague, Lith0, and Spine, plus a biome 0 parcel and an Origin Daydream or Origin Terraform.' },
+  { name: 'Full zone set',    color: '#ffe401', description: 'One parcel from each of the 75 zones in the collection.' },
+  { name: 'Full biome set',   color: '#ffe401', description: 'One parcel from each of the 92 biomes. The hardest set of all to acquire.' },
+];
+
+function SetGlossaryRow({ name, color, description }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-1">
+        <span className="text-xs px-1" style={{ color, border: `1px solid ${color}`, opacity: 0.85 }}>
+          {name}
+        </span>
+      </div>
+      <p className="text-sm opacity-65 leading-relaxed">{description}</p>
+    </div>
   );
 }
 

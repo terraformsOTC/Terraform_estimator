@@ -31,10 +31,10 @@ function PortfolioStats({ data }) {
             {displayTotal.toFixed(2)}
           </span>
         </div>
-        {data.sets?.length > 0 && (
+        {data.sets?.some(s => s.completed) && (
           <div>
             <p className="font-semibold">Sets</p>
-            <span>{data.sets.length}</span>
+            <span>{data.sets.filter(s => s.completed).length}</span>
           </div>
         )}
       </div>
