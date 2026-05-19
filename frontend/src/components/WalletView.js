@@ -46,10 +46,10 @@ const ALL_HIGHLIGHTS = [
   { key: 'origin_mint',   label: 'origin mint',  color: '#ffaa00' },
   { key: 'Biome0',        label: 'biome 0',      color: '#30e7ff' },
   { key: 'Lith0like',     label: 'lith-0like',   color: '#9ff240' },
-  { key: 'X-Seed',        label: 'x-seed',       color: '#62d840' },
-  { key: 'Y-Seed',        label: 'y-seed',       color: '#3dddb0' },
   { key: 'Basement',      label: 'basement',     color: '#bbbbbb' },
   { key: 'Penthouse',     label: 'penthouse',    color: '#d77c11' },
+  { key: 'X-Seed',        label: 'x-seed',       color: '#62d840' },
+  { key: 'Y-Seed',        label: 'y-seed',       color: '#3dddb0' },
   { key: 'Lith0',         label: 'lith0',        color: '#8e918c' },
   { key: 'Plague',        label: 'plague',       color: '#da709a' },
   { key: 'Godmode',       label: 'godmode',      color: '#f5eee8' },
@@ -190,7 +190,7 @@ export default function WalletView({ data, loading, address }) {
     <div>
       {/* Collection highlights — always show all types, grey if not owned */}
       <div className="mb-8">
-        <h2 className="text-lg mb-3 opacity-80">[collection highlights]</h2>
+        <h2 className="text-lg mb-3 opacity-80">[terraforms collected]</h2>
         <div className="flex flex-wrap gap-2">
           {ALL_HIGHLIGHTS.map(({ key, label, color }) => {
             const owned = ownedHighlights.has(key);
