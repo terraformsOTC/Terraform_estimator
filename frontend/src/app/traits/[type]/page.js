@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import TraitsResultView from '@/components/TraitsResultView';
 import { API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
 import { TRAIT_DESCRIPTIONS } from '@/lib/traitDescriptions';
 
 export default function TraitsDetailPage({ params }) {
-  const { type } = params;
+  const { type } = use(params);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
