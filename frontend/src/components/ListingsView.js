@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getMoneySwordMultiplier } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getLevelCategory, getMoneySwordMultiplier } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
+import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -32,7 +33,7 @@ function vsModelColor(discount) {
   return '#fecaca';
 }
 
-export default function ListingsView({ data, loading, error }) {
+export default function ListingsView({ data, loading, error, viewMode = 'list' }) {
   const [moneySword] = useMoneySword();
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
@@ -115,6 +116,15 @@ export default function ListingsView({ data, loading, error }) {
 
       {sorted.length === 0 ? (
         <p className="text-sm opacity-75">{bargainsOnly ? 'no bargains currently listed.' : 'no listings found.'}</p>
+      ) : viewMode === 'cards' ? (
+        <div
+          className="grid w-full gap-4"
+          style={{ gridTemplateColumns: getWalletGridTemplate() }}
+        >
+          {sorted.map(p => (
+            <ListingCard key={p.tokenId} parcel={p} />
+          ))}
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="text-sm border-collapse w-full min-w-[700px]">
@@ -231,5 +241,89 @@ function ListingRow({ parcel }) {
         </a>
       </td>
     </tr>
+  );
+}
+
+function ListingCard({ parcel }) {
+  const { tokenId, traits, pricing, listedPrice, discount } = parcel;
+  const { zone, biome, level, chroma, mode, specialType, mysteryOutlier, isOneOfOne, isS0 } = traits;
+  const { estimatedValue, zoneCategory, biomeCategory } = pricing;
+  const [moneySword] = useMoneySword();
+
+  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
+  const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
+
+  const levelCategory = getLevelCategory(level);
+  const topCategory = [zoneCategory, biomeCategory, levelCategory].filter(Boolean).sort((a, b) => {
+    const order = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };
+    return order[a] - order[b];
+  })[0];
+
+  const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || isS0 || biome === 0;
+  const showCategoryBadge = topCategory != null && !(topCategory === 'Floor' && isHighValueSpecial);
+  const specialBadge = SPECIAL_TYPE_BADGES[
+    mode === 'Origin Daydream' ? 'Origin Daydream'
+    : mode === 'Origin Terraform' ? 'Origin Terraform'
+    : specialType
+  ];
+
+  const color = vsModelColor(adjDiscount);
+  const sign = adjDiscount >= 0 ? '-' : '+';
+  const vsModelPct = (Math.abs(adjDiscount) * 100).toFixed(1);
+
+  return (
+    <div className="relative">
+      <a href={`/?token=${tokenId}`} className="block relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
+        <span className="absolute inset-0 bg-placeholder animate-pulse" />
+        <img
+          src={`${API_URL}/image/${tokenId}`}
+          alt={`Parcel ${tokenId}`}
+          className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
+          loading="lazy"
+          style={{ transitionDuration: '300ms', objectFit: 'cover' }}
+          onError={e => { e.target.style.opacity = 0; e.target.parentNode.querySelector('span').classList.remove('animate-pulse'); }}
+        />
+      </a>
+      <div className="flex flex-col">
+        <div className="flex justify-between items-center mt-1">
+          <a href={`/?token=${tokenId}`}>{tokenId}</a>
+          <a
+            href={`${OPENSEA_BASE}/${tokenId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm no-underline"
+            title="View on OpenSea"
+          >
+            <EthIcon width={8} height={13} />
+            {listedPrice.toFixed(3)}
+          </a>
+        </div>
+        <p className="hidden lg:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
+        <div className="hidden lg:flex items-center gap-1 flex-wrap mt-1">
+          {showCategoryBadge && (
+            <span
+              className="text-xs px-1"
+              style={{
+                color: CATEGORY_COLORS[topCategory],
+                border: `1px solid ${CATEGORY_COLORS[topCategory]}`,
+                opacity: 0.8
+              }}
+            >
+              {topCategory}
+            </span>
+          )}
+          {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
+          <AutoBadgeStack traits={traits} opacity={0.8} />
+          <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
+          <span
+            className="text-xs px-1 font-medium ml-auto"
+            style={{ color, border: `1px solid ${color}`, opacity: 0.9 }}
+            title="vs model estimate"
+          >
+            {sign}{vsModelPct}%
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

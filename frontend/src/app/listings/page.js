@@ -9,6 +9,7 @@ export default function ListingsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('list');
 
   async function fetchData() {
     setLoading(true);
@@ -41,13 +42,19 @@ export default function ListingsPage() {
 
         <div className="px-6">
           {data && !loading && (
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <button className="btn-primary btn-sm text-xs" onClick={fetchData}>
                 [refresh listings]
               </button>
+              <button
+                className="btn-primary btn-sm text-xs"
+                onClick={() => setViewMode(v => v === 'list' ? 'cards' : 'list')}
+              >
+                {viewMode === 'list' ? '[show cards]' : '[show list]'}
+              </button>
             </div>
           )}
-          <ListingsView data={data} loading={loading} error={error} />
+          <ListingsView data={data} loading={loading} error={error} viewMode={viewMode} />
         </div>
       </main>
       <Footer />
