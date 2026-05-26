@@ -1,8 +1,10 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Terrain mode (equal-weight):  Floor × ((zone_m×0.5 + biome_m×0.5) + level_m) × chroma_m × mode_m × ...
-//   Daydream mode (zone-dominant): Floor × ((zone_m×0.85 + biome_m×0.15) + level_m) × chroma_m × mode_m × ...
+//   Terrain mode (equal-weight):  Floor × ((zone_m×0.5 + biome_m×0.5) + level_m) × chroma_m × ...
+//   Daydream mode (zone-dominant): Floor × ((zone_m×0.85 + biome_m×0.15) + level_m) × chroma_m × ...
 //                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m × gm_m × origin_mode_m × biome0_zone_tier_m
+// Mode is not a multiplier itself — its effect is encoded in the zone/biome
+// weighting, originModeMultiple, and DAYDREAM_PREMIUM_DISCOUNT below.
 //
 //   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
 //   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
@@ -21,7 +23,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.8.0';
+const PRICING_MODEL_VERSION = '2.8.2';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -68,7 +70,7 @@ const BIOME_MULTIPLES = {
   // Rare (2.4x)
   14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
   39: 2.4, 75: 2.4, 80: 2.4, 87: 2.4, 88: 2.4,
-  // Rare (1.84x — category override, see BIOME_CATEGORY_OVERRIDES)
+  // Rare (2x — category override, see BIOME_CATEGORY_OVERRIDES)
   12: 2, 13: 2, 82: 2,
   // Premium (1.73x)
   1: 1.73, 2: 1.73, 8: 1.73, 40: 1.73, 42: 1.73,
@@ -99,14 +101,14 @@ const BIOME_CATEGORY_OVERRIDES = {
   10: "Mythical", // Mythical badge despite 3.6x pricing
   11: "Mythical", // Mythical badge despite 3.6x pricing
   17: "Mythical", // Mythical badge despite 3.6x pricing
-  12: "Rare",     // Rare badge despite 1.84x pricing
-  13: "Rare",     // Rare badge despite 1.84x pricing
-  82: "Rare",     // Rare badge despite 1.84x pricing
+  12: "Rare",     // Rare badge despite 2x pricing
+  13: "Rare",     // Rare badge despite 2x pricing
+  82: "Rare",     // Rare badge despite 2x pricing
 };
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
 const LEVEL_MULTIPLES = {
-  1: 5,   // Basement — extremely rare
+  1: 10,  // Basement — extremely rare
   2: 2,   // Basement
   3: 2,   // Basement
   4: 0,   // Mid-level — no level premium
@@ -125,7 +127,7 @@ const LEVEL_MULTIPLES = {
   17: 0,
   18: 2,  // Penthouse
   19: 2,  // Penthouse
-  20: 5,  // Penthouse — extremely rare
+  20: 10, // Penthouse — extremely rare
 };
 
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
@@ -134,17 +136,6 @@ const CHROMA_MULTIPLES = {
   "Pulse": 1.025,
   "Hyper": 1.025,
   // Plague is handled as a special parcel — not applied here
-};
-
-// ─── MODE MULTIPLES ────────────────────────────────────────────────────────────
-// Origin Daydream/Terraform use originModeMultiple (applied to total) instead,
-// because modeMultiple only multiplies the level term — which is 0 for mid-levels.
-const MODE_MULTIPLES = {
-  "Origin Daydream": 1,
-  "Origin Terraform": 1,
-  "Terrain": 1,
-  "Daydream": 1,
-  "Terraform": 1,
 };
 
 // For standard Daydream/Terraform: compress any premium above floor to this fraction.
@@ -300,10 +291,6 @@ function getChromaMultiple(chroma) {
   return CHROMA_MULTIPLES[chroma] ?? 1;
 }
 
-function getModeMultiple(mode) {
-  return MODE_MULTIPLES[mode] ?? 1;
-}
-
 // ─── MAIN ESTIMATE FUNCTION ────────────────────────────────────────────────────
 function estimatePrice(traits, floorOverride) {
   const { tokenId, zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryOutlier, mysteryValue } = traits;
@@ -378,12 +365,13 @@ function estimatePrice(traits, floorOverride) {
   const zoneMultiple = getZoneMultiple(zone);
   const biomeMultiple = getBiomeMultiple(biome);
   const levelMultiple = getLevelMultiple(level);
-  // Biome 0 + Flow chroma + Terrain mode gets a 1.2x boost (Flow is otherwise 1x).
-  // Daydream/Terraform/Origin variants on biome 0 + Flow fall back to standard 1x.
-  const chromaMultiple = (biome === 0 && (chroma === 'Flow' || !chroma) && mode === 'Terrain')
-    ? 1.2
-    : getChromaMultiple(chroma);
-  const modeMultiple = getModeMultiple(mode);
+  // Biome 0 + Terrain: chroma-specific premium. Flow → 1.56x flat; Pulse → 1.025 × 1.15 = 1.179x; Hyper unchanged.
+  // Daydream/Terraform/Origin variants on biome 0 fall back to standard chroma multiples.
+  let chromaMultiple = getChromaMultiple(chroma);
+  if (biome === 0 && mode === 'Terrain') {
+    if (chroma === 'Flow' || !chroma) chromaMultiple = 1.56;
+    else if (chroma === 'Pulse') chromaMultiple = 1.179;
+  }
 
   // Daydream/Terraform modes: zone is the dominant trait, biome adds little premium
   const isDaydreamMode = ['Daydream', 'Origin Daydream', 'Terraform', 'Origin Terraform'].includes(mode);
@@ -460,7 +448,6 @@ function estimatePrice(traits, floorOverride) {
     zonebiomeAvg: Math.round(zonebiomeAvg * 100) / 100,
     levelMultiple,
     chromaMultiple,
-    modeMultiple,
     spineMultiple,
     oneOf1Multiple,
     s0Multiple,
