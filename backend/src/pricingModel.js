@@ -13,9 +13,9 @@
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
 //   X-Seed / Y-Seed:  Floor × special_multiple × seed_zone_tier_m  (zone tier only, biome ignored)
-//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.85)  (zone tier removed, 15% dampening)
+//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.8)  (zone tier removed, 20% dampening)
 //                     Origin variants and Terrain unchanged.
-//   Lith0:            Floor × 18x × [1.15x if Flow chroma] × [1.1x if 1of1]  (Pulse/Hyper unaffected)
+//   Lith0:            Floor × 18x × [1.2x if Flow chroma] × [1.1x if 1of1]  (Pulse/Hyper unaffected)
 // Spine and 1of1 use the standard formula with a multiplier premium appended.
 
 const FLOOR_PRICE_ETH = 0.2; // Update as market moves
@@ -23,7 +23,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.9.3';
+const PRICING_MODEL_VERSION = '2.9.4';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -65,9 +65,10 @@ const ZONE_MULTIPLES = {
 const BIOME_MULTIPLES = {
   // Mythical (individual)
   0: 4.8, 73: 4.8,
-  74: 10,
-  77: 8.5,
-  76: 7.5, 78: 7.5, 79: 7.5, 81: 7.5,
+  74: 11,
+  77: 9,
+  78: 8, 81: 8,
+  76: 7.5, 79: 7.5,
   // Rare (3.6x) — see BIOME_CATEGORY_OVERRIDES
   10: 3.6, 11: 3.6, 17: 3.6,
   // Rare (2.4x)
@@ -321,7 +322,7 @@ function estimatePrice(traits, floorOverride) {
       const isDampenedMode = mode === 'Daydream' || mode === 'Terraform';
       const zoneCategory = getCategoryFromMultiple(getZoneMultiple(zone));
       const seedZoneTier = isDampenedMode ? 1 : (SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1);
-      const dampening = isDampenedMode ? 0.85 : 1;
+      const dampening = isDampenedMode ? 0.8 : 1;
       const effectiveBase = Math.round(baseMultiple * dampening * 1000) / 1000;
       const specialMultiple = Math.round(effectiveBase * seedZoneTier * 1000) / 1000;
       return {
@@ -338,7 +339,7 @@ function estimatePrice(traits, floorOverride) {
 
     // Lith0: +15% if Flow chroma (Pulse/Hyper unaffected), +10% if also 1of1
     if (specialType === 'Lith0') {
-      const flowBonus   = (!chroma || chroma === 'Flow') ? 1.15 : 1;
+      const flowBonus   = (!chroma || chroma === 'Flow') ? 1.2 : 1;
       const oneOf1Bonus = isOneOfOne ? 1.1 : 1;
       const specialMultiple = Math.round(baseMultiple * flowBonus * oneOf1Bonus * 1000) / 1000;
       let formula = `${floor} ETH × ${baseMultiple}x (Lith0)`;
