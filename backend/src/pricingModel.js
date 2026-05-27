@@ -13,7 +13,7 @@
 // Special parcels:
 //   Godmode / Plague:  Floor × special_multiple  (all traits ignored)
 //   X-Seed / Y-Seed:  Floor × special_multiple × seed_zone_tier_m  (zone tier only, biome ignored)
-//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.8)  (zone tier removed, 20% dampening)
+//                     If upgraded to Daydream or Terraform: Floor × (special_multiple × 0.72)  (zone tier removed, 28% dampening)
 //                     Origin variants and Terrain unchanged.
 //   Lith0:            Floor × 18x × [1.2x if Flow chroma] × [1.1x if 1of1]  (Pulse/Hyper unaffected)
 // Spine and 1of1 use the standard formula with a multiplier premium appended.
@@ -23,7 +23,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.9.5';
+const PRICING_MODEL_VERSION = '2.9.6';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -64,7 +64,7 @@ const ZONE_MULTIPLES = {
 // ─── BIOME MULTIPLES ───────────────────────────────────────────────────────────
 const BIOME_MULTIPLES = {
   // Mythical (individual)
-  0: 4.8, 73: 4.8,
+  0: 6.4, 73: 6.4,
   74: 13.75,
   77: 11.25,
   78: 10, 81: 10,
@@ -322,7 +322,7 @@ function estimatePrice(traits, floorOverride) {
       const isDampenedMode = mode === 'Daydream' || mode === 'Terraform';
       const zoneCategory = getCategoryFromMultiple(getZoneMultiple(zone));
       const seedZoneTier = isDampenedMode ? 1 : (SEED_ZONE_TIER_MULTIPLES[zoneCategory] ?? 1);
-      const dampening = isDampenedMode ? 0.8 : 1;
+      const dampening = isDampenedMode ? 0.72 : 1;
       const effectiveBase = Math.round(baseMultiple * dampening * 1000) / 1000;
       const specialMultiple = Math.round(effectiveBase * seedZoneTier * 1000) / 1000;
       return {
