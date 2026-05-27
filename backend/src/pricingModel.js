@@ -23,7 +23,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.9.4';
+const PRICING_MODEL_VERSION = '2.9.5';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -65,10 +65,10 @@ const ZONE_MULTIPLES = {
 const BIOME_MULTIPLES = {
   // Mythical (individual)
   0: 4.8, 73: 4.8,
-  74: 11,
-  77: 9,
-  78: 8, 81: 8,
-  76: 7.5, 79: 7.5,
+  74: 13.75,
+  77: 11.25,
+  78: 10, 81: 10,
+  76: 9.375, 79: 9.375,
   // Rare (3.6x) — see BIOME_CATEGORY_OVERRIDES
   10: 3.6, 11: 3.6, 17: 3.6,
   // Rare (2.4x)
