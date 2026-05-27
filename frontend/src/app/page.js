@@ -212,12 +212,12 @@ export default function Home() {
         onDisconnect={disconnectWallet}
         onWhale={loadRandomWhale}
       />
-      <div className="px-6 py-2.5 text-sm text-center" style={{ background: 'var(--color-fg)', color: 'var(--color-bg)' }}>
-        Terraform Estimator is going to be migrating to a new and more granular pricing methodology soon. This will mainly impact rare and special parcels.{' '}
-        <a href="https://twitter.com/TerraformsOTC" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-bg)', textDecoration: 'underline' }}>
+      <div className="px-6 py-1 text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: '0.7rem', background: '#1c1c1c', color: 'rgba(232,232,232,0.45)' }}>
+        Pricing methodology migration coming soon — mainly impacts rare &amp; special parcels.{' '}
+        <a href="https://twitter.com/TerraformsOTC" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(232,232,232,0.45)', textDecoration: 'underline' }}>
           Contact us
         </a>{' '}
-        if you have any questions.
+        with any questions.
       </div>
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">
