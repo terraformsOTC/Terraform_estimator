@@ -134,6 +134,13 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           🗡 One or more nerds has the money sword, there is an uncomfortable amount of competition for parcels. All estimates are increased.
         </p>
       )}
+      <p className="text-xs mt-2" style={{ color: 'rgba(232,232,232,0.4)' }}>
+        Pricing methodology migration coming soon — mainly impacts rare &amp; special parcels.{' '}
+        <a href="https://twitter.com/TerraformsOTC" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(232,232,232,0.4)', textDecoration: 'underline' }}>
+          Contact us
+        </a>{' '}
+        with any questions.
+      </p>
     </header>
   );
 }
