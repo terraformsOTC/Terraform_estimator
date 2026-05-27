@@ -23,7 +23,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.8.2';
+const PRICING_MODEL_VERSION = '2.9.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -63,9 +63,13 @@ const ZONE_MULTIPLES = {
 
 // ─── BIOME MULTIPLES ───────────────────────────────────────────────────────────
 const BIOME_MULTIPLES = {
-  // Mythical (4.8x)
-  0: 4.8, 73: 4.8, 74: 4.8, 76: 4.8, 77: 4.8, 78: 4.8, 79: 4.8, 81: 4.8,
-  // Mythical badge, lower multiple (3.6x) — see BIOME_CATEGORY_OVERRIDES
+  // Mythical (individual)
+  0: 4.8, 73: 4.8,
+  74: 8.64, // +80%
+  77: 7.92, // +65%
+  78: 6.96, 81: 6.96, // +45%
+  76: 6.0, 79: 6.0, // +25%
+  // Rare (3.6x) — see BIOME_CATEGORY_OVERRIDES
   10: 3.6, 11: 3.6, 17: 3.6,
   // Rare (2.4x)
   14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
@@ -98,9 +102,7 @@ const BIOME_MULTIPLES = {
 // ─── BIOME CATEGORY OVERRIDES ──────────────────────────────────────────────────
 // Biomes whose display category differs from what getCategoryFromMultiple() returns.
 const BIOME_CATEGORY_OVERRIDES = {
-  10: "Mythical", // Mythical badge despite 3.6x pricing
-  11: "Mythical", // Mythical badge despite 3.6x pricing
-  17: "Mythical", // Mythical badge despite 3.6x pricing
+  // 10, 11, 17 removed — 3.6x now correctly resolves to "Rare" via getCategoryFromMultiple
   12: "Rare",     // Rare badge despite 2x pricing
   13: "Rare",     // Rare badge despite 2x pricing
   82: "Rare",     // Rare badge despite 2x pricing
@@ -108,9 +110,9 @@ const BIOME_CATEGORY_OVERRIDES = {
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
 const LEVEL_MULTIPLES = {
-  1: 10,  // Basement — extremely rare
-  2: 2,   // Basement
-  3: 2,   // Basement
+  1: 10,    // Basement — extremely rare
+  2: 2.25,  // Basement
+  3: 2,     // Basement
   4: 0,   // Mid-level — no level premium
   5: 0,
   6: 0,
@@ -125,9 +127,9 @@ const LEVEL_MULTIPLES = {
   15: 0,
   16: 0,
   17: 0,
-  18: 2,  // Penthouse
-  19: 2,  // Penthouse
-  20: 10, // Penthouse — extremely rare
+  18: 2,    // Penthouse
+  19: 2.25, // Penthouse
+  20: 10,   // Penthouse — extremely rare
 };
 
 // ─── CHROMA MULTIPLES ──────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ const SPECIAL_TYPES = {
   "Y-Seed":  17.5,
   "Lith0":   18,
 };
-const GODMODE_MULTIPLE = 45;
+const GODMODE_MULTIPLE = 60;
 
 // X-Seed / Y-Seed zone tier multipliers (zone only — biome ignored for seeds)
 const SEED_ZONE_TIER_MULTIPLES = {

@@ -127,17 +127,23 @@ export default function Home() {
   }, []);
 
   async function loadWalletData(address) {
+    // Discard stale responses: if the user switches accounts in their wallet
+    // extension mid-fetch, the second fetch's response can land after the
+    // first's and overwrite walletData with the wrong account.
+    const myId = ++walletFetchId.current;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(address)}`);
+      if (myId !== walletFetchId.current) return;
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWalletData(data);
     } catch (err) {
+      if (myId !== walletFetchId.current) return;
       setError(err.message || 'Failed to load wallet data.');
     } finally {
-      setLoading(false);
+      if (myId === walletFetchId.current) setLoading(false);
     }
   }
 
@@ -206,6 +212,13 @@ export default function Home() {
         onDisconnect={disconnectWallet}
         onWhale={loadRandomWhale}
       />
+      <div className="px-6 py-2.5 text-sm text-center" style={{ background: 'var(--color-fg)', color: 'var(--color-bg)' }}>
+        Terraform Estimator is going to be migrating to a new and more granular pricing methodology soon. This will mainly impact rare and special parcels.{' '}
+        <a href="https://twitter.com/TerraformsOTC" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-bg)', textDecoration: 'underline' }}>
+          Contact us
+        </a>{' '}
+        if you have any questions.
+      </div>
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">
           <div>
