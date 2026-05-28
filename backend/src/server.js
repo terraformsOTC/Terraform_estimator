@@ -348,6 +348,11 @@ function floorAt(tsSeconds) {
 const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
 
+// Browser cache for price endpoints. Safe because the live floor only refreshes every
+// FLOOR_CACHE_TTL_MS server-side, so a 2-min client cache never serves anything staler than
+// the origin would — and it makes /?token= deep-link revisits instant, cutting Render load.
+const PRICE_CACHE_CONTROL = 'public, max-age=120, stale-while-revalidate=300';
+
 async function getFloorPrice() {
   const now = Date.now();
   if (floorCache.isLive && (now - floorCache.fetchedAt) < FLOOR_CACHE_TTL_MS) {
@@ -799,6 +804,15 @@ async function getParcelTraits(tokenId) {
 // GET /image/:tokenId — serves the on-chain SVG directly from tokenURI
 // The SVG is base64-encoded inside the JSON image field.
 // Note: parcels can change mode (terraform/daydream), so no long-term caching.
+// Locks an SVG response down so any inline scripts in on-chain markup can't
+// execute if the URL is opened directly in a browser tab. Inline styles are
+// still allowed — Terraforms SVGs animate via <style> blocks with keyframes.
+function setSvgResponseHeaders(res) {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src data:");
+}
+
 app.get('/image/:tokenId', async (req, res) => {
   try {
     if (!/^\d+$/.test(req.params.tokenId)) return res.status(400).send('Invalid token ID');
@@ -818,14 +832,14 @@ app.get('/image/:tokenId', async (req, res) => {
 
     if (image.startsWith('data:image/svg+xml;base64,')) {
       const svg = Buffer.from(image.slice(26), 'base64');
-      res.setHeader('Content-Type', 'image/svg+xml');
+      setSvgResponseHeaders(res);
       res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h — tokenURI is immutable
       return res.send(svg);
     }
 
     if (image.startsWith('data:image/svg+xml,')) {
       const svg = decodeURIComponent(image.slice(19));
-      res.setHeader('Content-Type', 'image/svg+xml');
+      setSvgResponseHeaders(res);
       res.setHeader('Cache-Control', 'public, max-age=300');
       return res.send(svg);
     }
@@ -834,7 +848,7 @@ app.get('/image/:tokenId', async (req, res) => {
   } catch (err) {
     console.error(`[image] ${req.params.tokenId}:`, err.message);
     const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 277 400" width="277" height="400"><rect width="277" height="400" fill="#1a1918"/><text x="138" y="185" font-size="80" text-anchor="middle" dominant-baseline="middle">⛱</text><text x="138" y="260" font-family="monospace" font-size="11" fill="#ffffff" opacity="0.4" text-anchor="middle">parcel did not load</text></svg>`;
-    res.setHeader('Content-Type', 'image/svg+xml');
+    setSvgResponseHeaders(res);
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).send(fallbackSvg);
   }
@@ -855,6 +869,7 @@ app.get('/estimate/:tokenId', async (req, res) => {
     ]);
     const pricing = estimatePrice(traits, floor);
 
+    res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
     res.json({ tokenId, traits, pricing, floorIsLive });
   } catch (err) {
     console.error(`[estimate] ${req.params.tokenId}:`, err.message);
@@ -898,10 +913,22 @@ app.get('/wallet/:address', async (req, res) => {
       return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: liveFloor, floorIsLive });
     }
 
-    const tokenIds = await withTimeout(
-      Promise.all(Array.from({ length: fetchCount }, (_, i) => contract.tokenOfOwnerByIndex(address, i))),
-      30_000, // 30s for large wallets
-    );
+    // Batched enumeration — fan-out is capped per batch so public RPCs (which
+    // silently rate-limit beyond ~20–50 concurrent requests) don't drop calls
+    // and corrupt the token list. Each call still gets the standard RPC timeout
+    // via withTimeout inside getCachedTokenURI; the outer 30s budget here just
+    // bounds the total enumeration walltime for very large wallets.
+    const ENUM_BATCH_SIZE = 20;
+    const tokenIds = [];
+    const enumStart = Date.now();
+    for (let i = 0; i < fetchCount; i += ENUM_BATCH_SIZE) {
+      if (Date.now() - enumStart > 30_000) throw new Error('Wallet enumeration timed out');
+      const batchEnd = Math.min(i + ENUM_BATCH_SIZE, fetchCount);
+      const batch = await Promise.all(
+        Array.from({ length: batchEnd - i }, (_, k) => withTimeout(contract.tokenOfOwnerByIndex(address, i + k))),
+      );
+      tokenIds.push(...batch);
+    }
 
     // Batch fetch traits for all tokens (needed for accurate set detection)
     const BATCH_SIZE = 5;
@@ -1009,6 +1036,7 @@ async function resolveUnminted(parcel, res) {
   const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm };
   const pricing  = estimatePrice(traits, floor);
   const animData = UNMINTED_ANIM_LOOKUP.get(`${parcel.level}/${parcel.x}/${parcel.y}`) || null;
+  res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
   res.json({ traits, pricing, floorIsLive, animData });
 }
 
@@ -1205,6 +1233,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.get('/floor', async (req, res) => {
   try {
     const { price, isLive, fetchedAt } = await getFloorPrice();
+    res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
     res.json({ floor: price, isLive, fetchedAt });
   } catch (err) {
     console.error('[floor]', err.message);
