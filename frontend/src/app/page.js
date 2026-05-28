@@ -59,6 +59,35 @@ function TokenParamHandler({ onToken, onAddress }) {
   return null;
 }
 
+// Reserves the result area's footprint while an estimate is in flight so the
+// async result (RPC ~1–3s, common on /?token= deep-links) doesn't shove the
+// footer down when it lands — the dominant CLS source on this page.
+function ResultSkeleton() {
+  return (
+    <div className="mt-8 flex flex-col md:flex-row gap-8 max-w-2xl" aria-hidden="true">
+      <div className="flex-shrink-0">
+        <div className="bg-placeholder animate-pulse" style={{ width: 277, height: 400 }} />
+        <div className="mt-2 flex flex-col gap-1.5">
+          <div className="bg-placeholder animate-pulse h-3 w-24" />
+          <div className="bg-placeholder animate-pulse h-3 w-32" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 flex-1">
+        <div className="flex flex-col gap-2">
+          <div className="bg-placeholder animate-pulse h-3 w-28" />
+          <div className="bg-placeholder animate-pulse h-8 w-40" />
+          <div className="bg-placeholder animate-pulse h-3 w-36" />
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-placeholder animate-pulse h-4 w-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [view, setView] = useState('search'); // 'search' | 'wallet' | 'whale'
@@ -257,6 +286,7 @@ export default function Home() {
           {view === 'search' && (
             <>
               <ParcelSearch onSearch={searchParcel} loading={loading} />
+              {loading && <ResultSkeleton />}
               {searchResult && !loading && (
                 <div className="mt-8">
                   <ParcelResult parcel={searchResult} ethUsd={ethUsd} />

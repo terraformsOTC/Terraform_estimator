@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getLevelCategory, getMoneySwordMultiplier } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
-import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -117,27 +116,24 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
       {sorted.length === 0 ? (
         <p className="text-sm opacity-75">{bargainsOnly ? 'no bargains currently listed.' : 'no listings found.'}</p>
       ) : viewMode === 'cards' ? (
-        <div
-          className="grid w-full gap-4"
-          style={{ gridTemplateColumns: getWalletGridTemplate() }}
-        >
+        <div className="grid w-full gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {sorted.map(p => (
             <ListingCard key={p.tokenId} parcel={p} />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="text-sm border-collapse w-full min-w-[700px]">
+          <table className="text-sm border-collapse w-full md:min-w-[700px]">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
                 <th className="pb-3 pr-4 font-normal hidden md:table-cell"></th>
                 <th className="pb-3 pr-4 font-normal">parcel</th>
                 <th className="pb-3 pr-4 font-normal">traits</th>
                 <th className="pb-3 pr-4 font-normal text-right">listed</th>
-                <th className="pb-3 pr-4 font-normal text-right">when</th>
+                <th className="pb-3 pr-4 font-normal text-right hidden md:table-cell">when</th>
                 <th className="pb-3 pr-4 font-normal text-right">estimate</th>
                 <th className="pb-3 pr-4 font-normal text-right">vs model</th>
-                <th className="pb-3 font-normal"></th>
+                <th className="pb-3 font-normal hidden sm:table-cell"></th>
               </tr>
             </thead>
             <tbody>
@@ -213,7 +209,7 @@ function ListingRow({ parcel }) {
           {listedPrice.toFixed(3)}
         </span>
       </td>
-      <td className="py-2 pr-4 text-right">
+      <td className="py-2 pr-4 text-right hidden md:table-cell">
         <span className="text-xs opacity-50">{timeAgo(listedAt)}</span>
       </td>
       <td className="py-2 pr-4 text-right">
@@ -230,7 +226,7 @@ function ListingRow({ parcel }) {
           {sign}{vsModelPct}%
         </span>
       </td>
-      <td className="py-2 text-right">
+      <td className="py-2 text-right hidden sm:table-cell">
         <a
           href={`${OPENSEA_BASE}/${tokenId}`}
           target="_blank"
