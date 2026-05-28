@@ -11,10 +11,15 @@ frontend/out/
 backend/.env
 frontend/.env.local
 
-# Debug scripts (not part of production)
+# Debug / one-off maintenance scripts (not part of production)
 backend/debug-traits.js
 backend/find-special.js
 backend/sample-mystery.js
+backend/check_1of1.js
+backend/apply_1of1_changes.js
+
+# Generated maintenance output (regenerable)
+backend/1of1_check_results.json
 
 # Misc
 .DS_Store

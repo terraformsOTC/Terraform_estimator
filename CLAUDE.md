@@ -27,7 +27,7 @@ Backend: `:3001` | Frontend: `:3000`
 - Unminted IDs `#1–#1193` sorted level ascending (1 = lowest, 1193 = highest)
 
 ### Backend (`backend/src/`)
-- `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `CORS_ORIGIN` env var.
+- `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `ALLOWED_ORIGINS` env var.
 - `pricingModel.js` — All pricing logic. Floor price constant at line 4. Formula: `Floor × (zone_mult + biome_mult) / 2`. Handles Godmode, Plague, X-Seed, Y-Seed, Lith0 special tokens.
 - `special-tokens.json` — Minted special parcel overrides.
 - `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/antennaOn/antennaFirstTs). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
