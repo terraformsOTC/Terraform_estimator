@@ -29,7 +29,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.10.0';
+const PRICING_MODEL_VERSION = '2.10.1';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -120,8 +120,8 @@ const BIOME_CATEGORY_OVERRIDES = {
 // zone/biome premium above floor is added on top; see estimatePrice().
 const LEVEL_MULTIPLES = {
   1: 12.5,  // Basement — extremely rare
-  2: 2.25,  // Basement
-  3: 2,     // Basement
+  2: 2,     // Basement
+  3: 1.75,  // Basement
   4: 1,   // Mid-level — neutral baseline (no level premium)
   5: 1,
   6: 1,
@@ -136,8 +136,8 @@ const LEVEL_MULTIPLES = {
   15: 1,
   16: 1,
   17: 1,
-  18: 2,    // Penthouse
-  19: 2.25, // Penthouse
+  18: 1.75, // Penthouse
+  19: 2,    // Penthouse
   20: 12.5, // Penthouse — extremely rare
 };
 
