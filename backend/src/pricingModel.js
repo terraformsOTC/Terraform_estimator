@@ -1,13 +1,19 @@
 // Terraforms Pricing Model v2
 // Formula (standard parcels):
-//   Terrain mode (equal-weight):  Floor × ((zone_m×0.5 + biome_m×0.5) + level_m) × chroma_m × ...
-//   Daydream mode (zone-dominant): Floor × ((zone_m×0.85 + biome_m×0.15) + level_m) × chroma_m × ...
+//   base_multiple = level_m + (zonebiome_avg − 1)
+//     Terrain mode (equal-weight):   zonebiome_avg = zone_m×0.5  + biome_m×0.5
+//     Daydream mode (zone-dominant): zonebiome_avg = zone_m×0.85 + biome_m×0.15
+//   estimate = Floor × base_multiple × chroma_m
 //                   × spine_m × 1of1_m × s0_m × matrix_m × mesa_m × heartbeat_m × lith0like_m × gm_m × origin_mode_m × biome0_zone_tier_m
 // Mode is not a multiplier itself — its effect is encoded in the zone/biome
 // weighting, originModeMultiple, and DAYDREAM_PREMIUM_DISCOUNT below.
 //
-//   level_m is 0 for mid-levels (L4–17), so the level term contributes nothing there.
-//   level_m is non-zero only for basement (L1–3) and penthouse (L18–20).
+//   level_m is the TOTAL multiple of floor a parcel is worth purely by virtue of
+//   its level: a floor parcel (zone_m = biome_m = 1, so zonebiome_avg = 1) lands
+//   exactly on level_m × floor. The zone/biome premium ABOVE floor
+//   (zonebiome_avg − 1) is then added on top of that level baseline.
+//   level_m is 1 for mid-levels (L4–17) — a neutral baseline contributing
+//   nothing — and > 1 only for basement (L1–3) and penthouse (L18–20).
 //   All trait premiums apply to the total — none are level-dependent.
 //
 // Special parcels:
@@ -23,7 +29,7 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 // Stamped onto sales records so accuracy/bias analysis can be segmented by
 // formula version once persistence lands. Bump when multipliers, weights, or
 // formula structure change (patch = data-only, minor = formula change).
-const PRICING_MODEL_VERSION = '2.9.6';
+const PRICING_MODEL_VERSION = '2.10.0';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
 const ZONE_MULTIPLES = {
@@ -109,24 +115,27 @@ const BIOME_CATEGORY_OVERRIDES = {
 };
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
+// Total multiple of floor a floor parcel (no zone/biome premium) is worth purely
+// by virtue of its level. Mid-levels (L4–17) are 1 — a neutral baseline. The
+// zone/biome premium above floor is added on top; see estimatePrice().
 const LEVEL_MULTIPLES = {
   1: 12.5,  // Basement — extremely rare
   2: 2.25,  // Basement
   3: 2,     // Basement
-  4: 0,   // Mid-level — no level premium
-  5: 0,
-  6: 0,
-  7: 0,
-  8: 0,
-  9: 0,
-  10: 0,
-  11: 0,
-  12: 0,
-  13: 0,
-  14: 0,
-  15: 0,
-  16: 0,
-  17: 0,
+  4: 1,   // Mid-level — neutral baseline (no level premium)
+  5: 1,
+  6: 1,
+  7: 1,
+  8: 1,
+  9: 1,
+  10: 1,
+  11: 1,
+  12: 1,
+  13: 1,
+  14: 1,
+  15: 1,
+  16: 1,
+  17: 1,
   18: 2,    // Penthouse
   19: 2.25, // Penthouse
   20: 12.5, // Penthouse — extremely rare
@@ -140,9 +149,15 @@ const CHROMA_MULTIPLES = {
   // Plague is handled as a special parcel — not applied here
 };
 
-// For standard Daydream/Terraform: compress any premium above floor to this fraction.
-// Ensures these parcels price close to floor regardless of zone/biome/trait premiums.
+// For standard Daydream/Terraform: compress the zone/biome + trait premium above
+// floor to this fraction. Ensures these parcels price close to floor regardless of
+// zone/biome/trait premiums.
 const DAYDREAM_PREMIUM_DISCOUNT = 0.32;
+
+// The level baseline is NOT crushed by the daydream discount — it is only lightly
+// shaved, so a basement/penthouse parcel in Daydream/Terraform sits ~10% below its
+// Terrain counterpart on the same level (the difference is slight).
+const DAYDREAM_LEVEL_DISCOUNT = 0.9;
 
 // ─── SPECIAL PARCEL OVERRIDES ──────────────────────────────────────────────────
 // Bypass standard formula entirely.
@@ -286,7 +301,7 @@ function getBiomeMultiple(biome) {
 }
 
 function getLevelMultiple(level) {
-  return LEVEL_MULTIPLES[level] ?? 0;
+  return LEVEL_MULTIPLES[level] ?? 1;
 }
 
 function getChromaMultiple(chroma) {
@@ -402,32 +417,56 @@ function estimatePrice(traits, floorOverride) {
   const heartbeatMultiple = (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')     ? TRAIT_PREMIUMS['Heartbeat'] : 1;
   const lith0likeMultiple  = isLith0like ? (LITH0LIKE_PREMIUMS[tokenId] ?? 1) : 1;
   const gmMultiple         = isGm ? TRAIT_PREMIUMS['gm'] : 1;
-  const originModeMultiple = (mode === 'Origin Daydream' || mode === 'Origin Terraform') ? 3.0 : 1;
+  // Origin Daydream/Terraform mode multiplier. Basement/penthouse parcels
+  // (level_m ≠ 1) already carry a large level baseline, so they get a tempered
+  // 1.5x instead of the 3x applied to mid-level origin parcels.
+  const originModeMultiple = isOriginMode ? (levelMultiple !== 1 ? 1.5 : 3.0) : 1;
   const zoneCategory       = getCategoryFromMultiple(zoneMultiple);
   // Biome 0 (standard formula path only — Lith0 / X-Seed / Y-Seed return early
   // before reaching here) gets a multiplicative bump tied to the zone's tier.
   const biome0ZoneTierBump = biome === 0 ? (BIOME0_ZONE_TIER_BUMP[zoneCategory] ?? 1) : 1;
 
-  // Additive formula: base zone/biome value + level premium (0 for mid-levels).
-  // chroma multiplies the entire estimate (base + level), not just the level term —
-  // so the biome-0 Flow bump and standard Pulse/Hyper boosts affect every parcel.
-  const baseValue      = floor * zonebiomeAvg;
-  const levelValue     = levelMultiple * floor;
-  const rawEstimate    = (baseValue + levelValue) * chromaMultiple * spineMultiple * oneOf1Multiple * s0Multiple * matrixMultiple * mesaMultiple * heartbeatMultiple * lith0likeMultiple * gmMultiple * originModeMultiple * biome0ZoneTierBump;
+  // Level sets a baseline multiple of floor (level_m); the zone/biome premium
+  // above floor (zonebiomeAvg − 1) is layered on top, so a floor parcel lands
+  // exactly on level_m × floor. The trait premiums (chroma, spine, …) multiply
+  // the base — so the biome-0 Flow bump and Pulse/Hyper boosts affect every parcel.
+  const levelPremium     = levelMultiple - 1;   // 0 for mid-levels (L4–17)
+  const zoneBiomePremium = zonebiomeAvg - 1;    // ≥ 0
+  const traitProduct = chromaMultiple * spineMultiple * oneOf1Multiple * s0Multiple *
+                       matrixMultiple * mesaMultiple * heartbeatMultiple *
+                       lith0likeMultiple * gmMultiple * originModeMultiple * biome0ZoneTierBump;
 
-  // For standard Daydream/Terraform: compress the premium above floor.
-  // Never goes below floor. Origin variants are unaffected (handled by originModeMultiple).
+  // Standard Daydream/Terraform: the zone/biome + trait premium above floor is
+  // heavily compressed (these parcels price near floor), but the level baseline is
+  // only lightly shaved (DAYDREAM_LEVEL_DISCOUNT) so a basement/penthouse daydream
+  // parcel sits ~10% below its Terrain counterpart. Never goes below floor.
+  // Terrain and Origin modes use the full base (origin scales via originModeMultiple).
   const isStandardDaydreamMode = (mode === 'Daydream' || mode === 'Terraform');
-  const estimatedValue = isStandardDaydreamMode
-    ? floor + (rawEstimate - floor) * DAYDREAM_PREMIUM_DISCOUNT
-    : rawEstimate;
+  let estimatedValue;
+  if (isStandardDaydreamMode) {
+    const zoneBiomeBase     = floor * (1 + zoneBiomePremium) * traitProduct;  // level-neutral
+    const compressedBase    = floor + (zoneBiomeBase - floor) * DAYDREAM_PREMIUM_DISCOUNT;
+    const levelContribution = floor * levelPremium * traitProduct * DAYDREAM_LEVEL_DISCOUNT;
+    estimatedValue = compressedBase + levelContribution;
+  } else {
+    estimatedValue = floor * (1 + levelPremium + zoneBiomePremium) * traitProduct;
+  }
   const totalMultiple   = Math.round((estimatedValue / floor) * 100) / 100;
 
-  let formula = isDaydreamMode
-    ? `${floor} × (${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginMode && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
-    : `${floor} × ((${zoneMultiple} + ${biomeMultiple}) / 2)`;
-  if (levelMultiple > 0) {
-    formula += ` + (${levelMultiple} × ${floor})(lvl)`;
+  const zoneBiomeStr = isDaydreamMode
+    ? `(${effectiveZoneMultiple}×0.85 + ${biomeMultiple}×0.15)${isOriginMode && effectiveZoneMultiple !== zoneMultiple ? ` [zone compressed: ${zoneMultiple}→${effectiveZoneMultiple}]` : ''}`
+    : `((${zoneMultiple} + ${biomeMultiple}) / 2)`;
+  // Standard daydream/terraform: zone/biome premium compressed, level baseline
+  // lightly shaved. Otherwise: level baseline (if ≠ 1) + zone/biome premium.
+  let formula;
+  if (isStandardDaydreamMode) {
+    formula = `${floor} × [1 + (${zoneBiomeStr} − 1)×${DAYDREAM_PREMIUM_DISCOUNT}(daydream)`;
+    if (levelMultiple !== 1) formula += ` + (${levelMultiple} − 1)×${DAYDREAM_LEVEL_DISCOUNT}(lvl)`;
+    formula += `]`;
+  } else {
+    formula = levelMultiple !== 1
+      ? `${floor} × (${levelMultiple}(lvl base) + [${zoneBiomeStr} − 1](zone/biome premium))`
+      : `${floor} × ${zoneBiomeStr}`;
   }
   if (chromaMultiple    !== 1) formula += ` × ${chromaMultiple}(chroma)`;
   if (spineMultiple     !== 1) formula += ` × ${spineMultiple}(spine)`;
@@ -440,7 +479,6 @@ function estimatePrice(traits, floorOverride) {
   if (gmMultiple         !== 1) formula += ` × ${gmMultiple}(gm)`;
   if (originModeMultiple !== 1) formula += ` × ${originModeMultiple}(${mode.toLowerCase()})`;
   if (biome0ZoneTierBump !== 1) formula += ` × ${biome0ZoneTierBump}(biome0 zone tier)`;
-  if (isStandardDaydreamMode) formula += ` → floor + premium×${DAYDREAM_PREMIUM_DISCOUNT} (daydream discount)`;
 
   return {
     estimatedValue: Math.round(estimatedValue * 1000) / 1000,
