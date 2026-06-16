@@ -109,16 +109,12 @@ function getProvider() {
   return { provider, contract, antennaContract };
 }
 
-// ─── tokenURI LRU CACHE ─────────────────────────────────────────────────────
-// Terraforms tokenURIs are immutable on-chain — safe to cache indefinitely.
-// Caching here benefits both /image and /estimate (via getParcelTraits).
-// Max 500 entries (~24MB worst-case); oldest entry evicted when full.
+// ─── tokenURI / tokenHTML LRU CACHES ─────────────────────────────────────────
+// Terraforms tokenURIs/tokenHTML are immutable on-chain — safe to cache
+// indefinitely. Caching benefits both /image and /estimate (via getParcelTraits).
+// Max 500 entries each (~24MB worst-case); oldest entry evicted when full.
 const TOKEN_URI_CACHE_MAX = 500;
 const TOKEN_HTML_CACHE_MAX = 500;
-const tokenUriCache = new Map();    // Map<tokenId, uri> — insertion order = LRU order
-const tokenHtmlCache = new Map();   // Map<tokenId, html> — same LRU pattern for tokenHTML
-const tokenUriInFlight = new Map(); // Map<tokenId, Promise> — dedup concurrent cold-cache fetches
-const tokenHtmlInFlight = new Map();
 
 const RPC_TIMEOUT_MS = 15_000; // 15s timeout for contract calls
 
@@ -129,51 +125,36 @@ function withTimeout(promise, ms = RPC_TIMEOUT_MS) {
   ]);
 }
 
-async function getCachedTokenURI(tokenId) {
-  const key = Number(tokenId);
-  if (tokenUriCache.has(key)) {
-    const uri = tokenUriCache.get(key);
-    tokenUriCache.delete(key);
-    tokenUriCache.set(key, uri);
-    return uri;
-  }
-  if (tokenUriInFlight.has(key)) return tokenUriInFlight.get(key);
-  const { contract } = getProvider();
-  const p = withTimeout(contract.tokenURI(tokenId))
-    .then(uri => {
-      if (tokenUriCache.size >= TOKEN_URI_CACHE_MAX) {
-        tokenUriCache.delete(tokenUriCache.keys().next().value);
-      }
-      tokenUriCache.set(key, uri);
-      return uri;
-    })
-    .finally(() => tokenUriInFlight.delete(key));
-  tokenUriInFlight.set(key, p);
-  return p;
+// Build an LRU + in-flight-dedup fetcher. `fetchFn(key)` performs the RPC call
+// for a numeric tokenId; results are cached (Map insertion order = LRU order),
+// the oldest entry is evicted past `max`, and concurrent cold-cache requests for
+// the same key share a single in-flight promise.
+function makeCachedFetcher(fetchFn, max) {
+  const cache = new Map();    // key -> value
+  const inFlight = new Map(); // key -> Promise
+  return function (tokenId) {
+    const key = Number(tokenId);
+    if (cache.has(key)) {
+      const value = cache.get(key);
+      cache.delete(key);
+      cache.set(key, value); // bump recency
+      return Promise.resolve(value);
+    }
+    if (inFlight.has(key)) return inFlight.get(key);
+    const p = withTimeout(fetchFn(key))
+      .then(value => {
+        if (cache.size >= max) cache.delete(cache.keys().next().value);
+        cache.set(key, value);
+        return value;
+      })
+      .finally(() => inFlight.delete(key));
+    inFlight.set(key, p);
+    return p;
+  };
 }
 
-async function getCachedTokenHTML(tokenId) {
-  const key = Number(tokenId);
-  if (tokenHtmlCache.has(key)) {
-    const html = tokenHtmlCache.get(key);
-    tokenHtmlCache.delete(key);
-    tokenHtmlCache.set(key, html);
-    return html;
-  }
-  if (tokenHtmlInFlight.has(key)) return tokenHtmlInFlight.get(key);
-  const { contract } = getProvider();
-  const p = withTimeout(contract.tokenHTML(tokenId))
-    .then(html => {
-      if (tokenHtmlCache.size >= TOKEN_HTML_CACHE_MAX) {
-        tokenHtmlCache.delete(tokenHtmlCache.keys().next().value);
-      }
-      tokenHtmlCache.set(key, html);
-      return html;
-    })
-    .finally(() => tokenHtmlInFlight.delete(key));
-  tokenHtmlInFlight.set(key, p);
-  return p;
-}
+const getCachedTokenURI  = makeCachedFetcher(key => getProvider().contract.tokenURI(key), TOKEN_URI_CACHE_MAX);
+const getCachedTokenHTML = makeCachedFetcher(key => getProvider().contract.tokenHTML(key), TOKEN_HTML_CACHE_MAX);
 
 // Detect special type from metadata attributes
 function detectSpecialType(attributes) {
@@ -385,7 +366,6 @@ async function getFloorPrice() {
 // ─── OPENSEA LISTINGS + UNDERVALUED ───────────────────────────────────────────
 const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY;
 const UNDERVALUED_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-let undervaluedCache = { data: null, fetchedAt: 0 };
 
 // Fetch a single URL with exponential backoff on 429 / 5xx responses.
 async function fetchWithRetry(url, options, maxRetries = 3) {
@@ -444,105 +424,115 @@ async function fetchOpenSeaListings(maxPages = Infinity) {
   return listings.filter(l => seen.has(l.tokenId) ? false : seen.add(l.tokenId));
 }
 
+// ─── SHARED: cached-resource wrapper + snapshot-first trait resolver ──────────
+class ResourceUnavailableError extends Error {}
+
+// Wrap an async compute() in TTL cache + in-flight dedup + post-failure backoff,
+// with optional stale-while-revalidate. Used by /undervalued, /listings, /sales
+// and /api/weekly-report-data, which each previously hand-rolled this.
+//   ttlMs      freshness window
+//   backoffMs  after a failure, refuse to recompute for this long (0 = retry next call)
+//   swr        true  → serve stale immediately + refresh in background
+//              false → block callers on a stale/cold recompute
+//   ready()    precondition; when false with no fresh cache, get() throws ResourceUnavailableError
+// get() resolves to data, or throws ResourceUnavailableError (→503) / the compute error (→500).
+function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false, ready = () => true }) {
+  let cache = { data: null, fetchedAt: 0 };
+  let inFlight = null;
+  let failedAt = 0;
+  function start() {
+    inFlight = Promise.resolve().then(compute)
+      .then(data => { cache = { data, fetchedAt: Date.now() }; return data; })
+      .catch(err => { failedAt = Date.now(); throw err; })
+      .finally(() => { inFlight = null; });
+    return inFlight;
+  }
+  function triggerBackground() {
+    if (inFlight || !ready() || Date.now() - failedAt < backoffMs) return;
+    start().catch(err => console.error('[cache] background refresh failed:', err.message));
+  }
+  async function get() {
+    const now = Date.now();
+    if (cache.data && now - cache.fetchedAt < ttlMs) return cache.data;
+    if (swr && cache.data) { triggerBackground(); return cache.data; }
+    if (!ready()) throw new ResourceUnavailableError();
+    if (!inFlight && now - failedAt < backoffMs) throw new ResourceUnavailableError();
+    return inFlight || start();
+  }
+  return { get };
+}
+
+// Resolve traits for items that each carry a numeric `tokenId`: snapshot first
+// (covers all 9911 minted parcels, zero RPC), then batched RPC for misses.
+// Returns [{ item, traits }]; items whose RPC fetch rejects are dropped.
+const RPC_BATCH_SIZE = 8;
+async function resolveListingTraits(items, logTag = '[traits]') {
+  const resolved = [];
+  const needRpc = [];
+  for (const item of items) {
+    const traits = getSnapshotTraits(item.tokenId);
+    if (traits) resolved.push({ item, traits });
+    else needRpc.push(item);
+  }
+  if (needRpc.length > 0) {
+    console.log(`${logTag} ${resolved.length} from snapshot, ${needRpc.length} via RPC fallback`);
+    for (let i = 0; i < needRpc.length; i += RPC_BATCH_SIZE) {
+      const batch = needRpc.slice(i, i + RPC_BATCH_SIZE);
+      const settled = await Promise.allSettled(batch.map(it => getParcelTraits(it.tokenId)));
+      for (let j = 0; j < settled.length; j++) {
+        if (settled[j].status === 'fulfilled') resolved.push({ item: batch[j], traits: settled[j].value });
+      }
+    }
+  }
+  return resolved;
+}
+
 async function computeUndervalued() {
   const now = Date.now();
   const allListings = await fetchOpenSeaListings(2);
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
-  // Resolve traits from the baked snapshot first; fall back to RPC for any tokenIds
-  // not in the snapshot (handles edge cases like out-of-range tokens or post-bake mints).
-  const fromSnapshot = [];
-  const needRpc = [];
-  for (const l of allListings) {
-    const traits = getSnapshotTraits(l.tokenId);
-    if (traits) fromSnapshot.push({ traits, listing: l });
-    else needRpc.push(l);
-  }
-
+  const resolved = await resolveListingTraits(allListings, '[undervalued]');
   const results = [];
-  const score = (traits, listedPrice) => {
+  for (const { item, traits } of resolved) {
     const pricing = estimatePrice(traits, floor);
-    const discount = (pricing.estimatedValue - listedPrice) / pricing.estimatedValue;
+    const discount = (pricing.estimatedValue - item.listedPrice) / pricing.estimatedValue;
     if (discount >= 0.01) {
-      results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount });
-    }
-  };
-
-  for (const { traits, listing } of fromSnapshot) score(traits, listing.listedPrice);
-
-  if (needRpc.length > 0) {
-    console.log(`[undervalued] ${fromSnapshot.length} from snapshot, ${needRpc.length} via RPC fallback`);
-    const BATCH_SIZE = 8;
-    for (let i = 0; i < needRpc.length; i += BATCH_SIZE) {
-      const batch = needRpc.slice(i, i + BATCH_SIZE);
-      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
-      for (let j = 0; j < settled.length; j++) {
-        if (settled[j].status === 'fulfilled') score(settled[j].value, batch[j].listedPrice);
-      }
+      results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, discount });
     }
   }
 
   results.sort((a, b) => b.discount - a.discount);
-  const responseData = {
+  return {
     parcels: results.slice(0, 25),
     floor,
     floorIsLive,
     totalListingsScanned: allListings.length,
     fetchedAt: now,
   };
-  undervaluedCache = { data: responseData, fetchedAt: now };
-  return responseData;
 }
 
-// In-flight guard: collapses concurrent cold-cache requests into a single computation.
-// Without this, simultaneous requests would each kick off the full 20–40s pipeline.
-let undervaluedInFlight = null;
-let undervaluedFailedAt = 0;
+// Stale-while-revalidate + in-flight dedup + 60s failure backoff. Serves cached
+// data instantly; refreshes in the background when stale; only blocks on a cold
+// cache. Without the in-flight guard, simultaneous cold requests would each kick
+// off the full 20–40s pipeline.
 const UNDERVALUED_BACKOFF_MS = 60_000;
-
-// Kick off a background refresh if one isn't already running. Caller does not await.
-function triggerUndervaluedRefresh() {
-  if (undervaluedInFlight) return;
-  if (!OPENSEA_API_KEY) return;
-  if (Date.now() - undervaluedFailedAt < UNDERVALUED_BACKOFF_MS) return;
-  undervaluedInFlight = computeUndervalued()
-    .catch(err => {
-      undervaluedFailedAt = Date.now();
-      console.error('[undervalued] background refresh failed:', err.message);
-    })
-    .finally(() => { undervaluedInFlight = null; });
-}
+const undervaluedResource = createCachedResource({
+  compute: computeUndervalued,
+  ttlMs: UNDERVALUED_CACHE_TTL_MS,
+  backoffMs: UNDERVALUED_BACKOFF_MS,
+  swr: true,
+  ready: () => !!OPENSEA_API_KEY,
+});
 
 // GET /undervalued
-// Stale-while-revalidate: if cached data exists, return it immediately.
-// If the cache is stale, kick off a background refresh — the next request
-// after it completes will get fresh data. Only blocks on a truly cold cache.
 app.get('/undervalued', async (req, res) => {
   try {
-    const now = Date.now();
-    const hasCache = !!undervaluedCache.data;
-    const isStale = hasCache && (now - undervaluedCache.fetchedAt) >= UNDERVALUED_CACHE_TTL_MS;
-
-    if (hasCache) {
-      if (isStale) triggerUndervaluedRefresh();
-      return res.json(undervaluedCache.data);
-    }
-
-    if (!OPENSEA_API_KEY) {
-      return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
-    }
-
-    if (!undervaluedInFlight && (now - undervaluedFailedAt) < UNDERVALUED_BACKOFF_MS) {
+    res.json(await undervaluedResource.get());
+  } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
       return res.status(503).json({ error: 'Undervalued data temporarily unavailable. Try again shortly.' });
     }
-
-    if (!undervaluedInFlight) {
-      undervaluedInFlight = computeUndervalued().finally(() => { undervaluedInFlight = null; });
-    }
-    const responseData = await undervaluedInFlight;
-    res.json(responseData);
-  } catch (err) {
-    undervaluedFailedAt = Date.now();
     console.error('[undervalued]', err.message);
     res.status(500).json({ error: 'Failed to fetch undervalued parcels.' });
   }
@@ -552,9 +542,6 @@ app.get('/undervalued', async (req, res) => {
 // Fetches every active listing (paginate until exhausted), scores each against
 // the pricing model, and returns the full dataset so the frontend can sort/filter.
 const LISTINGS_CACHE_TTL_MS = 30 * 60 * 1000;
-let listingsCache = { data: null, fetchedAt: 0 };
-let listingsInFlight = null;
-let listingsFailedAt = 0;
 const LISTINGS_BACKOFF_MS = 60_000;
 
 async function computeAllListings() {
@@ -562,81 +549,35 @@ async function computeAllListings() {
   const allListings = await fetchOpenSeaListings(); // paginate until cursor exhausted
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
-  const fromSnapshot = [];
-  const needRpc = [];
-  for (const l of allListings) {
-    const traits = getSnapshotTraits(l.tokenId);
-    if (traits) fromSnapshot.push({ traits, listing: l });
-    else needRpc.push(l);
-  }
-
-  const results = [];
-  const score = (traits, listing) => {
+  const resolved = await resolveListingTraits(allListings, '[listings]');
+  const parcels = resolved.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
-    const discount = (pricing.estimatedValue - listing.listedPrice) / pricing.estimatedValue;
-    results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice: listing.listedPrice, listedAt: listing.listedAt, discount });
-  };
+    const discount = (pricing.estimatedValue - item.listedPrice) / pricing.estimatedValue;
+    return { tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, listedAt: item.listedAt, discount };
+  });
 
-  for (const { traits, listing } of fromSnapshot) score(traits, listing);
-
-  if (needRpc.length > 0) {
-    console.log(`[listings] ${fromSnapshot.length} from snapshot, ${needRpc.length} via RPC fallback`);
-    const BATCH_SIZE = 8;
-    for (let i = 0; i < needRpc.length; i += BATCH_SIZE) {
-      const batch = needRpc.slice(i, i + BATCH_SIZE);
-      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
-      for (let j = 0; j < settled.length; j++) {
-        if (settled[j].status === 'fulfilled') score(settled[j].value, batch[j]);
-      }
-    }
-  }
-
-  return { parcels: results, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
+  return { parcels, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
 }
 
-function triggerListingsRefresh() {
-  if (listingsInFlight) return;
-  if (!OPENSEA_API_KEY) return;
-  if (Date.now() - listingsFailedAt < LISTINGS_BACKOFF_MS) return;
-  listingsInFlight = computeAllListings()
-    .then(data => { listingsCache = { data, fetchedAt: Date.now() }; return data; })
-    .catch(err => { listingsFailedAt = Date.now(); console.error('[listings] background refresh failed:', err.message); })
-    .finally(() => { listingsInFlight = null; });
-}
+const listingsResource = createCachedResource({
+  compute: computeAllListings,
+  ttlMs: LISTINGS_CACHE_TTL_MS,
+  backoffMs: LISTINGS_BACKOFF_MS,
+  swr: true,
+  ready: () => !!OPENSEA_API_KEY,
+});
 
 app.use('/listings', undervaluedLimiter);
 
 // GET /listings
 // Returns all active OpenSea listings scored against the pricing model.
-// Stale-while-revalidate: serves cached data immediately if available; refreshes in background when stale.
 app.get('/listings', async (req, res) => {
   try {
-    const now = Date.now();
-    const hasCache = !!listingsCache.data;
-    const isStale = hasCache && (now - listingsCache.fetchedAt) >= LISTINGS_CACHE_TTL_MS;
-
-    if (hasCache) {
-      if (isStale) triggerListingsRefresh();
-      return res.json(listingsCache.data);
-    }
-
-    if (!OPENSEA_API_KEY) {
-      return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
-    }
-
-    if (!listingsInFlight && (now - listingsFailedAt) < LISTINGS_BACKOFF_MS) {
+    res.json(await listingsResource.get());
+  } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
       return res.status(503).json({ error: 'Listings data temporarily unavailable. Try again shortly.' });
     }
-
-    if (!listingsInFlight) {
-      listingsInFlight = computeAllListings()
-        .then(data => { listingsCache = { data, fetchedAt: Date.now() }; return data; })
-        .finally(() => { listingsInFlight = null; });
-    }
-    const responseData = await listingsInFlight;
-    res.json(responseData);
-  } catch (err) {
-    listingsFailedAt = Date.now();
     console.error('[listings]', err.message);
     res.status(500).json({ error: 'Failed to fetch listings.' });
   }
@@ -649,9 +590,21 @@ app.get('/listings', async (req, res) => {
 const { computeRecentSales } = require('./sales');
 const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /undervalued
 const SALES_BACKOFF_MS = 60_000;
-let salesCache = { data: null, fetchedAt: 0 };
-let salesInFlight = null;
-let salesFailedAt = 0;
+
+const salesResource = createCachedResource({
+  compute: () => computeRecentSales({
+    apiKey: OPENSEA_API_KEY,
+    fetchWithRetry,
+    getParcelTraits,
+    getFloorPrice,
+    floorAt,
+    limit: 50,
+  }),
+  ttlMs: SALES_CACHE_TTL_MS,
+  backoffMs: SALES_BACKOFF_MS,
+  swr: false, // blocks on a stale/cold recompute (no serve-stale for the sales feed)
+  ready: () => !!OPENSEA_API_KEY,
+});
 
 // GET /sales
 // Returns up to 50 of the most recent OpenSea sales for the Terraforms
@@ -660,38 +613,11 @@ let salesFailedAt = 0;
 // priced (surfaced as `skippedNonEth`).
 app.get('/sales', async (req, res) => {
   try {
-    const now = Date.now();
-    if (salesCache.data && (now - salesCache.fetchedAt) < SALES_CACHE_TTL_MS) {
-      return res.json(salesCache.data);
-    }
-
-    if (!OPENSEA_API_KEY) {
-      return res.status(503).json({ error: 'OpenSea API key not configured on server.' });
-    }
-
-    if (!salesInFlight && (now - salesFailedAt) < SALES_BACKOFF_MS) {
+    res.json(await salesResource.get());
+  } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
       return res.status(503).json({ error: 'Sales data temporarily unavailable. Try again shortly.' });
     }
-
-    if (!salesInFlight) {
-      salesInFlight = computeRecentSales({
-        apiKey: OPENSEA_API_KEY,
-        fetchWithRetry,
-        getParcelTraits,
-        getFloorPrice,
-        floorAt,
-        limit: 50,
-      })
-        .then(data => {
-          salesCache = { data, fetchedAt: Date.now() };
-          return data;
-        })
-        .finally(() => { salesInFlight = null; });
-    }
-    const responseData = await salesInFlight;
-    res.json(responseData);
-  } catch (err) {
-    salesFailedAt = Date.now();
     console.error('[sales]', err.message);
     res.status(500).json({ error: 'Failed to fetch recent sales.' });
   }
@@ -1290,9 +1216,6 @@ async function fetchEthUsdPrice() {
   }
 }
 
-let weeklyReportCache = null;
-let weeklyReportFetchedAt = 0;
-let weeklyReportInFlight = null;
 const WEEKLY_REPORT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 async function buildWeeklyReportData() {
@@ -1300,7 +1223,14 @@ async function buildWeeklyReportData() {
   const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
   // Fan out all slow calls in parallel.
-  // fetchOpenSeaListings(2) = 2 pages × 100 = up to 200 listings (matches /undervalued).
+  // fetchOpenSeaListings() paginates fully (until cursor exhausted, capped at
+  // SAFETY_MAX_PAGES) so parcels_listed reflects EVERY unique listed parcel.
+  // The /all endpoint returns one entry per active order, not per token — a
+  // repriced parcel has several live orders — so a fixed 2-page window collapses
+  // to far fewer unique tokens as duplicate orders accumulate, undercounting the
+  // feed. Full pagination + the dedup in fetchOpenSeaListings gives the true count
+  // and the true (cheapest) floor. Snapshot traits cover all 9911 minted parcels,
+  // so scoring the larger set adds no RPC cost.
   // computeRecentSales limit matches what /sales already uses.
   // Sales is load-bearing — anything else can degrade gracefully.
   const [salesRes, listingsRes, collectorsRes, ethUsdRes] = await Promise.allSettled([
@@ -1311,7 +1241,7 @@ async function buildWeeklyReportData() {
       getFloorPrice,
       floorAt,
     }),
-    fetchOpenSeaListings(2),
+    fetchOpenSeaListings(),
     fetchCollectorsCount(),
     fetchEthUsdPrice(),
   ]);
@@ -1365,31 +1295,13 @@ async function buildWeeklyReportData() {
     }));
 
   // ── Bargains: score every listing against estimator formula ──
-  // Same approach as /undervalued: snapshot first, RPC fallback for misses.
-  const scored = [];
-  const scoreListing = (traits, listedPrice) => {
+  // Snapshot first, RPC fallback for misses (shared resolveListingTraits).
+  const resolvedListings = await resolveListingTraits(listingsRaw, '[weekly-report]');
+  const scored = resolvedListings.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
-    const discount_pct = Math.round((1 - listedPrice / pricing.estimatedValue) * 100);
-    scored.push({ tokenId: traits.tokenId, traits, pricing, listedPrice, discount_pct });
-  };
-
-  const needRpc = [];
-  for (const l of listingsRaw) {
-    const traits = getSnapshotTraits(l.tokenId);
-    if (traits) scoreListing(traits, l.listedPrice);
-    else needRpc.push(l);
-  }
-
-  if (needRpc.length > 0) {
-    const BATCH = 8;
-    for (let i = 0; i < needRpc.length; i += BATCH) {
-      const batch = needRpc.slice(i, i + BATCH);
-      const settled = await Promise.allSettled(batch.map(l => getParcelTraits(l.tokenId)));
-      for (let j = 0; j < settled.length; j++) {
-        if (settled[j].status === 'fulfilled') scoreListing(settled[j].value, batch[j].listedPrice);
-      }
-    }
-  }
+    const discount_pct = Math.round((1 - item.listedPrice / pricing.estimatedValue) * 100);
+    return { tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, discount_pct };
+  });
 
   const bargains = scored
     .filter(l => l.discount_pct > 0)
@@ -1410,8 +1322,8 @@ async function buildWeeklyReportData() {
   const floor_usd = ethUsd ? Math.round(floor * ethUsd) : null;
   const cheapest_listing = listingsRaw[0] ?? null;
 
-  // listingsRaw is capped at 200 (2 pages). If the true listing count exceeds
-  // 200 this will undercount. Acceptable given report usage.
+  // listingsRaw is fully paginated and deduped by tokenId, so this is the true
+  // count of unique minted parcels with an active listing.
   const parcels_listed = listingsRaw.length;
 
   const reportDate = new Date();
@@ -1436,30 +1348,18 @@ async function buildWeeklyReportData() {
   };
 }
 
+const weeklyReportResource = createCachedResource({
+  compute: buildWeeklyReportData,
+  ttlMs: WEEKLY_REPORT_CACHE_TTL,
+  backoffMs: 0, // no failure backoff — retry on the next request (matches prior behavior)
+  swr: false,
+});
+
 app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
   try {
-    const now = Date.now();
-
-    if (weeklyReportCache && now - weeklyReportFetchedAt < WEEKLY_REPORT_CACHE_TTL) {
-      return res.json(weeklyReportCache);
-    }
-
-    if (!weeklyReportInFlight) {
-      weeklyReportInFlight = buildWeeklyReportData()
-        .then(data => {
-          weeklyReportCache = data;
-          weeklyReportFetchedAt = Date.now();
-          return data;
-        })
-        .finally(() => {
-          weeklyReportInFlight = null;
-        });
-    }
-
-    const data = await weeklyReportInFlight;
-    res.json(data);
+    res.json(await weeklyReportResource.get());
   } catch (err) {
-    console.error('[weekly-report-data] error:', err);
+    console.error('[weekly-report-data] error:', err.message);
     res.status(500).json({ error: 'Failed to build weekly report data.' });
   }
 });
