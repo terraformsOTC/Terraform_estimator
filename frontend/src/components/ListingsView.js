@@ -123,18 +123,21 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="text-sm border-collapse w-full md:min-w-[640px]">
+          {/* table-fixed + explicit column widths: the visible row set (e.g. the
+              bargains-only filter) must never change column spacing. Only
+              PROPERTIES flexes to absorb the remaining width. */}
+          <table className="text-sm border-collapse w-full md:min-w-[640px] table-fixed">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
-                <th className="pb-3 pr-4 font-normal">id</th>
-                <th className="pb-3 pr-4 font-normal">price</th>
-                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">image</th>
+                <th className="pb-3 pr-4 font-normal w-[60px]">id</th>
+                <th className="pb-3 pr-4 font-normal w-[88px]">price</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell w-[92px]">image</th>
                 <th className="pb-3 pr-4 font-normal">properties</th>
-                <th className="pb-3 pr-4 font-normal hidden lg:table-cell">owner</th>
-                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell">estimate</th>
-                <th className="pb-3 pr-4 font-normal">vs model</th>
-                <th className="pb-3 font-normal hidden sm:table-cell">market</th>
+                <th className="pb-3 pr-4 font-normal hidden lg:table-cell w-[180px]">owner</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell w-[100px]">time</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell w-[104px]">estimate</th>
+                <th className="pb-3 pr-4 font-normal w-[96px]">vs model</th>
+                <th className="pb-3 font-normal hidden sm:table-cell w-[96px]">market</th>
               </tr>
             </thead>
             <tbody>
@@ -179,8 +182,8 @@ function ListingRow({ parcel }) {
           <img
             src={`${API_URL}/image/${tokenId}`}
             alt={`Parcel ${tokenId}`}
-            width={64}
-            height={92}
+            width={67}
+            height={97}
             style={{ display: 'block', objectFit: 'cover' }}
           />
         </a>
@@ -189,7 +192,9 @@ function ListingRow({ parcel }) {
         <PropertyStack traits={traits} pricing={pricing} showMystery />
       </td>
       <td className="py-3 pr-4 hidden lg:table-cell text-xs">
-        <WalletLink address={owner} ens={ownerEns} />
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+          <WalletLink address={owner} ens={ownerEns} />
+        </div>
       </td>
       <td className="py-3 pr-4 hidden sm:table-cell text-xs opacity-55 whitespace-nowrap">
         {timeAgo(listedAt)}

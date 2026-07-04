@@ -151,8 +151,8 @@ function SaleRow({ sale }) {
           <img
             src={`${API_URL}/image/${tokenId}`}
             alt={`Parcel ${tokenId}`}
-            width={64}
-            height={92}
+            width={67}
+            height={97}
             style={{ display: 'block', objectFit: 'cover' }}
           />
         </a>
