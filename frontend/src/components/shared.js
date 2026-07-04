@@ -293,3 +293,71 @@ export function EthIcon({ width = 10, height = 16 }) {
     </svg>
   );
 }
+
+// ─── Feed table helpers (sales + listings) ───────────────────────────────────
+
+export function shortAddr(a) {
+  if (!a) return '';
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+
+// From / To (sales) and Owner (listings). Shows the ENS name when the backend
+// reverse-resolved one, else a truncated address. Links to the estimator's
+// wallet view (/?address=…).
+export function WalletLink({ address, ens, opacity = 0.9 }) {
+  if (!address) return <span className="opacity-30">—</span>;
+  return (
+    <a
+      href={`/?address=${address}`}
+      className="no-underline hover:underline whitespace-nowrap"
+      style={{ opacity }}
+      title={address}
+    >
+      {ens || shortAddr(address)}
+    </a>
+  );
+}
+
+// Stacked L / Z / B / C property block used in both feed tables. Trait values are
+// tinted by rarity category (zone/biome/level); special + auto badges (godmode,
+// plague, basement, biome0, …) — and the mystery outlier flag for listings —
+// wrap underneath so no rarity signal is lost in the compact layout.
+export function PropertyStack({ traits, pricing, showMystery = false, opacity = 0.85 }) {
+  const { zone, biome, level, chroma, mode, specialType } = traits || {};
+  const { zoneCategory, biomeCategory } = pricing || {};
+  const levelCategory = getLevelCategory(level);
+  const catColor = (cat) => (cat && cat !== 'Floor' ? CATEGORY_COLORS[cat] : undefined);
+
+  const specialBadge = SPECIAL_TYPE_BADGES[
+    mode === 'Origin Daydream' ? 'Origin Daydream'
+    : mode === 'Origin Terraform' ? 'Origin Terraform'
+    : specialType
+  ];
+
+  const Row = ({ k, color, children }) => (
+    <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+      <span className="opacity-40 inline-block" style={{ width: '0.75rem' }}>{k}</span>
+      <span style={color ? { color } : undefined}>{children}</span>
+    </div>
+  );
+
+  const showBadgeRow = specialBadge || hasBadges(traits) || (showMystery && traits?.mysteryOutlier);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5 text-xs leading-tight">
+        <Row k="L" color={catColor(levelCategory)}>{level}</Row>
+        <Row k="Z" color={catColor(zoneCategory)}>{zone}</Row>
+        <Row k="B" color={catColor(biomeCategory)}>{biome}</Row>
+        <Row k="C">{chroma || 'Flow'}</Row>
+      </div>
+      {showBadgeRow && (
+        <div className="flex items-center gap-1 flex-wrap">
+          {specialBadge && <SpecialBadge config={specialBadge} opacity={opacity} />}
+          <AutoBadgeStack traits={traits} opacity={opacity} />
+          {showMystery && <MysteryBadge outlier={traits?.mysteryOutlier} opacity={opacity} />}
+        </div>
+      )}
+    </div>
+  );
+}

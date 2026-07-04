@@ -411,7 +411,9 @@ async function fetchOpenSeaListings(maxPages = Infinity) {
       if (!tokenId || !priceVal || tokenId < 1 || tokenId > 9911) continue;
       const listedPrice = Number(priceVal) / Math.pow(10, decimals);
       const listedAt = parseInt(listing.protocol_data?.parameters?.startTime, 10) || null;
-      listings.push({ tokenId, listedPrice, listedAt });
+      // Seaport offerer = the wallet that listed the parcel (the current owner).
+      const owner = listing.protocol_data?.parameters?.offerer || null;
+      listings.push({ tokenId, listedPrice, listedAt, owner });
     }
 
     next = data.next;
@@ -487,6 +489,52 @@ async function resolveListingTraits(items, logTag = '[traits]') {
   return resolved;
 }
 
+// ─── Reverse ENS resolution (address → primary name) ──────────────────────────
+// Labels the From/To (sales) and Owner (listings) columns. lookupAddress
+// forward-verifies — the resolved name must itself resolve back to the address —
+// so results are spoof-safe. Cached 6h keyed by lowercased address; a null
+// (wallet has no primary ENS) is cached too, so the majority of nameless wallets
+// aren't re-queried on every recompute. Bounded concurrency keeps the cold-cache
+// fan-out gentle on the public RPC; any failure/timeout just falls back to the
+// raw address on the frontend.
+const ensNameCache = new Map(); // lc address → { name: string|null, ts }
+const ENS_NAME_TTL_MS = 6 * 60 * 60 * 1000;
+const ENS_LOOKUP_CONCURRENCY = 6;
+
+async function resolveEnsNames(addresses) {
+  const now = Date.now();
+  const out = {};       // lc address → name|null
+  const misses = [];
+  for (const raw of addresses || []) {
+    if (!raw) continue;
+    const addr = raw.toLowerCase();
+    if (addr in out) continue;
+    const hit = ensNameCache.get(addr);
+    if (hit && now - hit.ts < ENS_NAME_TTL_MS) {
+      out[addr] = hit.name;
+    } else {
+      out[addr] = null;   // provisional — overwritten below if the lookup resolves
+      misses.push(addr);
+    }
+  }
+  if (misses.length === 0) return out;
+
+  const { provider } = getProvider();
+  for (let i = 0; i < misses.length; i += ENS_LOOKUP_CONCURRENCY) {
+    const batch = misses.slice(i, i + ENS_LOOKUP_CONCURRENCY);
+    const settled = await Promise.allSettled(
+      batch.map(a => withTimeout(provider.lookupAddress(a), 8_000))
+    );
+    settled.forEach((r, j) => {
+      const addr = batch[j];
+      const name = r.status === 'fulfilled' ? (r.value || null) : null;
+      ensNameCache.set(addr, { name, ts: now });
+      out[addr] = name;
+    });
+  }
+  return out;
+}
+
 async function computeUndervalued() {
   const now = Date.now();
   const allListings = await fetchOpenSeaListings(2);
@@ -550,10 +598,16 @@ async function computeAllListings() {
   const { price: floor, isLive: floorIsLive } = await getFloorPrice();
 
   const resolved = await resolveListingTraits(allListings, '[listings]');
+  const ensMap = await resolveEnsNames(resolved.map(({ item }) => item.owner));
   const parcels = resolved.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
     const discount = (pricing.estimatedValue - item.listedPrice) / pricing.estimatedValue;
-    return { tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, listedAt: item.listedAt, discount };
+    return {
+      tokenId: traits.tokenId, traits, pricing,
+      listedPrice: item.listedPrice, listedAt: item.listedAt, discount,
+      owner: item.owner || null,
+      ownerEns: item.owner ? (ensMap[item.owner.toLowerCase()] || null) : null,
+    };
   });
 
   return { parcels, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
@@ -598,6 +652,7 @@ const salesResource = createCachedResource({
     getParcelTraits,
     getFloorPrice,
     floorAt,
+    resolveEns: resolveEnsNames,
     limit: 50,
   }),
   ttlMs: SALES_CACHE_TTL_MS,

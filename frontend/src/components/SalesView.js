@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, CATEGORY_COLORS, API_URL, getMoneySwordMultiplier } from './shared';
+import { EthIcon, API_URL, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -93,17 +93,20 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         <p className="text-sm opacity-75">no recent sales.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="text-sm border-collapse w-full min-w-[640px]">
+          <table className="text-sm border-collapse w-full min-w-[620px]">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell"></th>
-                <th className="pb-3 pr-4 font-normal">parcel</th>
-                <th className="pb-3 pr-4 font-normal">traits</th>
-                <th className="pb-3 pr-4 font-normal text-right">sale</th>
-                <th className="pb-3 pr-4 font-normal text-right">estimate</th>
-                <th className="pb-3 pr-4 font-normal text-right">over/under</th>
-                <th className="pb-3 pr-4 font-normal text-right">when</th>
-                <th className="pb-3 font-normal"></th>
+                <th className="pb-3 pr-4 font-normal">id</th>
+                <th className="pb-3 pr-4 font-normal">price</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">image</th>
+                <th className="pb-3 pr-4 font-normal">properties</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell">name</th>
+                <th className="pb-3 pr-4 font-normal hidden lg:table-cell">from</th>
+                <th className="pb-3 pr-4 font-normal hidden lg:table-cell">to</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell">estimate</th>
+                <th className="pb-3 pr-4 font-normal">over/under</th>
+                <th className="pb-3 font-normal hidden sm:table-cell">market</th>
               </tr>
             </thead>
             <tbody>
@@ -119,27 +122,37 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 }
 
 function SaleRow({ sale }) {
-  const { tokenId, traits, pricing, salePrice, currency, signedError, closingDate } = sale;
-  const { zone, biome, level, chroma, mode, specialType } = traits || {};
-  const { estimatedValue, zoneCategory, biomeCategory } = pricing || {};
-
-  const specialBadge = SPECIAL_TYPE_BADGES[
-    mode === 'Origin Daydream' ? 'Origin Daydream'
-    : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : specialType
-  ];
+  const { tokenId, traits, pricing, salePrice, currency, signedError, closingDate, seller, winner, sellerEns, winnerEns } = sale;
+  const { level, x, y } = traits || {};
+  const { estimatedValue } = pricing || {};
 
   const errColor = errorColor(signedError);
   const errLabel = signedError == null
     ? '—'
     : `${signedError > 0 ? '+' : ''}${(signedError * 100).toFixed(1)}%`;
 
+  const name = level != null
+    ? (x != null && y != null ? `Level ${level} at {${x}, ${y}}` : `Level ${level}`)
+    : '—';
+
   return (
     <tr
       className="border-b"
       style={{ borderColor: 'rgba(232,232,232,0.08)' }}
     >
-      <td className="py-2 pr-4 hidden md:table-cell">
+      <td className="py-3 pr-4">
+        <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
+          #{tokenId}
+        </a>
+      </td>
+      <td className="py-3 pr-4">
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <EthIcon width={8} height={13} />
+          {salePrice.toFixed(3)}
+          {currency === 'WETH' && <span className="text-xs opacity-40 ml-0.5">w</span>}
+        </span>
+      </td>
+      <td className="py-3 pr-4 hidden sm:table-cell">
         <a href={`/?token=${tokenId}`}>
           <img
             src={`${API_URL}/image/${tokenId}`}
@@ -150,60 +163,43 @@ function SaleRow({ sale }) {
           />
         </a>
       </td>
-      <td className="py-2 pr-4">
-        <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
-          #{tokenId}
-        </a>
+      <td className="py-3 pr-4">
+        <PropertyStack traits={traits} pricing={pricing} />
       </td>
-      <td className="py-2 pr-4">
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-xs opacity-60">{zone}/B{biome}/L{level}/{chroma || 'Flow'}</span>
-          {zoneCategory && zoneCategory !== 'Floor' && (
-            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[zoneCategory], border: `1px solid ${CATEGORY_COLORS[zoneCategory]}`, opacity: 0.8 }}>
-              {zoneCategory.toLowerCase()}
-            </span>
-          )}
-          {biomeCategory && biomeCategory !== 'Floor' && (
-            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[biomeCategory], border: `1px solid ${CATEGORY_COLORS[biomeCategory]}`, opacity: 0.8 }}>
-              B{biome} {biomeCategory.toLowerCase()}
-            </span>
-          )}
-          {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
-          {traits && <AutoBadgeStack traits={traits} opacity={0.8} />}
-        </div>
+      <td className="py-3 pr-4 hidden md:table-cell text-xs opacity-60 whitespace-nowrap">
+        {name}
       </td>
-      <td className="py-2 pr-4 text-right">
-        <span className="flex items-center justify-end gap-1">
-          <EthIcon width={8} height={13} />
-          {salePrice.toFixed(3)}
-          {currency === 'WETH' && <span className="text-xs opacity-40 ml-0.5">w</span>}
-        </span>
+      <td className="py-3 pr-4 hidden lg:table-cell text-xs">
+        <WalletLink address={seller} ens={sellerEns} />
       </td>
-      <td className="py-2 pr-4 text-right">
-        <span className="flex items-center justify-end gap-1">
+      <td className="py-3 pr-4 hidden lg:table-cell text-xs">
+        <WalletLink address={winner} ens={winnerEns} />
+      </td>
+      <td className="py-3 pr-4 hidden sm:table-cell text-xs opacity-55 whitespace-nowrap">
+        {formatRelative(closingDate)}
+      </td>
+      <td className="py-3 pr-4 hidden md:table-cell">
+        <span className="flex items-center gap-1 whitespace-nowrap opacity-70">
           <EthIcon width={8} height={13} />
           {estimatedValue != null ? estimatedValue.toFixed(3) : '—'}
         </span>
       </td>
-      <td className="py-2 pr-4 text-right">
+      <td className="py-3 pr-4">
         <span
-          className="text-xs px-1 font-medium"
+          className="text-xs px-1 font-medium whitespace-nowrap"
           style={{ color: errColor, border: `1px solid ${errColor}`, opacity: 0.9 }}
         >
           {errLabel}
         </span>
       </td>
-      <td className="py-2 pr-4 text-right text-xs opacity-55">
-        {formatRelative(closingDate)}
-      </td>
-      <td className="py-2 text-right">
+      <td className="py-3 hidden sm:table-cell">
         <a
           href={`${OPENSEA_BASE}/${tokenId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary btn-sm text-xs no-underline whitespace-nowrap"
         >
-          [opensea ↗]
+          [os ↗]
         </a>
       </td>
     </tr>

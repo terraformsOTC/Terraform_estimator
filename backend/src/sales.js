@@ -92,6 +92,7 @@ async function computeRecentSales({
   getParcelTraits,
   getFloorPrice,
   floorAt,
+  resolveEns,
   limit = 50,
 }) {
   const now = Date.now();
@@ -135,6 +136,17 @@ async function computeRecentSales({
         floorAtSale: saleFloor,
         floorAtSaleSource: historicalFloor != null ? 'history' : 'current',
       });
+    }
+  }
+
+  // Reverse-resolve ENS for the buyer/seller of each displayed sale (one batched
+  // call across all unique addresses). Falls back silently to raw addresses if
+  // no resolver was injected or a lookup fails.
+  if (resolveEns) {
+    const ensMap = await resolveEns(results.flatMap(r => [r.seller, r.winner]));
+    for (const r of results) {
+      r.sellerEns = r.seller ? (ensMap[r.seller.toLowerCase()] || null) : null;
+      r.winnerEns = r.winner ? (ensMap[r.winner.toLowerCase()] || null) : null;
     }
   }
 

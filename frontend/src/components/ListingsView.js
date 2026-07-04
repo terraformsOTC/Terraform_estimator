@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getLevelCategory, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -123,17 +123,18 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="text-sm border-collapse w-full md:min-w-[700px]">
+          <table className="text-sm border-collapse w-full md:min-w-[640px]">
             <thead>
               <tr className="text-xs opacity-50 uppercase tracking-widest text-left">
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell"></th>
-                <th className="pb-3 pr-4 font-normal">parcel</th>
-                <th className="pb-3 pr-4 font-normal">traits</th>
-                <th className="pb-3 pr-4 font-normal text-right">listed</th>
-                <th className="pb-3 pr-4 font-normal text-right hidden md:table-cell">when</th>
-                <th className="pb-3 pr-4 font-normal text-right">estimate</th>
-                <th className="pb-3 pr-4 font-normal text-right">vs model</th>
-                <th className="pb-3 font-normal hidden sm:table-cell"></th>
+                <th className="pb-3 pr-4 font-normal">id</th>
+                <th className="pb-3 pr-4 font-normal">price</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">image</th>
+                <th className="pb-3 pr-4 font-normal">properties</th>
+                <th className="pb-3 pr-4 font-normal hidden lg:table-cell">owner</th>
+                <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell">estimate</th>
+                <th className="pb-3 pr-4 font-normal">vs model</th>
+                <th className="pb-3 font-normal hidden sm:table-cell">market</th>
               </tr>
             </thead>
             <tbody>
@@ -149,19 +150,12 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
 }
 
 function ListingRow({ parcel }) {
-  const { tokenId, traits, pricing, listedPrice, listedAt, discount } = parcel;
-  const { zone, biome, level, chroma, mode, specialType, mysteryOutlier } = traits;
-  const { estimatedValue, zoneCategory, biomeCategory } = pricing;
+  const { tokenId, traits, pricing, listedPrice, listedAt, discount, owner, ownerEns } = parcel;
+  const { estimatedValue } = pricing;
   const [moneySword] = useMoneySword();
 
   const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, traits.level) : estimatedValue;
   const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
-
-  const specialBadge = SPECIAL_TYPE_BADGES[
-    mode === 'Origin Daydream' ? 'Origin Daydream'
-    : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : specialType
-  ];
 
   const color = vsModelColor(adjDiscount);
   const sign = adjDiscount >= 0 ? '-' : '+';
@@ -169,7 +163,18 @@ function ListingRow({ parcel }) {
 
   return (
     <tr className="border-b" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
-      <td className="py-2 pr-4 hidden md:table-cell">
+      <td className="py-3 pr-4">
+        <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
+          #{tokenId}
+        </a>
+      </td>
+      <td className="py-3 pr-4">
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <EthIcon width={8} height={13} />
+          {listedPrice.toFixed(3)}
+        </span>
+      </td>
+      <td className="py-3 pr-4 hidden sm:table-cell">
         <a href={`/?token=${tokenId}`}>
           <img
             src={`${API_URL}/image/${tokenId}`}
@@ -180,60 +185,37 @@ function ListingRow({ parcel }) {
           />
         </a>
       </td>
-      <td className="py-2 pr-4">
-        <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
-          #{tokenId}
-        </a>
+      <td className="py-3 pr-4">
+        <PropertyStack traits={traits} pricing={pricing} showMystery />
       </td>
-      <td className="py-2 pr-4">
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-xs opacity-60">{zone}/B{biome}/L{level}/{chroma || 'Flow'}</span>
-          {zoneCategory && zoneCategory !== 'Floor' && (
-            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[zoneCategory], border: `1px solid ${CATEGORY_COLORS[zoneCategory]}`, opacity: 0.8 }}>
-              {zoneCategory.toLowerCase()}
-            </span>
-          )}
-          {biomeCategory && biomeCategory !== 'Floor' && (
-            <span className="text-xs px-1" style={{ color: CATEGORY_COLORS[biomeCategory], border: `1px solid ${CATEGORY_COLORS[biomeCategory]}`, opacity: 0.8 }}>
-              B{biome} {biomeCategory.toLowerCase()}
-            </span>
-          )}
-          {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
-          <AutoBadgeStack traits={traits} opacity={0.8} />
-          <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
-        </div>
+      <td className="py-3 pr-4 hidden lg:table-cell text-xs">
+        <WalletLink address={owner} ens={ownerEns} />
       </td>
-      <td className="py-2 pr-4 text-right">
-        <span className="flex items-center justify-end gap-1">
-          <EthIcon width={8} height={13} />
-          {listedPrice.toFixed(3)}
-        </span>
+      <td className="py-3 pr-4 hidden sm:table-cell text-xs opacity-55 whitespace-nowrap">
+        {timeAgo(listedAt)}
       </td>
-      <td className="py-2 pr-4 text-right hidden md:table-cell">
-        <span className="text-xs opacity-50">{timeAgo(listedAt)}</span>
-      </td>
-      <td className="py-2 pr-4 text-right">
-        <span className="flex items-center justify-end gap-1">
+      <td className="py-3 pr-4 hidden md:table-cell">
+        <span className="flex items-center gap-1 whitespace-nowrap opacity-70">
           <EthIcon width={8} height={13} />
           {adjEst.toFixed(3)}
         </span>
       </td>
-      <td className="py-2 pr-4 text-right">
+      <td className="py-3 pr-4">
         <span
-          className="text-xs px-1 font-medium"
+          className="text-xs px-1 font-medium whitespace-nowrap"
           style={{ color, border: `1px solid ${color}`, opacity: 0.9 }}
         >
           {sign}{vsModelPct}%
         </span>
       </td>
-      <td className="py-2 text-right hidden sm:table-cell">
+      <td className="py-3 hidden sm:table-cell">
         <a
           href={`${OPENSEA_BASE}/${tokenId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary btn-sm text-xs no-underline whitespace-nowrap"
         >
-          [opensea ↗]
+          [os ↗]
         </a>
       </td>
     </tr>
