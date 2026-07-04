@@ -100,7 +100,6 @@ export default function SalesView({ data, loading, error, ethUsd }) {
                 <th className="pb-3 pr-4 font-normal">price</th>
                 <th className="pb-3 pr-4 font-normal hidden sm:table-cell">image</th>
                 <th className="pb-3 pr-4 font-normal">properties</th>
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell">name</th>
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">from</th>
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">to</th>
                 <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
@@ -123,17 +122,12 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 
 function SaleRow({ sale }) {
   const { tokenId, traits, pricing, salePrice, currency, signedError, closingDate, seller, winner, sellerEns, winnerEns } = sale;
-  const { level, x, y } = traits || {};
   const { estimatedValue } = pricing || {};
 
   const errColor = errorColor(signedError);
   const errLabel = signedError == null
     ? '—'
     : `${signedError > 0 ? '+' : ''}${(signedError * 100).toFixed(1)}%`;
-
-  const name = level != null
-    ? (x != null && y != null ? `Level ${level} at {${x}, ${y}}` : `Level ${level}`)
-    : '—';
 
   return (
     <tr
@@ -157,17 +151,14 @@ function SaleRow({ sale }) {
           <img
             src={`${API_URL}/image/${tokenId}`}
             alt={`Parcel ${tokenId}`}
-            width={42}
-            height={60}
+            width={64}
+            height={92}
             style={{ display: 'block', objectFit: 'cover' }}
           />
         </a>
       </td>
       <td className="py-3 pr-4">
         <PropertyStack traits={traits} pricing={pricing} />
-      </td>
-      <td className="py-3 pr-4 hidden md:table-cell text-xs opacity-60 whitespace-nowrap">
-        {name}
       </td>
       <td className="py-3 pr-4 hidden lg:table-cell text-xs">
         <WalletLink address={seller} ens={sellerEns} />

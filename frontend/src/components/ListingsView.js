@@ -179,8 +179,8 @@ function ListingRow({ parcel }) {
           <img
             src={`${API_URL}/image/${tokenId}`}
             alt={`Parcel ${tokenId}`}
-            width={42}
-            height={60}
+            width={64}
+            height={92}
             style={{ display: 'block', objectFit: 'cover' }}
           />
         </a>
