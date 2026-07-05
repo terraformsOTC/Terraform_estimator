@@ -38,15 +38,19 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
     onWhale?.();
   };
 
-  const navItems = [
+  // Primary links stay visible in the banner; everything else is grouped under
+  // the [more ▾] dropdown (desktop) / hamburger menu (mobile).
+  const primaryNav = [
     { label: '[listings]', href: '/listings' },
     { label: '[sales]', href: '/sales' },
+  ];
+  const menuNav = [
     { label: '[random collector]', onClick: handleWhale },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits]', href: '/traits' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
-    { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
+    { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },
   ];
 
   const renderNavItem = (item, classes, closeOnNav) => {
@@ -82,6 +86,8 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
 
   const mobileClasses = 'text-sm opacity-80 hover:opacity-100 transition-opacity no-underline py-2';
 
+  const dropdownClasses = 'block text-sm opacity-70 hover:opacity-100 transition-opacity no-underline py-2 whitespace-nowrap text-left';
+
   return (
     <header ref={containerRef} className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
       <nav className="flex flex-row justify-between items-center gap-3" style={{ minHeight: '36px' }}>
@@ -97,7 +103,28 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           </button>
         </div>
         <div className="flex items-center gap-4">
-          {navItems.map((item) => renderNavItem(item, desktopClasses(item), false))}
+          {primaryNav.map((item) => renderNavItem(item, desktopClasses(item), false))}
+          {/* desktop: secondary links grouped under a [more ▾] dropdown */}
+          <div className="relative hidden md:block">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              className="text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer p-0 font-inherit whitespace-nowrap"
+            >
+              {`[more ${menuOpen ? '▴' : '▾'}]`}
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 mt-3 z-20 flex flex-col px-4 py-1 bg-primary border"
+                style={{ borderColor: 'rgba(232, 232, 232, 0.12)' }}
+              >
+                {menuNav.map((item) => renderNavItem(item, dropdownClasses, true))}
+              </div>
+            )}
+          </div>
+          {/* mobile: single hamburger menu */}
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -126,7 +153,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           className="md:hidden flex flex-col mt-4 pt-4 border-t"
           style={{ borderColor: 'rgba(232, 232, 232, 0.12)' }}
         >
-          {navItems.map((item) => renderNavItem(item, mobileClasses, true))}
+          {[...primaryNav, ...menuNav].map((item) => renderNavItem(item, mobileClasses, true))}
         </div>
       )}
       {moneySword && (
