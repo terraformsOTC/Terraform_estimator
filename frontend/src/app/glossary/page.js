@@ -54,7 +54,7 @@ export default function GlossaryPage() {
           <GlossaryRow badge={<SpecialBadge type="Godmode" />}         description={TRAIT_DESCRIPTIONS['godmode']} />
           <GlossaryRow
             badge={<CategoryBadge label="origin mint" color="#ffaa00" />}
-            description="An origin daydream or terraform mode parcel. These were specially allocated to certain contributors and community members when Terraforms launched in 2021. As each parcel going from terrain to daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin mints also calibrated the initial time before the Hypercastle would start to decay. As switching between terraform and daydream mode is reversible, we've decided to group both terraform and daydream modes together to avoid misleading rarity stats."
+            description="An origin daydream or terraform mode parcel, which inherits an extra custom unicode character set in addition to those of its biome. These were specially allocated to certain contributors and community members when Terraforms launched in 2021. As each parcel going from terrain to daydream mode incrementally delays (and eventually averts) the self-destruction of Hypercastle, these Origin mints also calibrated the initial time before the Hypercastle would start to decay. As switching between terraform and daydream mode is reversible, we've decided to group both terraform and daydream modes together to avoid misleading rarity stats."
           />
           <GlossaryRow badge={<SpecialBadge type="Plague" />}          description={TRAIT_DESCRIPTIONS['plague']} />
           <GlossaryRow badge={<SpecialBadge type="X-Seed" />}          description={TRAIT_DESCRIPTIONS['x-seed']} />
