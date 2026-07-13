@@ -8,18 +8,9 @@ Price estimator for Terraforms by Mathcastles parcels.
 - **Backend**: Node.js/Express API, deployed to Railway or Render
 - **On-chain**: Reads zone/biome traits directly from Terraforms contract via Ethereum RPC
 
-## Pricing Formula
+## Pricing
 
-```
-Estimated Value = Floor Price × (zone_multiple + biome_multiple) / 2
-```
-
-Categories and multipliers:
-- **Grail**: 4–6x (rarest zones/biomes)
-- **Rare**: 2x
-- **Premium**: 1.5x
-- **Premium Floor**: 1.1x
-- **Floor**: 1x
+Estimates track the live collection floor and scale with the rarity of each parcel's traits — the scarcer its zone and biome, the higher the estimate. Parcels fall into rarity tiers ranging from everyday floor parcels up to the rarest grails, with special types (1-of-1s, seeds, and other rare parcels) valued separately.
 
 ## Local Development
 
@@ -61,17 +52,9 @@ Visit http://localhost:3000
 3. Add env var: `NEXT_PUBLIC_API_URL=https://your-railway-url.railway.app`
 4. Deploy
 
-## Updating the Floor Price
+## Maintaining the Model
 
-In `backend/src/pricingModel.js`, update line 4:
-
-```js
-const FLOOR_PRICE_ETH = 0.2; // Update this as market moves
-```
-
-## Updating the Model
-
-All zone and biome multipliers are in `backend/src/pricingModel.js` in the `ZONE_MULTIPLES` and `BIOME_MULTIPLES` objects.
+All pricing logic and configuration live in `backend/src/pricingModel.js`.
 
 ## RPC Endpoints (free)
 
