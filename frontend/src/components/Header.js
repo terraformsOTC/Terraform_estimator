@@ -105,7 +105,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
         <div className="flex items-center gap-4">
           {primaryNav.map((item) => renderNavItem(item, desktopClasses(item), false))}
           {/* desktop: secondary links grouped under a [more ▾] dropdown */}
-          <div className="relative hidden md:block">
+          <div className="relative hidden md:flex md:items-center">
             <button
               onClick={() => setMenuOpen((o) => !o)}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
