@@ -21,7 +21,15 @@ backend/apply_1of1_changes.js
 # Generated maintenance output (regenerable)
 backend/1of1_check_results.json
 
+# Local-only Terraforms sales database (OpenSea backfill) — NEVER push.
+# Contains the OpenSea API key (.env) and the SQLite sales DB. Stays on this machine.
+sales database/
+
 # Misc
 .DS_Store
 *.log
 npm-debug.log*
+
+# Syncthing machine-local files (not synced between devices)
+.stfolder/
+.stignore
