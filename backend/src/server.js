@@ -437,8 +437,16 @@ class ResourceUnavailableError extends Error {}
 //   swr        true  → serve stale immediately + refresh in background
 //              false → block callers on a stale/cold recompute
 //   ready()    precondition; when false with no fresh cache, get() throws ResourceUnavailableError
+//   minForceAgeMs  floor on how often get({ force: true }) may recompute
 // get() resolves to data, or throws ResourceUnavailableError (→503) / the compute error (→500).
-function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false, ready = () => true }) {
+//
+// get({ force: true }) ignores ttlMs and recomputes — this is what a user-facing
+// [refresh] button needs, since a plain get() inside the TTL hands back the exact
+// same payload and the page looks frozen. A forced get still shares an in-flight
+// compute, still honours backoffMs, and still refuses to recompute a cache younger
+// than minForceAgeMs (returning what it has), so a held-down button can't multiply
+// the cold-path OpenSea + RPC fan-out.
+function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false, ready = () => true, minForceAgeMs = 60_000 }) {
   let cache = { data: null, fetchedAt: 0 };
   let inFlight = null;
   let failedAt = 0;
@@ -453,12 +461,18 @@ function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false,
     if (inFlight || !ready() || Date.now() - failedAt < backoffMs) return;
     start().catch(err => console.error('[cache] background refresh failed:', err.message));
   }
-  async function get() {
+  async function get({ force = false } = {}) {
     const now = Date.now();
-    if (cache.data && now - cache.fetchedAt < ttlMs) return cache.data;
-    if (swr && cache.data) { triggerBackground(); return cache.data; }
+    const age = now - cache.fetchedAt;
+    if (cache.data && age < (force ? minForceAgeMs : ttlMs)) return cache.data;
+    if (!force && swr && cache.data) { triggerBackground(); return cache.data; }
     if (!ready()) throw new ResourceUnavailableError();
-    if (!inFlight && now - failedAt < backoffMs) throw new ResourceUnavailableError();
+    if (!inFlight && now - failedAt < backoffMs) {
+      // Inside the failure backoff: a forced refresh keeps the stale view rather
+      // than replacing a working page with an error.
+      if (force && cache.data) return cache.data;
+      throw new ResourceUnavailableError();
+    }
     return inFlight || start();
   }
   return { get };
@@ -591,6 +605,9 @@ app.get('/undervalued', async (req, res) => {
 // the pricing model, and returns the full dataset so the frontend can sort/filter.
 const LISTINGS_CACHE_TTL_MS = 30 * 60 * 1000;
 const LISTINGS_BACKOFF_MS = 60_000;
+// Floor on the [refresh listings] button — same bound and reasoning as
+// SALES_MIN_REFRESH_MS below.
+const LISTINGS_MIN_REFRESH_MS = 60_000;
 
 async function computeAllListings() {
   const now = Date.now();
@@ -619,15 +636,22 @@ const listingsResource = createCachedResource({
   backoffMs: LISTINGS_BACKOFF_MS,
   swr: true,
   ready: () => !!OPENSEA_API_KEY,
+  minForceAgeMs: LISTINGS_MIN_REFRESH_MS,
 });
 
 app.use('/listings', undervaluedLimiter);
 
 // GET /listings
 // Returns all active OpenSea listings scored against the pricing model.
+//
+// ?refresh=1 bypasses the 30-minute TTL — the [refresh listings] button. Without
+// it the button re-serves the cached payload (swr means a stale hit only queues a
+// background refresh, so new data appears a click late, if at all).
 app.get('/listings', async (req, res) => {
   try {
-    res.json(await listingsResource.get());
+    const force = req.query.refresh === '1' || req.query.refresh === 'true';
+    res.set('Cache-Control', 'no-cache');
+    res.json(await listingsResource.get({ force }));
   } catch (err) {
     if (err instanceof ResourceUnavailableError) {
       return res.status(503).json({ error: 'Listings data temporarily unavailable. Try again shortly.' });
@@ -644,6 +668,10 @@ app.get('/listings', async (req, res) => {
 const { computeRecentSales } = require('./sales');
 const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /undervalued
 const SALES_BACKOFF_MS = 60_000;
+// Floor on the [refresh sales] button: a forced recompute no more than once a
+// minute per instance. The cold path is a 20–40s OpenSea + RPC fan-out, so this
+// (plus the 5 req/min limiter) is what keeps the button from being a load amp.
+const SALES_MIN_REFRESH_MS = 60_000;
 
 const salesResource = createCachedResource({
   compute: () => computeRecentSales({
@@ -659,6 +687,7 @@ const salesResource = createCachedResource({
   backoffMs: SALES_BACKOFF_MS,
   swr: false, // blocks on a stale/cold recompute (no serve-stale for the sales feed)
   ready: () => !!OPENSEA_API_KEY,
+  minForceAgeMs: SALES_MIN_REFRESH_MS,
 });
 
 // GET /sales
@@ -666,9 +695,17 @@ const salesResource = createCachedResource({
 // collection, each stamped with our current estimate + signed error
 // ((sale - estimate) / estimate). Non-ETH/WETH sales are counted but not
 // priced (surfaced as `skippedNonEth`).
+//
+// ?refresh=1 bypasses the 30-minute TTL — the [refresh sales] button on the
+// frontend. Bounded by SALES_MIN_REFRESH_MS server-side and the 5 req/min
+// limiter, so it costs at most one recompute per minute however often it's hit.
 app.get('/sales', async (req, res) => {
   try {
-    res.json(await salesResource.get());
+    const force = req.query.refresh === '1' || req.query.refresh === 'true';
+    // Revalidate on every request instead of letting a browser or proxy answer
+    // from its own copy — the freshness decision is the server cache's to make.
+    res.set('Cache-Control', 'no-cache');
+    res.json(await salesResource.get({ force }));
   } catch (err) {
     if (err instanceof ResourceUnavailableError) {
       return res.status(503).json({ error: 'Sales data temporarily unavailable. Try again shortly.' });

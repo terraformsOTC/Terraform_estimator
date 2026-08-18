@@ -18,11 +18,14 @@ export default function SalesPage() {
       .catch(() => {});
   }, []);
 
-  async function fetchData() {
+  // force → ?refresh=1, which tells the backend to bypass its 30-minute sales
+  // cache. Without it the button re-fetches the identical cached payload and the
+  // feed looks stuck. The backend still rate-limits how often it will recompute.
+  async function fetchData({ force = false } = {}) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/sales`);
+      const res = await fetch(`${API_URL}/sales${force ? '?refresh=1' : ''}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setData(json);
@@ -50,7 +53,7 @@ export default function SalesPage() {
         <div className="px-6">
           {data && !loading && (
             <div className="mb-4">
-              <button className="btn-primary btn-sm text-xs" onClick={fetchData}>
+              <button className="btn-primary btn-sm text-xs" onClick={() => fetchData({ force: true })}>
                 [refresh sales]
               </button>
             </div>

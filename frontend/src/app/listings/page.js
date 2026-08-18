@@ -11,11 +11,14 @@ export default function ListingsPage() {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('list');
 
-  async function fetchData() {
+  // force → ?refresh=1, which tells the backend to bypass its 30-minute listings
+  // cache. Without it the button re-fetches the cached payload. The backend still
+  // rate-limits how often it will actually recompute.
+  async function fetchData({ force = false } = {}) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/listings`);
+      const res = await fetch(`${API_URL}/listings${force ? '?refresh=1' : ''}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setData(json);
@@ -43,7 +46,7 @@ export default function ListingsPage() {
         <div className="px-6">
           {data && !loading && (
             <div className="mb-4 flex items-center gap-2">
-              <button className="btn-primary btn-sm text-xs" onClick={fetchData}>
+              <button className="btn-primary btn-sm text-xs" onClick={() => fetchData({ force: true })}>
                 [refresh listings]
               </button>
               <button
