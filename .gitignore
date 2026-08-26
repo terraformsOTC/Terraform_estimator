@@ -23,7 +23,20 @@ backend/1of1_check_results.json
 
 # Local-only Terraforms sales database (OpenSea backfill) — NEVER push.
 # Contains the OpenSea API key (.env) and the SQLite sales DB. Stays on this machine.
-sales database/
+#
+# The pattern is `/*` and not `/`: git does not descend into a directory excluded
+# with a trailing slash, so a `!` negation inside one is silently ignored and the
+# exception below would not work. Everything here stays ignored by default —
+# .env, the 15MB SQLite DB, the CSV exports, the logs — and files are re-included
+# one at a time, deliberately.
+sales database/*
+
+# The fit that produces the deployed pricing coefficients. Tracked because it is
+# now the site's only pricing model: the coefficients JSON that ships says what
+# the multipliers are, but nothing else records how they were arrived at, and a
+# refit needs to start from the same script. Reads its inputs from env vars and
+# holds no credentials.
+!sales database/fit_hedonic.py
 
 # Misc
 .DS_Store
