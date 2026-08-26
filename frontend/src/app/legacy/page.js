@@ -19,7 +19,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, pickRandomWhale, connectAndRedirect, Footer, getLevelCategory } from '@/components/shared';
+import { EthIcon, API_URL, connectAndRedirect, Footer, getLevelCategory } from '@/components/shared';
 
 // Verbatim from the retired shared.js helper — a tiered multiplier keyed on the
 // parcel's strongest rarity category. CATEGORY_ORDER was module-private there, so
@@ -97,7 +97,7 @@ export default function LegacyPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">

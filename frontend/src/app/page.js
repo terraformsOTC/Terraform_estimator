@@ -8,7 +8,7 @@ import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
+import { EthIcon, API_URL, Footer } from '@/components/shared';
 
 function PortfolioStats({ data }) {
   // Totals come from the backend already summed on both sides: totalEstimatedValue
@@ -96,7 +96,6 @@ export default function Home() {
   const [walletData, setWalletData] = useState(null);
   const [whaleIdentifier, setWhaleIdentifier] = useState(null);
   const [whaleData, setWhaleData] = useState(null);
-  const [isRandomWhale, setIsRandomWhale] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ethUsd, setEthUsd] = useState(null);
@@ -201,12 +200,11 @@ export default function Home() {
     }
   }
 
-  async function loadWalletByAddress(addr, { isWhale = false } = {}) {
+  async function loadWalletByAddress(addr) {
     if (!addr) return;
     const myId = ++walletFetchId.current;
     setWhaleIdentifier(addr);
     setWhaleData(null);
-    setIsRandomWhale(isWhale);
     setView('whale');
     setLoading(true);
     setError(null);
@@ -224,10 +222,16 @@ export default function Home() {
     }
   }
 
-  function loadRandomWhale() {
-    return loadWalletByAddress(pickRandomWhale(), { isWhale: true });
-  }
 
+  // Whose parcels these are, named the way the rest of the site names a wallet:
+  // ENS if the backend resolved one, otherwise the shortened address. The tab used
+  // to read "🐋 Whale" for a randomly-picked collector, which told you nothing
+  // about which collector you were looking at. `whaleIdentifier` is whatever was
+  // typed or linked, so it can be an ENS name already — pass it through rather
+  // than truncating something that is not an address.
+  const whaleAddr = whaleData?.address || whaleIdentifier;
+  const whaleLabel = whaleData?.ens
+    || (whaleAddr?.startsWith('0x') ? shortAddr(whaleAddr) : whaleAddr);
 
   return (
     <div className="content-wrapper">
@@ -239,7 +243,6 @@ export default function Home() {
         walletAddress={walletAddress}
         onConnect={connectWallet}
         onDisconnect={disconnectWallet}
-        onWhale={loadRandomWhale}
       />
       <main className="flex-1">
         <div className="px-6 mb-6 block md:flex justify-between items-end">
@@ -268,7 +271,7 @@ export default function Home() {
                   className={`text-[1.35rem] md:text-[1.6875rem] inline md:mb-0 mb-4 no-underline cursor-pointer switch-option-link ${view === 'whale' ? 'switch-option-link--selected' : 'switch-option-link--unselected'}`}
                   onClick={() => setView('whale')}
                 >
-                  {isRandomWhale ? '🐋 Whale' : whaleIdentifier}
+                  {whaleLabel}
                 </a>
               </>
             )}

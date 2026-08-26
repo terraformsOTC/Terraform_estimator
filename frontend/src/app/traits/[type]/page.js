@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import TraitsResultView from '@/components/TraitsResultView';
-import { API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
 import { TRAIT_DESCRIPTIONS } from '@/lib/traitDescriptions';
 
 export default function TraitsDetailPage({ params }) {
@@ -26,7 +26,7 @@ export default function TraitsDetailPage({ params }) {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
       <main className="flex-1 px-6">
         <div className="mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">

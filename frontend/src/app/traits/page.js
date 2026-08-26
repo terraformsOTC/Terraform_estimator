@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { API_URL, SpecialBadge, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { API_URL, SpecialBadge, connectAndRedirect, Footer } from '@/components/shared';
 
 // Maps backend trait slugs → SPECIAL_TYPE_BADGES keys for chip styling.
 const BADGE_KEY = {
@@ -48,7 +48,7 @@ export default function TraitsIndexPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
       <main className="flex-1 px-6 max-w-2xl">
         <div className="mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">

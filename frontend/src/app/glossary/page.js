@@ -1,17 +1,13 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, connectAndRedirect, Footer } from '@/components/shared';
 import Header from '@/components/Header';
 import { TRAIT_DESCRIPTIONS } from '@/lib/traitDescriptions';
 
 export default function GlossaryPage() {
-  function goRandomWhale() {
-    window.location.href = `/?address=${pickRandomWhale()}`;
-  }
-
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={goRandomWhale} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
 
       <main className="flex-1 px-6 max-w-2xl">
         <h1 className="text-3xl mb-2">Glossary</h1>

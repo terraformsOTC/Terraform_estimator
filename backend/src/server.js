@@ -91,6 +91,7 @@ app.use('/estimate',    standardLimiter);
 app.use('/image',       imageLimiter);
 app.use('/wallet',      walletLimiter);
 app.use('/floor',       standardLimiter);
+app.use('/collectors',  standardLimiter);
 app.use('/undervalued', undervaluedLimiter);
 app.use('/sales',       undervaluedLimiter);
 
@@ -669,6 +670,74 @@ async function computeAllListings() {
   return { parcels, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
 }
 
+// ─── COLLECTORS ───────────────────────────────────────────────────────────────
+// Top holders by parcel count, with the sets each has completed.
+//
+// One Alchemy call returns every owner and the token ids they hold — 1,991 owners
+// covering all 9,911 parcels, unpaginated — and everything after that is local:
+// traits come from the minted snapshot and sets from detectSets, so ranking the
+// whole collection costs exactly one upstream request rather than one per holder.
+// ENS is resolved only for the page that is actually returned.
+const COLLECTORS_TTL_MS = 30 * 60 * 1000;
+const COLLECTORS_LIMIT = 100;
+
+async function fetchContractOwners() {
+  const apiKey = process.env.ALCHEMY_API_KEY;
+  if (!apiKey) throw new Error('ALCHEMY_API_KEY not set');
+  const url = `https://eth-mainnet.g.alchemy.com/nft/v3/${apiKey}/getOwnersForContract`
+    + `?contractAddress=${TERRAFORMS_ADDRESS}&withTokenBalances=true`;
+  const res = await fetchWithRetry(url);
+  if (!res.ok) throw new Error(`Alchemy getOwnersForContract ${res.status}`);
+  const json = await res.json();
+  return json.owners || [];
+}
+
+async function computeCollectors() {
+  const owners = await fetchContractOwners();
+
+  const ranked = owners.map(o => {
+    const ids = (o.tokenBalances || []).map(b => Number(b.tokenId)).filter(Number.isFinite);
+    return { address: o.ownerAddress, tokenIds: ids, parcels: ids.length };
+  })
+    // Ties broken by address so the ordering is stable between refreshes rather
+    // than reshuffling equal-sized holders on every recompute.
+    .sort((a, b) => b.parcels - a.parcels || a.address.localeCompare(b.address))
+    .slice(0, COLLECTORS_LIMIT);
+
+  const ensMap = await resolveEnsNames(ranked.map(r => r.address));
+
+  const collectors = ranked.map((r, i) => {
+    // Snapshot misses would silently shrink a holding, so count what resolved and
+    // report it — a collector whose traits are incomplete has unreliable sets.
+    const traits = r.tokenIds.map(getSnapshotTraits).filter(Boolean);
+    const sets = traits.length ? detectSets(traits) : [];
+    const completed = sets.filter(s => s.completed);
+    return {
+      rank: i + 1,
+      address: r.address,
+      ens: ensMap[r.address.toLowerCase()] || null,
+      parcels: r.parcels,
+      traitsResolved: traits.length,
+      setsCompleted: completed.length,
+      sets: completed.map(s => s.name),
+    };
+  });
+
+  return {
+    collectors,
+    totalOwners: owners.length,
+    totalParcels: owners.reduce((sum, o) => sum + (o.tokenBalances || []).length, 0),
+    fetchedAt: Date.now(),
+  };
+}
+
+const collectorsResource = createCachedResource({
+  compute: computeCollectors,
+  ttlMs: COLLECTORS_TTL_MS,
+  swr: true,   // ownership moves slowly; serving a stale list beats blocking on Alchemy
+  ready: () => !!process.env.ALCHEMY_API_KEY,
+});
+
 const listingsResource = createCachedResource({
   compute: computeAllListings,
   ttlMs: LISTINGS_CACHE_TTL_MS,
@@ -1094,8 +1163,13 @@ app.get('/wallet/:address', async (req, res) => {
     const totalEstimatedValue = pricedParcels.reduce((sum, p) => sum + parcelValue(p.pricing, p.pricingV2), 0);
     const totalListedValue = pricedParcels.reduce((sum, p) => sum + askValue(p.pricing, p.pricingV2), 0);
 
+    // ENS for the wallet itself, so the UI can name a collector the way the
+    // listings and sales tables already do rather than showing a raw address.
+    const walletEns = (await resolveEnsNames([address]))[address.toLowerCase()] || null;
+
     res.json({
       address,
+      ens: walletEns,
       totalParcels: count,
       fetchedParcels: allParcels.length,
       // Parcels whose live trait fetch didn't land, served from the baked
@@ -1376,6 +1450,19 @@ app.use('/health', standardLimiter);
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // GET /floor
+app.get('/collectors', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json(await collectorsResource.get());
+  } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
+      return res.status(503).json({ error: 'Collector data temporarily unavailable. Try again shortly.' });
+    }
+    console.error('[collectors]', err.message);
+    res.status(500).json({ error: 'Failed to fetch collectors.' });
+  }
+});
+
 app.get('/floor', async (req, res) => {
   try {
     const { price, isLive, fetchedAt } = await getFloorPrice();

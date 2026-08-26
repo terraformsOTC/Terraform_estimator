@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import ListingsView from '@/components/ListingsView';
-import { API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
 
 export default function ListingsPage() {
   const [data, setData] = useState(null);
@@ -33,7 +33,7 @@ export default function ListingsPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} onWhale={() => { window.location.href = `/?address=${pickRandomWhale()}`; }} />
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">

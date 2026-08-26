@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-export default function Header({ walletAddress, onConnect, onDisconnect, onWhale }) {
+export default function Header({ walletAddress, onConnect, onDisconnect }) {
   const short = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
     : null;
@@ -31,10 +31,6 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
   }, [menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
-  const handleWhale = () => {
-    closeMenu();
-    onWhale?.();
-  };
 
   // Primary links stay visible in the banner; everything else is grouped under
   // the [more ▾] dropdown (desktop) / hamburger menu (mobile).
@@ -43,7 +39,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
     { label: '[sales]', href: '/sales' },
   ];
   const menuNav = [
-    { label: '[random collector]', onClick: handleWhale },
+    { label: '[collectors]', href: '/collectors' },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits]', href: '/traits' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
