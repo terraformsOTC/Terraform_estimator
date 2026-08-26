@@ -10,13 +10,34 @@
 // to act on.
 //
 // Deliberately v1-only: no range, because v1 never modelled the bid/ask spread.
-// The money-sword toggle that used to sit alongside it is gone site-wide — it was
-// a manual stand-in for exactly that spread, which the hedonic model now measures.
+// The money sword is kept here, and ONLY here, so this page reproduces an old
+// quote exactly. It was v1's manual stand-in for a market leaning on WETH bids
+// versus one clearing at listed prices — the thing the hedonic model now measures
+// as a fitted coefficient, which is why it is gone from every other page. Local
+// state rather than the old app-wide context: nothing else has a use for it.
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, pickRandomWhale, connectAndRedirect, Footer } from '@/components/shared';
+import { EthIcon, API_URL, pickRandomWhale, connectAndRedirect, Footer, getLevelCategory } from '@/components/shared';
+
+// Verbatim from the retired shared.js helper — a tiered multiplier keyed on the
+// parcel's strongest rarity category. CATEGORY_ORDER was module-private there, so
+// it is restated rather than exported: this is the only caller left.
+const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };
+
+function getMoneySwordMultiplier(pricing, level) {
+  if (!pricing) return 1.0;
+  if (pricing.isSpecial) return 1.35;
+  const levelCat = getLevelCategory(level);
+  const topCat = [pricing.zoneCategory, pricing.biomeCategory, levelCat]
+    .filter(Boolean)
+    .sort((a, b) => (CATEGORY_ORDER[a] ?? 99) - (CATEGORY_ORDER[b] ?? 99))[0];
+  if (topCat === 'Mythical') return 1.5;
+  if (topCat === 'Rare')     return 1.4;
+  if (topCat === 'Premium')  return 1.3;
+  return 1.2;
+}
 
 const MIN_TOKEN_ID = 1;
 const MAX_TOKEN_ID = 9911;
@@ -27,6 +48,23 @@ export default function LegacyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ethUsd, setEthUsd] = useState(null);
+  const [moneySword, setMoneySword] = useState(false);
+
+  // Same localStorage key the app-wide toggle used, so anyone who had it on before
+  // the cutover finds it on here. Wrapped: storage throws in some privacy modes.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('moneySword') === 'true') setMoneySword(true);
+    } catch { /* no stored preference is a fine default */ }
+  }, []);
+
+  function toggleMoneySword() {
+    setMoneySword(prev => {
+      const next = !prev;
+      try { localStorage.setItem('moneySword', String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   useEffect(() => {
     fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
@@ -77,6 +115,18 @@ export default function LegacyPage() {
               actually settle for, which is why it was replaced. Kept here so an older quote can still
               be reproduced.
             </p>
+            <button
+              onClick={toggleMoneySword}
+              title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
+              className={`mt-3 text-xs bg-transparent border-none cursor-pointer p-0 font-inherit transition-opacity ${moneySword ? 'opacity-100' : 'opacity-45 hover:opacity-75'}`}
+            >
+              🗡 money sword {moneySword ? '[on]' : '[off]'}
+            </button>
+            {moneySword && (
+              <p className="text-xs opacity-50 mt-2">
+                🗡 One or more nerds has the money sword, there is an uncomfortable amount of competition for parcels. All estimates are increased.
+              </p>
+            )}
           </div>
 
           <form onSubmit={search} className="flex gap-2 items-center mb-2">
@@ -101,7 +151,7 @@ export default function LegacyPage() {
 
           {parcel && (
             <ErrorBoundary>
-              <LegacyResult parcel={parcel} ethUsd={ethUsd} />
+              <LegacyResult parcel={parcel} ethUsd={ethUsd} moneySword={moneySword} />
             </ErrorBoundary>
           )}
         </div>
@@ -111,17 +161,22 @@ export default function LegacyPage() {
   );
 }
 
-function LegacyResult({ parcel, ethUsd }) {
+function LegacyResult({ parcel, ethUsd, moneySword }) {
   const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mode } = traits;
   const { estimatedValue, floor, isSpecial } = pricing;
+  const displayValue = moneySword
+    ? estimatedValue * getMoneySwordMultiplier(pricing, level)
+    : estimatedValue;
 
   return (
     <div className="max-w-lg">
-      <p className="text-xs opacity-60 uppercase tracking-widest mb-1">v1 estimated value</p>
+      <p className="text-xs opacity-60 uppercase tracking-widest mb-1">
+        v1 estimated value{moneySword ? ' 🗡' : ''}
+      </p>
       <div className="flex items-center gap-2">
         <EthIcon />
-        <span className="text-3xl">{estimatedValue.toFixed(3)}</span>
+        <span className="text-3xl">{displayValue.toFixed(3)}</span>
       </div>
       <p className="text-xs opacity-55 mt-1">
         floor: {floor} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
