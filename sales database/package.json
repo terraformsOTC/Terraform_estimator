@@ -1,0 +1,22 @@
+{
+  "name": "terraforms-sales",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local SQLite backfill of every Terraforms (Mathcastles) secondary sale via the OpenSea v2 API, with wash-sale flagging.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "init": "node -e \"require('./lib/db').initDb()\"",
+    "backfill": "node backfill.js",
+    "enrich:tokens": "node enrich_tokens.js",
+    "enrich:usd": "node enrich_usd.js",
+    "catchup": "node catchup.js --since",
+    "crosscheck": "node alchemy_crosscheck.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "dotenv": "^16.4.7"
+  }
+}

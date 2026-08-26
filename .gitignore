@@ -31,12 +31,34 @@ backend/1of1_check_results.json
 # one at a time, deliberately.
 sales database/*
 
-# The fit that produces the deployed pricing coefficients. Tracked because it is
-# now the site's only pricing model: the coefficients JSON that ships says what
-# the multipliers are, but nothing else records how they were arrived at, and a
-# refit needs to start from the same script. Reads its inputs from env vars and
-# holds no credentials.
+# The pricing-model pipeline. Tracked because the hedonic model is now the site's
+# only pricing model: the coefficients JSON that ships says what the multipliers
+# are, but nothing else records how they were arrived at, and a refit has to start
+# from the same code. All of these read their config from env vars and hold no
+# credentials — the OpenSea key stays in the untracked .env beside them.
+#
+# The chain, in the order it runs:
+#   build_floor_index.js  writes floor_index_daily into the DB — the endogenous
+#                         deflator for the fit's ln(price / floor_at_sale) target
+#   build_priors.js       turns backend/src/pricingModel.js (v1) into v1-priors.json,
+#                         which the fit shrinks thin traits toward at PRIOR_K
+#   fit_hedonic.py        the fit itself -> pricing-v2-coeffs.json
+#   calibrate-floor.js    patches floor_calibration into that JSON (both copies),
+#                         the constant that reconciles the index with the live floor
+#
+# v1-priors.json is a build product but is tracked anyway: it is 3.5KB, the fit will
+# not run without it at the default PRIOR_K, and keeping it means a clone only needs
+# the sales DB to reproduce a fit rather than the DB plus a rebuild step.
 !sales database/fit_hedonic.py
+!sales database/build_floor_index.js
+!sales database/build_priors.js
+!sales database/calibrate-floor.js
+!sales database/v1-priors.json
+# build_floor_index.js and calibrate-floor.js both require('better-sqlite3'), so
+# without this a clone has the pipeline but no way to install what it runs on. The
+# backfill/enrich scripts it also declares stay untracked — those need the OpenSea
+# key and are not part of reproducing a fit.
+!sales database/package.json
 
 # Misc
 .DS_Store
