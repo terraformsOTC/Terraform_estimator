@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 import {
@@ -162,6 +162,9 @@ export default function WalletView({ data, loading, address }) {
   const [highlightFilter, setHighlightFilter] = useState(new Set());
   const [attrFilters, setAttrFilters] = useState(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
+  // Token id whose animation is open over the grid, or null. Lives here rather
+  // than in ParcelCard so only one can be open at a time.
+  const [zoomed, setZoomed] = useState(null);
 
   const sortedParcels = useMemo(() => {
     const arr = data?.parcels ? [...data.parcels] : [];
@@ -336,12 +339,13 @@ export default function WalletView({ data, loading, address }) {
               style={{ gridTemplateColumns: gridTemplate }}
             >
               {displayParcels.map(parcel => (
-                <ParcelCard key={parcel.tokenId} parcel={parcel} />
+                <ParcelCard key={parcel.tokenId} parcel={parcel} onZoom={setZoomed} />
               ))}
             </div>
           )}
         </>
       )}
+      {zoomed != null && <ParcelZoom tokenId={zoomed} onClose={() => setZoomed(null)} />}
     </div>
   );
 }
@@ -397,7 +401,76 @@ function SetChip({ set }) {
 }
 
 
-function ParcelCard({ parcel }) {
+// The parcel's live animation, blown up over the grid.
+//
+// The grid shows the static SVG from /image — cheap, and 145 of them can share a
+// page. The animation is the on-chain tokenHTML, served by mathcastles and framed
+// the same way ParcelResult frames it, which is why the site CSP already allows
+// that host. One iframe on demand rather than one per card.
+//
+// Dismissal: anywhere on the backdrop, or Escape. The iframe is sandboxed, so a
+// click that lands inside the animation itself never reaches this component —
+// hence the explicit [close] affordance, so the way out is always visible.
+function ParcelZoom({ tokenId, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    // Stop the grid scrolling behind the overlay, and put it back exactly as it
+    // was — reading overflow off the element rather than assuming it was ''.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Parcel ${tokenId} animation`}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 px-4"
+      style={{ background: 'rgba(10, 10, 10, 0.92)' }}
+    >
+      {/* 277:400 is the parcel's native ratio. Height leads so a short, wide
+          window cannot push the frame past the bottom of the viewport; the width
+          term caps it on a tall, narrow one. */}
+      <div
+        className="relative"
+        style={{
+          height: 'min(82vh, calc(82vw * 400 / 277))',
+          aspectRatio: '277 / 400',
+          maxWidth: '100%',
+        }}
+      >
+        <span className="absolute inset-0 bg-placeholder animate-pulse" />
+        <iframe
+          src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
+          title={`Parcel ${tokenId}`}
+          scrolling="no"
+          sandbox="allow-scripts"
+          className="absolute inset-0 w-full h-full"
+          style={{ border: 'none', display: 'block' }}
+        />
+      </div>
+      <div className="flex items-center gap-4 text-sm">
+        <a href={`/?token=${tokenId}`} className="no-underline opacity-70 hover:opacity-100" onClick={e => e.stopPropagation()}>
+          {tokenId}
+        </a>
+        <button
+          onClick={onClose}
+          className="bg-transparent border-none cursor-pointer p-0 font-inherit text-sm opacity-70 hover:opacity-100"
+        >
+          [close]
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ParcelCard({ parcel, onZoom }) {
   const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
@@ -426,6 +499,7 @@ function ParcelCard({ parcel }) {
           className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
           loading="lazy"
           style={{ transitionDuration: '300ms', objectFit: 'cover' }}
+          onClick={() => onZoom?.(tokenId)}
           onError={e => { e.target.style.opacity = 0; e.target.parentNode.querySelector('span').classList.remove('animate-pulse'); }}
         />
       </div>

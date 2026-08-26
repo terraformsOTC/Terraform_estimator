@@ -292,6 +292,48 @@ function getCategoryFromMultiple(multiple) {
   return "Floor";
 }
 
+// Zone parcel counts, derived from the minted snapshot rather than hardcoded so
+// they track the collection as the remaining parcels mint.
+const ZONE_PARCEL_COUNTS = (() => {
+  const counts = {};
+  try {
+    for (const p of require('./minted-traits.json')) {
+      if (p.zone) counts[p.zone] = (counts[p.zone] || 0) + 1;
+    }
+  } catch (err) {
+    console.warn(`[pricing] minted-traits.json unavailable (${err.message}) — zone scarcity tiers fall back to price bands`);
+  }
+  return counts;
+})();
+
+// Above this many parcels a zone reads as a common part of the collection.
+// Calibrated against the minted counts: 12 zones sit at or above it (Mirage 240
+// is the smallest) and 63 below (Dynacrypts 214 the largest), so Dynacrypts is
+// the first Uncommon zone. Dynacrypts is ~16 mints from crossing, so expect the
+// boundary to move as the remaining unminted parcels are claimed.
+const ZONE_COMMON_THRESHOLD = 230;
+
+/**
+ * The tier shown on a zone badge.
+ *
+ * Premium and above stay priced: a zone that commands a real premium has earned
+ * its badge on value. Below that, the Floor/Uncommon split is about SCARCITY,
+ * not price — both are priced at or near floor, and what separates them is how
+ * present the zone is in the collection. Holo has 617 parcels and [SEP] 173, so
+ * a floor-priced [SEP] is a materially rarer thing to hold than a floor-priced
+ * Holo, and the badge is what says so.
+ *
+ * Display only. estimatePrice's internal zone tiering still runs off the price
+ * multiple, so /legacy keeps reproducing the quotes it always did.
+ */
+function getZoneDisplayCategory(zone, multiple) {
+  const priced = getCategoryFromMultiple(multiple);
+  if (priced !== "Floor" && priced !== "Uncommon") return priced;
+  const n = ZONE_PARCEL_COUNTS[zone];
+  if (n == null) return priced;         // unknown zone — leave the price band alone
+  return n >= ZONE_COMMON_THRESHOLD ? "Floor" : "Uncommon";
+}
+
 function getZoneMultiple(zoneName) {
   return ZONE_MULTIPLES[zoneName] ?? 1;
 }
@@ -501,7 +543,9 @@ function estimatePrice(traits, floorOverride) {
     originModeMultiple,
     biome0ZoneTierBump,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
-    zoneCategory,
+    // Badge tier — scarcity-aware, see getZoneDisplayCategory. `zoneCategory` above
+    // stays the price-derived one and keeps driving biome0ZoneTierBump.
+    zoneCategory: getZoneDisplayCategory(zone, zoneMultiple),
     biomeCategory: BIOME_CATEGORY_OVERRIDES[biome] ?? getCategoryFromMultiple(biomeMultiple),
     formula,
   };
@@ -563,6 +607,8 @@ module.exports = {
   // Read-only consumers — nothing here mutates them.
   ZONE_MULTIPLES,
   BIOME_MULTIPLES,
+  ZONE_PARCEL_COUNTS,
+  ZONE_COMMON_THRESHOLD,
   LEVEL_MULTIPLES,
   TRAIT_PREMIUMS,
 };
