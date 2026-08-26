@@ -32,8 +32,7 @@ export default function MethodologyPage() {
           <Q id="how" q="How are values calculated?">
             <p>
               The collection floor, multiplied by what a parcel&apos;s traits are worth. The multipliers
-              are fitted to roughly 20,000 settled sales, so each one reflects what buyers have actually
-              paid rather than a judgement call.
+              are fitted to roughly 20,000 historical sales.
             </p>
           </Q>
 
@@ -42,10 +41,6 @@ export default function MethodologyPage() {
               A model that prices something by pricing its characteristics. Nobody sells a zone or a
               biome on its own, but every sale is a bundle of them, and across enough sales you can
               separate out what each contributes.
-            </p>
-            <p>
-              It is the standard approach for housing — you cannot look up the price of a third bedroom,
-              but you can derive it from thousands of sales.
             </p>
           </Q>
 
@@ -69,54 +64,23 @@ export default function MethodologyPage() {
             </p>
             <p>
               The low end is roughly what an offer nets, the high end what a listing sells for. Both are
-              prices things have sold at — neither is an asking price, since listings that never sell
-              are not in the data.
-            </p>
-          </Q>
-
-          <Q id="floor" q="Why can an estimate be higher than the traits suggest?">
-            <p>
-              OpenSea lets someone bid on any parcel in the collection at once. While such an offer
-              stands, any parcel can be sold for it immediately, so no estimate is allowed below it.
-              Checked every few minutes; with no offer standing, the raw model estimate shows.
+              prices parcels have sold at — the lower end is driven by WETH offers accepted, and the
+              upper end by sales that cleared for a parcel listed in ETH.
             </p>
           </Q>
 
           <Q id="accuracy" q="How accurate is it?">
             <p>
-              Median error against recent settled sales is around 11% — half of sales land closer, half
-              further. Least reliable on very rare zones, one-of-ones and anything far from recent
-              trading; most reliable in the middle of the market.
-            </p>
-          </Q>
-
-          <Q id="floorprice" q="Where does the floor price come from?">
-            <p>
-              OpenSea. The model trained against a more conservative measure — a low percentile of what
-              actually traded rather than the cheapest listing — so a calibration constant reconciles the
-              two. Without it every estimate would read about 17% high.
-            </p>
-          </Q>
-
-          <Q id="listed" q="What does the listed price mean?">
-            <p>
-              What the current owner is asking on OpenSea, shown under the estimate when a parcel is for
-              sale. It may sit well above or below the model — comparing the two is the point.
+              Median error against recent settled sales is around 11%. The model is least reliable for
+              very rare zones, one-of-ones, and any trait that hasn&apos;t traded recently.
             </p>
           </Q>
 
           <Q id="unminted" q="How are unminted parcels valued?">
             <p>
               Identically. Their traits are already known, so they run through the same model. What is
-              not known is which token number they will receive — minting allocates those at random.
-            </p>
-          </Q>
-
-          <Q id="old" q="What happened to the old model?">
-            <p>
-              Its multipliers were set by hand and read high — parcels sold for less than it predicted.
-              It is still at <a href="/legacy" className="no-underline">/legacy</a> for reproducing older
-              quotes.
+              not known is the token number they will be allocated upon being minted, as this is
+              random.
             </p>
           </Q>
 
