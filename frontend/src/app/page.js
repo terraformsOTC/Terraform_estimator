@@ -8,7 +8,7 @@ import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, Footer } from '@/components/shared';
+import { EthIcon, API_URL, Footer, shortAddr } from '@/components/shared';
 
 function PortfolioStats({ data }) {
   // Totals come from the backend already summed on both sides: totalEstimatedValue
