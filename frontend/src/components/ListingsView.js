@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL, getLevelCategory, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -157,7 +157,9 @@ function ListingRow({ parcel }) {
   const { estimatedValue } = pricing;
   const [moneySword] = useMoneySword();
 
-  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, traits.level) : estimatedValue;
+  // traits?.level to match the isBargain/adjDiscount helpers in ListingsView —
+  // they already guard it, and a row should never be the one thing that throws.
+  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, traits?.level) : estimatedValue;
   const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
 
   const color = vsModelColor(adjDiscount);
@@ -179,12 +181,20 @@ function ListingRow({ parcel }) {
       </td>
       <td className="py-3 pr-4 hidden sm:table-cell">
         <a href={`/?token=${tokenId}`}>
+          {/* lazy + async: a full listings page is ~145 rows, and eagerly
+              fetching every thumbnail put 145 requests on the wire at once —
+              enough to trip the /image rate limit on a cache-bypassing reload.
+              Only what's on screen loads now. onError hides a failed thumbnail
+              rather than leaving a broken-image icon in the row. */}
           <img
-            src={`${API_URL}/image/${tokenId}`}
+            src={parcelImage(tokenId)}
             alt={`Parcel ${tokenId}`}
             width={67}
             height={97}
+            loading="lazy"
+            decoding="async"
             style={{ display: 'block', objectFit: 'cover' }}
+            onError={e => { e.currentTarget.style.visibility = 'hidden'; }}
           />
         </a>
       </td>
@@ -259,7 +269,7 @@ function ListingCard({ parcel }) {
       <a href={`/?token=${tokenId}`} className="block relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
         <span className="absolute inset-0 bg-placeholder animate-pulse" />
         <img
-          src={`${API_URL}/image/${tokenId}`}
+          src={parcelImage(tokenId)}
           alt={`Parcel ${tokenId}`}
           className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
           loading="lazy"

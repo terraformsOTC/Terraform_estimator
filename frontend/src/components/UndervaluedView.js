@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, API_URL } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -85,7 +85,7 @@ function ParcelRow({ parcel, rank }) {
       <td className="py-2 pr-4 hidden md:table-cell">
         <a href={`/?token=${tokenId}`}>
           <img
-            src={`${API_URL}/image/${tokenId}`}
+            src={parcelImage(tokenId)}
             alt={`Parcel ${tokenId}`}
             width={42}
             height={60}

@@ -26,9 +26,23 @@ const securityHeaders = [
   { key: 'Content-Security-Policy',  value: csp },
 ];
 
+// /img/* is the edge-cached parcel-SVG proxy (src/app/img/[tokenId]/route.js).
+// An SVG served as a document needs a *tighter* policy than the site's, not the
+// site's — this is the same lockdown the backend puts on /image, kept in step.
+const svgHeaders = [
+  { key: 'X-Content-Type-Options',  value: 'nosniff' },
+  { key: 'Content-Security-Policy', value: "default-src 'none'; style-src 'unsafe-inline'; img-src data:" },
+];
+
 const nextConfig = {
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      // Negative lookahead so the site CSP never lands on /img/* alongside the
+      // SVG one — two Content-Security-Policy headers intersect, and the site
+      // policy is the looser of the two only by accident.
+      { source: '/((?!img/).*)', headers: securityHeaders },
+      { source: '/img/:tokenId', headers: svgHeaders },
+    ];
   },
 };
 

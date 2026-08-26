@@ -1,6 +1,6 @@
 'use client';
 
-import { API_URL, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge } from './shared';
+import { parcelImage, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 import UnmintedStaticThumb from './UnmintedStaticThumb';
 
@@ -68,7 +68,7 @@ function MintedThumbnail({ tokenId }) {
     <>
       <span className="absolute inset-0 bg-placeholder animate-pulse" />
       <img
-        src={`${API_URL}/image/${tokenId}`}
+        src={parcelImage(tokenId)}
         alt={`Parcel ${tokenId}`}
         className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
         loading="lazy"

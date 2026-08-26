@@ -72,8 +72,20 @@ const undervaluedLimiter = rateLimit({
   message: { error: 'Too many requests — please wait a moment.' },
 });
 
+// Image limiter: 1000 req/min. /image serves immutable, browser-cacheable SVGs
+// and one listings page is ~145 of them, so sharing the 200/min API bucket meant
+// a single cache-bypassing reload (shift-refresh) 429'd most of a page's
+// thumbnails. Still bounded — an image is one cached RPC read at worst.
+const imageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many image requests — please slow down.' },
+});
+
 app.use('/estimate',    standardLimiter);
-app.use('/image',       standardLimiter);
+app.use('/image',       imageLimiter);
 app.use('/wallet',      walletLimiter);
 app.use('/floor',       standardLimiter);
 app.use('/undervalued', undervaluedLimiter);
@@ -611,8 +623,12 @@ const LISTINGS_MIN_REFRESH_MS = 60_000;
 
 async function computeAllListings() {
   const now = Date.now();
-  const allListings = await fetchOpenSeaListings(); // paginate until cursor exhausted
-  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+  // Independent calls — the floor lookup doesn't need the listings, so don't
+  // make the user wait for them in series.
+  const [allListings, { price: floor, isLive: floorIsLive }] = await Promise.all([
+    fetchOpenSeaListings(), // paginate until cursor exhausted
+    getFloorPrice(),
+  ]);
 
   const resolved = await resolveListingTraits(allListings, '[listings]');
   const ensMap = await resolveEnsNames(resolved.map(({ item }) => item.owner));
@@ -851,7 +867,9 @@ app.get('/image/:tokenId', async (req, res) => {
     if (image.startsWith('data:image/svg+xml;base64,')) {
       const svg = Buffer.from(image.slice(26), 'base64');
       setSvgResponseHeaders(res);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h — tokenURI is immutable
+      // tokenURI is immutable on-chain, so this can never go stale — `immutable`
+      // stops the browser revalidating it at all (matches /unminted/font below).
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       return res.send(svg);
     }
 
@@ -948,10 +966,23 @@ app.get('/wallet/:address', async (req, res) => {
       tokenIds.push(...batch);
     }
 
-    // Batch fetch traits for all tokens (needed for accurate set detection)
+    // Batch fetch traits for all tokens (needed for accurate set detection).
+    // Same walltime guard as the enumeration loop above — without one, a
+    // 500-parcel wallet is 100 sequential batches that can hold the request
+    // open (and keep spending RPC) long after the client has given up. Partial
+    // results are more useful here than an error, so this breaks out and flags
+    // the response rather than throwing.
     const BATCH_SIZE = 5;
+    const TRAIT_BUDGET_MS = 45_000;
+    const traitStart = Date.now();
+    let traitsTruncated = false;
     const allParcels = [];
     for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
+      if (Date.now() - traitStart > TRAIT_BUDGET_MS) {
+        traitsTruncated = true;
+        console.warn(`[wallet] ${address}: trait fetch budget exhausted at ${allParcels.length}/${tokenIds.length} parcels`);
+        break;
+      }
       const batch = tokenIds.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(batch.map(id => getParcelTraits(id)));
       for (let j = 0; j < results.length; j++) {
@@ -989,6 +1020,9 @@ app.get('/wallet/:address', async (req, res) => {
       totalEstimatedValue: Math.round(totalEstimatedValue * 1000) / 1000,
       floor: liveFloor,
       floorIsLive,
+      // true when the trait budget cut the walk short — totals below are a
+      // floor on the real figure, not the whole wallet.
+      traitsTruncated,
     });
   } catch (err) {
     console.error(`[wallet] ${req.params.address}:`, err.message);
@@ -1454,6 +1488,20 @@ app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
     console.error('[weekly-report-data] error:', err.message);
     res.status(500).json({ error: 'Failed to build weekly report data.' });
   }
+});
+
+// ─── ERROR HANDLER ─────────────────────────────────────────────────────────────
+// Must be registered last. Without it, a throw in middleware — in practice the
+// CORS origin check — falls through to Express's default handler and surfaces as
+// a bare 500 with an HTML body. A disallowed origin is a client error, not a
+// server fault, so it gets a clean 403 and the JSON shape every other error uses.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err && typeof err.message === 'string' && err.message.startsWith('CORS:')) {
+    return res.status(403).json({ error: 'Origin not allowed.' });
+  }
+  console.error('[unhandled]', err?.message || err);
+  res.status(500).json({ error: 'Internal server error.' });
 });
 
 const PORT = process.env.PORT || 3001;

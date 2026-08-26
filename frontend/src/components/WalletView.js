@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, API_URL, getLevelCategory, getMoneySwordMultiplier } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory, getMoneySwordMultiplier } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 
@@ -348,7 +348,7 @@ function ParcelCard({ parcel }) {
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
         <span className="absolute inset-0 bg-placeholder animate-pulse" />
         <img
-          src={`${API_URL}/image/${tokenId}`}
+          src={parcelImage(tokenId)}
           alt={`Parcel ${tokenId}`}
           className="absolute inset-0 w-full h-full cursor-pointer transition-opacity opacity-100"
           loading="lazy"

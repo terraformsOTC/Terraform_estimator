@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, API_URL, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
+import { EthIcon, parcelImage, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -149,7 +149,7 @@ function SaleRow({ sale }) {
       <td className="py-3 pr-4 hidden sm:table-cell">
         <a href={`/?token=${tokenId}`}>
           <img
-            src={`${API_URL}/image/${tokenId}`}
+            src={parcelImage(tokenId)}
             alt={`Parcel ${tokenId}`}
             width={67}
             height={97}

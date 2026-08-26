@@ -2,6 +2,12 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Parcel SVGs go through the app's own /img proxy instead of straight to the
+// backend: same origin (the browser reuses the page's connection) and cached on
+// Vercel's edge network, which the Render origin is not. Bytes are identical.
+// See src/app/img/[tokenId]/route.js.
+export const parcelImage = (tokenId) => `/img/${tokenId}`;
+
 // Used by secondary pages (bargains, glossary) that don't manage wallet state themselves.
 // Connects via MetaMask and redirects to the main page with the address in the URL.
 export async function connectAndRedirect() {
