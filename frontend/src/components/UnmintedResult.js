@@ -27,7 +27,6 @@ export default function UnmintedResult({ parcel, ethUsd }) {
             fallback={estimatedValue}
             floor={floor}
             ethUsd={ethUsd}
-            note={isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}
           />
         </div>
 

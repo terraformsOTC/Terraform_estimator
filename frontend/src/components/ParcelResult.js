@@ -28,7 +28,6 @@ export default function ParcelResult({ parcel, ethUsd }) {
           floor={floor}
           ethUsd={ethUsd}
           listing={listing ?? null}
-          note={isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}
         />
 
         <div className="flex flex-col gap-0">

@@ -16,7 +16,7 @@ export const parcelImage = (tokenId) => `/img/${tokenId}`;
 // the same relative width; it is one quantity with a width, not two competing
 // estimates. Tier-2 parcels (Godmode, Plague, the seeds, Lith0) have too few
 // settled sales to split, so they collapse to a single number and render as one.
-export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note, listing }) {
+export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, listing }) {
   const collapsed = !pricingV2 || pricingV2.tier === 'tier2' || pricingV2.off === pricingV2.on;
   const low = pricingV2 ? pricingV2.off : fallback;
   const high = pricingV2 ? pricingV2.on : fallback;
@@ -41,7 +41,6 @@ export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note, list
         </p>
       )}
       {listing !== undefined && <ListingRow listing={listing} />}
-      {note}
     </div>
   );
 }
