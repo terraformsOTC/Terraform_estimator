@@ -115,9 +115,14 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
             >
               {`[more ${menuOpen ? '▴' : '▾'}]`}
             </button>
+            {/* top-full is load-bearing: the wrapper is md:items-center, and an
+                absolute child with no vertical anchor falls back to its static
+                position, which a centering flex parent puts at the *middle* of the
+                trigger — that hung the panel's top half above the header and off
+                the top of the viewport, eating the first two items. */}
             {menuOpen && (
               <div
-                className="absolute right-0 mt-3 z-20 flex flex-col px-4 py-1 bg-primary border"
+                className="absolute right-0 top-full mt-3 z-20 flex flex-col px-4 py-1 bg-primary border"
                 style={{ borderColor: 'rgba(232, 232, 232, 0.12)' }}
               >
                 {menuNav.map((item) => renderNavItem(item, dropdownClasses, true))}
