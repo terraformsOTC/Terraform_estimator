@@ -59,6 +59,8 @@ sales database/*
 # backfill/enrich scripts it also declares stay untracked — those need the OpenSea
 # key and are not part of reproducing a fit.
 !sales database/package.json
+# Python side of the same problem — fit_hedonic.py needs numpy and scikit-learn.
+!sales database/requirements.txt
 
 # Misc
 .DS_Store

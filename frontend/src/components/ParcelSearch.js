@@ -37,7 +37,7 @@ export default function ParcelSearch({ onSearch, loading }) {
         </button>
       </form>
       <p className="mt-6 opacity-55 text-xs">
-        Estimates are subjective and can change. This is not financial advice. Unminted IDs are based on level and will not correspond to the true values when minted.
+        Estimates are based on a hedonic pricing model weighted toward recent sales. This is not financial advice. Unminted IDs are based on level and will not correspond to the true parcel number when minted.
       </p>
     </div>
   );
