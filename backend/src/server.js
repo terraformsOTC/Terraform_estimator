@@ -4,6 +4,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ethers } = require('ethers');
 const { estimatePrice, detectSets, FLOOR_PRICE_ETH } = require('./pricingModel');
+// Shadow model: computed alongside v1 and returned, but not what the UI shows.
+// See hedonicModel.js and "sales database/MODELING.md".
+const { estimateHedonic, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
 const app = express();
 
@@ -301,6 +304,18 @@ function getSnapshotTraits(tokenId) {
     x: null,
     y: null,
   };
+}
+
+// Shadow-model wrapper. The hedonic model is not what the product shows, so a
+// bug or a malformed coefficients file must never break a live estimate — it
+// degrades to null and the v1 price is served as normal.
+function safeHedonic(traits, floor, opts) {
+  try {
+    return estimateHedonic(traits, floor, opts);
+  } catch (err) {
+    console.warn(`[hedonic] estimate failed for ${traits?.tokenId}: ${err.message}`);
+    return null;
+  }
 }
 
 // ─── FLOOR PRICE HISTORY ──────────────────────────────────────────────────────
@@ -904,9 +919,12 @@ app.get('/estimate/:tokenId', async (req, res) => {
       getFloorPrice(),
     ]);
     const pricing = estimatePrice(traits, floor);
+    // Shadow: returned for comparison, not shown as the headline estimate.
+    // Never let a fault here take down the live estimate.
+    const pricingV2 = safeHedonic(traits, floor);
 
     res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
-    res.json({ tokenId, traits, pricing, floorIsLive });
+    res.json({ tokenId, traits, pricing, pricingV2, floorIsLive });
   } catch (err) {
     console.error(`[estimate] ${req.params.tokenId}:`, err.message);
     res.status(500).json({ error: 'Failed to fetch parcel data.' });

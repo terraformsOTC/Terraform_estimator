@@ -9,6 +9,7 @@
 // and floorAtSale so a future writer can insert the same shape into a DB.
 
 const { estimatePrice, PRICING_MODEL_VERSION } = require('./pricingModel');
+const { estimateHedonic, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
 
@@ -127,12 +128,32 @@ async function computeRecentSales({
       const signedError = pricing.estimatedValue > 0
         ? (sale.salePrice - pricing.estimatedValue) / pricing.estimatedValue
         : null;
+
+      // Shadow scorecard. Each sale is a settled fact, so scoring both models
+      // against it is what turns "v2 is at parity on a 2024 holdout" into live
+      // evidence for or against a cutover. Compare against the sub-model matching
+      // how the sale actually settled: a WETH fill is an accepted bid (money sword
+      // OFF), native ETH is a taken listing (ON). Same rule as views.sql.
+      let pricingV2 = null, signedErrorV2 = null, sideV2 = null;
+      try {
+        pricingV2 = estimateHedonic(traits, saleFloor);
+        sideV2 = sale.currency === 'WETH' ? 'off' : 'on';
+        const v2Value = pricingV2[sideV2];
+        if (v2Value > 0) signedErrorV2 = (sale.salePrice - v2Value) / v2Value;
+      } catch (err) {
+        console.warn(`[hedonic] sales scoring failed for ${sale.tokenId}: ${err.message}`);
+      }
+
       results.push({
         ...sale,
         traits,
         pricing,
         signedError,
+        pricingV2,
+        signedErrorV2,
+        sideV2,
         pricingModelVersion: PRICING_MODEL_VERSION,
+        hedonicModelVersion: HEDONIC_MODEL_VERSION,
         floorAtSale: saleFloor,
         floorAtSaleSource: historicalFloor != null ? 'history' : 'current',
       });

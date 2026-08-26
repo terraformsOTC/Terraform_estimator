@@ -8,6 +8,31 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001
 // See src/app/img/[tokenId]/route.js.
 export const parcelImage = (tokenId) => `/img/${tokenId}`;
 
+export function median(xs) {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+// Scores v1 and the hedonic shadow model against the same settled sales.
+// Takes RAW sales — the money-sword adjustment is a v1-only heuristic, while the
+// hedonic model fits bid and ask settlement directly, so applying it would score
+// the two on different quantities. Median, not mean: a handful of six-figure
+// outliers otherwise decides the comparison on its own.
+export function hedonicScorecard(rawSales) {
+  const scored = (rawSales || []).filter(
+    s => typeof s.signedError === 'number' && typeof s.signedErrorV2 === 'number'
+  );
+  if (!scored.length) return null;
+  return {
+    n: scored.length,
+    v1: median(scored.map(s => Math.abs(s.signedError))),
+    v2: median(scored.map(s => Math.abs(s.signedErrorV2))),
+    v2Wins: scored.filter(s => Math.abs(s.signedErrorV2) < Math.abs(s.signedError)).length,
+  };
+}
+
 // Used by secondary pages (bargains, glossary) that don't manage wallet state themselves.
 // Connects via MetaMask and redirects to the main page with the address in the URL.
 export async function connectAndRedirect() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { EthIcon, parcelImage, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
+import { EthIcon, parcelImage, getMoneySwordMultiplier, hedonicScorecard, PropertyStack, WalletLink } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -70,6 +70,11 @@ export default function SalesView({ data, loading, error, ethUsd }) {
     ? priced.reduce((a, s) => a + s.signedError, 0) / priced.length
     : null;
 
+  // Shadow scorecard: the fitted hedonic model scored against the same settled
+  // sales, so a cutover decision rests on live evidence rather than a backtest.
+  // Shared with /hedonic, which shows the same numbers in full.
+  const shadow = hedonicScorecard(rawSales);
+
   return (
     <div>
       <div className="mb-6 text-xs opacity-50">
@@ -87,7 +92,17 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         )}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">recent OpenSea sales compared to our current estimate. negative = sold below estimate, positive = sold above.</p>
+      <p className="mb-2 text-xs opacity-50">recent OpenSea sales compared to our current estimate. negative = sold below estimate, positive = sold above.</p>
+
+      {shadow && (
+        <p className="mb-6 text-xs opacity-40">
+          shadow model (hedonic v2, not shown above) — median absolute error over {shadow.n} sales:{' '}
+          <span className="opacity-90">v1 {(shadow.v1 * 100).toFixed(1)}%</span>
+          {' · '}
+          <span className="opacity-90">v2 {(shadow.v2 * 100).toFixed(1)}%</span>
+          {' · '}v2 closer on {shadow.v2Wins}/{shadow.n}
+        </p>
+      )}
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>

@@ -558,4 +558,11 @@ module.exports = {
   detectSets,
   FLOOR_PRICE_ETH,
   PRICING_MODEL_VERSION,
+  // Exported for the hedonic fit, which uses these hand-tuned values as Bayesian
+  // priors for traits with too few sales to estimate (see sales database/build_priors.js).
+  // Read-only consumers — nothing here mutates them.
+  ZONE_MULTIPLES,
+  BIOME_MULTIPLES,
+  LEVEL_MULTIPLES,
+  TRAIT_PREMIUMS,
 };
