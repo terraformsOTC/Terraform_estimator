@@ -122,10 +122,14 @@ export function HedonicBreakdown({ pricingV2, v1 }) {
 
       {off > on && (
         <p className="text-xs mt-3" style={{ color: '#d2a24c' }}>
-          band inverted — the bid sub-model prices this parcel above the ask sub-model. The two are
-          fitted independently on separate settlement populations, so nothing in the model constrains
-          bid ≤ ask; it comes out this way for 1,626 of the 9,911 tier-1 parcels (16.4%). Worth
-          resolving before a cutover, since the band is quoted as liquidation → retail.
+          band inverted — the bid sub-model prices this parcel above the ask sub-model. Both are fitted
+          on the same 20,271 sales, only reweighted (80/20 bid mass vs 20/80), but fit_submodel picks
+          each one&apos;s Ridge alpha separately and they landed 1000x apart: 100 for bid, 0.1 for ask.
+          The intercept is unpenalised, so heavy shrinkage pushes the level into the baseline (bid
+          1.33x floor) while light shrinkage leaves it in the coefficients (ask 0.93x floor) — which
+          makes the two baselines incomparable rather than a bid/ask spread. It shows up on plain
+          parcels, where no strong trait multiple outweighs that baseline gap: 1,626 of 9,911 tier-1
+          parcels (16.4%) overall, but 32% of the plainest sixth against 1.9% of the strongest.
         </p>
       )}
 
