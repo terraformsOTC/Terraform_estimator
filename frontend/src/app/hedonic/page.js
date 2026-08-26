@@ -84,11 +84,11 @@ export default function HedonicPage() {
             <p className="text-xs opacity-45 mt-2">
               v2 multipliers are fitted to ~20k settled sales (weighted Ridge on ln(price / floor at sale),
               shrunk toward v1&apos;s hand-tuned values where a trait has too few sales to estimate), rather
-              than hand-tuned. It is quoted as a band because the same fit is run twice, weighted 80/20
-              toward bid settlements and then 20/80 toward ask ones, on the premise that accepted offers
-              clear around 1.05x floor and taken listings around 1.30x. Note the fitted baselines come
-              out the other way round — 1.33x bid against 0.93x ask — so that premise is worth
-              re-checking before any cutover. Godmode, Plague,
+              than hand-tuned. Both numbers are settled sale prices: the target is ln(price / floor at
+              sale) over sales that cleared, so the ask figure is a listing price that gets taken, not
+              one someone posts and holds. It is quoted as a band because a single is-ask indicator in
+              the fit measures the spread directly — ask = bid x 1.124 — which also makes an inverted
+              band structurally impossible. Godmode, Plague,
               the seeds and Lith0 have too few sales to split, so they fall back to v1 as a single value.
             </p>
           </div>

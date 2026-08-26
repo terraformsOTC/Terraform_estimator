@@ -6,24 +6,43 @@
 // See "sales database/MODELING.md" for the fit, the parameter sweep, and the
 // honest A/B against v1.
 //
-// Two sub-models, differing only in how bid vs ask settlements are weighted:
+// Two sub-models, differing only in how the settlement side is priced:
 //   money sword ON  — retail / ask   (what a buyer pays taking a listing)
 //   money sword OFF — liquidation / bid (what a seller nets accepting an offer)
 // Together they bracket a parcel: OFF is the floor of the realistic range, ON the
-// ceiling. Across every floor regime measured, BID settles ~1.05x floor and ASK
-// ~1.30x, so this spread is a persistent market feature, not fitting noise.
+// ceiling. Both numbers are SETTLED sale prices — the fit's target is
+// ln(price / floor_at_sale) over sales that actually cleared. ASK is therefore the
+// listing price that gets taken, not the listing price someone posts and holds.
+//
+// The two share one fit. A single weighted Ridge runs over all 20,271 sales with
+// an is-ask indicator, and that coefficient IS the spread: ask = bid x 1.1241.
+// Structurally, off <= on for every parcel — the same parcel priced on two sides,
+// not two parcels priced independently.
+//
+// It used to be two separate fits at 80/20 and 20/80 weight mass, with nothing
+// tying them together. Per-trait noise then flipped 1,626 of 9,911 parcels (16.4%,
+// and 32% of the plainest sixth) to bid-above-ask, against raw data that says ask
+// clears ~25% above bid at every level bucket and zone-richness quartile. The
+// fitted like-for-like spread is smaller than that raw gap — +12.4% against +24.6%
+// — because the raw number is partly composition: different parcels sell on each
+// side. Controlling for traits is what the indicator does.
 //
 // SHADOW MODE: this runs alongside pricingModel.js and does not replace it. On the
-// held-out A/B the two are at parity overall (v1 9.7% vs v2 10.0% median error);
-// v2 is better on ask sales and mid-tier zones, worse on floor parcels and the
-// expensive tail. The live scorecard on /sales is what should decide a cutover.
+// live /sales feed v2 is well ahead — 11.3% median absolute error against v1's
+// 27.2%, closer on 39 of 50 settled sales — but v1's miss there is mostly a level
+// bias, and the feed is 50 sales. The live scorecard is what should decide a
+// cutover, and /hedonic shows it in full.
 
 const { estimatePrice } = require('./pricingModel');
 const coeffs = require('./pricing-v2-coeffs.json');
 
 // Bump when the coefficients are refit or the application logic changes, so sales
-// records can be segmented by which model produced them.
-const HEDONIC_MODEL_VERSION = '1.0.0';
+// records can be segmented by which model produced them. 2.0.0 is a structural
+// change, not a refit: one fit with a side indicator instead of two independent
+// fits, and alpha 30 instead of the CV pick (see fit_hedonic.py — CV scores the
+// most recent 20% of the DB, which is adjacent to training, and its choice was the
+// worst of the grid against sales that landed after the DB was built).
+const HEDONIC_MODEL_VERSION = '2.0.0';
 
 // Tier-2: too few sales to fit, so the whole price is v1's prior and both
 // sub-models return the same number. Spine and 1of1 are NOT here — they are
@@ -126,8 +145,8 @@ function isTier2(traits) {
  *                                  FLOOR_CALIBRATION is applied.
  *                         'index' the endogenous floor index the model trained on.
  *                                  No calibration — it is already the right basis.
- * @returns { off, on, ... } where off <= on for a normal parcel; Tier-2 collapses
- *          both to the v1 price.
+ * @returns { off, on, ... } where off <= on always, by construction; Tier-2
+ *          collapses both to the v1 price.
  */
 function estimateHedonic(traits, floor, opts = {}) {
   const basis = opts.floorBasis ?? 'live';
