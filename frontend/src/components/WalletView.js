@@ -4,6 +4,16 @@ import { useMemo, useState } from 'react';
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory, getMoneySwordMultiplier } from './shared';
 import { useMoneySword } from '@/contexts/MoneySword';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
+import {
+  EMPTY_FILTERS,
+  ParcelFilterPanel,
+  ActiveFilterChips,
+  buildFilterOptions,
+  matchesFilters,
+  toggleFilterValue,
+  hasActiveFilters,
+  countActiveFilters,
+} from './ParcelFilters';
 
 const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
@@ -151,6 +161,8 @@ function getParcelTierRank({ traits, pricing }) {
 export default function WalletView({ data, loading, address }) {
   const [sortBy, setSortBy] = useState('id');
   const [highlightFilter, setHighlightFilter] = useState(new Set());
+  const [attrFilters, setAttrFilters] = useState(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
 
   const sortedParcels = useMemo(() => {
     const arr = data?.parcels ? [...data.parcels] : [];
@@ -165,10 +177,21 @@ export default function WalletView({ data, loading, address }) {
 
   const ownedHighlights = useMemo(() => computeOwnedHighlights(sortedParcels), [sortedParcels]);
 
+  const filterOptions = useMemo(() => buildFilterOptions(sortedParcels), [sortedParcels]);
+
+  // Highlight chips and attribute filters compose with AND: a parcel must carry
+  // one of the selected badges *and* match every attribute selection.
   const displayParcels = useMemo(() => {
-    if (highlightFilter.size === 0) return sortedParcels;
-    return sortedParcels.filter(p => [...highlightFilter].some(key => parcelHasBadge(p, key)));
-  }, [sortedParcels, highlightFilter]);
+    const byBadge = highlightFilter.size === 0
+      ? sortedParcels
+      : sortedParcels.filter(p => [...highlightFilter].some(key => parcelHasBadge(p, key)));
+    if (!hasActiveFilters(attrFilters)) return byBadge;
+    return byBadge.filter(p => matchesFilters(p, attrFilters));
+  }, [sortedParcels, highlightFilter, attrFilters]);
+
+  const toggleAttrFilter = (key, value) => setAttrFilters(prev => toggleFilterValue(prev, key, value));
+  const resetAttrFilters = () => setAttrFilters(EMPTY_FILTERS);
+  const activeAttrCount = countActiveFilters(attrFilters);
 
   if (loading) {
     return (
@@ -188,6 +211,35 @@ export default function WalletView({ data, loading, address }) {
 
   return (
     <div>
+      {/* Attribute filters — zone / biome / mode / chroma, collapsed by default */}
+      {sortedParcels.length > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className="btn-primary btn-sm text-xs mb-3"
+          >
+            {showFilters ? '[hide filters]' : '[filter parcels]'}
+            {activeAttrCount > 0 && <span style={{ opacity: 0.6 }}> · {activeAttrCount}</span>}
+          </button>
+
+          {showFilters && (
+            <ParcelFilterPanel
+              options={filterOptions}
+              filters={attrFilters}
+              onToggle={toggleAttrFilter}
+              onReset={resetAttrFilters}
+              onClose={() => setShowFilters(false)}
+            />
+          )}
+
+          <ActiveFilterChips
+            filters={attrFilters}
+            onToggle={toggleAttrFilter}
+            onReset={resetAttrFilters}
+          />
+        </div>
+      )}
+
       {/* Collection highlights — always show all types, grey if not owned */}
       <div className="mb-8">
         <h2 className="text-lg mb-3 opacity-80">[terraforms collected]</h2>
@@ -259,15 +311,30 @@ export default function WalletView({ data, loading, address }) {
             <button onClick={() => setSortBy('id')} style={{ opacity: sortBy === 'id' ? 1 : 0.4 }}>token id</button>
             <span style={{ opacity: 0.3 }}>|</span>
             <button onClick={() => setSortBy('tier')} style={{ opacity: sortBy === 'tier' ? 1 : 0.4 }}>tier</button>
+            {displayParcels.length !== sortedParcels.length && (
+              <span className="ml-auto">showing {displayParcels.length} of {sortedParcels.length}</span>
+            )}
           </div>
-          <div
-            className="grid w-full gap-4"
-            style={{ gridTemplateColumns: gridTemplate }}
-          >
-            {displayParcels.map(parcel => (
-              <ParcelCard key={parcel.tokenId} parcel={parcel} />
-            ))}
-          </div>
+          {displayParcels.length === 0 ? (
+            <p className="opacity-75 text-sm">
+              no parcels match the selected filters.{' '}
+              <button
+                onClick={() => { resetAttrFilters(); setHighlightFilter(new Set()); }}
+                style={{ textDecoration: 'underline' }}
+              >
+                reset
+              </button>
+            </p>
+          ) : (
+            <div
+              className="grid w-full gap-4"
+              style={{ gridTemplateColumns: gridTemplate }}
+            >
+              {displayParcels.map(parcel => (
+                <ParcelCard key={parcel.tokenId} parcel={parcel} />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
