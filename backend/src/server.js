@@ -757,7 +757,14 @@ app.get('/sales', async (req, res) => {
 // Parse all traits from tokenURI metadata
 // Zone and Level are read from tokenURI attributes (trait_type "Zone" / "Level").
 // tokenSupplementalData has a struct ABI mismatch and is not used.
-async function getParcelTraits(tokenId) {
+//
+// `seed` and `x`/`y` each cost an extra RPC round trip (tokenHTML and a raw
+// tokenSupplementalData call) on top of tokenURI. Callers that don't display
+// them — the wallet grid, for one — pass includeSeed/includeCoords false and
+// cut per-parcel RPC traffic by roughly two thirds, which is the difference
+// between enumerating a 100+ parcel wallet inside the time budget and
+// truncating it.
+async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = true } = {}) {
   try {
     const uri = await getCachedTokenURI(tokenId);
 
@@ -772,29 +779,33 @@ async function getParcelTraits(tokenId) {
 
       // Extract seed from tokenHTML (on-chain HTML animation contains `const SEED=X;`)
       // The SVG from tokenURI is static and has no SEED — tokenHTML is the correct source.
-      try {
-        const html = await getCachedTokenHTML(tokenId);
-        const m = html.match(/\bSEED\s*=\s*(\d+)/);
-        if (m) seed = parseInt(m[1], 10);
-      } catch (err) {
-        console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
+      if (includeSeed) {
+        try {
+          const html = await getCachedTokenHTML(tokenId);
+          const m = html.match(/\bSEED\s*=\s*(\d+)/);
+          if (m) seed = parseInt(m[1], 10);
+        } catch (err) {
+          console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
+        }
       }
 
       // Extract X/Y coordinates from tokenSupplementalData via raw call.
       // The function returns a struct memory, which ABI-encodes as:
       //   [0x20 outer pointer (32 bytes) | slot0 (32) | level (32) | xCoordinate (32) | yCoordinate (32) | ...]
       // xCoordinate is at byte offset 96, yCoordinate at byte offset 128.
-      try {
-        const { provider } = getProvider();
-        const selector = ethers.id('tokenSupplementalData(uint256)').slice(0, 10);
-        const arg = ethers.zeroPadValue(ethers.toBeHex(tokenId), 32);
-        const raw = await withTimeout(provider.call({ to: TERRAFORMS_ADDRESS, data: selector + arg.slice(2) }));
-        if (raw && raw.length >= 322) {
-          x = Number(BigInt('0x' + raw.slice(194, 258)));
-          y = Number(BigInt('0x' + raw.slice(258, 322)));
+      if (includeCoords) {
+        try {
+          const { provider } = getProvider();
+          const selector = ethers.id('tokenSupplementalData(uint256)').slice(0, 10);
+          const arg = ethers.zeroPadValue(ethers.toBeHex(tokenId), 32);
+          const raw = await withTimeout(provider.call({ to: TERRAFORMS_ADDRESS, data: selector + arg.slice(2) }));
+          if (raw && raw.length >= 322) {
+            x = Number(BigInt('0x' + raw.slice(194, 258)));
+            y = Number(BigInt('0x' + raw.slice(258, 322)));
+          }
+        } catch (err) {
+          console.warn(`[traits] Token ${tokenId}: tokenSupplementalData failed (${err.message}) — x/y will be null`);
         }
-      } catch (err) {
-        console.warn(`[traits] Token ${tokenId}: tokenSupplementalData failed (${err.message}) — x/y will be null`);
       }
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
@@ -992,41 +1003,80 @@ app.get('/wallet/:address', async (req, res) => {
       tokenIds.push(...batch);
     }
 
-    // Batch fetch traits for all tokens (needed for accurate set detection).
+    // Batch fetch live traits for all tokens (needed for accurate set detection
+    // and for the trait filters on the portfolio grid).
+    //
+    // The wallet grid never renders seed or x/y, so those two RPC round trips
+    // are skipped — that is what keeps a 100+ parcel wallet inside the budget.
+    // Concurrency stays inside the ~20-50 band public RPCs tolerate: each
+    // parcel is now one tokenURI call plus an antenna call only when the
+    // antenna is on, so a batch of 12 peaks around 24 requests in flight.
+    //
     // Same walltime guard as the enumeration loop above — without one, a
-    // 500-parcel wallet is 100 sequential batches that can hold the request
-    // open (and keep spending RPC) long after the client has given up. Partial
-    // results are more useful here than an error, so this breaks out and flags
-    // the response rather than throwing.
-    const BATCH_SIZE = 5;
+    // 500-parcel wallet can hold the request open (and keep spending RPC) long
+    // after the client has given up.
+    const BATCH_SIZE = 12;
     const TRAIT_BUDGET_MS = 45_000;
     const traitStart = Date.now();
     let traitsTruncated = false;
-    const allParcels = [];
+    const liveTraits = new Map();
     for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
       if (Date.now() - traitStart > TRAIT_BUDGET_MS) {
         traitsTruncated = true;
-        console.warn(`[wallet] ${address}: trait fetch budget exhausted at ${allParcels.length}/${tokenIds.length} parcels`);
+        console.warn(`[wallet] ${address}: trait fetch budget exhausted at ${liveTraits.size}/${tokenIds.length} parcels`);
         break;
       }
       const batch = tokenIds.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(batch.map(id => getParcelTraits(id)));
+      const results = await Promise.allSettled(
+        batch.map(id => getParcelTraits(id, { includeSeed: false, includeCoords: false })),
+      );
       for (let j = 0; j < results.length; j++) {
         const r = results[j];
         if (r.status === 'fulfilled') {
-          allParcels.push(r.value);
+          liveTraits.set(Number(batch[j]), r.value);
         } else {
           console.warn(`[wallet] Token ${batch[j]}: trait fetch failed — ${r.reason?.message || r.reason}`);
         }
       }
     }
 
+    // Assemble in enumeration order, backfilling anything the budget or a
+    // failed fetch left behind from the baked snapshot. A parcel with slightly
+    // stale chroma/mode is far better than one that silently vanishes from its
+    // owner's portfolio — which is what the old code did, dropping 16 of this
+    // wallet's 111 parcels and taking every Terraform-mode parcel with them.
+    let snapshotFallbacks = 0;
+    let unresolvedParcels = 0;
+    const allParcels = [];
+    for (const rawId of tokenIds) {
+      const id = Number(rawId);
+      const live = liveTraits.get(id);
+      if (live) {
+        allParcels.push(live);
+        continue;
+      }
+      const snap = getSnapshotTraits(id);
+      if (snap) {
+        snapshotFallbacks++;
+        allParcels.push({ ...snap, traitsFromSnapshot: true });
+      } else {
+        unresolvedParcels++;
+        console.warn(`[wallet] Token ${id}: no live traits and no snapshot entry — omitted`);
+      }
+    }
+    if (snapshotFallbacks > 0) {
+      console.warn(`[wallet] ${address}: ${snapshotFallbacks} parcel(s) served from snapshot traits`);
+    }
+
     // Set detection runs on all parcels
     const sets = detectSets(allParcels);
 
-    // Pricing and display capped at 100 to keep response size manageable
-    const displayParcels = allParcels.slice(0, 100);
-    const pricedParcels = displayParcels.map(p => ({
+    // Every enumerated parcel is priced and returned. estimatePrice/safeHedonic
+    // are pure arithmetic on traits already in hand, and a parcel serialises to
+    // well under 1KB, so even the 500-parcel cap lands around 0.5MB — cheap
+    // enough that withholding parcels from an owner's own portfolio (and from
+    // the grid's trait filters) isn't a trade worth making.
+    const pricedParcels = allParcels.map(p => ({
       tokenId: p.tokenId,
       traits: p,
       pricing: estimatePrice(p, liveFloor),
@@ -1039,23 +1089,19 @@ app.get('/wallet/:address', async (req, res) => {
     // by the whole spread. Both ends are returned so the UI can show the range.
     const parcelValue = (p, v2) => (v2 ? v2.off : p.estimatedValue);
     const askValue = (p, v2) => (v2 ? v2.on : p.estimatedValue);
-    // Reuse already-computed pricing for the first 100; price only the remainder here
-    const displayedTotal = pricedParcels.reduce((sum, p) => sum + parcelValue(p.pricing, p.pricingV2), 0);
-    const displayedAsk = pricedParcels.reduce((sum, p) => sum + askValue(p.pricing, p.pricingV2), 0);
-    let remainderTotal = 0, remainderAsk = 0;
-    for (const p of allParcels.slice(100)) {
-      const v1 = estimatePrice(p, liveFloor);
-      const v2 = safeHedonic(p, liveFloor);
-      remainderTotal += parcelValue(v1, v2);
-      remainderAsk += askValue(v1, v2);
-    }
-    const totalEstimatedValue = displayedTotal + remainderTotal;
-    const totalListedValue = displayedAsk + remainderAsk;
+    // Every parcel is in pricedParcels now, so the totals are a straight sum —
+    // no separate remainder pass.
+    const totalEstimatedValue = pricedParcels.reduce((sum, p) => sum + parcelValue(p.pricing, p.pricingV2), 0);
+    const totalListedValue = pricedParcels.reduce((sum, p) => sum + askValue(p.pricing, p.pricingV2), 0);
 
     res.json({
       address,
       totalParcels: count,
       fetchedParcels: allParcels.length,
+      // Parcels whose live trait fetch didn't land, served from the baked
+      // snapshot instead — present and priced, but chroma/mode/level may lag.
+      snapshotFallbacks,
+      unresolvedParcels,
       parcels: pricedParcels,
       sets,
       totalEstimatedValue: Math.round(totalEstimatedValue * 1000) / 1000,

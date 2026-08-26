@@ -204,7 +204,7 @@ export default function WalletView({ data, loading, address }) {
 
   if (!data) return null;
 
-  const { sets, totalParcels, fetchedParcels } = data;
+  const { sets, totalParcels, fetchedParcels, snapshotFallbacks = 0 } = data;
 
   const gridTemplate = getWalletGridTemplate();
 
@@ -298,6 +298,12 @@ export default function WalletView({ data, loading, address }) {
       {totalParcels > fetchedParcels && (
         <p className="text-xs opacity-55 mb-4">
           [showing {fetchedParcels} of {totalParcels} parcels]
+        </p>
+      )}
+
+      {snapshotFallbacks > 0 && (
+        <p className="text-xs opacity-55 mb-4">
+          [{snapshotFallbacks} parcel{snapshotFallbacks === 1 ? '' : 's'} shown from cached traits — chroma/mode/level may be out of date]
         </p>
       )}
 
