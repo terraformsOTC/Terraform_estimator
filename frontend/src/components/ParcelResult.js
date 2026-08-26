@@ -3,7 +3,7 @@
 import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate } from './shared';
 
 export default function ParcelResult({ parcel, ethUsd }) {
-  const { tokenId, traits, pricing, pricingV2 } = parcel;
+  const { tokenId, traits, pricing, pricingV2, listing } = parcel;
   const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed, x, y } = traits;
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
 
@@ -27,6 +27,7 @@ export default function ParcelResult({ parcel, ethUsd }) {
           fallback={estimatedValue}
           floor={floor}
           ethUsd={ethUsd}
+          listing={listing ?? null}
           note={isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}
         />
 

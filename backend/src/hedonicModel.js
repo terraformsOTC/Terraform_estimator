@@ -68,6 +68,41 @@ const S0_PREMIUM = 1.05;
 // than silently guessing a constant.
 const FLOOR_CALIBRATION = coeffs.floor_calibration?.value ?? 1;
 
+// exp(beta) on the is-ask indicator: ask = bid x this, for every parcel. Read
+// rather than hardcoded so a refit carries through.
+const ASK_PREMIUM = coeffs.ask_premium?.value ?? 1;
+
+/**
+ * Raise a range that sits below a live, standing collection-wide bid.
+ *
+ * A collection offer is fillable against ANY parcel, so while one stands nobody
+ * would rationally sell below it — it is a hard floor under every estimate the
+ * model produces, whatever the traits say.
+ *
+ * The ask side is re-derived through the model's own fitted premium rather than
+ * merely clamped to the new bid. Since 2.0.0 ask IS bid x ASK_PREMIUM by
+ * construction, so once the bid moves the model's own definition says where the
+ * ask goes; clamping both to the same number would contradict the model and
+ * collapse the range to a point on the ~10% of parcels priced entirely below the
+ * bid. max() throughout, so a parcel already above the bid is untouched.
+ */
+function applyOfferFloor(estimate, offer) {
+  if (!estimate || !(offer > 0) || !(estimate.off < offer)) return estimate;
+  const round = (x) => Math.round(x * 1000) / 1000;
+  const off = offer;
+  const on = Math.max(estimate.on, offer * ASK_PREMIUM);
+  return {
+    ...estimate,
+    off: round(off),
+    on: round(on),
+    // What the number would have been without the floor, so the UI (and anyone
+    // reading the API) can tell a floored estimate from a modelled one.
+    modelOff: estimate.off,
+    modelOn: estimate.on,
+    offerFloor: round(offer),
+  };
+}
+
 /** Badge tests. MUST stay in lockstep with badges() in fit_hedonic.py — a badge
  *  applied on a definition the model did not fit is worse than no badge at all. */
 function badgeFlags(traits, modeGroup) {
@@ -189,7 +224,9 @@ function estimateHedonic(traits, floor, opts = {}) {
 
 module.exports = {
   estimateHedonic,
+  applyOfferFloor,
   isTier2,
+  ASK_PREMIUM,
   HEDONIC_MODEL_VERSION,
   FLOOR_CALIBRATION,
   COEFFS_META: coeffs.meta,

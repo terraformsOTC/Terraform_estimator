@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 const { estimatePrice, detectSets, FLOOR_PRICE_ETH } = require('./pricingModel');
 // Shadow model: computed alongside v1 and returned, but not what the UI shows.
 // See hedonicModel.js and "sales database/MODELING.md".
-const { estimateHedonic, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
+const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
 const app = express();
 
@@ -307,12 +307,126 @@ function getSnapshotTraits(tokenId) {
   };
 }
 
-// Shadow-model wrapper. The hedonic model is not what the product shows, so a
-// bug or a malformed coefficients file must never break a live estimate — it
-// degrades to null and the v1 price is served as normal.
+// ─── TOP COLLECTION-WIDE BID ──────────────────────────────────────────────────
+// A standing collection offer is fillable against any parcel in the collection,
+// so while one is live no parcel is worth less than it — it is a hard floor under
+// every estimate. See applyOfferFloor in hedonicModel.js.
+//
+// Two things make reading this endpoint error-prone, both handled below:
+//   * `price.value` is the total for the WHOLE quantity, not per item. A 1.25
+//     WETH offer for 25 parcels is 0.05 each. Taking it at face value would put a
+//     1.25 floor under all 9,911 parcels — roughly 5x the real floor.
+//   * Trait- and token-scoped offers come back from the same endpoint. Those bid
+//     on a subset, so they are not a floor for everything and are skipped.
+const TOP_OFFER_TTL_MS = 3 * 60 * 1000;   // these expire fast — half within the hour
+let topOfferCache = { value: null, at: 0 };
+let topOfferInFlight = null;
+
+async function fetchTopCollectionOffer() {
+  if (!OPENSEA_API_KEY) return null;
+  const res = await fetchWithRetry('https://api.opensea.io/api/v2/offers/collection/terraforms', {
+    headers: { 'X-API-KEY': OPENSEA_API_KEY, 'accept': 'application/json' },
+  });
+  if (!res.ok) throw new Error(`OpenSea offers ${res.status}`);
+  const { offers = [] } = await res.json();
+
+  let best = 0;
+  for (const o of offers) {
+    if (o.status !== 'ACTIVE') continue;
+    if (o.price?.currency !== 'WETH') continue;
+    const c = o.criteria || {};
+    if (c.traits || c.numeric_traits) continue;                       // trait-scoped
+    if (c.encoded_token_ids && c.encoded_token_ids !== '*') continue;  // token-scoped
+    // itemType 4 is the ERC-721 criteria item; its startAmount is how many
+    // parcels the offer wants, which is what the WETH total is spread across.
+    const nft = o.protocol_data?.parameters?.consideration?.find(x => x.itemType === 4);
+    const qty = nft ? Number(nft.startAmount) : 1;
+    if (!(qty > 0)) continue;
+    const perItem = (Number(o.price.value) / 1e18) / qty;
+    if (Number.isFinite(perItem)) best = Math.max(best, perItem);
+  }
+  return best > 0 ? best : null;
+}
+
+// Synchronous read of the last known bid, refreshing in the background when stale.
+// Never awaited on the request path and never throws: a failed or slow lookup
+// means no floor for that request, which leaves the raw model estimate standing.
+// Failing open matters more than usual here — a stale bid would silently lift
+// every estimate on the site.
+function currentTopOffer() {
+  const age = Date.now() - topOfferCache.at;
+  if (age > TOP_OFFER_TTL_MS && !topOfferInFlight) {
+    topOfferInFlight = fetchTopCollectionOffer()
+      .then(v => { topOfferCache = { value: v, at: Date.now() }; })
+      .catch(err => {
+        console.warn(`[offer] top collection bid lookup failed: ${err.message}`);
+        // Expire the cached value rather than serving a bid we can no longer confirm.
+        topOfferCache = { value: null, at: Date.now() };
+      })
+      .finally(() => { topOfferInFlight = null; });
+  }
+  return topOfferCache.value;
+}
+
+// ─── PER-PARCEL LISTING ───────────────────────────────────────────────────────
+// Whether this specific parcel is for sale right now, and at what. Deliberately
+// the per-NFT endpoint rather than a lookup into the cached full-listings feed:
+// that feed is only warm once someone has loaded /listings, and answering "not
+// listed" for a parcel that IS listed is worse than one small request. 404 is
+// OpenSea's not-listed answer, not an error.
+const LISTING_TTL_MS = 2 * 60 * 1000;
+const listingCache = new Map();   // tokenId -> { value, at }
+
+async function getBestListing(tokenId) {
+  if (!OPENSEA_API_KEY) return null;
+  const hit = listingCache.get(tokenId);
+  if (hit && Date.now() - hit.at < LISTING_TTL_MS) return hit.value;
+
+  let value = null;
+  try {
+    const res = await fetchWithRetry(
+      `https://api.opensea.io/api/v2/listings/collection/terraforms/nfts/${tokenId}/best`,
+      { headers: { 'X-API-KEY': OPENSEA_API_KEY, 'accept': 'application/json' } },
+    );
+    if (res.ok) {
+      const j = await res.json();
+      const cur = j?.price?.current;
+      if (cur?.value != null) {
+        value = {
+          price: Number(cur.value) / 10 ** (cur.decimals ?? 18),
+          currency: cur.currency || 'ETH',
+          seller: j.protocol_data?.parameters?.offerer || null,
+          expiresAt: j.protocol_data?.parameters?.endTime
+            ? Number(j.protocol_data.parameters.endTime) * 1000 : null,
+          url: `https://opensea.io/assets/ethereum/${TERRAFORMS_ADDRESS}/${tokenId}`,
+        };
+      }
+    } else if (res.status !== 404) {
+      throw new Error(`OpenSea best listing ${res.status}`);
+    }
+  } catch (err) {
+    // Never let a listing lookup take down an estimate — the price is the point
+    // of the page, the listing is context. Not cached, so the next view retries.
+    console.warn(`[listing] ${tokenId}: ${err.message}`);
+    return null;
+  }
+  listingCache.set(tokenId, { value, at: Date.now() });
+  // Bound the cache the same way the tokenURI caches are bounded.
+  if (listingCache.size > 5000) {
+    for (const k of listingCache.keys()) { listingCache.delete(k); if (listingCache.size <= 4000) break; }
+  }
+  return value;
+}
+
+// Hedonic wrapper. A bug or a malformed coefficients file must never break a live
+// estimate — it degrades to null and the v1 price is served as normal.
 function safeHedonic(traits, floor, opts) {
   try {
-    return estimateHedonic(traits, floor, opts);
+    const estimate = estimateHedonic(traits, floor, opts);
+    // Tier-2 parcels fall back to the v1 price and are far above any collection
+    // bid, but the floor is applied uniformly rather than special-cased — max()
+    // leaves anything already above it untouched.
+    return applyOfferFloor(estimate, currentTopOffer());
   } catch (err) {
     console.warn(`[hedonic] estimate failed for ${traits?.tokenId}: ${err.message}`);
     return null;
@@ -1007,12 +1121,12 @@ app.get('/estimate/:tokenId', async (req, res) => {
       getFloorPrice(),
     ]);
     const pricing = estimatePrice(traits, floor);
-    // Shadow: returned for comparison, not shown as the headline estimate.
-    // Never let a fault here take down the live estimate.
+    // v1, kept alongside for /legacy. The headline estimate is pricingV2.
     const pricingV2 = safeHedonic(traits, floor);
+    const listing = await getBestListing(tokenId);
 
     res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
-    res.json({ tokenId, traits, pricing, pricingV2, floorIsLive });
+    res.json({ tokenId, traits, pricing, pricingV2, listing, floorIsLive });
   } catch (err) {
     console.error(`[estimate] ${req.params.tokenId}:`, err.message);
     res.status(500).json({ error: 'Failed to fetch parcel data.' });
@@ -1688,6 +1802,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   console.log(`Terraform Estimator API on port ${PORT}`);
+  // Warm the collection-bid cache so the first estimate served is already floored
+  // rather than waiting for a background refresh to land.
+  currentTopOffer();
   if (!process.env.ALCHEMY_API_KEY) console.warn('[startup] ALCHEMY_API_KEY not set — floor price will use hardcoded fallback');
   if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — /undervalued endpoint disabled');
   try {

@@ -16,7 +16,7 @@ export const parcelImage = (tokenId) => `/img/${tokenId}`;
 // the same relative width; it is one quantity with a width, not two competing
 // estimates. Tier-2 parcels (Godmode, Plague, the seeds, Lith0) have too few
 // settled sales to split, so they collapse to a single number and render as one.
-export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note }) {
+export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note, listing }) {
   const collapsed = !pricingV2 || pricingV2.tier === 'tier2' || pricingV2.off === pricingV2.on;
   const low = pricingV2 ? pricingV2.off : fallback;
   const high = pricingV2 ? pricingV2.on : fallback;
@@ -30,9 +30,6 @@ export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note }) {
           {collapsed ? high.toFixed(3) : `${low.toFixed(3)} – ${high.toFixed(3)}`}
         </span>
       </div>
-      {!collapsed && (
-        <p className="text-xs opacity-55 mt-1">liquidation → listed price</p>
-      )}
       {floor != null && (
         <p className="text-xs opacity-55 mt-1">
           floor: {floor} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
@@ -43,8 +40,38 @@ export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note }) {
           {pricingV2.tierReason} — too few settled sales to price a range.
         </p>
       )}
+      {pricingV2?.offerFloor != null && (
+        <p className="text-xs opacity-45 mt-1">
+          raised to the {pricingV2.offerFloor} ETH collection offer —{' '}
+          <a href="/faq#floor" className="no-underline">why?</a>
+        </p>
+      )}
+      {listing !== undefined && <ListingRow listing={listing} />}
       {note}
     </div>
+  );
+}
+
+// Whether this parcel is for sale right now. `listing` is null when it is not,
+// so an explicit "not listed" is shown rather than silence — absence of a row
+// would read as missing data rather than as an answer.
+function ListingRow({ listing }) {
+  if (!listing) {
+    return <p className="text-xs opacity-40 mt-3">not currently listed</p>;
+  }
+  return (
+    <p className="text-xs mt-3">
+      <span className="opacity-55">listed at </span>
+      <a
+        href={listing.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="no-underline"
+        style={{ color: '#7dd3a0' }}
+      >
+        {listing.price.toFixed(3)} {listing.currency} ↗
+      </a>
+    </p>
   );
 }
 
