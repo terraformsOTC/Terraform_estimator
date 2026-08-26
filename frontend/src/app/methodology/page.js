@@ -72,7 +72,7 @@ export default function MethodologyPage() {
           <Q id="accuracy" q="How accurate is it?">
             <p>
               Median error against recent settled sales is around 11%. The model is least reliable for
-              very rare zones, one-of-ones, and any trait that hasn&apos;t traded recently.
+              very rare zones, special parcel types, and any trait that hasn&apos;t traded recently.
             </p>
           </Q>
 
