@@ -1,7 +1,6 @@
 'use client';
 
-import { EthIcon, parcelImage, getMoneySwordMultiplier, hedonicScorecard, PropertyStack, WalletLink } from './shared';
-import { useMoneySword } from '@/contexts/MoneySword';
+import { EthIcon, parcelImage, PropertyStack, WalletLink } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -33,7 +32,6 @@ function formatRelative(closingDate) {
 }
 
 export default function SalesView({ data, loading, error, ethUsd }) {
-  const [moneySword] = useMoneySword();
 
   if (loading) {
     return (
@@ -54,15 +52,10 @@ export default function SalesView({ data, loading, error, ethUsd }) {
   const { sales: rawSales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
 
-  const sales = moneySword
-    ? (rawSales || []).map(s => {
-        const est = s.pricing?.estimatedValue;
-        if (!est) return s;
-        const adjEst = est * getMoneySwordMultiplier(s.pricing, s.traits?.level);
-        const adjError = typeof s.salePrice === 'number' ? (s.salePrice - adjEst) / adjEst : s.signedError;
-        return { ...s, pricing: { ...s.pricing, estimatedValue: adjEst }, signedError: adjError };
-      })
-    : rawSales;
+  // signedErrorV2 already scores each sale against the side it settled on — a WETH
+  // fill against the liquidation model, native ETH against the listed-price model.
+  // That is the like-for-like comparison, so nothing is adjusted here.
+  const sales = (rawSales || []).map(s => ({ ...s, signedError: s.signedErrorV2 ?? s.signedError }));
 
   // Collection-wide mean signed error — quick eyeball of model bias.
   const priced = (sales || []).filter(s => typeof s.signedError === 'number');
@@ -70,10 +63,6 @@ export default function SalesView({ data, loading, error, ethUsd }) {
     ? priced.reduce((a, s) => a + s.signedError, 0) / priced.length
     : null;
 
-  // Shadow scorecard: the fitted hedonic model scored against the same settled
-  // sales, so a cutover decision rests on live evidence rather than a backtest.
-  // Shared with /hedonic, which shows the same numbers in full.
-  const shadow = hedonicScorecard(rawSales);
 
   return (
     <div>
@@ -92,17 +81,7 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         )}
       </div>
 
-      <p className="mb-2 text-xs opacity-50">recent OpenSea sales compared to our current estimate. negative = sold below estimate, positive = sold above.</p>
-
-      {shadow && (
-        <p className="mb-6 text-xs opacity-40">
-          shadow model (hedonic v2, not shown above) — median absolute error over {shadow.n} sales:{' '}
-          <span className="opacity-90">v1 {(shadow.v1 * 100).toFixed(1)}%</span>
-          {' · '}
-          <span className="opacity-90">v2 {(shadow.v2 * 100).toFixed(1)}%</span>
-          {' · '}v2 closer on {shadow.v2Wins}/{shadow.n}
-        </p>
-      )}
+      <p className="mb-6 text-xs opacity-50">recent OpenSea sales compared to our current estimate. negative = sold below estimate, positive = sold above.</p>
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>

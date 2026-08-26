@@ -8,29 +8,44 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001
 // See src/app/img/[tokenId]/route.js.
 export const parcelImage = (tokenId) => `/img/${tokenId}`;
 
-export function median(xs) {
-  if (!xs.length) return null;
-  const s = [...xs].sort((a, b) => a - b);
-  const m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
+// The estimate, as the model actually produces it: a range, not a point.
+//
+// The two ends are the same parcel priced on the two sides it can change hands
+// on — an accepted offer (what a seller nets) and a taken listing (what a buyer
+// pays). The gap between them is one fitted coefficient, so the range is always
+// the same relative width; it is one quantity with a width, not two competing
+// estimates. Tier-2 parcels (Godmode, Plague, the seeds, Lith0) have too few
+// settled sales to split, so they collapse to a single number and render as one.
+export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note }) {
+  const collapsed = !pricingV2 || pricingV2.tier === 'tier2' || pricingV2.off === pricingV2.on;
+  const low = pricingV2 ? pricingV2.off : fallback;
+  const high = pricingV2 ? pricingV2.on : fallback;
 
-// Scores v1 and the hedonic shadow model against the same settled sales.
-// Takes RAW sales — the money-sword adjustment is a v1-only heuristic, while the
-// hedonic model fits bid and ask settlement directly, so applying it would score
-// the two on different quantities. Median, not mean: a handful of six-figure
-// outliers otherwise decides the comparison on its own.
-export function hedonicScorecard(rawSales) {
-  const scored = (rawSales || []).filter(
-    s => typeof s.signedError === 'number' && typeof s.signedErrorV2 === 'number'
+  return (
+    <div>
+      <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
+      <div className="flex items-center gap-2 flex-wrap">
+        <EthIcon />
+        <span className="text-3xl">
+          {collapsed ? high.toFixed(3) : `${low.toFixed(3)} – ${high.toFixed(3)}`}
+        </span>
+      </div>
+      {!collapsed && (
+        <p className="text-xs opacity-55 mt-1">liquidation → listed price</p>
+      )}
+      {floor != null && (
+        <p className="text-xs opacity-55 mt-1">
+          floor: {floor} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
+        </p>
+      )}
+      {collapsed && pricingV2?.tierReason && (
+        <p className="text-xs opacity-45 mt-1">
+          {pricingV2.tierReason} — too few settled sales to price a range.
+        </p>
+      )}
+      {note}
+    </div>
   );
-  if (!scored.length) return null;
-  return {
-    n: scored.length,
-    v1: median(scored.map(s => Math.abs(s.signedError))),
-    v2: median(scored.map(s => Math.abs(s.signedErrorV2))),
-    v2Wins: scored.filter(s => Math.abs(s.signedErrorV2) < Math.abs(s.signedError)).length,
-  };
 }
 
 // Used by secondary pages (bargains, glossary) that don't manage wallet state themselves.
@@ -255,18 +270,6 @@ export function getLevelCategory(level) {
 
 const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };
 
-export function getMoneySwordMultiplier(pricing, level) {
-  if (!pricing) return 1.0;
-  if (pricing.isSpecial) return 1.35;
-  const levelCat = getLevelCategory(level);
-  const topCat = [pricing.zoneCategory, pricing.biomeCategory, levelCat]
-    .filter(Boolean)
-    .sort((a, b) => (CATEGORY_ORDER[a] ?? 99) - (CATEGORY_ORDER[b] ?? 99))[0];
-  if (topCat === 'Mythical') return 1.5;
-  if (topCat === 'Rare')     return 1.4;
-  if (topCat === 'Premium')  return 1.3;
-  return 1.2;
-}
 
 // ─── Shared trait row components ─────────────────────────────────────────────
 // Used in both ParcelResult and UnmintedResult

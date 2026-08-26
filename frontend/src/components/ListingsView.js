@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, getMoneySwordMultiplier, PropertyStack, WalletLink } from './shared';
-import { useMoneySword } from '@/contexts/MoneySword';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -33,33 +32,24 @@ function vsModelColor(discount) {
 }
 
 export default function ListingsView({ data, loading, error, viewMode = 'list' }) {
-  const [moneySword] = useMoneySword();
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
 
+  // `discount` is computed server-side against the model's LISTED-PRICE side, so a
+  // live ask is compared with a modelled ask. Scoring listings against the
+  // liquidation side would mark every listing on the site overpriced by the spread.
   const sorted = useMemo(() => {
     if (!data?.parcels) return [];
-    const isBargain = (p) => {
-      if (!moneySword) return p.discount > 0;
-      return p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level) > p.listedPrice;
-    };
-    const list = bargainsOnly ? data.parcels.filter(isBargain) : data.parcels;
+    const list = bargainsOnly ? data.parcels.filter(p => p.discount > 0) : data.parcels;
     if (sort === 'price') return [...list].sort((a, b) => a.listedPrice - b.listedPrice);
-    if (sort === 'discount') {
-      const adjDiscount = (p) => {
-        if (!moneySword) return p.discount;
-        const adj = p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level);
-        return (adj - p.listedPrice) / adj;
-      };
-      return [...list].sort((a, b) => adjDiscount(b) - adjDiscount(a));
-    }
+    if (sort === 'discount') return [...list].sort((a, b) => b.discount - a.discount);
     return [...list].sort((a, b) => {
       if (!a.listedAt && !b.listedAt) return 0;
       if (!a.listedAt) return 1;
       if (!b.listedAt) return -1;
       return b.listedAt - a.listedAt;
     });
-  }, [data, sort, bargainsOnly, moneySword]);
+  }, [data, sort, bargainsOnly]);
 
   if (loading) {
     return (
@@ -153,18 +143,13 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
 }
 
 function ListingRow({ parcel }) {
-  const { tokenId, traits, pricing, listedPrice, listedAt, discount, owner, ownerEns } = parcel;
+  const { tokenId, traits, pricing, pricingV2, listedPrice, listedAt, discount, owner, ownerEns } = parcel;
   const { estimatedValue } = pricing;
-  const [moneySword] = useMoneySword();
 
-  // traits?.level to match the isBargain/adjDiscount helpers in ListingsView —
-  // they already guard it, and a row should never be the one thing that throws.
-  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, traits?.level) : estimatedValue;
-  const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
-
-  const color = vsModelColor(adjDiscount);
-  const sign = adjDiscount >= 0 ? '-' : '+';
-  const vsModelPct = (Math.abs(adjDiscount) * 100).toFixed(1);
+  const adjEst = pricingV2 ? pricingV2.on : estimatedValue;
+  const color = vsModelColor(discount);
+  const sign = discount >= 0 ? '-' : '+';
+  const vsModelPct = (Math.abs(discount) * 100).toFixed(1);
 
   return (
     <tr className="border-b" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
@@ -238,13 +223,11 @@ function ListingRow({ parcel }) {
 }
 
 function ListingCard({ parcel }) {
-  const { tokenId, traits, pricing, listedPrice, discount } = parcel;
+  const { tokenId, traits, pricing, pricingV2, listedPrice, discount } = parcel;
   const { zone, biome, level, chroma, mode, specialType, mysteryOutlier, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
-  const [moneySword] = useMoneySword();
 
-  const adjEst = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
-  const adjDiscount = moneySword ? (adjEst - listedPrice) / adjEst : discount;
+  const adjEst = pricingV2 ? pricingV2.on : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
   const topCategory = [zoneCategory, biomeCategory, levelCategory].filter(Boolean).sort((a, b) => {
@@ -260,9 +243,9 @@ function ListingCard({ parcel }) {
     : specialType
   ];
 
-  const color = vsModelColor(adjDiscount);
-  const sign = adjDiscount >= 0 ? '-' : '+';
-  const vsModelPct = (Math.abs(adjDiscount) * 100).toFixed(1);
+  const color = vsModelColor(discount);
+  const sign = discount >= 0 ? '-' : '+';
+  const vsModelPct = (Math.abs(discount) * 100).toFixed(1);
 
   return (
     <div className="relative">

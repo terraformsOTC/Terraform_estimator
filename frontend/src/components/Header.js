@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useMoneySword } from '@/contexts/MoneySword';
 
 export default function Header({ walletAddress, onConnect, onDisconnect, onWhale }) {
   const short = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
     : null;
 
-  const [moneySword, toggleMoneySword] = useMoneySword();
   const [menuOpen, setMenuOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -93,14 +91,6 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
       <nav className="flex flex-row justify-between items-center gap-3" style={{ minHeight: '36px' }}>
         <div className="flex items-center whitespace-nowrap">
           <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
-          <button
-            onClick={toggleMoneySword}
-            title={moneySword ? 'Disable Money Sword mode' : 'Enable Money Sword mode'}
-            className={`ml-2 bg-transparent border-none cursor-pointer p-0 font-inherit leading-none transition-opacity ${moneySword ? 'opacity-100' : 'opacity-35 hover:opacity-60'}`}
-            style={{ fontSize: '1.1em' }}
-          >
-            🗡
-          </button>
         </div>
         <div className="flex items-center gap-4">
           {primaryNav.map((item) => renderNavItem(item, desktopClasses(item), false))}
@@ -161,18 +151,6 @@ export default function Header({ walletAddress, onConnect, onDisconnect, onWhale
           {[...primaryNav, ...menuNav].map((item) => renderNavItem(item, mobileClasses, true))}
         </div>
       )}
-      {moneySword && (
-        <p className="text-xs opacity-50 mt-2">
-          🗡 One or more nerds has the money sword, there is an uncomfortable amount of competition for parcels. All estimates are increased.
-        </p>
-      )}
-      <p className="text-xs mt-2" style={{ color: 'rgba(232,232,232,0.4)' }}>
-        Pricing methodology migration coming soon — mainly impacts rare &amp; special parcels.{' '}
-        <a href="https://twitter.com/TerraformsOTC" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(232,232,232,0.4)', textDecoration: 'underline' }}>
-          Contact us
-        </a>{' '}
-        with any questions.
-      </p>
     </header>
   );
 }

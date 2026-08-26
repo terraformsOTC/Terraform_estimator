@@ -27,11 +27,11 @@
 // — because the raw number is partly composition: different parcels sell on each
 // side. Controlling for traits is what the indicator does.
 //
-// SHADOW MODE: this runs alongside pricingModel.js and does not replace it. On the
-// live /sales feed v2 is well ahead — 11.3% median absolute error against v1's
-// 27.2%, closer on 39 of 50 settled sales — but v1's miss there is mostly a level
-// bias, and the feed is 50 sales. The live scorecard is what should decide a
-// cutover, and /hedonic shows it in full.
+// This is the site's pricing model. It replaced pricingModel.js (v1) as the
+// headline estimate; v1 still computes alongside it and is served on the unlinked
+// /legacy page. On the live sales feed at cutover, v2 missed by 11.3% median
+// absolute error against v1's 27.2%, closer on 39 of 50 settled sales — most of
+// v1's gap being a level bias, since v1 read high and parcels cleared under it.
 
 const { estimatePrice } = require('./pricingModel');
 const coeffs = require('./pricing-v2-coeffs.json');

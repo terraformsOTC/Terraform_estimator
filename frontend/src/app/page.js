@@ -8,15 +8,15 @@ import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { EthIcon, API_URL, pickRandomWhale, Footer, getMoneySwordMultiplier } from '@/components/shared';
-import { useMoneySword } from '@/contexts/MoneySword';
+import { EthIcon, API_URL, pickRandomWhale, Footer } from '@/components/shared';
 
 function PortfolioStats({ data }) {
-  const [moneySword] = useMoneySword();
-  const displayTotal = useMemo(() => {
-    if (!moneySword || !data.parcels) return data.totalEstimatedValue;
-    return data.parcels.reduce((sum, p) => sum + p.pricing.estimatedValue * getMoneySwordMultiplier(p.pricing, p.traits?.level), 0);
-  }, [data, moneySword]);
+  // Totals come from the backend already summed on both sides: totalEstimatedValue
+  // is the bid side (what liquidating realises) and totalListedValue the ask side.
+  // Shown as a range for the same reason a single parcel is — summing the ask side
+  // alone would quote a wallet at a price every parcel selling at once could not get.
+  const { totalEstimatedValue: low, totalListedValue: high } = data;
+  const showRange = typeof high === 'number' && high !== low;
   return (
     <div className="text-left md:text-right">
       <div className="flex text-left md:text-right gap-6 whitespace-nowrap">
@@ -28,7 +28,7 @@ function PortfolioStats({ data }) {
           <p className="font-semibold">Estimated collection value</p>
           <span className="flex items-center md:justify-end gap-1">
             <EthIcon />
-            {displayTotal.toFixed(2)}
+            {showRange ? `${low.toFixed(2)} – ${high.toFixed(2)}` : low.toFixed(2)}
           </span>
         </div>
         {data.sets?.some(s => s.completed) && (

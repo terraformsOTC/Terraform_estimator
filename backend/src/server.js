@@ -585,9 +585,14 @@ async function computeUndervalued() {
   const results = [];
   for (const { item, traits } of resolved) {
     const pricing = estimatePrice(traits, floor);
-    const discount = (pricing.estimatedValue - item.listedPrice) / pricing.estimatedValue;
+    const pricingV2 = safeHedonic(traits, floor);
+    // A listing IS an ask, so it is scored against the ask sub-model — comparing a
+    // live listing to the bid side would mark every listing on the site overpriced
+    // by the width of the spread. Falls back to v1 if the shadow model faults.
+    const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
+    const discount = (model - item.listedPrice) / model;
     if (discount >= 0.01) {
-      results.push({ tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, discount });
+      results.push({ tokenId: traits.tokenId, traits, pricing, pricingV2, listedPrice: item.listedPrice, discount });
     }
   }
 
@@ -649,9 +654,12 @@ async function computeAllListings() {
   const ensMap = await resolveEnsNames(resolved.map(({ item }) => item.owner));
   const parcels = resolved.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
-    const discount = (pricing.estimatedValue - item.listedPrice) / pricing.estimatedValue;
+    const pricingV2 = safeHedonic(traits, floor);
+    // Ask against ask — see the note in computeUndervalued.
+    const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
+    const discount = (model - item.listedPrice) / model;
     return {
-      tokenId: traits.tokenId, traits, pricing,
+      tokenId: traits.tokenId, traits, pricing, pricingV2,
       listedPrice: item.listedPrice, listedAt: item.listedAt, discount,
       owner: item.owner || null,
       ownerEns: item.owner ? (ensMap[item.owner.toLowerCase()] || null) : null,
@@ -1022,12 +1030,27 @@ app.get('/wallet/:address', async (req, res) => {
       tokenId: p.tokenId,
       traits: p,
       pricing: estimatePrice(p, liveFloor),
+      pricingV2: safeHedonic(p, liveFloor),
     }));
 
-    // Reuse already-computed pricing for the first 100; run estimatePrice only for the remainder
-    const displayedTotal = pricedParcels.reduce((sum, p) => sum + p.pricing.estimatedValue, 0);
-    const remainderTotal = allParcels.slice(100).reduce((sum, p) => sum + estimatePrice(p, liveFloor).estimatedValue, 0);
+    // Portfolio totals use the BID side: a collection is worth what selling it
+    // realises, and selling a hundred parcels means taking offers, not waiting for
+    // a hundred listings to be hit. Totalling the ask side would overstate a wallet
+    // by the whole spread. Both ends are returned so the UI can show the range.
+    const parcelValue = (p, v2) => (v2 ? v2.off : p.estimatedValue);
+    const askValue = (p, v2) => (v2 ? v2.on : p.estimatedValue);
+    // Reuse already-computed pricing for the first 100; price only the remainder here
+    const displayedTotal = pricedParcels.reduce((sum, p) => sum + parcelValue(p.pricing, p.pricingV2), 0);
+    const displayedAsk = pricedParcels.reduce((sum, p) => sum + askValue(p.pricing, p.pricingV2), 0);
+    let remainderTotal = 0, remainderAsk = 0;
+    for (const p of allParcels.slice(100)) {
+      const v1 = estimatePrice(p, liveFloor);
+      const v2 = safeHedonic(p, liveFloor);
+      remainderTotal += parcelValue(v1, v2);
+      remainderAsk += askValue(v1, v2);
+    }
     const totalEstimatedValue = displayedTotal + remainderTotal;
+    const totalListedValue = displayedAsk + remainderAsk;
 
     res.json({
       address,
@@ -1036,6 +1059,7 @@ app.get('/wallet/:address', async (req, res) => {
       parcels: pricedParcels,
       sets,
       totalEstimatedValue: Math.round(totalEstimatedValue * 1000) / 1000,
+      totalListedValue: Math.round(totalListedValue * 1000) / 1000,
       floor: liveFloor,
       floorIsLive,
       // true when the trait budget cut the walk short — totals below are a
@@ -1105,9 +1129,15 @@ async function resolveUnminted(parcel, res) {
     && parcel.mysteryValue != null && parcel.mysteryValue < MYSTERY_P5;
   const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm };
   const pricing  = estimatePrice(traits, floor);
+  // Unminted parcels carry every feature the hedonic model reads — zone, biome,
+  // level, chroma, mode, mysteryValue are all known from the queue data, only the
+  // on-chain token doesn't exist yet. So this is the same estimate a minted parcel
+  // gets, not a level-only approximation, and it is what the parcel should be
+  // worth once minted rather than what the mint costs.
+  const pricingV2 = safeHedonic(traits, floor);
   const animData = UNMINTED_ANIM_LOOKUP.get(`${parcel.level}/${parcel.x}/${parcel.y}`) || null;
   res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
-  res.json({ traits, pricing, floorIsLive, animData });
+  res.json({ traits, pricing, pricingV2, floorIsLive, animData });
 }
 
 // GET /unminted/search?id=N  — lookup by sequential id (1–1193)

@@ -1,8 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory, getMoneySwordMultiplier } from './shared';
-import { useMoneySword } from '@/contexts/MoneySword';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 import {
   EMPTY_FILTERS,
@@ -393,11 +392,12 @@ function SetChip({ set }) {
 
 
 function ParcelCard({ parcel }) {
-  const { tokenId, traits, pricing } = parcel;
+  const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
-  const [moneySword] = useMoneySword();
-  const displayValue = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
+  // Bid side per card, so a card and the wallet total below it agree. A wallet is
+  // worth what selling it realises, and selling in size means taking offers.
+  const displayValue = pricingV2 ? pricingV2.off : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
 

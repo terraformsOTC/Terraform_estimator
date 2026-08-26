@@ -1,20 +1,11 @@
 'use client';
 
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getMoneySwordMultiplier, getZoneLoreUrl } from './shared';
-import { useMoneySword } from '@/contexts/MoneySword';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate } from './shared';
 
-// Shadow model is off by default: the headline estimate stays v1 until the /sales
-// scorecard justifies a cutover. Set NEXT_PUBLIC_SHOW_HEDONIC=true to preview it
-// site-wide; /hedonic passes showHedonic explicitly so the staging page can show
-// the band without turning it on for everyone.
-const SHOW_HEDONIC = process.env.NEXT_PUBLIC_SHOW_HEDONIC === 'true';
-
-export default function ParcelResult({ parcel, ethUsd, showHedonic = SHOW_HEDONIC }) {
+export default function ParcelResult({ parcel, ethUsd }) {
   const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed, x, y } = traits;
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
-  const [moneySword] = useMoneySword();
-  const displayValue = moneySword ? estimatedValue * getMoneySwordMultiplier(pricing, level) : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
 
@@ -31,16 +22,13 @@ export default function ParcelResult({ parcel, ethUsd, showHedonic = SHOW_HEDONI
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <div>
-          <p className="text-xs opacity-60 uppercase tracking-widest mb-1">estimated value</p>
-          <div className="flex items-center gap-2">
-            <EthIcon />
-            <span className="text-3xl">{displayValue.toFixed(3)}</span>
-          </div>
-          <p className="text-xs opacity-55 mt-1">floor: {floor} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}</p>
-          {isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}
-          {showHedonic && <HedonicRange pricingV2={pricingV2} />}
-        </div>
+        <HedonicEstimate
+          pricingV2={pricingV2}
+          fallback={estimatedValue}
+          floor={floor}
+          ethUsd={ethUsd}
+          note={isSpecial && <p className="text-xs opacity-45 mt-1">special parcel types are priced independently.</p>}
+        />
 
         <div className="flex flex-col gap-0">
           {isSpecial
@@ -62,32 +50,6 @@ export default function ParcelResult({ parcel, ethUsd, showHedonic = SHOW_HEDONI
         <ExternalLinks tokenId={tokenId} zone={zone} />
       </div>
     </div>
-  );
-}
-
-// Fitted hedonic model, shown as a band rather than a point: the two sub-models
-// are fitted separately on bid and ask settlements, and across every floor regime
-// measured bids clear ~1.05x floor while asks clear ~1.30x. That spread is a real
-// market feature, so collapsing it to one number would overstate our precision.
-// Tier-2 parcels (Godmode/Plague/seeds/Lith0) have too few sales to split, so they
-// collapse to a single value.
-function HedonicRange({ pricingV2 }) {
-  if (!pricingV2) return null;
-  const { off, on, tier, tierReason } = pricingV2;
-
-  if (tier === 'tier2') {
-    return (
-      <p className="text-xs opacity-40 mt-2">
-        hedonic v2: {on.toFixed(3)} ETH <span className="opacity-70">({tierReason} — priced from the v1 prior)</span>
-      </p>
-    );
-  }
-
-  return (
-    <p className="text-xs opacity-40 mt-2">
-      hedonic v2: {off.toFixed(3)} – {on.toFixed(3)} ETH{' '}
-      <span className="opacity-70">(liquidation → retail)</span>
-    </p>
   );
 }
 
