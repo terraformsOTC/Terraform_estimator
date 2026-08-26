@@ -46,7 +46,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
     { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },
     // Last item deliberately: it explains the site rather than linking away from it.
-    { label: '[faq]', href: '/faq' },
+    { label: '[methodology]', href: '/methodology' },
   ];
 
   const renderNavItem = (item, classes, closeOnNav) => {

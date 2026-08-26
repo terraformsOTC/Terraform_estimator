@@ -40,12 +40,6 @@ export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, note, list
           {pricingV2.tierReason} — too few settled sales to price a range.
         </p>
       )}
-      {pricingV2?.offerFloor != null && (
-        <p className="text-xs opacity-45 mt-1">
-          raised to the {pricingV2.offerFloor} ETH collection offer —{' '}
-          <a href="/faq#floor" className="no-underline">why?</a>
-        </p>
-      )}
       {listing !== undefined && <ListingRow listing={listing} />}
       {note}
     </div>

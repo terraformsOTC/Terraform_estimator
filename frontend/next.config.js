@@ -35,6 +35,11 @@ const svgHeaders = [
 ];
 
 const nextConfig = {
+  // /faq shipped briefly under that name and went out in the sitemap before being
+  // renamed. Cheap insurance against a dead link; permanent so it is not re-crawled.
+  async redirects() {
+    return [{ source: '/faq', destination: '/methodology', permanent: true }];
+  },
   async headers() {
     return [
       // Negative lookahead so the site CSP never lands on /img/* alongside the
