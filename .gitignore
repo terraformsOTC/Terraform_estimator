@@ -33,3 +33,7 @@ npm-debug.log*
 # Syncthing machine-local files (not synced between devices)
 .stfolder/
 .stignore
+
+# Claude Code per-machine permission allowlist. Local-only by design, and this
+# one carries an inlined RPC key in an allowed-command string.
+.claude/settings.local.json

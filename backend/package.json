@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env src/server.js",
     "dev": "nodemon --env-file=.env src/server.js",
-    "bake-traits": "node --env-file=.env scripts/bake-minted-traits.js"
+    "bake-traits": "node --env-file=.env scripts/bake-minted-traits.js",
+    "otc-scan": "node --env-file=.env scripts/otc-scan.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
