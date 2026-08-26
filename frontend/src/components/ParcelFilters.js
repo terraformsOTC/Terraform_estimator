@@ -1,58 +1,70 @@
 'use client';
 
+import { useState } from 'react';
+import { ALL_ZONES, ALL_MODES, ALL_CHROMAS, ALL_BIOMES, ALL_LEVELS } from '@/lib/parcelTraitDomains';
+
 // Attribute filtering for parcel grids (wallet/portfolio view).
 //
-// Semantics mirror terraformexplorer.xyz: the option list for each attribute is
-// derived from the parcels actually present (not the whole collection), and a
-// parcel passes when it matches SOME selected value in EVERY attribute that has
-// a selection — OR within an attribute, AND across attributes.
+// Semantics mirror terraformexplorer.xyz: a parcel passes when it matches SOME
+// selected value in EVERY attribute that has a selection — OR within an
+// attribute, AND across attributes.
+//
+// Unlike the explorer, every value in the collection is listed, not just the
+// ones the wallet holds: unowned values render greyed and inert, so the panel
+// doubles as a "what's missing" view.
 
-// Order here is the order sections render in: smallest option sets first.
+// Order here is the order sections render in: the two small always-open
+// sections first, then the long collapsible ones.
 export const FILTER_ATTRS = [
   {
     key: 'mode',
     label: 'mode',
+    domain: ALL_MODES,
     get: t => t.mode || 'Terrain',
     compare: (a, b) => String(a).localeCompare(String(b)),
     format: v => v,
-    layout: 'flex flex-wrap',
-    showCount: true,
+    layout: 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5',
+    collapsible: false,
   },
   {
     key: 'chroma',
     label: 'chroma',
+    domain: ALL_CHROMAS,
     get: t => t.chroma || 'Flow',
     compare: (a, b) => String(a).localeCompare(String(b)),
     format: v => v,
-    layout: 'flex flex-wrap',
-    showCount: true,
+    layout: 'grid grid-cols-2 sm:grid-cols-4',
+    collapsible: false,
   },
   {
     key: 'level',
     label: 'level',
+    domain: ALL_LEVELS,
     get: t => (Number.isInteger(t.level) && t.level > 0 ? t.level : null),
     compare: (a, b) => a - b,
     format: v => `L${v}`,
-    layout: 'grid grid-cols-5 sm:grid-cols-10',
-    showCount: false,
+    layout: 'grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10',
+    collapsible: true,
   },
   {
     key: 'zone',
     label: 'zone',
+    domain: ALL_ZONES,
     get: t => t.zone || null,
     compare: (a, b) => String(a).localeCompare(String(b)),
     format: v => v,
     layout: 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6',
-    showCount: true,
+    collapsible: true,
   },
   {
     key: 'biome',
     label: 'biome',
+    domain: ALL_BIOMES,
     get: t => (Number.isInteger(t.biome) && t.biome >= 0 ? t.biome : null),
     compare: (a, b) => a - b,
     format: v => `B${v}`,
-    layout: 'grid grid-cols-5 sm:grid-cols-8 md:grid-cols-12',
-    showCount: false,
+    layout: 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10',
+    collapsible: true,
   },
 ];
 
@@ -68,9 +80,10 @@ export function countActiveFilters(filters) {
   return FILTER_ATTRS.reduce((n, a) => n + (filters[a.key]?.size ?? 0), 0);
 }
 
-// { mode: [{ value, label, count }], chroma: [...], zone: [...], biome: [...] }
-// Only values present in `parcels` become options, so the panel never offers a
-// selection that yields zero results.
+// { mode: [{ value, label, count }], ... } covering the whole collection domain.
+// count is 0 for values the wallet doesn't hold — those render greyed and inert
+// rather than being dropped. Values observed on a parcel but missing from the
+// domain (a stale snapshot) are merged in so nothing becomes unfilterable.
 export function buildFilterOptions(parcels) {
   const tallies = Object.fromEntries(FILTER_ATTRS.map(a => [a.key, new Map()]));
 
@@ -85,12 +98,14 @@ export function buildFilterOptions(parcels) {
   }
 
   return Object.fromEntries(
-    FILTER_ATTRS.map(attr => [
-      attr.key,
-      [...tallies[attr.key].entries()]
-        .sort((a, b) => attr.compare(a[0], b[0]))
-        .map(([value, count]) => ({ value, label: attr.format(value), count })),
-    ]),
+    FILTER_ATTRS.map(attr => {
+      const counts = tallies[attr.key];
+      const values = [...new Set([...attr.domain, ...counts.keys()])].sort(attr.compare);
+      return [
+        attr.key,
+        values.map(value => ({ value, label: attr.format(value), count: counts.get(value) ?? 0 })),
+      ];
+    }),
   );
 }
 
@@ -114,31 +129,98 @@ export function toggleFilterValue(filters, key, value) {
   return next;
 }
 
-function FilterChip({ label, count, active, title, onClick }) {
+// Label left, owned count right — keeps the count visually distinct from
+// numeric labels like B46 / L14, which would otherwise run together.
+function FilterChip({ label, count, active, owned, title, onClick }) {
   return (
     <button
-      onClick={onClick}
+      onClick={owned ? onClick : undefined}
+      disabled={!owned}
       title={title}
-      className="text-xs px-1 py-0.5 text-left truncate"
+      className="text-xs px-1 py-0.5 flex items-center justify-between gap-1 w-full"
       style={{
-        border: `1px solid ${active ? 'rgba(232,232,232,0.75)' : 'rgba(232,232,232,0.18)'}`,
+        border: `1px solid ${
+          !owned ? 'rgba(200,200,200,0.15)'
+            : active ? 'rgba(232,232,232,0.75)'
+            : 'rgba(232,232,232,0.18)'
+        }`,
         background: active ? 'rgba(232,232,232,0.12)' : 'transparent',
-        opacity: active ? 1 : 0.65,
-        cursor: 'pointer',
+        color: owned ? 'inherit' : 'rgba(200,200,200,0.25)',
+        opacity: !owned ? 1 : active ? 1 : 0.65,
+        cursor: owned ? 'pointer' : 'default',
       }}
     >
-      {label}
-      {count != null && <span style={{ opacity: 0.45 }}> {count}</span>}
+      <span className="truncate">{label}</span>
+      {count > 0 && <span className="flex-shrink-0" style={{ opacity: 0.5 }}>{count}</span>}
     </button>
   );
 }
 
-export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose }) {
+function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen }) {
+  const selectedCount = selected?.size ?? 0;
+  const ownedCount = options.filter(o => o.count > 0).length;
+
+  const grid = (
+    <div className={`${attr.layout} gap-1`}>
+      {options.map(({ value, label, count }) => (
+        <FilterChip
+          key={String(value)}
+          label={label}
+          count={count}
+          owned={count > 0}
+          active={selected?.has(value)}
+          title={
+            count > 0
+              ? `${attr.label} ${label} — ${count} ${count === 1 ? 'parcel' : 'parcels'}`
+              : `${attr.label} ${label} — none owned`
+          }
+          onClick={() => onToggle(attr.key, value)}
+        />
+      ))}
+    </div>
+  );
+
+  if (!attr.collapsible) {
+    return (
+      <div className="mb-3">
+        <p className="text-xs uppercase tracking-widest mb-1" style={{ opacity: 0.4 }}>
+          {attr.label}
+        </p>
+        {grid}
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="mb-6 p-3"
-      style={{ border: '1px solid rgba(232,232,232,0.15)' }}
-    >
+    <div className="mb-3">
+      <button
+        onClick={onToggleOpen}
+        className="flex items-center gap-2 mb-1 text-xs w-full text-left"
+      >
+        <span className="uppercase tracking-widest" style={{ opacity: 0.4 }}>{attr.label}</span>
+        <span style={{ opacity: 0.5 }}>{open ? '[−]' : '[+]'}</span>
+        <span style={{ opacity: 0.3 }}>{ownedCount}/{options.length} owned</span>
+        {selectedCount > 0 && (
+          <span style={{ opacity: 0.75 }}>· {selectedCount} selected</span>
+        )}
+      </button>
+      {open && grid}
+    </div>
+  );
+}
+
+export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose }) {
+  // Long sections start collapsed so the panel opens compact.
+  const [openSections, setOpenSections] = useState(() => new Set());
+  const toggleSection = key =>
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+
+  return (
+    <div className="mb-6 p-3" style={{ border: '1px solid rgba(232,232,232,0.15)' }}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm opacity-80">filter parcels</span>
         <div className="flex items-center gap-2 text-xs">
@@ -147,30 +229,17 @@ export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose
         </div>
       </div>
 
-      {FILTER_ATTRS.map(attr => {
-        const attrOptions = options[attr.key] ?? [];
-        if (attrOptions.length === 0) return null;
-        const selected = filters[attr.key];
-        return (
-          <div key={attr.key} className="mb-3 last:mb-0">
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ opacity: 0.4 }}>
-              {attr.label}
-            </p>
-            <div className={`${attr.layout} gap-1`}>
-              {attrOptions.map(({ value, label, count }) => (
-                <FilterChip
-                  key={String(value)}
-                  label={label}
-                  count={attr.showCount ? count : null}
-                  title={`${attr.label} ${label} — ${count} ${count === 1 ? 'parcel' : 'parcels'}`}
-                  active={selected?.has(value)}
-                  onClick={() => onToggle(attr.key, value)}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      {FILTER_ATTRS.map(attr => (
+        <FilterSection
+          key={attr.key}
+          attr={attr}
+          options={options[attr.key] ?? []}
+          selected={filters[attr.key]}
+          onToggle={onToggle}
+          open={openSections.has(attr.key)}
+          onToggleOpen={() => toggleSection(attr.key)}
+        />
+      ))}
     </div>
   );
 }
