@@ -8,6 +8,13 @@
 // Resumable: re-reads existing JSON and only fetches missing tokenIds.
 // Writes incrementally every 50 tokens so progress isn't lost on Ctrl-C.
 //
+// Pass --force to re-fetch every token instead of only the missing ones. The
+// resumable default cannot refresh a record that already exists, so a plain
+// run is a no-op once the file is complete — and chroma/mode/level/??? all
+// change on-chain when a parcel is upgraded or terraformed. --force is the
+// only way to clear that staleness:
+//   node --env-file=.env scripts/bake-minted-traits.js --force
+//
 // We bake raw attribute-derived fields (zone/biome/level/chroma/mode/
 // mysteryValue/antennaOn) plus the antenna activation timestamp from the
 // Antenna contract (antennaFirstTs — seconds since epoch, 0 if never modified).
@@ -93,17 +100,23 @@ async function main() {
   const terraforms = new ethers.Contract(TERRAFORMS_ADDRESS, TERRAFORMS_ABI, provider);
   const antenna    = new ethers.Contract(ANTENNA_ADDRESS,    ANTENNA_ABI,    provider);
 
+  const force = process.argv.includes('--force') || process.argv.includes('-f');
+
   const existing = loadExisting();
   const startCount = Object.keys(existing).length;
   console.log(`[bake] Loaded ${startCount} existing records from ${OUT_PATH}`);
 
   // Re-fetch if record is missing OR was baked before antennaFirstTs was added.
+  // Under --force, re-fetch everything: an existing record is exactly what goes
+  // stale when a parcel is terraformed, so skipping it defeats the refresh.
   const todo = [];
   for (let id = 1; id <= TOTAL_SUPPLY; id++) {
     const r = existing[id];
-    if (!r || r.antennaOn == null || r.antennaFirstTs == null) todo.push(id);
+    if (force || !r || r.antennaOn == null || r.antennaFirstTs == null) todo.push(id);
   }
-  console.log(`[bake] ${todo.length} tokens remaining to fetch`);
+  console.log(force
+    ? `[bake] --force: re-fetching all ${todo.length} tokens`
+    : `[bake] ${todo.length} tokens remaining to fetch`);
   if (todo.length === 0) {
     console.log('[bake] Nothing to do.');
     return;

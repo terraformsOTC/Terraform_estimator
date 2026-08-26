@@ -76,9 +76,17 @@ Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, 
 
 **Refresh cadence**: chroma, mode, level, and mysteryValue can change on-chain when parcels are upgraded/terraformed. Stale traits skew estimates (worst case: a parcel that becomes Plague after the bake won't get the 5x specialType). Re-bake periodically:
 ```bash
-cd backend && npm run bake-traits   # ~22 min, resumable, batches of 8
+cd backend && npm run bake-traits -- --force   # ~22 min, batches of 8
 ```
 Then commit the updated `minted-traits.json`.
+
+**`--force` is required for a refresh.** The plain `npm run bake-traits` is
+resumable and only fetches tokenIds that are missing or predate the
+`antennaFirstTs` field — so once the file is complete it prints "Nothing to
+do" and refreshes nothing. An existing record is exactly what goes stale, so
+only `--force` re-reads every token. (Found 2026-08-26: #5299 had been
+terraformed but the snapshot still read `Daydream`.) Use the plain form only
+to fill gaps after an interrupted bake.
 
 ## On-Chain Trait Attributes
 
