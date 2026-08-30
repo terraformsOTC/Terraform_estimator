@@ -52,7 +52,8 @@ export default function MethodologyPage() {
             <p>
               Recent sales count for more — the weighting halves every 60 days. Traits with few sales are
               pulled toward a hand-tuned prior, so one unusual trade cannot set a rare zone&apos;s price.
-              Godmode, Plague, the seeds and Lith0 have too few sales to fit and show a single number.
+              Godmode, Plague, X &amp; Y seeds, and Lith0 parcels have too few sales to fit and thus
+              display a single number as value estimate.
             </p>
           </Q>
 
