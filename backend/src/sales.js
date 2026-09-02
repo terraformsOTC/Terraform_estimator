@@ -13,6 +13,16 @@ const { estimateHedonic, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
 
+// Payment tokens that are 1:1 with ETH, keyed by contract address so a missing
+// or empty `payment.symbol` still resolves. Anything not listed here is genuinely
+// non-ETH and is counted in skippedNonEth rather than priced.
+const CURRENCY_BY_ADDRESS = new Map([
+  ['0x0000000000000000000000000000000000000000', 'ETH'],
+  ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', 'WETH'],
+  // Blur Pool ETH. Deposited ETH used for Blur bidding; withdrawable 1:1.
+  ['0x0000000000a39bb272e79075ade125fd351887ac', 'BETH'],
+]);
+
 // OpenSea returns closing_date / event_timestamp as either a Unix integer
 // (seconds) or an ISO 8601 string depending on endpoint version. Normalise
 // to an integer (Unix seconds) so sort arithmetic and formatRelative work.
@@ -57,7 +67,15 @@ async function fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages = 3, limit =
       const payment = ev.payment || {};
       const rawQty = payment.quantity;
       const decimals = payment.decimals ?? 18;
-      const symbol = (payment.symbol || '').toUpperCase();
+      // OpenSea returns an EMPTY symbol for some ERC-20 payments, so the currency
+      // has to be resolved by token address too. Blur Pool ETH is the one that
+      // bites: Blur bids settle in it, it is 1:1 with ETH, and it arrives as
+      // symbol "" — which fell through to UNKNOWN and was dropped as non-ETH.
+      // That silently discarded 15 of 50 events on a single page, and the same
+      // path feeds /api/weekly-report-data, so weekly volume was undercounted.
+      const symbol = (payment.symbol || '').toUpperCase()
+        || CURRENCY_BY_ADDRESS.get((payment.token_address || '').toLowerCase())
+        || '';
       if (!rawQty) continue;
       const salePrice = Number(rawQty) / Math.pow(10, decimals);
       if (!Number.isFinite(salePrice) || salePrice <= 0) continue;
@@ -100,7 +118,7 @@ async function computeRecentSales({
   const allSales = await fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages: 3, limit });
 
   // WETH trades as 1 ETH — safe to merge with ETH sales for pricing purposes.
-  const ETH_LIKE = new Set(['ETH', 'WETH']);
+  const ETH_LIKE = new Set(['ETH', 'WETH', 'BETH']);
   const pricedSales = allSales.filter(s => ETH_LIKE.has(s.currency));
   const skippedNonEth = allSales.length - pricedSales.length;
 
@@ -137,7 +155,9 @@ async function computeRecentSales({
       let pricingV2 = null, signedErrorV2 = null, sideV2 = null;
       try {
         pricingV2 = estimateHedonic(traits, saleFloor);
-        sideV2 = sale.currency === 'WETH' ? 'off' : 'on';
+        // BETH sits with WETH, not with ETH: Blur Pool is the bidding currency,
+        // so a fill denominated in it is an accepted offer, not a taken listing.
+        sideV2 = (sale.currency === 'WETH' || sale.currency === 'BETH') ? 'off' : 'on';
         const v2Value = pricingV2[sideV2];
         if (v2Value > 0) signedErrorV2 = (sale.salePrice - v2Value) / v2Value;
       } catch (err) {
