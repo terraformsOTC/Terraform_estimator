@@ -115,8 +115,14 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 }
 
 function SaleRow({ sale }) {
-  const { tokenId, traits, pricing, salePrice, currency, signedError, closingDate, seller, winner, sellerEns, winnerEns } = sale;
-  const { estimatedValue } = pricing || {};
+  const { tokenId, traits, pricing, pricingV2, sideV2, salePrice, currency, signedError, closingDate, seller, winner, sellerEns, winnerEns } = sale;
+  // Show the number the percentage was actually measured against. signedError here
+  // is signedErrorV2, scored against the side the sale settled on, so displaying
+  // v1's estimatedValue beside it put two different models in one row: #8414 sold
+  // at 0.25 showing v1's 0.321 next to "+3.3%", which was 0.25 against v2's 0.242
+  // bid. Falls back to v1 only when the shadow value is missing.
+  const sideValue = pricingV2 && sideV2 ? pricingV2[sideV2] : null;
+  const estimatedValue = sideValue ?? pricing?.estimatedValue;
 
   const errColor = errorColor(signedError);
   const errLabel = signedError == null
