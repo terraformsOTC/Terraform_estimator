@@ -61,6 +61,10 @@ sales database/*
 !sales database/package.json
 # Python side of the same problem — fit_hedonic.py needs numpy and scikit-learn.
 !sales database/requirements.txt
+# The USD pricing step. Tracked with the rest of the pipeline: it stamps price_usd
+# on every sale, and it broke silently once already when its upstream started
+# requiring a paid key.
+!sales database/enrich_usd.js
 
 # Misc
 .DS_Store
