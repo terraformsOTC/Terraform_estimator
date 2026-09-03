@@ -42,7 +42,10 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // fits, and alpha 30 instead of the CV pick (see fit_hedonic.py — CV scores the
 // most recent 20% of the DB, which is adjacent to training, and its choice was the
 // worst of the grid against sales that landed after the DB was built).
-const HEDONIC_MODEL_VERSION = '2.0.0';
+// 2.1.0 (2026-09-03) IS a refit: the sales DB was three weeks stale, and the live
+// feed alpha was tuned against was missing ~30% of its sales (Blur Pool fills,
+// which are bid-side). With both fixed the alpha minimum moves 30 -> 10.
+const HEDONIC_MODEL_VERSION = '2.1.0';
 
 // Tier-2: too few sales to fit, so the whole price is v1's prior and both
 // sub-models return the same number. Spine and 1of1 are NOT here — they are

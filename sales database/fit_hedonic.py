@@ -73,18 +73,21 @@ SIDE_MODEL = os.environ.get('SIDE_MODEL', 'dummy')
 # AFTER the DB was built (the live /sales feed, 50 settled sales), the CV pick is
 # the worst model on the grid:
 #
-#   alpha    CV holdout    live feed    bias
-#   0.1        16.3%         17.7%     -17.7%   <- CV picks this
-#   3          18.9%         14.5%     -14.5%
-#   10         19.1%         13.4%     -12.1%
-#   30         19.1%         11.3%     -10.5%   <- best out-of-sample
-#   100        19.2%         12.5%     -10.4%
+#   alpha    live feed    bias
+#   3          5.4%       -2.4%
+#   10         5.0%       +0.8%   <- best out-of-sample
+#   30         5.6%       +1.9%
+#   100        5.8%       +1.1%
 #
 # So CV is anti-correlated with real out-of-sample error here, and reading it
-# straight would ship the worst option. 30 is a clean interior minimum, not a
-# knife-edge. Caveat: it is chosen on 50 live sales, so re-check it as the feed
-# grows — set ALPHA= to re-test, or ALPHA=cv to go back to the CV pick.
-ALPHA = os.environ.get('ALPHA', '30')
+# straight would ship the worst option.
+#
+# 2026-09-03: was 30. The feed those numbers came from was missing ~30% of its
+# sales — backend/src/sales.js dropped Blur Pool ETH fills, which are bid-side,
+# so alpha was being chosen against an ask-skewed sample. With the full feed the
+# minimum moves to 10, which also lands nearly unbiased (+0.8% vs +1.9%).
+# Re-check as the feed grows: set ALPHA= to re-test, or ALPHA=cv for the CV pick.
+ALPHA = os.environ.get('ALPHA', '10')
 # Rare-zone pooling is off by default now that priors exist: shrinking a thin zone
 # toward its OWN v1 prior strictly beats merging it into a 'ZONE_rare' bucket that
 # averages mythical 1-of-1 zones together with floor zones. Set >0 to re-enable.
