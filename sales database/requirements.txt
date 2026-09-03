@@ -7,6 +7,11 @@
 # meant to be comparable to the live model should start from these; loosen them
 # deliberately, not by accident.
 #
+# The venv lives at "sales database/.venv" and is gitignored there. It already
+# exists on the working machine — check before creating one, and never put it in
+# a temp dir: a scratch venv outside the project is wiped between sessions and
+# then looks like the packages have gone missing.
+#
 #   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 #   .venv/bin/python fit_hedonic.py
 #
