@@ -13,7 +13,8 @@
     "enrich:tokens": "node enrich_tokens.js",
     "enrich:usd": "node enrich_usd.js",
     "catchup": "node catchup.js --since",
-    "crosscheck": "node alchemy_crosscheck.js"
+    "crosscheck": "node alchemy_crosscheck.js",
+    "reconcile": "node chain_reconcile.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",

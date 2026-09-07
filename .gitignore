@@ -65,6 +65,10 @@ sales database/*
 # on every sale, and it broke silently once already when its upstream started
 # requiring a paid key.
 !sales database/enrich_usd.js
+# Chain-side reconciliation of the sales table. Tracked because it is the only
+# independent check on OpenSea, and the reason it exists (Alchemy's getNFTSales
+# is removed 2026-09-30) means nothing else will be.
+!sales database/chain_reconcile.js
 
 # Misc
 .DS_Store
