@@ -1674,9 +1674,14 @@ async function buildWeeklyReportData() {
   const ethUsd      = ethUsdRes.status === 'fulfilled' ? ethUsdRes.value : null;
   if (listingsRes.status === 'rejected') console.warn('[weekly-report] listings fetch failed:', listingsRes.reason?.message);
 
-  // Use cheapest active OpenSea listing as the floor — already fetched, no extra call.
-  // Fall back to Alchemy floor if listings came back empty.
-  const floor = listingsRaw[0]?.listedPrice ?? salesResult.floor;
+  // Floor comes from Alchemy (which reports OpenSea's own collection stat), NOT
+  // from the cheapest listing we can see. Those disagree: OpenSea's site surfaces
+  // parcels listed on Blur, and their collection floor reflects them, but those
+  // orders never appear in OpenSea's own orders API — so walking the listings
+  // feed misses the cheapest parcels entirely and reads the floor high.
+  // Measured 2026-09-14: listings scan 0.2100 against a true floor of 0.2052.
+  // Falls back to the cheapest visible listing only if Alchemy is unavailable.
+  const floor = salesResult.floor ?? listingsRaw[0]?.listedPrice;
   const floorIsLive = salesResult.floorIsLive;
 
   // ── Weekly sales (past 7 days only) ──
@@ -1757,7 +1762,19 @@ async function buildWeeklyReportData() {
     market: {
       floor_eth: floor,
       floor_usd,
-      floor_token_id: cheapest_listing?.tokenId ?? null,
+      // Only name a token when the cheapest parcel we can SEE is actually at the
+      // floor. When the floor sits below it the floor parcel is listed somewhere
+      // we cannot read — on Blur — and naming our cheapest would point at the
+      // wrong parcel. A cent of tolerance absorbs rounding between the sources.
+      floor_token_id:
+        cheapest_listing && floor != null &&
+        Math.abs(cheapest_listing.listedPrice - floor) < 0.0005
+          ? cheapest_listing.tokenId
+          : null,
+      // What the OpenSea orders feed alone can see, for comparison. A gap to
+      // floor_eth is the Blur-listed portion of the book.
+      cheapest_visible_listing_eth: cheapest_listing?.listedPrice ?? null,
+      cheapest_visible_listing_token_id: cheapest_listing?.tokenId ?? null,
       parcels_listed,
       collectors,
       weekly_sales_count,
