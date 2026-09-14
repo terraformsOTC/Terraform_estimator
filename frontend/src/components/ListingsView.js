@@ -67,11 +67,30 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
   const { floor, totalListings, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
 
+  // These listings come from OpenSea's orders API, which does not carry parcels
+  // listed on Blur — verified against four OpenSea endpoints, none of which
+  // return them, even though opensea.io shows them and counts them in the floor
+  // it reports. So the page is genuinely incomplete, and the floor is the proof:
+  // when it sits below everything on this page, the cheapest parcels are ones we
+  // cannot see. Saying so beats a page that silently implies it is the whole book.
+  const cheapestShown = data.parcels?.length
+    ? Math.min(...data.parcels.map(p => p.listedPrice))
+    : null;
+  const hiddenBelow = floor != null && cheapestShown != null && floor < cheapestShown - 0.0005;
+
   return (
     <div>
       <div className="mb-4 text-xs opacity-50">
         {totalListings} listings · floor {floor?.toFixed(3)} ETH · cached at {fetchedDate}
       </div>
+
+      {hiddenBelow && (
+        <div className="mb-4 text-xs opacity-50">
+          Showing OpenSea listings only. The collection floor is{' '}
+          {floor.toFixed(3)} ETH, below the cheapest here ({cheapestShown.toFixed(3)} ETH) —
+          parcels listed on Blur are not included.
+        </div>
+      )}
 
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1 text-xs">
