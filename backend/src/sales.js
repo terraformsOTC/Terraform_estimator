@@ -9,7 +9,7 @@
 // and floorAtSale so a future writer can insert the same shape into a DB.
 
 const { estimatePrice, PRICING_MODEL_VERSION } = require('./pricingModel');
-const { estimateHedonic, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
+const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
 
@@ -112,6 +112,7 @@ async function computeRecentSales({
   getFloorPrice,
   floorAt,
   resolveEns,
+  topOffer,
   limit = 50,
 }) {
   const now = Date.now();
@@ -123,6 +124,9 @@ async function computeRecentSales({
   const skippedNonEth = allSales.length - pricedSales.length;
 
   const { price: currentFloor, isLive: floorIsLive } = await getFloorPrice();
+  // Fails open exactly as currentTopOffer does: no offer means no floor applied,
+  // which is the pre-existing behaviour rather than a broken feed.
+  const offer = typeof topOffer === 'function' ? topOffer() : topOffer;
 
   // Cap the trait fan-out. 50 is enough for a homepage-style feed and keeps
   // cold-path latency comparable to /undervalued.
@@ -154,7 +158,20 @@ async function computeRecentSales({
       // OFF), native ETH is a taken listing (ON). Same rule as views.sql.
       let pricingV2 = null, signedErrorV2 = null, sideV2 = null;
       try {
-        pricingV2 = estimateHedonic(traits, saleFloor);
+        // The standing collection-wide bid is a floor under any bid-side value:
+        // a seller can always hit it instead of accepting less. Every other
+        // pricing surface applies it via safeHedonic, and omitting it here was
+        // scoring bid-side sales against an estimate no seller would ever have
+        // settled for — #2427 sold at 0.180 into a 0.177 offer and read as
+        // +9.1% over a 0.165 estimate, when it barely cleared the bid.
+        //
+        // Approximation, and a deliberate one: this is the offer standing NOW,
+        // not at the time of sale, which we do not record. The feed covers ~2
+        // weeks and the floor moves slowly over that span, so the error is small
+        // and always in the direction of scoring a bid-side sale less
+        // generously. If the feed ever lengthens, this wants an offer history
+        // alongside floor-history.json.
+        pricingV2 = applyOfferFloor(estimateHedonic(traits, saleFloor), offer);
         // BETH sits with WETH, not with ETH: Blur Pool is the bidding currency,
         // so a fill denominated in it is an accepted offer, not a taken listing.
         sideV2 = (sale.currency === 'WETH' || sale.currency === 'BETH') ? 'off' : 'on';

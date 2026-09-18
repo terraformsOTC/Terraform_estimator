@@ -903,6 +903,7 @@ const salesResource = createCachedResource({
     getFloorPrice,
     floorAt,
     resolveEns: resolveEnsNames,
+    topOffer: currentTopOffer,
     limit: 50,
   }),
   ttlMs: SALES_CACHE_TTL_MS,
@@ -1661,6 +1662,9 @@ async function buildWeeklyReportData() {
       getParcelTraits,
       getFloorPrice,
       floorAt,
+      // Same offer floor as /sales, so a sale's over/under figure does not
+      // change depending on which surface reports it.
+      topOffer: currentTopOffer,
     }),
     fetchOpenSeaListings(),
     fetchCollectorsCount(),
