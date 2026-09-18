@@ -53,24 +53,18 @@ export default function SalesView({ data, loading, error, ethUsd }) {
   const { sales: rawSales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
 
-  // The table reports premium/discount to the floor at time of sale, not model
-  // error. Those are different questions and conflating them is what made #2427
-  // — 0.180 against a 0.204 floor — read as +9.1% over: it beat a bid-side
-  // estimate that sits below floor by construction. Against floor it is -11.8%,
-  // which is what a sale below floor means and the only reading that cannot
-  // invert on the model being retuned.
-  const sales = (rawSales || []).map(s => ({
-    ...s,
-    modelError: s.signedErrorV2 ?? s.signedError,
-  }));
+  // Each sale carries its own basis — floor below floor, hedonic estimate at or
+  // above it — so the table never averages the two together. A mean across
+  // mixed bases would not mean anything.
+  const sales = rawSales || [];
 
-  const mean = (rows, key) => (rows.length
-    ? rows.reduce((a, s) => a + s[key], 0) / rows.length
+  const below = (sales || []).filter(s => s.basis === 'floor' && typeof s.vsReference === 'number');
+  const above = (sales || []).filter(s => s.basis === 'estimate' && typeof s.vsReference === 'number');
+  const mean = (rows) => (rows.length
+    ? rows.reduce((a, s) => a + s.vsReference, 0) / rows.length
     : null);
-  const meanVsFloor = mean((sales || []).filter(s => typeof s.vsFloor === 'number'), 'vsFloor');
-  // Kept as a secondary stat: the shadow scorecard is still how a cutover gets
-  // judged, it just no longer drives the column a collector reads.
-  const meanModelError = mean((sales || []).filter(s => typeof s.modelError === 'number'), 'modelError');
+  const meanBelow = mean(below);
+  const meanAbove = mean(above);
 
 
   return (
@@ -80,25 +74,25 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         {skippedNonEth > 0 ? ` · skipped ${skippedNonEth} non-ETH` : ''}
         {' · '}floor {floor?.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
         {' · '}cached at {fetchedDate}
-        {meanVsFloor != null && (
+        {meanBelow != null && (
           <>
-            {' · '}mean vs floor{' '}
-            <span style={{ color: errorColor(meanVsFloor) }}>
-              {meanVsFloor > 0 ? '+' : ''}{(meanVsFloor * 100).toFixed(1)}%
+            {' · '}{below.length} below floor, avg{' '}
+            <span style={{ color: errorColor(meanBelow) }}>
+              {(meanBelow * 100).toFixed(1)}%
             </span>
           </>
         )}
-        {meanModelError != null && (
+        {meanAbove != null && (
           <>
-            {' · '}model error{' '}
-            <span style={{ color: errorColor(meanModelError) }}>
-              {meanModelError > 0 ? '+' : ''}{(meanModelError * 100).toFixed(1)}%
-            </span>
+            {' · '}{above.length} at/above, avg{' '}
+            <span style={{ color: errorColor(meanAbove) }}>
+              {meanAbove > 0 ? '+' : ''}{(meanAbove * 100).toFixed(1)}%
+            </span>{' '}vs estimate
           </>
         )}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">recent OpenSea sales compared to the floor at the time of each sale. negative = sold below floor, positive = sold above.</p>
+      <p className="mb-6 text-xs opacity-50">recent OpenSea sales. a sale below the floor at the time is measured against that floor — a discount. a sale at or above it is measured against our estimate for the side it settled on. the reference used is shown beside each figure.</p>
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>
@@ -114,8 +108,8 @@ export default function SalesView({ data, loading, error, ethUsd }) {
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">from</th>
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">to</th>
                 <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell">floor</th>
-                <th className="pb-3 pr-4 font-normal">vs floor</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell">vs</th>
+                <th className="pb-3 pr-4 font-normal">diff</th>
                 <th className="pb-3 font-normal hidden sm:table-cell">market</th>
               </tr>
             </thead>
@@ -132,15 +126,15 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 }
 
 function SaleRow({ sale }) {
-  const { tokenId, traits, pricing, salePrice, currency, vsFloor, floorAtSale, closingDate, seller, winner, sellerEns, winnerEns } = sale;
-  // The column next to the percentage must be the number the percentage was
-  // measured against, or the row states two different comparisons at once —
-  // that is how #8414 came to show v1's 0.321 beside a figure computed off
-  // v2's 0.242. Percentage is vs floor, so the column is the floor at sale.
-  const errColor = errorColor(vsFloor);
-  const errLabel = vsFloor == null
+  const { tokenId, traits, pricing, salePrice, currency, basis, reference, vsReference, closingDate, seller, winner, sellerEns, winnerEns } = sale;
+  // The column next to the percentage is the number the percentage was measured
+  // against, and it is labelled with which basis that was. The row must state
+  // one comparison, not two — showing a reference the figure was not computed
+  // from is how #8414 came to display v1's 0.321 beside a figure off v2's 0.242.
+  const errColor = errorColor(vsReference);
+  const errLabel = vsReference == null
     ? '—'
-    : `${vsFloor > 0 ? '+' : ''}${(vsFloor * 100).toFixed(1)}%`;
+    : `${vsReference > 0 ? '+' : ''}${(vsReference * 100).toFixed(1)}%`;
 
   return (
     <tr
@@ -185,7 +179,8 @@ function SaleRow({ sale }) {
       <td className="py-3 pr-4 hidden md:table-cell">
         <span className="flex items-center gap-1 whitespace-nowrap opacity-70">
           <EthIcon width={8} height={13} />
-          {floorAtSale != null ? floorAtSale.toFixed(3) : '—'}
+          {reference != null ? reference.toFixed(3) : '—'}
+          {basis && <span className="text-xs opacity-50 ml-0.5">{basis === 'floor' ? 'floor' : 'est'}</span>}
         </span>
       </td>
       <td className="py-3 pr-4">

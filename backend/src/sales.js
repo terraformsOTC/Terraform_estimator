@@ -181,23 +181,43 @@ async function computeRecentSales({
         console.warn(`[hedonic] sales scoring failed for ${sale.tokenId}: ${err.message}`);
       }
 
-      // Premium or discount to the floor in effect at the time of sale. This is
-      // what the sales page reports, and it is deliberately NOT a model score:
-      // a parcel that changes hands below floor has sold at a discount, full
-      // stop, and must never read as a premium because it happened to beat a
-      // bid-side estimate that sits below floor by construction. #2427 cleared
-      // 0.180 against a 0.204 floor and read +9.1% over; it is -11.8% under.
+      // What a sale is measured against depends on where it cleared, because
+      // the two regions are asking different questions.
       //
-      // signedError / signedErrorV2 are kept alongside for model scoring — they
-      // answer a different question (was the model right?) and are what the
-      // shadow scorecard and the weekly report read.
-      const vsFloor = saleFloor > 0 ? (sale.salePrice - saleFloor) / saleFloor : null;
+      //   BELOW floor -> measure against the floor. Nothing about the parcel's
+      //     traits explains a sale under the cheapest thing on the market; it
+      //     cleared at a discount, and the size of that discount is the fact.
+      //     Scoring it against a model estimate is what let #2427 (0.180 into a
+      //     0.204 floor) read +9.1% over — the bid-side estimate sits below
+      //     floor by construction, so almost anything beats it down there.
+      //
+      //   AT OR ABOVE floor -> measure against the hedonic estimate for the side
+      //     it settled on. Above floor the parcel is being bought for what it
+      //     is, so the question is whether it beat what its traits are worth.
+      //     "+150% over floor" on a rare parcel is arithmetic, not information.
+      //
+      // The basis travels with the number so the page can show the reference it
+      // was actually computed from, rather than a figure next to an unrelated
+      // column.
+      const v2Value = pricingV2 && sideV2 ? pricingV2[sideV2] : null;
+      const estimate = v2Value ?? (pricing.estimatedValue > 0 ? pricing.estimatedValue : null);
+      let basis = null, reference = null, vsReference = null;
+      if (saleFloor > 0 && sale.salePrice < saleFloor) {
+        basis = 'floor';
+        reference = saleFloor;
+      } else if (estimate > 0) {
+        basis = 'estimate';
+        reference = estimate;
+      }
+      if (reference > 0) vsReference = (sale.salePrice - reference) / reference;
 
       results.push({
         ...sale,
         traits,
         pricing,
-        vsFloor,
+        basis,
+        reference,
+        vsReference,
         signedError,
         pricingV2,
         signedErrorV2,
