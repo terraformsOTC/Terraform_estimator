@@ -18,46 +18,46 @@ const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./h
 // premium.
 const PREMIUM_OVER_FLOOR = 0.05;
 
-// What a sale is measured against depends on BOTH where it cleared and
-// whether the parcel is worth more than a floor parcel. Three cases:
+// What a sale is measured against depends on BOTH where it cleared and whether
+// the parcel is worth more than a floor parcel. Three cases:
 //
 //   1. Below floor, plain parcel  -> vs FLOOR.
-//      Nothing about its traits explains a sale under the cheapest thing
-//      on the market. It cleared at a discount and the discount is the
-//      fact. #2427 (0.180 into a 0.204 floor) reads -11.8%.
+//      Nothing about its traits explains a sale under the cheapest thing on the
+//      market. It cleared at a discount and the discount is the fact.
+//      #2427 (0.180 into a 0.204 floor) reads -11.8%.
 //
 //   2. Below floor, premium parcel -> vs ESTIMATE.
-//      The floor is the wrong yardstick for a parcel the model prices well
-//      above it: #2299 is worth ~0.32 and sold at 0.203, which is a 36%
-//      discount to its value, not the 0.6% the floor comparison implies.
+//      The floor is the wrong yardstick for a parcel the model prices well above
+//      it: #2299 is worth ~0.32 and sold at 0.203, a 36% discount to its value,
+//      not the 0.6% the floor comparison implies.
 //
 //   3. At or above floor -> vs ESTIMATE.
-//      The parcel is being bought for what it is, so the question is
-//      whether it beat what its traits are worth. "+268% over floor" on
-//      #295 is arithmetic, not information.
+//      The parcel is being bought for what it is, so the question is whether it
+//      beat what its traits are worth. "+268% over floor" on #295 is arithmetic,
+//      not information.
 //
-// "Premium" is deliberately a property of the PARCEL, not of the sale, so
-// it is tested against modelOn:
+// ONE estimate does both jobs — it decides whether the parcel is premium AND it
+// is the number the percentage is measured against. That is not a stylistic
+// choice, it is what makes a below-floor sale mathematically incapable of
+// showing a premium:
 //
-//   * Ask side, because the floor is itself a listed ask. Testing the
-//     bid-side estimate compares a bid to an ask and understates by the
-//     ~13-15% ask premium — it disagreed with this test on 7 of 50 sales
-//     in the 2026-09-18 feed, every one of them a bid-side fill. A parcel
-//     must not become premium because of the currency it settled in.
+//     premium  =>  estimate > floor * 1.05 > floor > salePrice  =>  vs < 0
 //
-//   * modelOn rather than on, i.e. before applyOfferFloor. The offer floor
-//     is a liquidity adjustment describing what a seller could get today,
-//     not a statement about the parcel's traits. It changes no verdict on
-//     the current feed but could flip a borderline parcel in a different
-//     market, and 13 of 50 sales sit within 0.98-1.12x floor.
+// Judging premium on one number and measuring against another broke exactly
+// that. #884 sold at 0.200 under a 0.204 floor; it was called premium on its
+// ask-side estimate (0.216, over the 0.2144 line) and then measured against its
+// bid-side estimate (0.188), reading +6.4% — a below-floor sale displaying a
+// premium. It is -2.0% against the floor. Any future change here must keep the
+// test and the reference on the same number; the invariant is covered by a test.
 //
-// The comparison reference is still the side-matched, offer-floored
-// estimate: the sale settled on one side, so that is the like-for-like
-// number, and the offer floor belongs there because it is what the seller
-// could actually have taken.
-function decideBasis({ salePrice, saleFloor, estimate, premiumEstimate }) {
-  const isPremium = saleFloor > 0 && premiumEstimate > 0
-    ? premiumEstimate > saleFloor * (1 + PREMIUM_OVER_FLOOR)
+// The estimate used is the side-matched, offer-floored one. ETH, WETH and BETH
+// are the same money and are never valued differently — the currency is read
+// only as which side of the book was hit, since an offer cannot be denominated
+// in native ETH. A bid fill is compared against the bid-side estimate and an ask
+// fill against the ask-side one, which is the like-for-like comparison.
+function decideBasis({ salePrice, saleFloor, estimate }) {
+  const isPremium = saleFloor > 0 && estimate > 0
+    ? estimate > saleFloor * (1 + PREMIUM_OVER_FLOOR)
     : false;
   const belowFloor = saleFloor > 0 && salePrice < saleFloor;
 
@@ -69,8 +69,8 @@ function decideBasis({ salePrice, saleFloor, estimate, premiumEstimate }) {
     basis = 'estimate';
     reference = estimate;
   } else if (saleFloor > 0) {
-    // Premium or at/above floor, but unpriceable. Falling back to the floor
-    // beats reporting nothing, and the basis tag says which was used.
+    // At or above floor but unpriceable. Falling back to the floor beats
+    // reporting nothing, and the basis tag says which was used.
     basis = 'floor';
     reference = saleFloor;
   }
@@ -252,15 +252,9 @@ async function computeRecentSales({
       const { basis, reference, vsReference, isPremium } = decideBasis({
         salePrice: sale.salePrice,
         saleFloor,
-        // Side-matched and offer-floored: the sale settled on one side, so that
-        // is the like-for-like number, and the offer floor is what the seller
-        // could actually have taken.
         estimate: v2Value > 0
           ? v2Value
           : (pricing.estimatedValue > 0 ? pricing.estimatedValue : null),
-        // Null when the hedonic model produced nothing; a parcel we cannot
-        // price is not assumed premium.
-        premiumEstimate: pricingV2 ? (pricingV2.modelOn ?? pricingV2.on) : null,
       });
 
       results.push({
