@@ -4,9 +4,10 @@ import { EthIcon, parcelImage, PropertyStack, WalletLink } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
-// Signed error = (sale - estimate) / estimate.
-//   negative  →  sale cleared BELOW estimate  →  model over-estimated (green)
-//   positive  →  sale cleared ABOVE estimate  →  model under-estimated (red)
+// Shared by both signed ratios on this page: vs-floor (what the table reports)
+// and model error (the scorecard stat in the header).
+//   negative  →  cleared BELOW the reference  →  green
+//   positive  →  cleared ABOVE the reference  →  red
 function errorColor(signedError) {
   if (signedError == null) return 'rgba(232,232,232,0.4)';
   const mag = Math.abs(signedError);
@@ -52,16 +53,24 @@ export default function SalesView({ data, loading, error, ethUsd }) {
   const { sales: rawSales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
 
-  // signedErrorV2 already scores each sale against the side it settled on — a WETH
-  // fill against the liquidation model, native ETH against the listed-price model.
-  // That is the like-for-like comparison, so nothing is adjusted here.
-  const sales = (rawSales || []).map(s => ({ ...s, signedError: s.signedErrorV2 ?? s.signedError }));
+  // The table reports premium/discount to the floor at time of sale, not model
+  // error. Those are different questions and conflating them is what made #2427
+  // — 0.180 against a 0.204 floor — read as +9.1% over: it beat a bid-side
+  // estimate that sits below floor by construction. Against floor it is -11.8%,
+  // which is what a sale below floor means and the only reading that cannot
+  // invert on the model being retuned.
+  const sales = (rawSales || []).map(s => ({
+    ...s,
+    modelError: s.signedErrorV2 ?? s.signedError,
+  }));
 
-  // Collection-wide mean signed error — quick eyeball of model bias.
-  const priced = (sales || []).filter(s => typeof s.signedError === 'number');
-  const meanError = priced.length
-    ? priced.reduce((a, s) => a + s.signedError, 0) / priced.length
-    : null;
+  const mean = (rows, key) => (rows.length
+    ? rows.reduce((a, s) => a + s[key], 0) / rows.length
+    : null);
+  const meanVsFloor = mean((sales || []).filter(s => typeof s.vsFloor === 'number'), 'vsFloor');
+  // Kept as a secondary stat: the shadow scorecard is still how a cutover gets
+  // judged, it just no longer drives the column a collector reads.
+  const meanModelError = mean((sales || []).filter(s => typeof s.modelError === 'number'), 'modelError');
 
 
   return (
@@ -71,17 +80,25 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         {skippedNonEth > 0 ? ` · skipped ${skippedNonEth} non-ETH` : ''}
         {' · '}floor {floor?.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
         {' · '}cached at {fetchedDate}
-        {meanError != null && (
+        {meanVsFloor != null && (
           <>
-            {' · '}mean error{' '}
-            <span style={{ color: errorColor(meanError) }}>
-              {meanError > 0 ? '+' : ''}{(meanError * 100).toFixed(1)}%
+            {' · '}mean vs floor{' '}
+            <span style={{ color: errorColor(meanVsFloor) }}>
+              {meanVsFloor > 0 ? '+' : ''}{(meanVsFloor * 100).toFixed(1)}%
+            </span>
+          </>
+        )}
+        {meanModelError != null && (
+          <>
+            {' · '}model error{' '}
+            <span style={{ color: errorColor(meanModelError) }}>
+              {meanModelError > 0 ? '+' : ''}{(meanModelError * 100).toFixed(1)}%
             </span>
           </>
         )}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">recent OpenSea sales compared to our current estimate. negative = sold below estimate, positive = sold above.</p>
+      <p className="mb-6 text-xs opacity-50">recent OpenSea sales compared to the floor at the time of each sale. negative = sold below floor, positive = sold above.</p>
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>
@@ -97,8 +114,8 @@ export default function SalesView({ data, loading, error, ethUsd }) {
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">from</th>
                 <th className="pb-3 pr-4 font-normal hidden lg:table-cell">to</th>
                 <th className="pb-3 pr-4 font-normal hidden sm:table-cell">time</th>
-                <th className="pb-3 pr-4 font-normal hidden md:table-cell">estimate</th>
-                <th className="pb-3 pr-4 font-normal">over/under</th>
+                <th className="pb-3 pr-4 font-normal hidden md:table-cell">floor</th>
+                <th className="pb-3 pr-4 font-normal">vs floor</th>
                 <th className="pb-3 font-normal hidden sm:table-cell">market</th>
               </tr>
             </thead>
@@ -115,19 +132,15 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 }
 
 function SaleRow({ sale }) {
-  const { tokenId, traits, pricing, pricingV2, sideV2, salePrice, currency, signedError, closingDate, seller, winner, sellerEns, winnerEns } = sale;
-  // Show the number the percentage was actually measured against. signedError here
-  // is signedErrorV2, scored against the side the sale settled on, so displaying
-  // v1's estimatedValue beside it put two different models in one row: #8414 sold
-  // at 0.25 showing v1's 0.321 next to "+3.3%", which was 0.25 against v2's 0.242
-  // bid. Falls back to v1 only when the shadow value is missing.
-  const sideValue = pricingV2 && sideV2 ? pricingV2[sideV2] : null;
-  const estimatedValue = sideValue ?? pricing?.estimatedValue;
-
-  const errColor = errorColor(signedError);
-  const errLabel = signedError == null
+  const { tokenId, traits, pricing, salePrice, currency, vsFloor, floorAtSale, closingDate, seller, winner, sellerEns, winnerEns } = sale;
+  // The column next to the percentage must be the number the percentage was
+  // measured against, or the row states two different comparisons at once —
+  // that is how #8414 came to show v1's 0.321 beside a figure computed off
+  // v2's 0.242. Percentage is vs floor, so the column is the floor at sale.
+  const errColor = errorColor(vsFloor);
+  const errLabel = vsFloor == null
     ? '—'
-    : `${signedError > 0 ? '+' : ''}${(signedError * 100).toFixed(1)}%`;
+    : `${vsFloor > 0 ? '+' : ''}${(vsFloor * 100).toFixed(1)}%`;
 
   return (
     <tr
@@ -172,7 +185,7 @@ function SaleRow({ sale }) {
       <td className="py-3 pr-4 hidden md:table-cell">
         <span className="flex items-center gap-1 whitespace-nowrap opacity-70">
           <EthIcon width={8} height={13} />
-          {estimatedValue != null ? estimatedValue.toFixed(3) : '—'}
+          {floorAtSale != null ? floorAtSale.toFixed(3) : '—'}
         </span>
       </td>
       <td className="py-3 pr-4">

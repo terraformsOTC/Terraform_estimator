@@ -181,10 +181,23 @@ async function computeRecentSales({
         console.warn(`[hedonic] sales scoring failed for ${sale.tokenId}: ${err.message}`);
       }
 
+      // Premium or discount to the floor in effect at the time of sale. This is
+      // what the sales page reports, and it is deliberately NOT a model score:
+      // a parcel that changes hands below floor has sold at a discount, full
+      // stop, and must never read as a premium because it happened to beat a
+      // bid-side estimate that sits below floor by construction. #2427 cleared
+      // 0.180 against a 0.204 floor and read +9.1% over; it is -11.8% under.
+      //
+      // signedError / signedErrorV2 are kept alongside for model scoring — they
+      // answer a different question (was the model right?) and are what the
+      // shadow scorecard and the weekly report read.
+      const vsFloor = saleFloor > 0 ? (sale.salePrice - saleFloor) / saleFloor : null;
+
       results.push({
         ...sale,
         traits,
         pricing,
+        vsFloor,
         signedError,
         pricingV2,
         signedErrorV2,
