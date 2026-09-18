@@ -53,18 +53,19 @@ export default function SalesView({ data, loading, error, ethUsd }) {
   const { sales: rawSales, floor, totalSalesScanned, skippedNonEth, fetchedAt } = data;
   const fetchedDate = fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : null;
 
-  // Each sale carries its own basis — floor below floor, hedonic estimate at or
-  // above it — so the table never averages the two together. A mean across
-  // mixed bases would not mean anything.
+  // Each sale carries its own basis, decided server-side: a plain parcel that
+  // cleared below floor is measured against the floor, everything else against
+  // our estimate. The two are never averaged together — a mean across mixed
+  // references would not mean anything.
   const sales = rawSales || [];
 
-  const below = (sales || []).filter(s => s.basis === 'floor' && typeof s.vsReference === 'number');
-  const above = (sales || []).filter(s => s.basis === 'estimate' && typeof s.vsReference === 'number');
+  const vsFloor = sales.filter(s => s.basis === 'floor' && typeof s.vsReference === 'number');
+  const vsEst = sales.filter(s => s.basis === 'estimate' && typeof s.vsReference === 'number');
   const mean = (rows) => (rows.length
     ? rows.reduce((a, s) => a + s.vsReference, 0) / rows.length
     : null);
-  const meanBelow = mean(below);
-  const meanAbove = mean(above);
+  const meanVsFloor = mean(vsFloor);
+  const meanVsEst = mean(vsEst);
 
 
   return (
@@ -74,25 +75,25 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         {skippedNonEth > 0 ? ` · skipped ${skippedNonEth} non-ETH` : ''}
         {' · '}floor {floor?.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}
         {' · '}cached at {fetchedDate}
-        {meanBelow != null && (
+        {meanVsFloor != null && (
           <>
-            {' · '}{below.length} below floor, avg{' '}
-            <span style={{ color: errorColor(meanBelow) }}>
-              {(meanBelow * 100).toFixed(1)}%
+            {' · '}{vsFloor.length} vs floor, avg{' '}
+            <span style={{ color: errorColor(meanVsFloor) }}>
+              {meanVsFloor > 0 ? '+' : ''}{(meanVsFloor * 100).toFixed(1)}%
             </span>
           </>
         )}
-        {meanAbove != null && (
+        {meanVsEst != null && (
           <>
-            {' · '}{above.length} at/above, avg{' '}
-            <span style={{ color: errorColor(meanAbove) }}>
-              {meanAbove > 0 ? '+' : ''}{(meanAbove * 100).toFixed(1)}%
-            </span>{' '}vs estimate
+            {' · '}{vsEst.length} vs estimate, avg{' '}
+            <span style={{ color: errorColor(meanVsEst) }}>
+              {meanVsEst > 0 ? '+' : ''}{(meanVsEst * 100).toFixed(1)}%
+            </span>
           </>
         )}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">recent OpenSea sales. a sale below the floor at the time is measured against that floor — a discount. a sale at or above it is measured against our estimate for the side it settled on. the reference used is shown beside each figure.</p>
+      <p className="mb-6 text-xs opacity-50">recent OpenSea sales. a floor-value parcel that sold below the floor at the time is measured against that floor — a discount. everything else, including a parcel we price above floor that still sold under it, is measured against our estimate for the side it settled on. the reference used is shown beside each figure.</p>
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>

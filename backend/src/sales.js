@@ -11,6 +11,73 @@
 const { estimatePrice, PRICING_MODEL_VERSION } = require('./pricingModel');
 const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
 
+// A parcel counts as premium — worth measuring against its own estimate rather
+// than against the floor — when the model prices it more than this far above the
+// floor at the time of sale. 5% is wide enough to absorb model noise on an
+// ordinary parcel, narrow enough to catch anything genuinely carrying a trait
+// premium.
+const PREMIUM_OVER_FLOOR = 0.05;
+
+// What a sale is measured against depends on BOTH where it cleared and
+// whether the parcel is worth more than a floor parcel. Three cases:
+//
+//   1. Below floor, plain parcel  -> vs FLOOR.
+//      Nothing about its traits explains a sale under the cheapest thing
+//      on the market. It cleared at a discount and the discount is the
+//      fact. #2427 (0.180 into a 0.204 floor) reads -11.8%.
+//
+//   2. Below floor, premium parcel -> vs ESTIMATE.
+//      The floor is the wrong yardstick for a parcel the model prices well
+//      above it: #2299 is worth ~0.32 and sold at 0.203, which is a 36%
+//      discount to its value, not the 0.6% the floor comparison implies.
+//
+//   3. At or above floor -> vs ESTIMATE.
+//      The parcel is being bought for what it is, so the question is
+//      whether it beat what its traits are worth. "+268% over floor" on
+//      #295 is arithmetic, not information.
+//
+// "Premium" is deliberately a property of the PARCEL, not of the sale, so
+// it is tested against modelOn:
+//
+//   * Ask side, because the floor is itself a listed ask. Testing the
+//     bid-side estimate compares a bid to an ask and understates by the
+//     ~13-15% ask premium — it disagreed with this test on 7 of 50 sales
+//     in the 2026-09-18 feed, every one of them a bid-side fill. A parcel
+//     must not become premium because of the currency it settled in.
+//
+//   * modelOn rather than on, i.e. before applyOfferFloor. The offer floor
+//     is a liquidity adjustment describing what a seller could get today,
+//     not a statement about the parcel's traits. It changes no verdict on
+//     the current feed but could flip a borderline parcel in a different
+//     market, and 13 of 50 sales sit within 0.98-1.12x floor.
+//
+// The comparison reference is still the side-matched, offer-floored
+// estimate: the sale settled on one side, so that is the like-for-like
+// number, and the offer floor belongs there because it is what the seller
+// could actually have taken.
+function decideBasis({ salePrice, saleFloor, estimate, premiumEstimate }) {
+  const isPremium = saleFloor > 0 && premiumEstimate > 0
+    ? premiumEstimate > saleFloor * (1 + PREMIUM_OVER_FLOOR)
+    : false;
+  const belowFloor = saleFloor > 0 && salePrice < saleFloor;
+
+  let basis = null, reference = null, vsReference = null;
+  if (belowFloor && !isPremium) {
+    basis = 'floor';
+    reference = saleFloor;
+  } else if (estimate > 0) {
+    basis = 'estimate';
+    reference = estimate;
+  } else if (saleFloor > 0) {
+    // Premium or at/above floor, but unpriceable. Falling back to the floor
+    // beats reporting nothing, and the basis tag says which was used.
+    basis = 'floor';
+    reference = saleFloor;
+  }
+  if (reference > 0) vsReference = (salePrice - reference) / reference;
+  return { basis, reference, vsReference, isPremium };
+}
+
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
 
 // Payment tokens that are 1:1 with ETH, keyed by contract address so a missing
@@ -181,35 +248,20 @@ async function computeRecentSales({
         console.warn(`[hedonic] sales scoring failed for ${sale.tokenId}: ${err.message}`);
       }
 
-      // What a sale is measured against depends on where it cleared, because
-      // the two regions are asking different questions.
-      //
-      //   BELOW floor -> measure against the floor. Nothing about the parcel's
-      //     traits explains a sale under the cheapest thing on the market; it
-      //     cleared at a discount, and the size of that discount is the fact.
-      //     Scoring it against a model estimate is what let #2427 (0.180 into a
-      //     0.204 floor) read +9.1% over — the bid-side estimate sits below
-      //     floor by construction, so almost anything beats it down there.
-      //
-      //   AT OR ABOVE floor -> measure against the hedonic estimate for the side
-      //     it settled on. Above floor the parcel is being bought for what it
-      //     is, so the question is whether it beat what its traits are worth.
-      //     "+150% over floor" on a rare parcel is arithmetic, not information.
-      //
-      // The basis travels with the number so the page can show the reference it
-      // was actually computed from, rather than a figure next to an unrelated
-      // column.
       const v2Value = pricingV2 && sideV2 ? pricingV2[sideV2] : null;
-      const estimate = v2Value ?? (pricing.estimatedValue > 0 ? pricing.estimatedValue : null);
-      let basis = null, reference = null, vsReference = null;
-      if (saleFloor > 0 && sale.salePrice < saleFloor) {
-        basis = 'floor';
-        reference = saleFloor;
-      } else if (estimate > 0) {
-        basis = 'estimate';
-        reference = estimate;
-      }
-      if (reference > 0) vsReference = (sale.salePrice - reference) / reference;
+      const { basis, reference, vsReference, isPremium } = decideBasis({
+        salePrice: sale.salePrice,
+        saleFloor,
+        // Side-matched and offer-floored: the sale settled on one side, so that
+        // is the like-for-like number, and the offer floor is what the seller
+        // could actually have taken.
+        estimate: v2Value > 0
+          ? v2Value
+          : (pricing.estimatedValue > 0 ? pricing.estimatedValue : null),
+        // Null when the hedonic model produced nothing; a parcel we cannot
+        // price is not assumed premium.
+        premiumEstimate: pricingV2 ? (pricingV2.modelOn ?? pricingV2.on) : null,
+      });
 
       results.push({
         ...sale,
@@ -218,6 +270,7 @@ async function computeRecentSales({
         basis,
         reference,
         vsReference,
+        isPremium,
         signedError,
         pricingV2,
         signedErrorV2,
@@ -251,4 +304,6 @@ async function computeRecentSales({
   };
 }
 
-module.exports = { fetchOpenSeaSales, computeRecentSales };
+module.exports = {
+  decideBasis,
+  PREMIUM_OVER_FLOOR, fetchOpenSeaSales, computeRecentSales };
