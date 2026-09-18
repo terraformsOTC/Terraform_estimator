@@ -55,8 +55,8 @@ export default function SalesView({ data, loading, error, ethUsd }) {
 
   // Each sale carries its own basis, decided server-side: a plain parcel that
   // cleared below floor is measured against the floor, everything else against
-  // our estimate. The two are never averaged together — a mean across mixed
-  // references would not mean anything.
+  // our listed-price estimate. The two are never averaged together — a mean
+  // across mixed references would not mean anything.
   const sales = rawSales || [];
 
   const vsFloor = sales.filter(s => s.basis === 'floor' && typeof s.vsReference === 'number');
@@ -93,7 +93,7 @@ export default function SalesView({ data, loading, error, ethUsd }) {
         )}
       </div>
 
-      <p className="mb-6 text-xs opacity-50">recent OpenSea sales. a floor-value parcel that sold below the floor at the time is measured against that floor — a discount. everything else, including a parcel we price above floor that still sold under it, is measured against our estimate for the side it settled on. the reference used is shown beside each figure.</p>
+      <p className="mb-6 text-xs opacity-50">recent OpenSea sales. a floor-value parcel that sold below the floor at the time is measured against that floor — a discount. everything else, including a parcel we price above floor that still sold under it, is measured against our listed-price estimate. what a parcel is worth is what it would clear at if listed, so bids are never used as the yardstick. the reference used is shown beside each figure.</p>
 
       {(!sales || sales.length === 0) ? (
         <p className="text-sm opacity-75">no recent sales.</p>

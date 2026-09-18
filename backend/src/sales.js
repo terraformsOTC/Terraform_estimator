@@ -50,11 +50,24 @@ const PREMIUM_OVER_FLOOR = 0.05;
 // premium. It is -2.0% against the floor. Any future change here must keep the
 // test and the reference on the same number; the invariant is covered by a test.
 //
-// The estimate used is the side-matched, offer-floored one. ETH, WETH and BETH
-// are the same money and are never valued differently — the currency is read
-// only as which side of the book was hit, since an offer cannot be denominated
-// in native ETH. A bid fill is compared against the bid-side estimate and an ask
-// fill against the ask-side one, which is the like-for-like comparison.
+// That one estimate is ALWAYS the ask side, whichever side the sale settled on.
+// What a parcel is worth is the price it would clear at if listed. Sellers do
+// dump valuable parcels indiscriminately into WETH bids, and those fills are
+// real, but they say what a seller was willing to accept that day rather than
+// what the parcel is worth — scoring them against the bid-side estimate bakes
+// that same distortion into the yardstick and the discount disappears. Anchored
+// to the ask side, a valuable parcel dumped into a bid shows the full discount,
+// which is the point of the column.
+//
+// ETH, WETH and BETH are the same money and are never valued differently
+// anywhere in the pipeline. sideV2 still records which side of the book was hit
+// (an offer cannot be denominated in native ETH) and signedErrorV2 still scores
+// the model side-matched, because "was the model right" is a different question
+// from "what did this parcel go for against its worth".
+//
+// modelOn rather than on: applyOfferFloor lifts the estimate toward the standing
+// collection-wide WETH bid, which is bid-side information. `on` already equals
+// modelOn wherever that floor did not fire.
 function decideBasis({ salePrice, saleFloor, estimate }) {
   const isPremium = saleFloor > 0 && estimate > 0
     ? estimate > saleFloor * (1 + PREMIUM_OVER_FLOOR)
@@ -248,12 +261,15 @@ async function computeRecentSales({
         console.warn(`[hedonic] sales scoring failed for ${sale.tokenId}: ${err.message}`);
       }
 
-      const v2Value = pricingV2 && sideV2 ? pricingV2[sideV2] : null;
       const { basis, reference, vsReference, isPremium } = decideBasis({
         salePrice: sale.salePrice,
         saleFloor,
-        estimate: v2Value > 0
-          ? v2Value
+        // What a parcel is worth is the price it would clear at if listed. See
+        // the note on decideBasis for why the bid side is never used here.
+        // modelOn is the ask estimate before applyOfferFloor; `on` already is
+        // that when the offer floor did not fire.
+        estimate: pricingV2
+          ? (pricingV2.modelOn ?? pricingV2.on)
           : (pricing.estimatedValue > 0 ? pricing.estimatedValue : null),
       });
 

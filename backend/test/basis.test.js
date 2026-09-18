@@ -10,7 +10,9 @@ const near = (got, want) => assert.ok(
   `expected ${want}, got ${got}`);
 
 // One estimate does both jobs: it decides premium AND is what the percentage is
-// measured against. Passing two different numbers is what produced #884.
+// measured against. Passing two different numbers is what produced #884. The
+// caller always supplies the ASK-side estimate (modelOn) — never the bid side,
+// which carries the distortion of sellers dumping into WETH bids.
 const c = (salePrice, saleFloor, estimate) =>
   decideBasis({ salePrice, saleFloor, estimate });
 
@@ -48,10 +50,12 @@ test('#884 — a below-floor sale never reads as a premium', () => {
   // Sold 0.200 under a 0.204 floor. It was called premium on its ask-side
   // estimate (0.216) and then measured against its bid-side estimate (0.188),
   // reading +6.4%. One estimate does both jobs now, so it cannot recur.
-  const r = c(0.200, 0.204, 0.188);
-  assert.strictEqual(r.isPremium, false, '0.188 is under the 0.2142 line');
-  assert.strictEqual(r.basis, 'floor');
-  near(r.vsReference, -0.0196);
+  // 0.216 is its ask-side estimate; the +6.4% came from measuring against the
+  // 0.188 bid-side one. Ask-anchored it is premium, and still a discount.
+  const r = c(0.200, 0.204, 0.216);
+  assert.strictEqual(r.isPremium, true);
+  assert.strictEqual(r.basis, 'estimate');
+  near(r.vsReference, -0.0741);
 });
 
 test('INVARIANT — no sale below floor can ever show a premium', () => {
@@ -118,4 +122,16 @@ test('a zero or negative reference never divides', () => {
     const r = decideBasis({ salePrice: 0.18, saleFloor: f, estimate: e });
     assert.strictEqual(r.vsReference, null);
   }
+});
+
+test('INVARIANT — a valuable parcel dumped into a bid shows its full discount', () => {
+  // The reason the bid side is excluded. A parcel worth 0.320 listed, whose
+  // bid-side estimate is 0.278, sold at 0.177 into a WETH bid. Anchored to the
+  // bid it reads -36.3%; anchored to the ask, -44.7%. The larger figure is the
+  // true one — the seller accepted a bid, they did not revalue the parcel.
+  const asAsk = decideBasis({ salePrice: 0.177, saleFloor: 0.204, estimate: 0.320 });
+  const asBid = decideBasis({ salePrice: 0.177, saleFloor: 0.204, estimate: 0.278 });
+  near(asAsk.vsReference, -0.4469);
+  assert.ok(asAsk.vsReference < asBid.vsReference,
+    'the ask anchor must report the deeper discount, not flatter it');
 });
