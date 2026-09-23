@@ -152,6 +152,49 @@ export default function Home() {
     setView('search');
   }
 
+  // Make the back button mean something.
+  //
+  // Searching pushes ?token= / ?address= so a result is linkable, but pushState
+  // only rewrites the URL — React knows nothing about it. Without this, going back
+  // returned the address bar to "/" while the parcel or wallet stayed on screen,
+  // and the deals rail stayed hidden. That is worse than not touching the URL at
+  // all, because it invites a click that appears to do nothing.
+  //
+  // Neither branch pushes, or navigating back would push a fresh entry and trap
+  // the user in the history.
+  useEffect(() => {
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const address = params.get('address');
+
+      if (token) {
+        const id = parseInt(token, 10);
+        if (!Number.isNaN(id) && id >= 1 && id <= 11104) {
+          setView('search');
+          searchParcel(id);
+          return;
+        }
+      }
+      if (address) {
+        loadWalletByAddress(address);
+        return;
+      }
+      // Bare "/" — back to the landing page, results cleared so the rail returns.
+      walletFetchId.current += 1;   // abandon any wallet fetch still in flight
+      setSearchResult(null);
+      setUnmintedResult(null);
+      setWhaleData(null);
+      setWhaleIdentifier(null);
+      setError(null);
+      setLoading(false);
+      setView('search');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Sync header + wallet view when the user switches accounts in their wallet extension.
   // Without this, the short-address button in the header stays on the previously
   // connected account until a page reload.
@@ -196,11 +239,16 @@ export default function Home() {
     }
   }
 
-  async function searchParcel(tokenId) {
+  // Same contract as loadWalletByAddress: `pushUrl` when the search box is the
+  // caller, so the result is linkable and the back button works; not set when the
+  // ?token= deep link is, which would push the entry twice. No resolution step
+  // here — a token id is already canonical, so there is nothing to replace after.
+  async function searchParcel(tokenId, { pushUrl = false } = {}) {
     setLoading(true);
     setError(null);
     setSearchResult(null);
     setUnmintedResult(null);
+    if (pushUrl) window.history.pushState({}, '', `/?token=${tokenId}`);
     try {
       if (tokenId >= 1 && tokenId <= 9911) {
         const res = await fetch(`${API_URL}/estimate/${tokenId}`);
@@ -330,7 +378,11 @@ export default function Home() {
           <ErrorBoundary>
           {view === 'search' && (
             <>
-              <ParcelSearch onSearch={searchParcel} onAddress={(a) => loadWalletByAddress(a, { pushUrl: true })} loading={loading} />
+              <ParcelSearch
+                onSearch={(id) => searchParcel(id, { pushUrl: true })}
+                onAddress={(a) => loadWalletByAddress(a, { pushUrl: true })}
+                loading={loading}
+              />
               {loading && <ResultSkeleton />}
               {searchResult && !loading && (
                 <div className="mt-8">
