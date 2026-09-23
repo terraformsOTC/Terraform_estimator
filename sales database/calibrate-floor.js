@@ -45,6 +45,11 @@ const COEFFS_PATHS = [
 
 // Below this many overlapping days the median is too fragile to ship.
 const MIN_DAYS = 5;
+// The measurement day must be recent, or the constant is exactly the stale input
+// it is meant to remove. One day of slack over the 24h refit cadence.
+const MAX_AGE_DAYS = Number(process.env.CALIB_MAX_AGE_DAYS || 2);
+// Ship a real regime shift, refuse a broken input.
+const MAX_MOVE = Number(process.env.CALIB_MAX_MOVE || 0.5);
 
 const median = (xs) => {
   if (!xs.length) return null;
@@ -82,8 +87,26 @@ function main() {
   }
 
   const ratios = days.map((d) => index.get(d) / live.get(d));
-  const c = median(ratios);
   const lo = Math.min(...ratios), hi = Math.max(...ratios);
+
+  // The constant converts TODAY's live floor into the basis the model was trained
+  // on, so it is measured from the most recent overlapping day — not averaged over
+  // the whole series.
+  //
+  // Averaging was the original approach and it failed on 2026-09-23. The listing
+  // floor rose 20% in five days while transacted prices stayed flat, taking the
+  // ratio from 0.93 to 0.77. The median over four months still read 0.869, so the
+  // correction that was supposed to catch exactly this move reported almost no
+  // change, and every estimate stayed ~15% high.
+  //
+  // Averaging is not needed for smoothing either: the index side is already a 12th
+  // percentile over a trailing 14 days. The live side is a point sample, and it is
+  // the same point sample production prices against, so taking it raw is what keeps
+  // the two consistent. What bounds the staleness is cadence, not averaging — see
+  // ops/daily-refit.sh, which re-runs this every 24h.
+  const latestDay = days[days.length - 1];
+  const c = index.get(latestDay) / live.get(latestDay);
+  const historicalMedian = median(ratios);
 
   console.log(`\nFloor calibration — index vs live listing floor`);
   console.log(`  overlapping days: ${days.length}  (${days[0]} -> ${days[days.length - 1]})\n`);
@@ -92,7 +115,7 @@ function main() {
     console.log(`  ${d.padEnd(12)}${index.get(d).toFixed(4).padStart(9)}`
       + `${live.get(d).toFixed(4).padStart(10)}${(index.get(d) / live.get(d)).toFixed(3).padStart(11)}`);
   }
-  console.log(`\n  floor_calibration = ${c.toFixed(4)}   (range ${lo.toFixed(3)}-${hi.toFixed(3)}, n=${days.length})`);
+  console.log(`\n  floor_calibration = ${c.toFixed(4)}   (from ${latestDay}; history median ${historicalMedian.toFixed(4)}, range ${lo.toFixed(3)}-${hi.toFixed(3)}, n=${days.length})`);
   console.log(`  live floor runs ${((1 / c - 1) * 100).toFixed(1)}% above the index`);
   console.log(`  => uncorrected, production would overprice by that much\n`);
 
@@ -108,6 +131,35 @@ function main() {
     console.log(`  floor-history.json accumulates samples across different regimes.\n`);
   }
 
+  // A constant measured from one day is only as good as that day being today.
+  const ageDays = Math.floor((Date.now() - Date.parse(latestDay + 'T00:00:00Z')) / 86400000);
+  if (ageDays > MAX_AGE_DAYS) {
+    console.error(`  REFUSING: latest overlapping day is ${latestDay}, ${ageDays} days old `
+      + `(max ${MAX_AGE_DAYS}). Sample the live floor and rebuild the index first — a stale `
+      + `calibration is the failure this script exists to prevent.`);
+    process.exit(1);
+  }
+
+  // Not a smoother — a tripwire. A genuine regime shift should land, but a 2x jump
+  // means one of the two inputs is broken and must not be shipped unattended.
+  const prev = (() => {
+    for (const p of COEFFS_PATHS) {
+      if (!fs.existsSync(p)) continue;
+      const v = JSON.parse(fs.readFileSync(p, 'utf8'))?.floor_calibration?.value;
+      if (typeof v === 'number') return v;
+    }
+    return null;
+  })();
+  if (prev) {
+    const move = Math.abs(c - prev) / prev;
+    console.log(`  previous value ${prev.toFixed(4)} -> ${c.toFixed(4)} (${(move * 100).toFixed(1)}% move)`);
+    if (move > MAX_MOVE && !process.argv.includes('--force')) {
+      console.error(`  REFUSING: ${(move * 100).toFixed(1)}% move exceeds ${(MAX_MOVE * 100).toFixed(0)}%. `
+        + `Check the index and floor-history, then re-run with --force if it is real.`);
+      process.exit(1);
+    }
+  }
+
   if (!process.argv.includes('--write')) {
     console.log(`  (pass --write to patch floor_calibration into the coefficients JSON)\n`);
     return;
@@ -120,8 +172,13 @@ function main() {
     day_range: [days[0], days[days.length - 1]],
     ratio_range: [Number(lo.toFixed(3)), Number(hi.toFixed(3))],
     live_floor_range: [Number(Math.min(...liveVals).toFixed(4)), Number(Math.max(...liveVals).toFixed(4))],
-    note: 'median(index_floor / live_floor). Multiply the live floor by this before '
-        + 'applying fitted multiples, which were trained against the index.',
+    measured_from_day: latestDay,
+    history_median: Number(historicalMedian.toFixed(4)),
+    note: 'index_floor / live_floor on the most recent overlapping day. Multiply the '
+        + 'live floor by this before applying fitted multiples, which were trained '
+        + 'against the index. Re-measured every 24h by ops/daily-refit.sh — a value '
+        + 'older than that is stale and will overprice when the listing floor moves '
+        + 'away from transacted prices.',
   };
 
   let written = 0;

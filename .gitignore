@@ -82,3 +82,6 @@ npm-debug.log*
 # Claude Code per-machine permission allowlist. Local-only by design, and this
 # one carries an inlined RPC key in an allowed-command string.
 .claude/settings.local.json
+
+# Refit job logs (local, regenerated every run).
+ops/logs/
