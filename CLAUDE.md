@@ -28,10 +28,13 @@ Backend: `:3001` | Frontend: `:3000`
 
 ### Backend (`backend/src/`)
 - `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `ALLOWED_ORIGINS` env var.
-- `pricingModel.js` — All pricing logic. Floor price constant at line 4. Formula: `Floor × (zone_mult + biome_mult) / 2`. Handles Godmode, Plague, X-Seed, Y-Seed, Lith0 special tokens.
+- `hedonicModel.js` — **the pricing model**: fitted multiples from `pricing-v2-coeffs.json` (built by `sales database/fit_hedonic.py`, refit daily by `ops/daily-refit.sh`) × live floor × `floor_calibration`. Returns a bid–ask range. Tier-2 specials (Godmode, Plague, seeds, Lith0) fall back to v1.
+- `pricingModel.js` — v1 hand-tuned model. Only served on `/legacy`, used for Tier-2 prices and as the fit's priors (`build_priors.js`). Also holds `SETS` / `detectSets`.
+- `snapshotTraits.js` — lookup-derived traits (special tokens, 1of1, Godmode, gm, Lith0-like, S0 window, ??? thresholds). Shared by the API and the offline pricing scripts — change them here only.
+- `sales.js` — OpenSea sales feed and the `decideBasis` over/under rule (ask-anchored; see `test/basis.test.js`).
 - `special-tokens.json` — Minted special parcel overrides.
 - `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/antennaOn/antennaFirstTs). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
-- `floor-history.json` — Time-series of `{ts, floor}` samples written by `.githooks/pre-push`. Used by `/sales` to anchor estimates to the floor at time of sale. See "Floor Price History" below.
+- `floor-history.json` — Time-series of `{ts, floor, bid?}` samples (hourly sampler + pre-push hook). Used by `/sales` and `calibrate-floor.js` to anchor estimates to the floor at time of sale. See "Floor Price History" below.
 - `unminted-parcels.json` — 1193 unminted parcels with all traits and `specialType` field.
 - `unminted-animation.json` — Per-parcel animation data (grid, chars, fonts, CSS).
 - `unminted-fonts.json` — 94 base64 WOFF2 fonts indexed by `fontIndex`.
@@ -63,16 +66,17 @@ Uses `tokenHTML(uint256)` contract call (not `tokenURI`) — the SVG has no SEED
 ### Floor Price History
 `backend/src/floor-history.json` is an append-only time-series of `{ts, floor}` samples used by `/sales` to anchor each sale's estimate to the floor in effect at sale time, instead of the current floor (which would otherwise make every past sale look retroactively under/overvalued as the floor moves).
 
-Samples are written by **`.githooks/pre-push`**, which runs `backend/scripts/append-floor-history.js` before any push to main. The hook fetches the live Alchemy floor, appends a sample, creates a follow-up commit, and asks you to re-run `git push` so the new commit ships with the deploy. One-time enable:
-```bash
-git config core.hooksPath .githooks
-```
-Sampling cadence equals push cadence — sales between two pushes resolve to the floor at the earlier push (nearest-prior). Sales that predate all history fall back to the current live floor (`floorAtSaleSource: 'current'` on the response).
+Samples are written three ways, all through `backend/scripts/append-floor-history.js` or its in-memory equivalent:
+- **hourly**, by the `com.terraformestimator.floor-sample` launchd agent (`ops/launchd/`). It writes the file and does not commit — the file is normally dirty.
+- **before every push**, by `.githooks/pre-push`, which appends a sample, commits the file, and asks you to re-run `git push` (one-time enable: `git config core.hooksPath .githooks`).
+- **at runtime**, the API adds every live floor it reads (≥10 min apart) to its in-memory history, so sales since the last deploy resolve to a fresh floor.
+
+Lookups are nearest-prior. Before 2026-09-23 sampling was tied to pushes and has multi-day holes; `calibrate-floor.js` refuses sales whose nearest reading is over 72h old. Sales that predate all history fall back to the current live floor (`floorAtSaleSource: 'current'`).
 
 ### Minted Traits Snapshot
 `minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, antennaOn, antennaFirstTs). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.
 
-Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`, `isS0`) are applied at query time via `getSnapshotTraits` in `server.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` / S0 window bounds take effect without re-baking. `isS0` is true when `antennaOn === true` AND `antennaFirstTs` falls inside `[S0_ANTENNA_TS_MIN, S0_ANTENNA_TS_MAX]` (currently the V2 launch window 2023-12-24 → 2024-01-13 UTC). `antennaFirstTs` is read from `getFirstAntennaModification(tokenId).timestamp` on the Antenna contract `0x331512A28A4cF80221aF949B5d43041fF0FC7f01` — the V2 antenna state lives on a separate contract from the original Terraforms contract.
+Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`, `isS0`) are applied at query time via `snapshotTraits()` in `snapshotTraits.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` / S0 window bounds take effect without re-baking. `isS0` is true when `antennaOn === true` AND `antennaFirstTs` falls inside `[S0_ANTENNA_TS_MIN, S0_ANTENNA_TS_MAX]` (currently the V2 launch window 2023-12-24 → 2024-01-13 UTC). `antennaFirstTs` is read from `getFirstAntennaModification(tokenId).timestamp` on the Antenna contract `0x331512A28A4cF80221aF949B5d43041fF0FC7f01` — the V2 antenna state lives on a separate contract from the original Terraforms contract.
 
 **Refresh cadence**: chroma, mode, level, and mysteryValue can change on-chain when parcels are upgraded/terraformed. Stale traits skew estimates (worst case: a parcel that becomes Plague after the bake won't get the 5x specialType). Re-bake periodically:
 ```bash
