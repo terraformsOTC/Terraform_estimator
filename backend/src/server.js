@@ -1656,6 +1656,7 @@ const SET_EXAMPLE_CAP = 24;
 // wholesale — see the note above.
 const EXAMPLE_PINS = {
   'biome 0': 8379,
+  'Y-Seed': 9417,
 };
 
 function pickExample(predicate, label) {

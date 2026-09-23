@@ -15,14 +15,18 @@ import { API_URL, Footer } from '@/components/shared';
 // So the top line here is not "is it up", it is "how old is what it is telling
 // people". Everything else is context for that question.
 
-function ago(iso) {
+// `coarse` drops the decimal. The model rows want the tenth of an hour — the
+// whole point there is how close the age is to the 48h threshold. A commit list
+// does not: "4d ago" says everything "4.1d ago" was trying to.
+function ago(iso, { coarse = false } = {}) {
   if (!iso) return '—';
   const s = Math.round((Date.now() - Date.parse(iso)) / 1000);
   if (!Number.isFinite(s)) return '—';
   if (s < 90) return `${s}s ago`;
   if (s < 5400) return `${Math.round(s / 60)}m ago`;
-  if (s < 172800) return `${(s / 3600).toFixed(1)}h ago`;
-  return `${(s / 86400).toFixed(1)}d ago`;
+  const h = s / 3600, d = s / 86400;
+  if (s < 172800) return `${coarse ? Math.round(h) : h.toFixed(1)}h ago`;
+  return `${coarse ? Math.round(d) : d.toFixed(1)}d ago`;
 }
 
 const GOOD = '#4ade80';
@@ -142,8 +146,7 @@ export default function HealthPage() {
               <Row label="value" value={calib.value ?? '—'} color={calibColor}
                    hint={calib.value ? `live floor x ${calib.value}` : null} />
               <Row label="measured" value={ago(calib.measuredAt)} color={calibColor} hint={calib.measuredFromDay} />
-              <Row label="history median" value={calib.historyMedian ?? '—'}
-                   hint="the averaged figure that missed the 2026-09-23 drift" />
+              <Row label="history median" value={calib.historyMedian ?? '—'} />
             </Panel>
 
             <Panel title="Floor">
@@ -151,7 +154,7 @@ export default function HealthPage() {
                    color={data.floor?.isLive ? undefined : WARN}
                    hint={data.floor?.isLive ? 'alchemy' : 'fallback — alchemy unreachable'} />
               <Row label="effective floor" value={data.floor && calib.value ? `${(data.floor.eth * calib.value).toFixed(4)} ETH` : '—'}
-                   hint="what multiples are applied to" />
+                   hint="every estimate is built from this — compare to recent sale prices" />
               <Row label="history samples" value={data.data?.floorHistorySamples ?? '—'} />
             </Panel>
 
@@ -181,21 +184,17 @@ export default function HealthPage() {
           {log && (
             <>
               {log.commits.map((c) => (
-                <div
-                  key={c.sha}
-                  className="flex items-baseline justify-between gap-4 py-1.5"
-                  style={{ borderBottom: '1px solid rgba(232,232,232,0.06)' }}
-                >
+                <div key={c.sha} className="flex items-baseline justify-between gap-3 py-0.5">
                   <a
                     href={c.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm opacity-85 hover:opacity-100 no-underline"
+                    className="text-xs opacity-75 hover:opacity-100 no-underline truncate"
                   >
                     {c.title}
                   </a>
-                  <span className="text-xs opacity-35 whitespace-nowrap">
-                    {c.sha} · {ago(c.date)}
+                  <span className="text-xs opacity-30 whitespace-nowrap">
+                    {ago(c.date, { coarse: true })}
                   </span>
                 </div>
               ))}
