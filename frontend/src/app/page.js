@@ -60,6 +60,26 @@ function TokenParamHandler({ onToken, onAddress }) {
   return null;
 }
 
+// The rail belongs to the landing page only. Two things take you off it: a
+// ?token= / ?address= deep link, and running a search from the box (which leaves
+// the URL alone, so the param check cannot see it) — hence both conditions.
+//
+// The param read lives inside its own Suspense boundary rather than in the parent:
+// useSearchParams opts this subtree out of the static prerender, so the server
+// sends nothing and the client renders the rail only when it belongs. Deciding in
+// an effect instead would ship the skeletons in the prerendered HTML and blink
+// them away a frame later on every /?token= load.
+function LandingCarousel({ suppressed }) {
+  const searchParams = useSearchParams();
+  if (suppressed) return null;
+  if (searchParams.get('token') || searchParams.get('address')) return null;
+  return (
+    <div className="px-6">
+      <BestTerrainCarousel />
+    </div>
+  );
+}
+
 // Reserves the result area's footprint while an estimate is in flight so the
 // async result (RPC ~1–3s, common on /?token= deep-links) doesn't shove the
 // footer down when it lands — the dominant CLS source on this page.
@@ -247,9 +267,9 @@ export default function Home() {
       />
       <main className="flex-1">
         {view === 'search' && (
-          <div className="px-6">
-            <BestTerrainCarousel />
-          </div>
+          <Suspense fallback={null}>
+            <LandingCarousel suppressed={loading || !!searchResult || !!unmintedResult} />
+          </Suspense>
         )}
 
         <div className="px-6 mb-6 block md:flex justify-between items-end">
