@@ -1644,7 +1644,33 @@ app.get('/traits/:type', (req, res) => {
 // stand-in.
 const SET_EXAMPLE_CAP = 24;
 
-function pickExample(predicate) {
+// Hand-picked examples, by member label. Auto-picking takes the first Terrain +
+// Flow parcel a member matches, which is fine for most and arbitrary for the ones
+// people actually look at — biome 0 is the set's headline in both Grails and
+// Blocky biomes, and deserves a better specimen than whichever id sorts first.
+//
+// A pin is checked against the member's own predicate before it is used, so if a
+// pinned parcel is ever dreamed, terraformed or re-chromed it falls back to an
+// auto-pick rather than quietly illustrating the wrong thing. That is the same
+// reason examples are resolved at request time instead of being hardcoded
+// wholesale — see the note above.
+const EXAMPLE_PINS = {
+  'biome 0': 8379,
+};
+
+function pickExample(predicate, label) {
+  const pinned = EXAMPLE_PINS[label];
+  if (pinned) {
+    const traits = getSnapshotTraits(pinned);
+    if (traits && predicate(traits)) {
+      return { tokenId: pinned, traits, exact: traits.mode === 'Terrain' && traits.chroma === 'Flow' };
+    }
+    console.warn(`[sets] pinned example #${pinned} no longer matches "${label}" — auto-picking`);
+  }
+  return autoPickExample(predicate);
+}
+
+function autoPickExample(predicate) {
   if (!MINTED_TRAITS_SNAPSHOT) return null;
   let fallback = null;
   for (const tokenId of MINTED_TRAITS_SNAPSHOT.keys()) {
@@ -1692,7 +1718,7 @@ function getSets() {
     const shown = members.slice(0, SET_EXAMPLE_CAP);
     const examples = shown
       .map(m => {
-        const hit = pickExample(m.pick);
+        const hit = pickExample(m.pick, m.label);
         return hit ? { label: m.label, tokenId: hit.tokenId, traits: hit.traits, exact: hit.exact } : null;
       })
       .filter(Boolean);
