@@ -57,7 +57,8 @@ function Panel({ title, status, children }) {
 export default function HealthPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [checkedAt, setCheckedAt] = useState(null);
+  const [log, setLog] = useState(null);
+  const [logError, setLogError] = useState(null);
 
   const load = useCallback(() => {
     // Same-origin, through src/app/api/feed — which forwards /health uncached.
@@ -73,12 +74,11 @@ export default function HealthPage() {
         if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
         return d;
       })
-      .then((d) => { setData(d); setError(null); setCheckedAt(Date.now()); })
+      .then((d) => { setData(d); setError(null); })
       .catch((e) => {
         // "Failed to fetch" on its own tells an operator nothing about which hop
         // broke, and this page exists for exactly the moment something has.
         setError(`${e.message} — /api/feed/health did not answer. Check the API at ${API_URL}/health directly.`);
-        setCheckedAt(Date.now());
       });
   }, []);
 
@@ -88,6 +88,19 @@ export default function HealthPage() {
     return () => clearInterval(t);
   }, [load]);
 
+  // Once on mount, not on the 60s tick: commits change far more slowly than the
+  // model ages, and the route is edge-cached for five minutes anyway.
+  useEffect(() => {
+    fetch('/api/changelog')
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+        return d;
+      })
+      .then(setLog)
+      .catch((e) => setLogError(e.message));
+  }, []);
+
   const model = data?.model;
   const calib = data?.calibration;
   const modelColor = model ? (model.stale ? BAD : model.ageHours > 26 ? WARN : GOOD) : DIM;
@@ -96,10 +109,7 @@ export default function HealthPage() {
   return (
     <div className="content-wrapper">
       <main className="flex-1 px-6 pt-8 max-w-2xl">
-        <h1 className="text-[1.35rem] md:text-[1.6875rem] m-0 font-normal">estimator health</h1>
-        <p className="opacity-40 text-xs mt-2 mb-8">
-          Unlisted operator view. Refreshes every 60s{checkedAt ? ` · checked ${ago(new Date(checkedAt).toISOString())}` : ''}.
-        </p>
+        <h1 className="text-[1.35rem] md:text-[1.6875rem] m-0 font-normal mb-8">estimator health</h1>
 
         {error && (
           <div className="mb-8 text-sm" style={{ color: BAD }}>
@@ -164,6 +174,40 @@ export default function HealthPage() {
             </Panel>
           </>
         )}
+
+        <Panel title="Changelog">
+          {logError && <p className="text-sm" style={{ color: WARN }}>[{logError}]</p>}
+          {!log && !logError && <p className="text-sm opacity-40">[loading...]</p>}
+          {log && (
+            <>
+              {log.commits.map((c) => (
+                <div
+                  key={c.sha}
+                  className="flex items-baseline justify-between gap-4 py-1.5"
+                  style={{ borderBottom: '1px solid rgba(232,232,232,0.06)' }}
+                >
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm opacity-85 hover:opacity-100 no-underline"
+                  >
+                    {c.title}
+                  </a>
+                  <span className="text-xs opacity-35 whitespace-nowrap">
+                    {c.sha} · {ago(c.date)}
+                  </span>
+                </div>
+              ))}
+              <p className="mt-3 text-xs opacity-35">
+                Last {log.commits.length} changes to main
+                {log.automatedCount > 0
+                  ? ` · ${log.automatedCount} automated floor snapshots hidden`
+                  : ''}
+              </p>
+            </>
+          )}
+        </Panel>
 
         {!data && !error && <p className="text-sm opacity-50">[loading...]</p>}
       </main>

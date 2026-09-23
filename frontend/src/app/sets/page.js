@@ -8,9 +8,12 @@ import { SETS_GLOSSARY, setStyle } from '@/lib/setsGlossary';
 // Examples come from the backend (GET /sets), which picks a Terrain + Flow parcel
 // per member so a row differs only in the trait the set is actually about. Where
 // no such parcel can exist — Plague is a chroma, Origin is a mode — it falls back
-// and flags the card, rather than leaving a gap.
+// to the nearest match. The card does not call that out: those two ARE the
+// exception the set is about, and the intro no longer sets up Terrain + Flow as a
+// rule, so a "· Plague" tag read as a defect rather than the point. The backend
+// still returns `exact` for anyone querying /sets directly.
 function ExampleCard({ example }) {
-  const { label, tokenId, traits, exact } = example;
+  const { label, tokenId, traits } = example;
   return (
     <a
       href={`/?token=${tokenId}`}
@@ -29,8 +32,6 @@ function ExampleCard({ example }) {
         <span className="text-sm opacity-90">{label}</span>
         <span className="text-xs opacity-45">
           #{tokenId} · {traits?.zone}
-          {!exact && traits?.mode !== 'Terrain' ? ` · ${traits.mode}` : ''}
-          {!exact && traits?.chroma !== 'Flow' ? ` · ${traits.chroma}` : ''}
         </span>
       </div>
     </a>
