@@ -140,8 +140,7 @@ export default function HealthPage() {
               <Row label="fitted" value={ago(model.built)} color={modelColor} hint={model.built?.slice(0, 16).replace('T', ' ')} />
               <Row label="age" value={model.ageHours != null ? `${model.ageHours}h` : '—'} color={modelColor} hint={`stale after ${data.staleAfterHours}h`} />
               <Row label="sales fitted" value={model.salesFitted?.toLocaleString() ?? '—'} />
-              <Row label="median model error" value={model.holdoutMedianPctErr != null ? `${(model.holdoutMedianPctErr * 100).toFixed(1)}%` : '—'}
-                   hint="against the newest 20% of sales, held out of the fit" />
+              <Row label="median model error" value={model.holdoutMedianPctErr != null ? `${(model.holdoutMedianPctErr * 100).toFixed(1)}%` : '—'} />
               <Row label="baseline multiple" value={model.baselineMultiple?.toFixed(4) ?? '—'} />
               <Row label="half-life" value={model.halfLifeDays ? `${model.halfLifeDays}d` : '—'} hint={`${model.features ?? '—'} features`} />
               <Row label="version" value={model.version ?? '—'} />
@@ -152,8 +151,7 @@ export default function HealthPage() {
                    color={data.floor?.isLive ? undefined : WARN}
                    hint={data.floor?.isLive ? 'cheapest ask' : 'fallback — alchemy unreachable'} />
               <Row label="top collection bid" value={data.floor?.topBid ? `${data.floor.topBid.toFixed(4)} WETH` : '—'} />
-              <Row label="synthetic floor" value={data.floor && calib.value ? `${(data.floor.eth * calib.value).toFixed(4)} ETH` : '—'}
-                   hint="every estimate is built from this — compare to recent sale prices" />
+              <Row label="synthetic floor" value={data.floor && calib.value ? `${(data.floor.eth * calib.value).toFixed(4)} ETH` : '—'} />
               <Row label="history samples" value={data.data?.floorHistorySamples ?? '—'} />
             </Panel>
 

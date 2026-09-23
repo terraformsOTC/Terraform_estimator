@@ -463,9 +463,11 @@ function ParcelCard({ parcel, onZoom }) {
   const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
-  // Bid side per card, so a card and the wallet total below it agree. A wallet is
-  // worth what selling it realises, and selling in size means taking offers.
-  const displayValue = pricingV2 ? pricingV2.off : estimatedValue;
+  // Ask side per card — the top of the range, matching every other valuation
+  // surface on the site. A card previously showed the bid side, which made the
+  // same parcel read lower here than on its own page for no reason the viewer
+  // could see. The cards now sum to the high end of the wallet total above.
+  const displayValue = pricingV2 ? pricingV2.on : estimatedValue;
 
   const levelCategory = getLevelCategory(level);
 

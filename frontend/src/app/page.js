@@ -221,13 +221,22 @@ export default function Home() {
     }
   }
 
-  async function loadWalletByAddress(addr) {
+  // `pushUrl` is set when the search box is the caller, so the address lands in
+  // the URL and the view becomes linkable and back-navigable. Not set when the
+  // caller is the ?address= deep link itself — that would push the entry twice.
+  async function loadWalletByAddress(addr, { pushUrl = false } = {}) {
     if (!addr) return;
     const myId = ++walletFetchId.current;
     setWhaleIdentifier(addr);
     setWhaleData(null);
     setView('whale');
     setLoading(true);
+    if (pushUrl) {
+      // Push what was typed straight away rather than waiting for the lookup:
+      // an ENS name is a valid deep link on its own, the backend resolves it the
+      // same way. The canonical address replaces it below once known.
+      window.history.pushState({}, '', `/?address=${encodeURIComponent(addr)}`);
+    }
     setError(null);
     try {
       const res = await fetch(`${API_URL}/wallet/${encodeURIComponent(addr)}`);
@@ -235,6 +244,12 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWhaleData(data);
+      // Swap the typed name for the address it resolved to, so a copied link is
+      // stable even if the ENS record later points somewhere else. replaceState,
+      // not push: this is the same view, spelled canonically.
+      if (pushUrl && data.address) {
+        window.history.replaceState({}, '', `/?address=${data.address}`);
+      }
     } catch (err) {
       if (myId !== walletFetchId.current) return;
       setError(err.message || 'Failed to load wallet.');
@@ -315,7 +330,7 @@ export default function Home() {
           <ErrorBoundary>
           {view === 'search' && (
             <>
-              <ParcelSearch onSearch={searchParcel} onAddress={loadWalletByAddress} loading={loading} />
+              <ParcelSearch onSearch={searchParcel} onAddress={(a) => loadWalletByAddress(a, { pushUrl: true })} loading={loading} />
               {loading && <ResultSkeleton />}
               {searchResult && !loading && (
                 <div className="mt-8">
