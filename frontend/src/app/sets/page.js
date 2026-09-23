@@ -80,6 +80,10 @@ function ExampleRail({ examples }) {
 function SetBlock({ set, data }) {
   const style = setStyle(set.name);
   const examples = data?.examples || [];
+  // `set.size` rather than data.memberCount: the two full sets are defined by
+  // allZones/allBiomes rather than an explicit list, so the backend reports 0
+  // members for them. The glossary carries the real figure.
+  const size = set.size ?? data?.memberCount ?? null;
 
   return (
     <section className="mb-14">
@@ -90,6 +94,9 @@ function SetBlock({ set, data }) {
         >
           {set.name}
         </span>
+        {size != null && (
+          <span className="text-xs opacity-40">{size} parcels</span>
+        )}
         {data?.bottleneck && (
           <span className="text-xs opacity-40">bottleneck: {data.bottleneck}</span>
         )}
@@ -106,11 +113,7 @@ function SetBlock({ set, data }) {
             </p>
           )}
         </>
-      ) : (
-        <p className="text-xs opacity-35">
-          Too many members to illustrate — {data?.memberCount ? `${data.memberCount} in the set.` : 'see the description above.'}
-        </p>
-      )}
+      ) : null}
     </section>
   );
 }
