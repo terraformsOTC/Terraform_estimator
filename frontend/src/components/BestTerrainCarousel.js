@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { API_URL, EthIcon, parcelImage, SpecialBadge, SPECIAL_TYPE_BADGES, CATEGORY_COLORS, vsModelColor } from './shared';
 
 // How many cards the rail holds. /listings returns every active listing (~145
@@ -148,9 +148,6 @@ function ParcelCard({ parcel, rank }) {
 export default function BestTerrainCarousel() {
   const [parcels, setParcels] = useState(null);
   const [error, setError] = useState(null);
-  const [atStart, setAtStart] = useState(true);
-  const [atEnd, setAtEnd] = useState(false);
-  const railRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,55 +169,19 @@ export default function BestTerrainCarousel() {
     return () => { cancelled = true; };
   }, []);
 
-  const syncArrows = useCallback(() => {
-    const el = railRef.current;
-    if (!el) return;
-    setAtStart(el.scrollLeft <= 2);
-    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
-  }, []);
-
-  useEffect(() => { syncArrows(); }, [parcels, syncArrows]);
-
-  function scrollByPage(dir) {
-    const el = railRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.max(el.clientWidth * 0.8, 180), behavior: 'smooth' });
-  }
-
   if (error) return null;               // the rail is a bonus; never block the estimator
   if (parcels && parcels.length === 0) return null;
 
   return (
     <section className="mb-10" aria-label="Best terrain parcels listed">
-      <div className="flex items-baseline justify-between gap-4 mb-3">
-        <h2 className="text-sm tracking-widest uppercase opacity-60 m-0 font-normal">
-          Best terrain parcels listed
-        </h2>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            className="btn-primary btn-sm"
-            onClick={() => scrollByPage(-1)}
-            disabled={!parcels || atStart}
-            aria-label="Scroll left"
-          >
-            [&lt;]
-          </button>
-          <button
-            type="button"
-            className="btn-primary btn-sm"
-            onClick={() => scrollByPage(1)}
-            disabled={!parcels || atEnd}
-            aria-label="Scroll right"
-          >
-            [&gt;]
-          </button>
-        </div>
-      </div>
+      {/* Same size, case and weight as the "parcel valuation estimate" heading
+          below it — the two are siblings on the page and were reading as
+          different levels of the hierarchy. */}
+      <h2 className="text-[1.35rem] md:text-[1.6875rem] m-0 font-normal mb-3">
+        best terrain parcels listed
+      </h2>
 
       <div
-        ref={railRef}
-        onScroll={syncArrows}
         className="flex gap-4 overflow-x-auto pb-2 carousel-rail"
         style={{ scrollSnapType: 'x mandatory' }}
         tabIndex={0}
