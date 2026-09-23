@@ -3609,23 +3609,15 @@
     }
   },
   "floor_calibration": {
-    "value": 0.7699,
-    "measured_at": "2026-09-23T12:54:22.124Z",
-    "n_days": 28,
-    "day_range": [
-      "2026-05-05",
-      "2026-09-23"
+    "value": 0.8816,
+    "measured_at": "2026-09-23T20:49:24.780Z",
+    "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
+    "window_days": 30,
+    "n_sales": 61,
+    "iqr": [
+      0.783,
+      0.954
     ],
-    "ratio_range": [
-      0.751,
-      0.974
-    ],
-    "live_floor_range": [
-      0.2024,
-      0.3444
-    ],
-    "measured_from_day": "2026-09-23",
-    "history_median": 0.8689,
-    "note": "index_floor / live_floor on the most recent overlapping day. Multiply the live floor by this before applying fitted multiples, which were trained against the index. Re-measured every 24h by ops/daily-refit.sh — a value older than that is stale and will overprice when the listing floor moves away from transacted prices."
+    "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
   }
 }

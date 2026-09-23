@@ -98,9 +98,29 @@ cp pricing-v2-coeffs.json pricing-v2-coeffs.prev.json 2>/dev/null || true
 .venv/bin/python fit_hedonic.py || fail "fit_hedonic"
 
 echo "[refit] 6/7 calibrate"
-# Refuses on a stale day or an implausible jump — see calibrate-floor.js.
-node calibrate-floor.js --write || fail "calibrate-floor (see reason above; production keeps the previous coefficients)"
+# Order matters. calibrate-floor solves the constant against the multiples it is
+# correcting, and it loads them through backend/src/hedonicModel.js — so the new
+# fit has to be in place BEFORE it runs, or it would calibrate yesterday's model
+# and write the answer against today's.
+#
+# fit_hedonic.py also rewrites the coefficients without floor_calibration, so the
+# previous value is carried across first: the model needs a constant to load, and
+# calibrate-floor divides that same constant back out.
+node -e '
+  const fs = require("fs");
+  const src = "pricing-v2-coeffs.json";
+  const dst = process.argv[1];
+  const fresh = JSON.parse(fs.readFileSync(src, "utf8"));
+  if (!fresh.floor_calibration && fs.existsSync(dst)) {
+    const old = JSON.parse(fs.readFileSync(dst, "utf8"));
+    if (old.floor_calibration) fresh.floor_calibration = old.floor_calibration;
+  }
+  fs.writeFileSync(src, JSON.stringify(fresh, null, 2));
+' "$REPO/backend/src/pricing-v2-coeffs.json" || fail "carrying floor_calibration across the fit"
 cp pricing-v2-coeffs.json "$REPO/backend/src/pricing-v2-coeffs.json"
+
+# Refuses on too few sales, an implausible value or an implausible jump.
+node calibrate-floor.js --write || fail "calibrate-floor (see reason above; production keeps the previous coefficients)"
 
 echo "[refit] 7/7 verify"
 cd "$REPO"

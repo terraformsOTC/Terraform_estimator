@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/Users/oasis/.local/share/mise/shims:/Users/oasis/.local/share/mise/installs/node/22.22.2/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.terraformestimator.floor-sample</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-lc</string>
+		<string>cd "/Users/oasis/dev/Terraforms Estimator" &amp;&amp; node --env-file=backend/.env backend/scripts/append-floor-history.js</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/oasis/dev/Terraforms Estimator/ops/logs/floor-sample.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/oasis/dev/Terraforms Estimator/ops/logs/floor-sample.log</string>
+	<key>StartInterval</key>
+	<integer>3600</integer>
+</dict>
+</plist>
