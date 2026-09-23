@@ -15,8 +15,6 @@ import { API_URL, Footer } from '@/components/shared';
 // So the top line here is not "is it up", it is "how old is what it is telling
 // people". Everything else is context for that question.
 
-const STALE_H = 48;
-
 function ago(iso) {
   if (!iso) return '—';
   const s = Math.round((Date.now() - Date.parse(iso)) / 1000);
@@ -62,16 +60,26 @@ export default function HealthPage() {
   const [checkedAt, setCheckedAt] = useState(null);
 
   const load = useCallback(() => {
-    // Straight to the origin, not through the edge proxy: a cached answer would
-    // defeat the point of a page whose whole job is reporting current state.
-    fetch(`${API_URL}/health`, { cache: 'no-store' })
+    // Same-origin, through src/app/api/feed — which forwards /health uncached.
+    //
+    // This used to call the Render origin directly and was the only page left
+    // doing so, every other feed having moved behind the proxy. That made it the
+    // only page that could fail on anything specific to that hostname: a blocking
+    // extension, DNS, a VPN, or the origin waking from idle. Same-origin removes
+    // the whole class, and inherits the CSP 'self' allowance for free.
+    fetch('/api/feed/health', { cache: 'no-store' })
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
         return d;
       })
       .then((d) => { setData(d); setError(null); setCheckedAt(Date.now()); })
-      .catch((e) => { setError(e.message); setCheckedAt(Date.now()); });
+      .catch((e) => {
+        // "Failed to fetch" on its own tells an operator nothing about which hop
+        // broke, and this page exists for exactly the moment something has.
+        setError(`${e.message} — /api/feed/health did not answer. Check the API at ${API_URL}/health directly.`);
+        setCheckedAt(Date.now());
+      });
   }, []);
 
   useEffect(() => {

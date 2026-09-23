@@ -18,19 +18,23 @@ import { API_URL } from '@/components/shared';
 // origin already allows.
 
 // Allowlist, not a catch-all `[...path]`: this route is public and unauthenticated,
-// so it forwards exactly the three read-only feeds and nothing else. Adding one is
+// so it forwards exactly these read-only endpoints and nothing else. Adding one is
 // a deliberate edit.
-const FEEDS = {
-  listings: '/listings',
-  'listings-slim': '/listings-slim',
-  sales: '/sales',
-};
-
 const EDGE_CACHE = 'public, max-age=60, s-maxage=60, stale-while-revalidate=1800';
+
+// `cache: false` means always no-store. /health reports how old the model is —
+// a cached answer would be the one thing that page must never give.
+const FEEDS = {
+  listings: { path: '/listings', cache: true },
+  'listings-slim': { path: '/listings-slim', cache: true },
+  sales: { path: '/sales', cache: true },
+  health: { path: '/health', cache: false },
+};
 
 export async function GET(request, { params }) {
   const { feed } = await params;
-  const upstreamPath = FEEDS[feed];
+  const spec = FEEDS[feed];
+  const upstreamPath = spec?.path;
   if (!upstreamPath) {
     return Response.json({ error: 'Unknown feed' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   }
@@ -60,7 +64,7 @@ export async function GET(request, { params }) {
   const body = await upstream.text();
   // A 503 from the backend means its own cache is cold or in failure backoff.
   // Never let that get pinned at the edge for half an hour.
-  const cacheable = upstream.ok && !forced;
+  const cacheable = spec.cache && upstream.ok && !forced;
 
   return new Response(body, {
     status: upstream.status,
