@@ -138,6 +138,24 @@ export function getZoneLoreUrl(zone) {
   return slug ? `https://www.terraformlore.xyz/zones/${slug}` : null;
 }
 
+// discount > 0 → bargain (green), discount < 0 → overpriced (red)
+// Mirrors errorColor in SalesView: pass -discount so positive = over-estimate = red.
+// Shared by ListingsView and BestTerrainCarousel — both rank listings against the
+// model's ask side, so they must agree on what a given gap looks like.
+export function vsModelColor(discount) {
+  const sig = -discount; // positive when overpriced
+  const mag = Math.abs(sig);
+  if (mag < 0.05) return 'rgba(232,232,232,0.5)';
+  if (sig < 0) {
+    if (mag >= 0.4) return '#4ade80';
+    if (mag >= 0.2) return '#86efac';
+    return '#d1fae5';
+  }
+  if (mag >= 0.4) return '#f87171';
+  if (mag >= 0.2) return '#fca5a5';
+  return '#fecaca';
+}
+
 export const CATEGORY_COLORS = {
   Mythical: '#ffe401',
   Rare: '#84488b',

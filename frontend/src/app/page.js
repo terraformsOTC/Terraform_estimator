@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import ParcelSearch from '@/components/ParcelSearch';
+import BestTerrainCarousel from '@/components/BestTerrainCarousel';
 import WalletView from '@/components/WalletView';
 import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
@@ -245,6 +246,12 @@ export default function Home() {
         onDisconnect={disconnectWallet}
       />
       <main className="flex-1">
+        {view === 'search' && (
+          <div className="px-6">
+            <BestTerrainCarousel />
+          </div>
+        )}
+
         <div className="px-6 mb-6 block md:flex justify-between items-end">
           <div>
             <a

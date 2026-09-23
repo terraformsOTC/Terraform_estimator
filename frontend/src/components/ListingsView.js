@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink, vsModelColor } from './shared';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -13,22 +13,6 @@ function timeAgo(ts) {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)}d ago`;
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-// discount > 0 → bargain (green), discount < 0 → overpriced (red)
-// Mirrors errorColor in SalesView: pass -discount so positive = over-estimate = red.
-function vsModelColor(discount) {
-  const sig = -discount; // positive when overpriced
-  const mag = Math.abs(sig);
-  if (mag < 0.05) return 'rgba(232,232,232,0.5)';
-  if (sig < 0) {
-    if (mag >= 0.4) return '#4ade80';
-    if (mag >= 0.2) return '#86efac';
-    return '#d1fae5';
-  }
-  if (mag >= 0.4) return '#f87171';
-  if (mag >= 0.2) return '#fca5a5';
-  return '#fecaca';
 }
 
 export default function ListingsView({ data, loading, error, viewMode = 'list' }) {
