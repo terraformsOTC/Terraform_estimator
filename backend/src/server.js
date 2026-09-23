@@ -611,6 +611,15 @@ function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false,
     if (inFlight || !ready() || Date.now() - failedAt < backoffMs) return;
     start().catch(err => console.error('[cache] background refresh failed:', err.message));
   }
+  function stats() {
+    return {
+      fetchedAt: cache.fetchedAt || null,
+      ageSeconds: cache.fetchedAt ? Math.round((Date.now() - cache.fetchedAt) / 1000) : null,
+      warm: !!cache.data,
+      refreshing: !!inFlight,
+      lastFailureAt: failedAt || null,
+    };
+  }
   async function get({ force = false } = {}) {
     const now = Date.now();
     const age = now - cache.fetchedAt;
@@ -625,7 +634,7 @@ function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false,
     }
     return inFlight || start();
   }
-  return { get };
+  return { get, stats };
 }
 
 // Resolve traits for items that each carry a numeric `tokenId`: snapshot first
@@ -791,6 +800,55 @@ async function computeAllListings() {
 
   return { parcels, floor, floorIsLive, totalListings: allListings.length, fetchedAt: now };
 }
+
+// ─── SLIM LISTINGS ────────────────────────────────────────────────────────────
+// The landing page's deals rail renders 20 cards but /listings hands it all ~145
+// parcels with their full pricing breakdowns: 237KB, of which the v1 `pricing`
+// object is 70KB and the v2 one 55KB, none of it displayed. This is the same
+// cached dataset reduced to the fields the rail draws — 5x smaller, and the parse
+// cost is what matters on a phone, not the compressed bytes.
+//
+// Deliberately not a second cache: it reads listingsResource, so both surfaces
+// always agree and there is only ever one OpenSea fan-out.
+app.use('/listings-slim', undervaluedLimiter);
+
+app.get('/listings-slim', async (req, res) => {
+  try {
+    const mode = typeof req.query.mode === 'string' ? req.query.mode : null;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+    const full = await listingsResource.get();
+
+    let parcels = full.parcels || [];
+    if (mode) parcels = parcels.filter(p => p?.traits?.mode === mode);
+    parcels = [...parcels].sort((a, b) => b.discount - a.discount).slice(0, limit);
+
+    res.set('Cache-Control', FEED_CACHE_CONTROL);
+    res.json({
+      parcels: parcels.map(p => ({
+        tokenId: p.tokenId,
+        listedPrice: p.listedPrice,
+        discount: p.discount,
+        estimate: p.pricingV2 ? p.pricingV2.on : p.pricing?.estimatedValue ?? null,
+        zone: p.traits?.zone ?? null,
+        biome: p.traits?.biome ?? null,
+        level: p.traits?.level ?? null,
+        chroma: p.traits?.chroma ?? null,
+        mode: p.traits?.mode ?? null,
+        specialType: p.traits?.specialType ?? null,
+        zoneCategory: p.pricing?.zoneCategory ?? null,
+      })),
+      floor: full.floor,
+      totalListings: full.totalListings,
+      fetchedAt: full.fetchedAt,
+    });
+  } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
+      return res.status(503).json({ error: 'Listings data temporarily unavailable. Try again shortly.' });
+    }
+    console.error('[listings-slim]', err.message);
+    res.status(500).json({ error: 'Failed to fetch listings.' });
+  }
+});
 
 // ─── COLLECTORS ───────────────────────────────────────────────────────────────
 // Top holders by parcel count, with the sets each has completed.
@@ -1666,8 +1724,80 @@ app.get('/sets', (_req, res) => {
 });
 
 // GET /health
+//
+// Was `{ok:true}`. It now reports how old the pricing model and its floor
+// calibration are, because that is the failure this service actually has: on
+// 2026-09-23 every estimate ran ~15% high for three weeks and nothing said so —
+// the coefficients were fitted once and the calibration constant with them, and
+// neither had a visible age. Uptime checks would have stayed green throughout.
+//
+// `ok` stays true when the model is stale: the API is serving correctly, and a
+// monitor that pages on it would cry wolf. `stale` is the field to watch, and
+// what the /health dashboard and the daily poster's heartbeat both read.
+//
+// Everything here is already public (the coefficients ship in the bundle, the
+// ages are derivable from /estimate) — no secrets, no request-identifying data.
+const MODEL_STALE_HOURS = 48;
+
 app.use('/health', standardLimiter);
-app.get('/health', (_req, res) => res.json({ ok: true }));
+app.get('/health', async (_req, res) => {
+  const ageH = (iso) => {
+    const t = Date.parse(iso);
+    return Number.isFinite(t) ? Math.round(((Date.now() - t) / 3600000) * 10) / 10 : null;
+  };
+  let coeffs = {};
+  try { coeffs = require('./pricing-v2-coeffs.json'); } catch { /* reported as nulls below */ }
+
+  const modelAge = ageH(coeffs?.meta?.built);
+  const calibAge = ageH(coeffs?.floor_calibration?.measured_at);
+  const stale = (modelAge === null || modelAge > MODEL_STALE_HOURS)
+             || (calibAge === null || calibAge > MODEL_STALE_HOURS);
+
+  let floor = null;
+  try {
+    const f = await getFloorPrice();
+    floor = { eth: f.price, isLive: f.isLive };
+  } catch { /* leave null */ }
+
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    ok: true,
+    stale,
+    staleAfterHours: MODEL_STALE_HOURS,
+    now: new Date().toISOString(),
+    uptimeSeconds: Math.round(process.uptime()),
+    model: {
+      version: HEDONIC_MODEL_VERSION,
+      built: coeffs?.meta?.built ?? null,
+      ageHours: modelAge,
+      stale: modelAge === null || modelAge > MODEL_STALE_HOURS,
+      salesFitted: coeffs?.meta?.n_eligible ?? null,
+      features: coeffs?.meta?.features ?? null,
+      halfLifeDays: coeffs?.meta?.half_life_days ?? null,
+      holdoutMedianPctErr: coeffs?.money_sword_on?.holdout_median_pct_err ?? null,
+      baselineMultiple: coeffs?.money_sword_on?.multipliers?.baseline_multiple ?? null,
+    },
+    calibration: {
+      value: coeffs?.floor_calibration?.value ?? null,
+      measuredAt: coeffs?.floor_calibration?.measured_at ?? null,
+      measuredFromDay: coeffs?.floor_calibration?.measured_from_day ?? null,
+      ageHours: calibAge,
+      stale: calibAge === null || calibAge > MODEL_STALE_HOURS,
+      historyMedian: coeffs?.floor_calibration?.history_median ?? null,
+    },
+    floor,
+    feeds: {
+      listings: listingsResource.stats(),
+      sales: salesResource.stats(),
+      undervalued: undervaluedResource.stats(),
+    },
+    data: {
+      mintedTraitsSnapshot: MINTED_TRAITS_SNAPSHOT ? MINTED_TRAITS_SNAPSHOT.size : 0,
+      unmintedParcels: UNMINTED_PARCELS.length,
+      floorHistorySamples: FLOOR_HISTORY.length,
+    },
+  });
+});
 
 // GET /floor
 app.get('/collectors', async (req, res) => {
@@ -1819,11 +1949,17 @@ async function buildWeeklyReportData() {
       chroma: s.traits?.chroma ?? null,
       specialType: s.traits?.specialType ?? null,
       price_eth: s.salePrice,
-      estimated_value_eth: s.pricing?.estimatedValue ?? null,
-      price_to_estimate_ratio:
-        s.pricing?.estimatedValue
-          ? Math.round((s.salePrice / s.pricing.estimatedValue) * 100) / 100
-          : null,
+      // v2, side-matched, with v1 only as a fallback — the same basis /listings,
+      // /undervalued and every parcel page use. This read s.pricing.estimatedValue
+      // (v1, retired 2026-08-26), so the newsletter graded sales against a model
+      // the site no longer shows: #4363 sold 0.65 on 2026-09-21 and was reported
+      // as 2.30x estimate against v1's 0.332, while v2 called the same sale a 41%
+      // discount to 1.110.
+      estimated_value_eth: weeklyEstimate(s),
+      price_to_estimate_ratio: (() => {
+        const est = weeklyEstimate(s);
+        return est > 0 ? Math.round((s.salePrice / est) * 100) / 100 : null;
+      })(),
       buyer_wallet: s.winner,
       seller_wallet: s.seller,
       timestamp: typeof s.closingDate === 'number' ? new Date(s.closingDate * 1000).toISOString() : s.closingDate,
@@ -1834,8 +1970,13 @@ async function buildWeeklyReportData() {
   const resolvedListings = await resolveListingTraits(listingsRaw, '[weekly-report]');
   const scored = resolvedListings.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
-    const discount_pct = Math.round((1 - item.listedPrice / pricing.estimatedValue) * 100);
-    return { tokenId: traits.tokenId, traits, pricing, listedPrice: item.listedPrice, discount_pct };
+    // A listing is an ask, so it is scored against the ask sub-model — identical
+    // to computeUndervalued and computeAllListings. Was v1, which put the
+    // newsletter's bargains on a different basis to the site's own bargain list.
+    const pricingV2 = safeHedonic(traits, floor);
+    const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
+    const discount_pct = Math.round((1 - item.listedPrice / model) * 100);
+    return { tokenId: traits.tokenId, traits, pricing, model, listedPrice: item.listedPrice, discount_pct };
   });
 
   const bargains = scored
@@ -1850,7 +1991,7 @@ async function buildWeeklyReportData() {
       chroma: l.traits.chroma,
       specialType: l.traits.specialType ?? null,
       list_price_eth: l.listedPrice,
-      estimated_value_eth: l.pricing.estimatedValue,
+      estimated_value_eth: Math.round(l.model * 1000) / 1000,
       discount_pct: l.discount_pct,
     }));
 
@@ -1901,6 +2042,19 @@ const weeklyReportResource = createCachedResource({
   backoffMs: 0, // no failure backoff — retry on the next request (matches prior behavior)
   swr: false,
 });
+
+// The estimate a weekly-report sale is graded against: the hedonic sub-model
+// matching how it settled (ETH = taken listing, WETH/BETH = accepted offer),
+// falling back to v1 only when the hedonic fit could not score the parcel.
+function weeklyEstimate(sale) {
+  const v2 = sale.pricingV2;
+  if (v2) {
+    const side = sale.sideV2 || 'on';
+    const v = v2[side];
+    if (v > 0) return v;
+  }
+  return sale.pricing?.estimatedValue > 0 ? sale.pricing.estimatedValue : null;
+}
 
 app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
   try {

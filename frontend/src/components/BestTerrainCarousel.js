@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { API_URL, EthIcon, parcelImage, SpecialBadge, SPECIAL_TYPE_BADGES, CATEGORY_COLORS, vsModelColor } from './shared';
+import { EthIcon, parcelImage, SpecialBadge, SPECIAL_TYPE_BADGES, CATEGORY_COLORS, vsModelColor } from './shared';
 
 // How many cards the rail holds. /listings returns every active listing (~145
 // today, ~94 of them Terrain); past the first couple of dozen the "best deal"
@@ -47,9 +47,8 @@ function CardSkeleton() {
 }
 
 function ParcelCard({ parcel, rank }) {
-  const { tokenId, traits, pricing, listedPrice, discount } = parcel;
-  const { mode, specialType } = traits;
-  const zoneCategory = pricing?.zoneCategory;
+  // Flat shape from /listings-slim — no nested traits/pricing objects.
+  const { tokenId, listedPrice, discount, mode, specialType, zoneCategory } = parcel;
   const [live, setLive] = useState(false);
   const hoverTimer = useRef(null);
 
@@ -151,7 +150,12 @@ export default function BestTerrainCarousel() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/listings`)
+    // Same-origin /api/feed/* rather than the backend directly: it is edge-cached
+    // on Vercel, which turns a 250ms round trip to Render's single region into a
+    // hit from the nearest PoP. listings-slim does the Terrain filter, the sort
+    // and the field trimming upstream — this rail was drawing 20 cards out of a
+    // 237KB payload of all 145 listings with their full pricing breakdowns.
+    fetch(`/api/feed/listings-slim?mode=Terrain&limit=${MAX_CARDS}`)
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || 'failed to load listings');
@@ -159,11 +163,7 @@ export default function BestTerrainCarousel() {
       })
       .then((d) => {
         if (cancelled) return;
-        // Terrain only — a dreamed or terraformed parcel is a different thing to
-        // buy, so it does not belong in a rail about raw land.
-        const terrain = (d.parcels || []).filter(p => p?.traits?.mode === 'Terrain');
-        terrain.sort((a, b) => b.discount - a.discount);
-        setParcels(terrain.slice(0, MAX_CARDS));
+        setParcels(d.parcels || []);
       })
       .catch((e) => { if (!cancelled) setError(e.message); });
     return () => { cancelled = true; };

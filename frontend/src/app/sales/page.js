@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import SalesView from '@/components/SalesView';
-import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
+import { connectAndRedirect, Footer } from '@/components/shared';
 
 export default function SalesPage() {
   const [data, setData] = useState(null);
@@ -25,7 +25,10 @@ export default function SalesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/sales${force ? '?refresh=1' : ''}`, { cache: 'no-store' });
+      // Through the same-origin edge proxy (src/app/api/feed) rather than straight
+      // to Render: cached at the PoP nearest the visitor instead of one round
+      // trip to a single region. A forced refresh is passed through uncached.
+      const res = await fetch(`/api/feed/sales${force ? '?refresh=1' : ''}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setData(json);
