@@ -1783,7 +1783,15 @@ app.get('/health', async (_req, res) => {
   let floor = null;
   try {
     const f = await getFloorPrice();
-    floor = { eth: f.price, isLive: f.isLive };
+    // The standing collection-wide WETH bid alongside the ask floor: the two ends
+    // of the spread, so the page can show what a parcel could be sold into right
+    // now as well as what the cheapest one is listed at.
+    const bid = currentTopOffer();
+    floor = {
+      eth: f.price,
+      isLive: f.isLive,
+      topBid: typeof bid === 'number' && bid > 0 ? bid : null,
+    };
   } catch { /* leave null */ }
 
   res.set('Cache-Control', 'no-store');

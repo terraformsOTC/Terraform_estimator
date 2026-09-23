@@ -143,16 +143,18 @@ export default function HealthPage() {
             </Panel>
 
             <Panel title="Floor calibration" status={{ label: calib.stale ? 'stale' : 'fresh', color: calibColor }}>
-              <Row label="value" value={calib.value ?? '—'} color={calibColor}
+              <Row label="sale-to-ask ratio" value={calib.value ?? '—'} color={calibColor}
                    hint={calib.value ? `live floor x ${calib.value}` : null} />
               <Row label="measured" value={ago(calib.measuredAt)} color={calibColor} hint={calib.measuredFromDay} />
-              <Row label="history median" value={calib.historyMedian ?? '—'} />
+              <Row label="4-month average" value={calib.historyMedian ?? '—'} />
             </Panel>
 
             <Panel title="Floor">
               <Row label="live floor" value={data.floor ? `${data.floor.eth.toFixed(4)} ETH` : '—'}
                    color={data.floor?.isLive ? undefined : WARN}
-                   hint={data.floor?.isLive ? 'alchemy' : 'fallback — alchemy unreachable'} />
+                   hint={data.floor?.isLive ? 'cheapest ask' : 'fallback — alchemy unreachable'} />
+              <Row label="top collection bid" value={data.floor?.topBid ? `${data.floor.topBid.toFixed(4)} WETH` : '—'}
+                   hint="sell into this right now — not used by the model yet" />
               <Row label="effective floor" value={data.floor && calib.value ? `${(data.floor.eth * calib.value).toFixed(4)} ETH` : '—'}
                    hint="every estimate is built from this — compare to recent sale prices" />
               <Row label="history samples" value={data.data?.floorHistorySamples ?? '—'} />
