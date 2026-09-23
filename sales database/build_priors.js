@@ -113,6 +113,13 @@ function build() {
 function main() {
   const priors = build();
   const out = path.join(__dirname, 'v1-priors.json');
+  // Keep the previous build time when nothing else changed. The daily refit runs
+  // this and commits the file, and a fresh timestamp alone made a diff every day.
+  try {
+    const prev = JSON.parse(fs.readFileSync(out, 'utf8'));
+    const strip = (p) => JSON.stringify({ ...p, meta: { ...p.meta, built: null } });
+    if (strip(prev) === strip(priors)) priors.meta.built = prev.meta.built;
+  } catch { /* first build, or unreadable: write fresh */ }
   fs.writeFileSync(out, JSON.stringify(priors, null, 2));
 
   const nz = Object.keys(priors.zone).length, nb = Object.keys(priors.biome).length;

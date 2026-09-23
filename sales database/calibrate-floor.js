@@ -81,6 +81,12 @@ const MAX_MOVE = Number(process.env.CALIB_MAX_MOVE || 0.5);
 // filled in a few weeks.
 const MAX_FLOOR_AGE_H = Number(process.env.CALIB_MAX_FLOOR_AGE_H || 72);
 
+// Payment tokens that mean the seller accepted an offer. Same list as views.sql.
+const BID_TOKENS = new Set([
+  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+  '0x0000000000a39bb272e79075ade125fd351887ac', // Blur Pool
+]);
+
 const median = (xs) => {
   if (!xs.length) return null;
   const s = [...xs].sort((a, b) => a - b);
@@ -120,37 +126,42 @@ function main() {
 
   // Dividing the current constant back out leaves an effective floor of exactly
   // 1.0, so what the model returns IS the fitted multiple.
+  //
+  // Traits come through snapshotTraits, the same function the API prices with.
+  // This used to build them by hand with specialType null and isOneOfOne/isS0
+  // false, so Spine, 1of1 and S0 premiums were missing from the multiple and
+  // Tier-2 parcels (seeds, Lith0, Plague) were priced as plain ones — the tier2
+  // skip below could never fire.
+  const { snapshotTraits } = require(path.join(__dirname, '..', 'backend', 'src', 'snapshotTraits.js'));
   const snapshot = require(path.join(__dirname, '..', 'backend', 'src', 'minted-traits.json'));
-  const byId = {};
-  for (const k of Object.keys(snapshot)) byId[snapshot[k].tokenId] = snapshot[k];
+  const byId = new Map(snapshot.map((rec) => [rec.tokenId, rec]));
 
   const history = loadFloorHistory();
   const db = new Database(DB_PATH, { readonly: true });
   const since = Math.floor(Date.now() / 1000) - WINDOW_D * 86400;
-  // is_bundle = 0: a bundle leg's price is an even split of the bundle total, not
-  // an observed price for that parcel.
+  // is_bundle = 0: a multi-parcel order repeats the whole order price on every
+  // leg, so a bundle leg's price is not an observed price for that parcel.
+  // Self-trades are excluded for the same reason views.sql excludes them.
   const sales = db.prepare(
-    'SELECT token_id, price_native, payment_symbol, event_unix FROM sales '
-    + 'WHERE is_wash = 0 AND is_bundle = 0 AND event_unix > ? ORDER BY event_unix'
+    'SELECT token_id, price_native, lower(COALESCE(payment_token, \'\')) AS token, event_unix FROM sales '
+    + 'WHERE is_wash = 0 AND is_bundle = 0 AND lower(buyer) <> lower(seller) AND event_unix > ? '
+    + 'ORDER BY event_unix'
   ).all(since);
   db.close();
 
   const implied = [];
   const skipped = { noTraits: 0, tier2: 0, noFloor: 0, staleFloor: 0 };
   for (const s of sales) {
-    const m = byId[s.token_id];
+    const m = byId.get(s.token_id);
     if (!m) { skipped.noTraits++; continue; }
-    const traits = {
-      tokenId: m.tokenId, zone: m.zone, level: m.level, biome: m.biome,
-      chroma: m.chroma, mode: m.mode, specialType: null, isOneOfOne: false,
-      isGodmode: false, isS0: false, isLith0like: false, isGm: false,
-      mysteryValue: m.mysteryValue,
-    };
-    const r = estimateHedonic(traits, 1 / prev);
+    const r = estimateHedonic(snapshotTraits(m), 1 / prev);
     if (r.tier !== 'tier1') { skipped.tier2++; continue; }
-    // ETH is a taken listing (ask); WETH and Blur Pool are accepted offers (bid).
-    // Same rule as views.sql and the sales feed.
-    const mult = (s.payment_symbol === 'ETH') ? r.on : r.off;
+    // Side comes from the payment TOKEN, as in views.sql: WETH and Blur Pool are
+    // accepted offers (bid), native ETH a taken listing (ask). Not from
+    // payment_symbol — lib/db.js normalises Blur Pool's empty symbol to 'ETH', so
+    // testing the symbol scored every Blur bid fill against the ask side and
+    // pulled the constant down by up to the ask premium on those sales.
+    const mult = BID_TOKENS.has(s.token) ? r.off : r.on;
     if (!(mult > 0)) continue;
 
     const f = floorAt(history, s.event_unix);

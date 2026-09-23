@@ -72,7 +72,13 @@ fail() { echo "[refit] FAILED: $*"; exit 1; }
 cd "$REPO"
 # Refuse to run on top of someone's half-finished work: this script commits, and
 # it must only ever commit the artifacts it regenerated.
-if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json backend/src/floor-history.json 'sales database/v1-priors.json')" ]; then
+#
+# floor-history.json is deliberately NOT in this check. The hourly floor-sample
+# agent appends to it and never commits, so it is dirty almost all the time —
+# checking it made every scheduled run refuse. Its only writers are the sampler,
+# the pre-push hook and step 1 below, all append-only, so committing whatever it
+# holds is exactly what the next push would do anyway.
+if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json 'sales database/v1-priors.json')" ]; then
   fail "pricing artifacts already modified in the working tree — resolve by hand first"
 fi
 git rev-parse --abbrev-ref HEAD | grep -qx main || fail "not on main"
@@ -125,6 +131,9 @@ node calibrate-floor.js --write || fail "calibrate-floor (see reason above; prod
 echo "[refit] 7/7 verify"
 cd "$REPO"
 node ops/verify-model.js || fail "verification (production keeps the previous coefficients)"
+# Structural guarantees (bid <= ask on every parcel, fitted flags applied, Tier-2
+# collapsed) against the coefficients about to ship.
+(cd backend && npm test --silent >/dev/null 2>&1) || fail "backend tests (production keeps the previous coefficients)"
 
 if [ -z "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json backend/src/floor-history.json 'sales database/v1-priors.json')" ]; then
   echo "[refit] no artifact changed — nothing to ship"
@@ -135,7 +144,8 @@ git add backend/src/pricing-v2-coeffs.json backend/src/floor-history.json "sales
 git commit -q -m "model: daily refit $(date -u +%F)
 
 Automated by ops/daily-refit.sh. Coefficients refitted against sales through
-$(date -u +%F) and floor_calibration re-measured from today's index vs live floor.
+$(date -u +%F); floor_calibration re-solved against the last 30 days of settled
+sales at the live floor in effect when each one sold.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 

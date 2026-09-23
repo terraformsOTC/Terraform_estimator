@@ -86,34 +86,41 @@ check(refMult <= REF_MULT_MAX, `reference parcel prices at ${refMult.toFixed(3)}
 let ratioLine = 'backtest skipped (no sales DB on this machine)';
 if (fs.existsSync(DB_PATH)) {
   const Database = require(path.join(REPO, 'sales database', 'node_modules', 'better-sqlite3'));
+  const { snapshotTraits } = require(path.join(REPO, 'backend', 'src', 'snapshotTraits.js'));
   const snap = require(path.join(REPO, 'backend', 'src', 'minted-traits.json'));
-  const hist = require(path.join(REPO, 'backend', 'src', 'floor-history.json'));
-  const byId = {};
-  for (const k of Object.keys(snap)) byId[snap[k].tokenId] = snap[k];
-  const floorAt = (ts) => { let f = hist[0].floor; for (const s of hist) { if (s.ts <= ts) f = s.floor; else break; } return f; };
+  const hist = [...require(path.join(REPO, 'backend', 'src', 'floor-history.json'))].sort((a, b) => a.ts - b.ts);
+  const byId = new Map(snap.map((rec) => [rec.tokenId, rec]));
+  // Nearest-prior floor, refused when the reading is older than calibrate-floor
+  // accepts: a sale scored against a days-old floor measures the gap, not the model.
+  const MAX_FLOOR_AGE_S = 72 * 3600;
+  const floorAt = (ts) => {
+    let hit = null;
+    for (const s of hist) { if (s.ts <= ts) hit = s; else break; }
+    return hit && ts - hit.ts <= MAX_FLOOR_AGE_S ? hit.floor : null;
+  };
+  // Side from the payment token, as in views.sql and calibrate-floor.js. Blur Pool
+  // is stored with payment_symbol 'ETH', so the symbol cannot tell a bid from an ask.
+  const BID_TOKENS = new Set([
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+    '0x0000000000a39bb272e79075ade125fd351887ac', // Blur Pool
+  ]);
 
   const db = new Database(DB_PATH, { readonly: true });
   const since = Math.floor(Date.now() / 1000) - BACKTEST_DAYS * 86400;
   const sales = db.prepare(
-    'SELECT token_id, price_native, payment_symbol, event_unix FROM sales '
-    + 'WHERE is_wash = 0 AND is_bundle = 0 AND event_unix > ?'
+    "SELECT token_id, price_native, lower(COALESCE(payment_token, '')) AS token, event_unix FROM sales "
+    + 'WHERE is_wash = 0 AND is_bundle = 0 AND lower(buyer) <> lower(seller) AND event_unix > ?'
   ).all(since);
   db.close();
 
   const ratios = [];
   for (const s of sales) {
-    const m = byId[s.token_id];
-    if (!m) continue;
-    const t = {
-      tokenId: m.tokenId, zone: m.zone, level: m.level, biome: m.biome,
-      chroma: m.chroma, mode: m.mode, specialType: null, isOneOfOne: false,
-      isGodmode: false, isS0: false, isLith0like: false, isGm: false,
-      mysteryValue: m.mysteryValue,
-    };
-    const r = estimateHedonic(t, floorAt(s.event_unix));
+    const m = byId.get(s.token_id);
+    const floor = floorAt(s.event_unix);
+    if (!m || !floor) continue;
+    const r = estimateHedonic(snapshotTraits(m), floor);
     if (r.tier !== 'tier1') continue;
-    // ETH = taken listing (ask side); WETH/BETH = accepted offer (bid side).
-    const model = s.payment_symbol === 'ETH' ? r.on : r.off;
+    const model = BID_TOKENS.has(s.token) ? r.off : r.on;
     if (model > 0) ratios.push(s.price_native / model);
   }
 
