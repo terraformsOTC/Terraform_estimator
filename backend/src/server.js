@@ -66,8 +66,9 @@ const walletLimiter = rateLimit({
   message: { error: 'Too many wallet requests — please wait a moment.' },
 });
 
-// Undervalued limiter: 5 req/min (triggers OpenSea API + many RPC calls on cold cache)
-const undervaluedLimiter = rateLimit({
+// Feed limiter: 5 req/min. These endpoints fan out to the OpenSea API and, on a
+// cold cache, to RPC for every token. Named for /undervalued, which it outlived.
+const feedLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,
   standardHeaders: true,
@@ -92,8 +93,7 @@ app.use('/image',       imageLimiter);
 app.use('/wallet',      walletLimiter);
 app.use('/floor',       standardLimiter);
 app.use('/collectors',  standardLimiter);
-app.use('/undervalued', undervaluedLimiter);
-app.use('/sales',       undervaluedLimiter);
+app.use('/sales',       feedLimiter);
 
 const TERRAFORMS_ADDRESS = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const RPC_URL = process.env.RPC_URL;
@@ -247,7 +247,7 @@ function mysteryOutlierFlag(value) {
 // ─── MINTED TRAITS SNAPSHOT ───────────────────────────────────────────────────
 // Pre-baked attribute-derived traits for all 9911 minted parcels.
 // Source: backend/scripts/bake-minted-traits.js (one-shot scan, committed to repo).
-// Used by /undervalued to skip ~9911 RPC trait fetches on cold compute.
+// Used by /listings and the weekly report to skip ~9911 RPC trait fetches.
 //
 // We store only attribute-derived fields. Lookup-derived fields (specialType,
 // isOneOfOne, isGodmode, isLith0like, isGm) are applied at query time so
@@ -258,7 +258,7 @@ try {
   MINTED_TRAITS_SNAPSHOT = new Map(snapshot.map(r => [r.tokenId, r]));
   console.log(`[snapshot] Loaded minted traits for ${MINTED_TRAITS_SNAPSHOT.size} tokens`);
 } catch {
-  console.warn('[snapshot] minted-traits.json not found — /undervalued will fall back to RPC for every token');
+  console.warn('[snapshot] minted-traits.json not found — listings will fall back to RPC for every token');
 }
 
 // S0 (Season 0) window — parcels whose antenna was first turned on inside the
@@ -276,7 +276,7 @@ function computeIsS0(antennaOn, antennaFirstTs) {
 
 // Augment a snapshot record with lookup-derived fields. Returns a full trait
 // object matching getParcelTraits' shape (minus seed/x/y, which are not used
-// by /undervalued). Returns null if the tokenId isn't in the snapshot.
+// by /listings). Returns null if the tokenId isn't in the snapshot.
 function getSnapshotTraits(tokenId) {
   if (!MINTED_TRAITS_SNAPSHOT) return null;
   const id = Number(tokenId);
@@ -513,9 +513,8 @@ async function getFloorPrice() {
   return floorCache;
 }
 
-// ─── OPENSEA LISTINGS + UNDERVALUED ───────────────────────────────────────────
+// ─── OPENSEA LISTINGS ─────────────────────────────────────────────────────────
 const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY;
-const UNDERVALUED_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 // Fetch a single URL with exponential backoff on 429 / 5xx responses.
 async function fetchWithRetry(url, options, maxRetries = 3) {
@@ -535,7 +534,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // Fetch active listings from OpenSea for the Terraforms collection.
 // Returns array of { tokenId, listedPrice, listedAt } sorted cheapest first.
 // Paginates until cursor is exhausted, capped at SAFETY_MAX_PAGES.
-// Pass maxPages to limit depth (e.g. computeUndervalued uses maxPages=2).
+// Pass maxPages to limit depth.
 async function fetchOpenSeaListings(maxPages = Infinity) {
   const SAFETY_MAX_PAGES = 50;
   const listings = [];
@@ -580,7 +579,7 @@ async function fetchOpenSeaListings(maxPages = Infinity) {
 class ResourceUnavailableError extends Error {}
 
 // Wrap an async compute() in TTL cache + in-flight dedup + post-failure backoff,
-// with optional stale-while-revalidate. Used by /undervalued, /listings, /sales
+// with optional stale-while-revalidate. Used by /listings, /listings-slim, /sales
 // and /api/weekly-report-data, which each previously hand-rolled this.
 //   ttlMs      freshness window
 //   backoffMs  after a failure, refuse to recompute for this long (0 = retry next call)
@@ -708,62 +707,6 @@ async function resolveEnsNames(addresses) {
   return out;
 }
 
-async function computeUndervalued() {
-  const now = Date.now();
-  const allListings = await fetchOpenSeaListings(2);
-  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
-
-  const resolved = await resolveListingTraits(allListings, '[undervalued]');
-  const results = [];
-  for (const { item, traits } of resolved) {
-    const pricing = estimatePrice(traits, floor);
-    const pricingV2 = safeHedonic(traits, floor);
-    // A listing IS an ask, so it is scored against the ask sub-model — comparing a
-    // live listing to the bid side would mark every listing on the site overpriced
-    // by the width of the spread. Falls back to v1 if the shadow model faults.
-    const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
-    const discount = (model - item.listedPrice) / model;
-    if (discount >= 0.01) {
-      results.push({ tokenId: traits.tokenId, traits, pricing, pricingV2, listedPrice: item.listedPrice, discount });
-    }
-  }
-
-  results.sort((a, b) => b.discount - a.discount);
-  return {
-    parcels: results.slice(0, 25),
-    floor,
-    floorIsLive,
-    totalListingsScanned: allListings.length,
-    fetchedAt: now,
-  };
-}
-
-// Stale-while-revalidate + in-flight dedup + 60s failure backoff. Serves cached
-// data instantly; refreshes in the background when stale; only blocks on a cold
-// cache. Without the in-flight guard, simultaneous cold requests would each kick
-// off the full 20–40s pipeline.
-const UNDERVALUED_BACKOFF_MS = 60_000;
-const undervaluedResource = createCachedResource({
-  compute: computeUndervalued,
-  ttlMs: UNDERVALUED_CACHE_TTL_MS,
-  backoffMs: UNDERVALUED_BACKOFF_MS,
-  swr: true,
-  ready: () => !!OPENSEA_API_KEY,
-});
-
-// GET /undervalued
-app.get('/undervalued', async (req, res) => {
-  try {
-    res.json(await undervaluedResource.get());
-  } catch (err) {
-    if (err instanceof ResourceUnavailableError) {
-      return res.status(503).json({ error: 'Undervalued data temporarily unavailable. Try again shortly.' });
-    }
-    console.error('[undervalued]', err.message);
-    res.status(500).json({ error: 'Failed to fetch undervalued parcels.' });
-  }
-});
-
 // ─── ALL LISTINGS ─────────────────────────────────────────────────────────────
 // Fetches every active listing (paginate until exhausted), scores each against
 // the pricing model, and returns the full dataset so the frontend can sort/filter.
@@ -787,7 +730,9 @@ async function computeAllListings() {
   const parcels = resolved.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
     const pricingV2 = safeHedonic(traits, floor);
-    // Ask against ask — see the note in computeUndervalued.
+    // A listing IS an ask, so it is scored against the ask sub-model: comparing a
+    // live listing to the bid side would mark every listing overpriced by the
+    // width of the spread. Falls back to v1 if the shadow model faults.
     const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
     const discount = (model - item.listedPrice) / model;
     return {
@@ -810,7 +755,7 @@ async function computeAllListings() {
 //
 // Deliberately not a second cache: it reads listingsResource, so both surfaces
 // always agree and there is only ever one OpenSea fan-out.
-app.use('/listings-slim', undervaluedLimiter);
+app.use('/listings-slim', feedLimiter);
 
 app.get('/listings-slim', async (req, res) => {
   try {
@@ -927,7 +872,7 @@ const listingsResource = createCachedResource({
   minForceAgeMs: LISTINGS_MIN_REFRESH_MS,
 });
 
-app.use('/listings', undervaluedLimiter);
+app.use('/listings', feedLimiter);
 
 // GET /listings
 // Returns all active OpenSea listings scored against the pricing model.
@@ -951,10 +896,10 @@ app.get('/listings', async (req, res) => {
 
 // ─── OPENSEA RECENT SALES ─────────────────────────────────────────────────────
 // Live "sales vs. estimate" feed. Mirrors the caching + in-flight guard pattern
-// used by /undervalued above — cold-path fans out to RPC for traits on every
+// cold-path fans out to RPC for traits on every
 // scanned sale, so without the guard a burst of requests would multiply load.
 const { computeRecentSales } = require('./sales');
-const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /undervalued
+const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /listings
 const SALES_BACKOFF_MS = 60_000;
 // Floor on the [refresh sales] button: a forced recompute no more than once a
 // minute per instance. The cold path is a 20–40s OpenSea + RPC fan-out, so this
@@ -1824,7 +1769,6 @@ app.get('/health', async (_req, res) => {
     feeds: {
       listings: listingsResource.stats(),
       sales: salesResource.stats(),
-      undervalued: undervaluedResource.stats(),
     },
     data: {
       mintedTraitsSnapshot: MINTED_TRAITS_SNAPSHOT ? MINTED_TRAITS_SNAPSHOT.size : 0,
@@ -1985,7 +1929,7 @@ async function buildWeeklyReportData() {
       specialType: s.traits?.specialType ?? null,
       price_eth: s.salePrice,
       // v2, side-matched, with v1 only as a fallback — the same basis /listings,
-      // /undervalued and every parcel page use. This read s.pricing.estimatedValue
+      // /listings and every parcel page use. This read s.pricing.estimatedValue
       // (v1, retired 2026-08-26), so the newsletter graded sales against a model
       // the site no longer shows: #4363 sold 0.65 on 2026-09-21 and was reported
       // as 2.30x estimate against v1's 0.332, while v2 called the same sale a 41%
@@ -2006,7 +1950,7 @@ async function buildWeeklyReportData() {
   const scored = resolvedListings.map(({ item, traits }) => {
     const pricing = estimatePrice(traits, floor);
     // A listing is an ask, so it is scored against the ask sub-model — identical
-    // to computeUndervalued and computeAllListings. Was v1, which put the
+    // to computeAllListings. Was v1, which put the
     // newsletter's bargains on a different basis to the site's own bargain list.
     const pricingV2 = safeHedonic(traits, floor);
     const model = pricingV2 ? pricingV2.on : pricing.estimatedValue;
@@ -2140,7 +2084,7 @@ app.listen(PORT, async () => {
     }
   })();
   if (!process.env.ALCHEMY_API_KEY) console.warn('[startup] ALCHEMY_API_KEY not set — floor price will use hardcoded fallback');
-  if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — /undervalued endpoint disabled');
+  if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — listings and sales feeds disabled');
   try {
     const { provider } = getProvider();
     const network = await withTimeout(provider.getNetwork());

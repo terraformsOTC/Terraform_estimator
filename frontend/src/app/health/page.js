@@ -29,6 +29,8 @@ function ago(iso, { coarse = false } = {}) {
   return `${coarse ? Math.round(d) : d.toFixed(1)}d ago`;
 }
 
+const COLLAPSED_COMMITS = 25;
+
 const GOOD = '#4ade80';
 const WARN = '#fbbf24';
 const BAD = '#f87171';
@@ -63,6 +65,8 @@ export default function HealthPage() {
   const [error, setError] = useState(null);
   const [log, setLog] = useState(null);
   const [logError, setLogError] = useState(null);
+  // 25 is enough to see what shipped this week; the rest is there on request.
+  const [logExpanded, setLogExpanded] = useState(false);
 
   const load = useCallback(() => {
     // Same-origin, through src/app/api/feed — which forwards /health uncached.
@@ -185,7 +189,7 @@ export default function HealthPage() {
           {!log && !logError && <p className="text-sm opacity-40">[loading...]</p>}
           {log && (
             <>
-              {log.commits.map((c) => (
+              {(logExpanded ? log.commits : log.commits.slice(0, COLLAPSED_COMMITS)).map((c) => (
                 <div key={c.sha} className="flex items-baseline justify-between gap-3 py-0.5">
                   <a
                     href={c.url}
@@ -200,8 +204,17 @@ export default function HealthPage() {
                   </span>
                 </div>
               ))}
+              {!logExpanded && log.commits.length > COLLAPSED_COMMITS && (
+                <button
+                  type="button"
+                  onClick={() => setLogExpanded(true)}
+                  className="mt-2 bg-transparent border-none cursor-pointer p-0 font-inherit text-xs opacity-50 hover:opacity-100"
+                >
+                  [see full changelog — {log.commits.length} changes]
+                </button>
+              )}
               <p className="mt-3 text-xs opacity-35">
-                Last {log.commits.length} changes to main
+                {logExpanded ? `Last ${log.commits.length} changes to main` : `Last ${Math.min(COLLAPSED_COMMITS, log.commits.length)} of ${log.commits.length} changes to main`}
                 {log.automatedCount > 0
                   ? ` · ${log.automatedCount} automated floor snapshots hidden`
                   : ''}
