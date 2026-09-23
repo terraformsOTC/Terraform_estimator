@@ -475,6 +475,14 @@ let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
 // FLOOR_CACHE_TTL_MS server-side, so a 2-min client cache never serves anything staler than
 // the origin would — and it makes /?token= deep-link revisits instant, cutting Render load.
 const PRICE_CACHE_CONTROL = 'public, max-age=120, stale-while-revalidate=300';
+// Feeds behind a 30-minute server cache. A browser revalidating every one of
+// those requests costs a ~250ms round trip to Render's single region for a body
+// the server was going to serve from memory anyway — and the landing page, the
+// listings page and the deals rail all want the same payload. 60s of browser
+// cache collapses that to zero for a session, and stale-while-revalidate keeps a
+// navigation instant while the refresh happens behind it.
+// `?refresh=1` is answered with no-store so the button always reaches the origin.
+const FEED_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=1800';
 
 async function getFloorPrice() {
   const now = Date.now();
@@ -872,7 +880,7 @@ app.use('/listings', undervaluedLimiter);
 app.get('/listings', async (req, res) => {
   try {
     const force = req.query.refresh === '1' || req.query.refresh === 'true';
-    res.set('Cache-Control', 'no-cache');
+    res.set('Cache-Control', force ? 'no-store' : FEED_CACHE_CONTROL);
     res.json(await listingsResource.get({ force }));
   } catch (err) {
     if (err instanceof ResourceUnavailableError) {
@@ -930,9 +938,7 @@ const salesResource = createCachedResource({
 app.get('/sales', async (req, res) => {
   try {
     const force = req.query.refresh === '1' || req.query.refresh === 'true';
-    // Revalidate on every request instead of letting a browser or proxy answer
-    // from its own copy — the freshness decision is the server cache's to make.
-    res.set('Cache-Control', 'no-cache');
+    res.set('Cache-Control', force ? 'no-store' : FEED_CACHE_CONTROL);
     res.json(await salesResource.get({ force }));
   } catch (err) {
     if (err instanceof ResourceUnavailableError) {
