@@ -908,7 +908,12 @@ const salesResource = createCachedResource({
   }),
   ttlMs: SALES_CACHE_TTL_MS,
   backoffMs: SALES_BACKOFF_MS,
-  swr: false, // blocks on a stale/cold recompute (no serve-stale for the sales feed)
+  // Serve the cached feed and refresh behind it. This was false, which meant the
+  // first visitor after each 30-minute expiry paid the full 20-40s OpenSea + RPC
+  // fan-out while the page sat empty — once every half hour, someone waits.
+  // The data is a feed of completed sales, so up to 30 minutes of staleness costs
+  // that visitor nothing, and [refresh sales] still forces a live recompute.
+  swr: true,
   ready: () => !!OPENSEA_API_KEY,
   minForceAgeMs: SALES_MIN_REFRESH_MS,
 });
@@ -1920,6 +1925,25 @@ app.listen(PORT, async () => {
   // Warm the collection-bid cache so the first estimate served is already floored
   // rather than waiting for a background refresh to land.
   currentTopOffer();
+  // Warm the two OpenSea-backed feeds as well. Stale-while-revalidate spares every
+  // visitor but the first the cold-path wait; warming on boot spares that one too,
+  // which on Render matters more than it looks — the service restarts on every
+  // deploy, so "the first request after a cold cache" is a real user most days.
+  //
+  // Sequential, not concurrent: both are multi-page OpenSea fan-outs plus an RPC
+  // batch, and firing them together timed the second one out every boot. A failed
+  // warm-up also puts the resource into its failure backoff, so the endpoint 503s
+  // for a minute — a warm-up that races itself is worse than none.
+  (async () => {
+    for (const [label, resource] of [['listings', listingsResource], ['sales', salesResource]]) {
+      try {
+        await resource.get();
+        console.log(`[startup] ${label} cache warm`);
+      } catch (err) {
+        console.warn(`[startup] ${label} warm-up failed (fills on first request): ${err.message}`);
+      }
+    }
+  })();
   if (!process.env.ALCHEMY_API_KEY) console.warn('[startup] ALCHEMY_API_KEY not set — floor price will use hardcoded fallback');
   if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — /undervalued endpoint disabled');
   try {
