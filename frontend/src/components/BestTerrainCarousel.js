@@ -1,24 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import ParcelArt from './ParcelArt';
 import { EthIcon, parcelImage, SpecialBadge, SPECIAL_TYPE_BADGES, CATEGORY_COLORS, vsModelColor } from './shared';
 
 // How many cards the rail holds. /listings returns every active listing (~145
 // today, ~94 of them Terrain); past the first couple of dozen the "best deal"
 // framing stops being true, so the tail is cut rather than scrolled forever.
 const MAX_CARDS = 20;
-
-// Native size of the on-chain tokenHTML document. The card is narrower, so the
-// frame is rendered at full size and scaled down — the document has no responsive
-// layout of its own and squashes if the frame is simply made smaller.
-const ART_W = 277;
-const ART_H = 400;
 const CARD_W = 168;
 const CARD_H = 242;
-
-// A mouse crossing the rail passes over every card on the way. Without this each
-// one would mount an iframe against mathcastles and immediately tear it down.
-const HOVER_DELAY_MS = 140;
 
 // A listing is scored against the ASK side of the model (pricingV2.on), the same
 // basis /undervalued and the weekly report use: a listing IS an ask, and scoring
@@ -49,18 +40,6 @@ function CardSkeleton() {
 function ParcelCard({ parcel, rank }) {
   // Flat shape from /listings-slim — no nested traits/pricing objects.
   const { tokenId, listedPrice, discount, mode, specialType, zoneCategory } = parcel;
-  const [live, setLive] = useState(false);
-  const hoverTimer = useRef(null);
-
-  function onArtEnter() {
-    clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => setLive(true), HOVER_DELAY_MS);
-  }
-  function onArtLeave() {
-    clearTimeout(hoverTimer.current);
-    setLive(false);
-  }
-  useEffect(() => () => clearTimeout(hoverTimer.current), []);
 
   const specialBadge = SPECIAL_TYPE_BADGES[
     mode === 'Origin Daydream' ? 'Origin Daydream'
@@ -74,44 +53,8 @@ function ParcelCard({ parcel, rank }) {
       className="flex-shrink-0 w-[168px] no-underline snap-start group"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <div
-        className="relative"
-        style={{ width: CARD_W, height: CARD_H, overflow: 'hidden', border: '1px solid var(--border-color)' }}
-        onMouseEnter={onArtEnter}
-        onMouseLeave={onArtLeave}
-      >
-        <img
-          src={parcelImage(tokenId)}
-          alt={`Parcel ${tokenId}`}
-          width={CARD_W}
-          height={CARD_H}
-          loading="lazy"
-          style={{ display: 'block', objectFit: 'cover' }}
-        />
-        {live && (
-          // pointer-events:none so the click still lands on the card's anchor —
-          // the frame is sandboxed without allow-same-origin, so a click that
-          // reached it would go nowhere.
-          <iframe
-            src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
-            title={`Parcel ${tokenId} animation`}
-            scrolling="no"
-            sandbox="allow-scripts"
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: ART_W,
-              height: ART_H,
-              border: 'none',
-              display: 'block',
-              pointerEvents: 'none',
-              transform: `scale(${CARD_W / ART_W})`,
-              transformOrigin: 'top left',
-            }}
-          />
-        )}
+      <div className="relative">
+        <ParcelArt tokenId={tokenId} width={CARD_W} height={CARD_H} />
         <span
           className="absolute top-1 left-1 text-xs px-1"
           style={{ background: 'var(--bg-primary)', color: vsModelColor(discount), border: `1px solid ${vsModelColor(discount)}` }}

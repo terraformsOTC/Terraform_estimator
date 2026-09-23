@@ -315,7 +315,7 @@ export default function Home() {
           <ErrorBoundary>
           {view === 'search' && (
             <>
-              <ParcelSearch onSearch={searchParcel} loading={loading} />
+              <ParcelSearch onSearch={searchParcel} onAddress={loadWalletByAddress} loading={loading} />
               {loading && <ResultSkeleton />}
               {searchResult && !loading && (
                 <div className="mt-8">

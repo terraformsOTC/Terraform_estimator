@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Header from '@/components/Header';
-import { API_URL, connectAndRedirect, Footer, parcelImage } from '@/components/shared';
+import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
+import ParcelArt from '@/components/ParcelArt';
 import { SETS_GLOSSARY, setStyle } from '@/lib/setsGlossary';
 
 // Examples come from the backend (GET /sets), which picks a Terrain + Flow parcel
@@ -20,14 +21,7 @@ function ExampleCard({ example }) {
       className="flex-shrink-0 w-[132px] no-underline"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <img
-        src={parcelImage(tokenId)}
-        alt={`Parcel ${tokenId} — ${label}`}
-        width={132}
-        height={190}
-        loading="lazy"
-        style={{ display: 'block', objectFit: 'cover', border: '1px solid var(--border-color)' }}
-      />
+      <ParcelArt tokenId={tokenId} width={132} height={190} alt={`Parcel ${tokenId} — ${label}`} />
       <div className="mt-2 flex flex-col gap-0.5">
         <span className="text-sm opacity-90">{label}</span>
         <span className="text-xs opacity-45">
@@ -96,9 +90,6 @@ function SetBlock({ set, data }) {
         >
           {set.name}
         </span>
-        {data?.attainability && (
-          <span className="text-xs opacity-40">{data.attainability.toLowerCase()}</span>
-        )}
         {data?.bottleneck && (
           <span className="text-xs opacity-40">bottleneck: {data.bottleneck}</span>
         )}
