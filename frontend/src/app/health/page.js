@@ -158,8 +158,9 @@ export default function HealthPage() {
             <Panel title="Floor calibration" status={{ label: calib.stale ? 'stale' : 'fresh', color: calibColor }}>
               <Row label="recent sale-to-ask ratio" value={calib.value ?? '—'} color={calibColor}
                    hint={calib.value ? `live floor x ${calib.value}` : null} />
-              <Row label="measured" value={ago(calib.measuredAt)} color={calibColor} hint={calib.measuredFromDay} />
-              <Row label="4-month average" value={calib.historyMedian ?? '—'} />
+              <Row label="measured" value={ago(calib.measuredAt)} color={calibColor}
+                   hint={calib.nSales ? `${calib.nSales} sales over ${calib.windowDays}d` : null} />
+              <Row label="spread across those sales" value={calib.iqr ? `${calib.iqr[0]} – ${calib.iqr[1]}` : '—'} />
             </Panel>
 
             <Panel title="Feed caches">

@@ -1760,10 +1760,14 @@ app.get('/health', async (_req, res) => {
     calibration: {
       value: coeffs?.floor_calibration?.value ?? null,
       measuredAt: coeffs?.floor_calibration?.measured_at ?? null,
-      measuredFromDay: coeffs?.floor_calibration?.measured_from_day ?? null,
       ageHours: calibAge,
       stale: calibAge === null || calibAge > MODEL_STALE_HOURS,
-      historyMedian: coeffs?.floor_calibration?.history_median ?? null,
+      // Set by calibrate-floor.js, which solves the constant against settled
+      // sales rather than a ratio of proxies. measured_from_day / history_median
+      // belonged to the ratio method and are gone.
+      windowDays: coeffs?.floor_calibration?.window_days ?? null,
+      nSales: coeffs?.floor_calibration?.n_sales ?? null,
+      iqr: coeffs?.floor_calibration?.iqr ?? null,
     },
     floor,
     feeds: {
