@@ -42,6 +42,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
     { label: '[collectors]', href: '/collectors' },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits]', href: '/traits' },
+    { label: '[sets]', href: '/sets' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
     { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },

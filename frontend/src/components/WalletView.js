@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
+import { SET_COLORS } from '@/lib/setsGlossary';
 import {
   EMPTY_FILTERS,
   ParcelFilterPanel,
@@ -18,18 +19,6 @@ const ATTAINABILITY_COLORS = {
   'Easy': '#34d399',
   'Medium': '#60a5fa',
   'Very difficult': '#c084fc',
-};
-
-const SET_COLORS = {
-  'Chess biome set':  '#34d399',
-  'Binary biome set': '#34d399',
-  'Blocky biome set': '#60a5fa',
-  '[DUOTONE] set':    '#60a5fa',
-  'Polychrome set':   '#c084fc',
-  'Full level set':   '#c084fc',
-  'Grail set':        '#c084fc',
-  'Full zone set':    '#ffe401',
-  'Full biome set':   '#ffe401',
 };
 
 const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };

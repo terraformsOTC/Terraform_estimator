@@ -215,25 +215,32 @@ const LITH0LIKE_PREMIUMS = {
 
 // ─── SETS ──────────────────────────────────────────────────────────────────────
 const SETS = {
-  "Chess biome set": {
+  "Chess biomes": {
     description: "Biomes 85, 39, 26, 27, 38",
     requiredBiomes: [85, 39, 26, 27, 38],
     attainability: "Easy",
     bottleneck: "biome 39",
   },
-  "Binary biome set": {
+  "Binary biomes": {
     description: "Biomes 54, 58, 89",
     requiredBiomes: [54, 58, 89],
     attainability: "Easy",
     bottleneck: "biome 89",
   },
-  "Blocky biome set": {
+  "Meadow biomes": {
+    description: "Biomes 42, 65, 60",
+    requiredBiomes: [42, 65, 60],
+    attainability: "Easy",
+    // 104 parcels, against 125 for biome 65 and 126 for biome 60.
+    bottleneck: "biome 42",
+  },
+  "Blocky biomes": {
     description: "Biomes 0–16",
     requiredBiomes: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
     attainability: "Medium",
     bottleneck: "biome 10",
   },
-  "[DUOTONE] set": {
+  "[DUOTONE]": {
     description: "All Duotone zones (designated by [...] naming)",
     requiredZones: ["[SOON]","[SUN]","[NOV]","[HOME]","[NEON]","[BOSS]","[CUR2]","[HYCA]","[YUNA]","[MENU]","[DARK]","[SEP]","[BLOOD]","[WEN]","[MOON]"],
     attainability: "Medium",
@@ -255,13 +262,13 @@ const SETS = {
     attainability: "Very difficult",
     bottleneck: "Shahra zone",
   },
-  "Full level set": {
+  "Full level": {
     description: "Levels 1–20 of the Hypercastle",
     requiredLevels: Array.from({ length: 20 }, (_, i) => i + 1),
     attainability: "Very difficult",
     bottleneck: "levels 1 & 20",
   },
-  "Grail set": {
+  "Grails": {
     description: "One each: X-Seed, Y-Seed, Plague, Lith0, Spine + biome 0 + Origin daydream/terraform",
     requiredSpecialTypes: ["X-Seed", "Y-Seed", "Plague", "Lith0", "Spine"],
     requiredBiomes: [0],
@@ -269,13 +276,13 @@ const SETS = {
     attainability: "Very difficult",
     bottleneck: "Plague chroma",
   },
-  "Full zone set": {
+  "Full zone": {
     description: "One parcel from each zone (75 zones)",
     allZones: true,
     attainability: "Very difficult",
     bottleneck: "Shahra zone",
   },
-  "Full biome set": {
+  "Full biome": {
     description: "One parcel from each biome (92 biomes)",
     allBiomes: true,
     attainability: "Very difficult",
@@ -600,6 +607,7 @@ function detectSets(parcels) {
 module.exports = {
   estimatePrice,
   detectSets,
+  SETS,
   FLOOR_PRICE_ETH,
   PRICING_MODEL_VERSION,
   // Exported for the hedonic fit, which uses these hand-tuned values as Bayesian

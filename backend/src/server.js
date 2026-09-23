@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ethers } = require('ethers');
-const { estimatePrice, detectSets, FLOOR_PRICE_ETH } = require('./pricingModel');
+const { estimatePrice, detectSets, SETS, FLOOR_PRICE_ETH } = require('./pricingModel');
 // Shadow model: computed alongside v1 and returned, but not what the UI shows.
 // See hedonicModel.js and "sales database/MODELING.md".
 const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
@@ -1558,6 +1558,100 @@ app.get('/traits/:type', (req, res) => {
     count: entry.parcels.length,
     parcels: entry.parcels,
   });
+});
+
+// ─── SETS ─────────────────────────────────────────────────────────────────────
+// The collecting rubric, plus one example parcel per member so the page can show
+// what a set actually looks like rather than just naming its biomes.
+//
+// Examples are picked from the minted snapshot rather than hardcoded: mode and
+// chroma are mutable on chain, so a pinned token id can quietly stop being the
+// Terrain/Flow parcel it was chosen for. Picking at request time means the worst
+// case is a stale snapshot, which the existing re-bake already fixes.
+//
+// Terrain + Flow throughout, so a row of examples differs only in the trait the
+// set is actually about. Where no parcel in a member meets that bar the filter is
+// relaxed rather than leaving a hole — `exact: false` says the card is a
+// stand-in.
+const SET_EXAMPLE_CAP = 24;
+
+function pickExample(predicate) {
+  if (!MINTED_TRAITS_SNAPSHOT) return null;
+  let fallback = null;
+  for (const tokenId of MINTED_TRAITS_SNAPSHOT.keys()) {
+    const traits = getSnapshotTraits(tokenId);
+    if (!traits || !predicate(traits)) continue;
+    if (traits.mode === 'Terrain' && traits.chroma === 'Flow') {
+      return { tokenId, traits, exact: true };
+    }
+    if (!fallback) fallback = { tokenId, traits, exact: false };
+  }
+  return fallback;
+}
+
+function setMembers(def) {
+  // requiredSpecialTypes first, matching detectSets: the Grails set carries
+  // specials AND a biome AND a mode, and checking biomes first reduced it to a
+  // single biome-0 card.
+  if (def.requiredSpecialTypes) {
+    return [
+      ...def.requiredSpecialTypes.map(st => ({ label: st, pick: t => t.specialType === st })),
+      ...(def.requiredBiomes || []).map(b => ({ label: `biome ${b}`, pick: t => t.biome === b })),
+      ...(def.requiredModes?.length
+        ? [{ label: 'Origin', pick: t => def.requiredModes.includes(t.mode) }]
+        : []),
+    ];
+  }
+  if (def.requiredBiomes) {
+    return def.requiredBiomes.map(b => ({ label: `biome ${b}`, pick: t => t.biome === b }));
+  }
+  if (def.requiredZones) {
+    return def.requiredZones.map(z => ({ label: z, pick: t => t.zone === z }));
+  }
+  if (def.requiredLevels) {
+    return def.requiredLevels.map(l => ({ label: `L${l}`, pick: t => t.level === l }));
+  }
+  return [];   // allZones / allBiomes — far too many to illustrate
+}
+
+let SETS_PAYLOAD = null;
+function getSets() {
+  if (SETS_PAYLOAD) return SETS_PAYLOAD;
+  const t0 = Date.now();
+  const sets = Object.entries(SETS).map(([name, def]) => {
+    const members = setMembers(def);
+    const shown = members.slice(0, SET_EXAMPLE_CAP);
+    const examples = shown
+      .map(m => {
+        const hit = pickExample(m.pick);
+        return hit ? { label: m.label, tokenId: hit.tokenId, traits: hit.traits, exact: hit.exact } : null;
+      })
+      .filter(Boolean);
+    return {
+      name,
+      description: def.description,
+      attainability: def.attainability,
+      bottleneck: def.bottleneck,
+      memberCount: members.length,
+      truncated: members.length > shown.length,
+      examples,
+    };
+  });
+  SETS_PAYLOAD = { sets };
+  console.log(`[sets] Built set examples in ${Date.now() - t0}ms`);
+  return SETS_PAYLOAD;
+}
+
+app.use('/sets', standardLimiter);
+
+// GET /sets — the collecting rubric with example parcels per set
+app.get('/sets', (_req, res) => {
+  try {
+    res.json(getSets());
+  } catch (err) {
+    console.error('[sets]', err.message);
+    res.status(500).json({ error: 'Failed to build sets.' });
+  }
 });
 
 // GET /health

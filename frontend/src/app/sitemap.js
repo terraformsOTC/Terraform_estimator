@@ -7,6 +7,7 @@ export default function sitemap() {
     { url: `${base}/glossary`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/methodology`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/traits`,   lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${base}/sets`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/collectors`, lastModified: new Date(), changeFrequency: 'daily',  priority: 0.7 },
   ];
 }
