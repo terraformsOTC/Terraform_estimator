@@ -119,6 +119,7 @@ function toUnixSeconds(val) {
 // 429/5xx backoff + 10s timeout behavior.
 async function fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages = 3, limit = 50 }) {
   const sales = [];
+  const seen = new Set();
   let next = null;
 
   for (let page = 0; page < maxPages; page++) {
@@ -163,14 +164,28 @@ async function fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages = 3, limit =
       const closingDate = toUnixSeconds(ev.closing_date ?? ev.event_timestamp ?? null);
       const eventId = ev.order_hash || ev.transaction || ev.event_timestamp + '-' + tokenId;
 
+      // A router's internal leg is not a sale. Gondi's purchase bundler
+      // (0xf46a58ca…) produces two events for one loan-exit sale: the real one to
+      // the bidder, and a second in the same transaction where the bundler "sells"
+      // to itself at ~99% of the price. Counted, every such sale appeared twice on
+      // the feed and in the weekly report's count and volume. The sales DB drops
+      // the same legs (views.sql, buyer <> seller).
+      const seller = ev.seller || null;
+      const winner = ev.winner_account?.address || ev.buyer || null;
+      if (seller && winner && seller.toLowerCase() === winner.toLowerCase()) continue;
+      // One sale per (transaction, token), as in the DB's primary key.
+      const dedupeKey = ev.transaction ? `${ev.transaction}:${tokenId}` : null;
+      if (dedupeKey && seen.has(dedupeKey)) continue;
+      if (dedupeKey) seen.add(dedupeKey);
+
       sales.push({
         eventId,
         tokenId,
         salePrice,
         currency: symbol || 'UNKNOWN',
         closingDate,
-        seller: ev.seller || null,
-        winner: ev.winner_account?.address || ev.buyer || null,
+        seller,
+        winner,
       });
     }
 
@@ -216,7 +231,9 @@ async function computeRecentSales({
   const BATCH_SIZE = 8;
   for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
     const batch = candidates.slice(i, i + BATCH_SIZE);
-    const settled = await Promise.allSettled(batch.map(s => getParcelTraits(s.tokenId)));
+    // The feed shows neither seed nor x/y, and each costs its own RPC call.
+    const settled = await Promise.allSettled(
+      batch.map(s => getParcelTraits(s.tokenId, { includeSeed: false, includeCoords: false })));
     for (let j = 0; j < settled.length; j++) {
       const r = settled[j];
       if (r.status !== 'fulfilled') continue;

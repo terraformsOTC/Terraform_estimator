@@ -45,8 +45,6 @@ app.use(cors({
   },
 }));
 
-app.use(express.json({ limit: '1kb' }));
-
 // ─── RATE LIMITING ─────────────────────────────────────────────────────────────
 // Standard: 200 req/min
 const standardLimiter = rateLimit({
@@ -66,11 +64,19 @@ const walletLimiter = rateLimit({
   message: { error: 'Too many wallet requests — please wait a moment.' },
 });
 
-// Feed limiter: 5 req/min. These endpoints fan out to the OpenSea API and, on a
-// cold cache, to RPC for every token. Named for /undervalued, which it outlived.
+// Feed limiter: 60 req/min, for /listings, /listings-slim and /sales.
+//
+// It was 5, from when each call could start an OpenSea + RPC fan-out. That cost
+// is now bounded inside createCachedResource — a request is served from memory,
+// at most one recompute runs at a time, and a forced refresh recomputes at most
+// once a minute — so the limiter no longer protects the upstreams. What 5 did do
+// was starve the site: the frontend reaches these through its Vercel edge proxy
+// (src/app/api/feed), so every visitor arrives from the same few Vercel egress
+// IPs and shares ONE bucket. Two edge revalidations and a couple of [refresh]
+// clicks in a minute and the feeds answered 429 for everyone.
 const feedLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests — please wait a moment.' },
@@ -190,59 +196,13 @@ function detectSpecialType(attributes) {
   return null;
 }
 
-// ─── SPECIAL TOKEN LOOKUP ─────────────────────────────────────────────────────
-// Authoritative source for X-Seed, Y-Seed, Lith0, Spine, and 1of1.
-// Plague is detected on-chain via Chroma; Origin Daydream via Mode.
-// Source: community-verified list provided Mar 2025.
-const SPECIAL_TOKEN_LOOKUP = require('./special-tokens.json');
-
-
-// ─── ONE-OF-ONE SET ───────────────────────────────────────────────────────────
-// 1186 tokens with a confirmed-unique zone/biome combination across all 9911 minted parcels.
-// Methodology: full on-chain tokenURI scan of all tokens (Mar 2026) — NOT Alchemy metadata
-// (Alchemy returns empty attributes for all Terraforms tokens and cannot be used for this).
-// ─── GODMODE SET ─────────────────────────────────────────────────────────────
-// X-Seed + Origin Daydream — the rarest combination (3 tokens).
-// These remain specialType='X-Seed' in the lookup but get a 45x pricing override
-// and show an additional Godmode badge alongside the X-Seed and Origin Daydream badges.
-const GODMODE_IDS = new Set([83, 124, 1955]);
-
-// ─── GM SET ───────────────────────────────────────────────────────────────────
-// Terrain / Biome 71 parcels with a low ??? value that print a clean "gm" in the heightmap.
-// Source: community-verified list provided Mar 2026.
-const GM_IDS = new Set([1369, 1800, 4632, 6997, 7297]);
-
-// ─── LITH0-LIKE SET ───────────────────────────────────────────────────────────
-// Biome 0 parcels whose zone/chroma combination produces an opening frame that is a
-// flat, single block of colour — visually indistinguishable from genuine Lith0 parcels.
-// Tiered pricing premiums applied in pricingModel.js (1.5x or 2x per token).
-// Source: community-verified list provided Mar 2026.
-const LITH0LIKE_IDS = new Set([3124, 3218, 6005, 6512, 9427]);
-
-// Includes both pure 1of1s AND Spine/Lith0/X-Seed/Y-Seed tokens that are also 1of1.
-// To re-verify, run: node backend/verify_1of1.js (script in git history, commit 8848717).
-// Used to set isOneOfOne on trait responses independently of specialType.
-const ONE_OF_ONE_IDS = new Set(require('./one-of-one-ids.json'));
-
-// ??? value thresholds — full collection scan of 9911 tokens (Mar 2026)
-// 8864 tokens have ??? trait (1047 have none).
-// Distribution: min=815, p5=19918, p25=32332, p50=41052, p75=48163, p95=52953, max=53994
-// low ???  : value < 20000  →  449 tokens  (5.1%)
-// high ??? : value > 50000  →  1574 tokens (17.8%)
-//
-// Both thresholds are manually determined based on parcel animations — they mark the
-// points at which the liquid flood level visually reads as distinctly low or high.
-// The Mesa badge uses a separate threshold (< 30000 in pricingModel.js / shared.js)
-// for the same reason: it was set independently based on how the terrain renders.
-const MYSTERY_P5  = 20000;
-const MYSTERY_P95 = 50000;
-
-function mysteryOutlierFlag(value) {
-  if (value == null) return null;
-  if (value > MYSTERY_P95) return 'high';
-  if (value < MYSTERY_P5)  return 'low';
-  return null;
-}
+// ─── LOOKUP-DERIVED TRAITS ────────────────────────────────────────────────────
+// Special-token lists, the 1of1 set, the S0 window and the ??? thresholds live in
+// snapshotTraits.js, shared with the offline pricing scripts so they cannot drift.
+const {
+  SPECIAL_TOKEN_LOOKUP, ONE_OF_ONE_IDS, GODMODE_IDS, GM_IDS, LITH0LIKE_IDS,
+  MYSTERY_P5, mysteryOutlierFlag, computeIsS0, snapshotTraits,
+} = require('./snapshotTraits');
 
 // ─── MINTED TRAITS SNAPSHOT ───────────────────────────────────────────────────
 // Pre-baked attribute-derived traits for all 9911 minted parcels.
@@ -261,50 +221,10 @@ try {
   console.warn('[snapshot] minted-traits.json not found — listings will fall back to RPC for every token');
 }
 
-// S0 (Season 0) window — parcels whose antenna was first turned on inside the
-// V2 contract launch window AND currently have the Antenna trait on.
-// Source: getFirstAntennaModification(tokenId).timestamp on the Antenna
-// contract (0x331512...7f01). Stored as antennaFirstTs (unix seconds, 0 if
-// never modified).
-const S0_ANTENNA_TS_MIN = 1703376000; // 2023-12-24 00:00:00 UTC
-const S0_ANTENNA_TS_MAX = 1705190399; // 2024-01-13 23:59:59 UTC
-
-function computeIsS0(antennaOn, antennaFirstTs) {
-  if (!antennaOn || !antennaFirstTs) return false;
-  return antennaFirstTs >= S0_ANTENNA_TS_MIN && antennaFirstTs <= S0_ANTENNA_TS_MAX;
-}
-
-// Augment a snapshot record with lookup-derived fields. Returns a full trait
-// object matching getParcelTraits' shape (minus seed/x/y, which are not used
-// by /listings). Returns null if the tokenId isn't in the snapshot.
+// Full trait object for a minted parcel from the snapshot, or null if absent.
 function getSnapshotTraits(tokenId) {
-  if (!MINTED_TRAITS_SNAPSHOT) return null;
-  const id = Number(tokenId);
-  const rec = MINTED_TRAITS_SNAPSHOT.get(id);
-  if (!rec) return null;
-
-  const plagueFromChroma = rec.chroma === 'Plague' ? 'Plague' : null;
-  const specialType = SPECIAL_TOKEN_LOOKUP[id] || plagueFromChroma || null;
-
-  return {
-    tokenId: id,
-    zone: rec.zone,
-    level: rec.level,
-    biome: rec.biome,
-    chroma: rec.chroma,
-    mode: rec.mode,
-    specialType,
-    isOneOfOne: ONE_OF_ONE_IDS.has(id),
-    isGodmode: GODMODE_IDS.has(id),
-    isS0: computeIsS0(rec.antennaOn, rec.antennaFirstTs),
-    isLith0like: LITH0LIKE_IDS.has(id),
-    isGm: GM_IDS.has(id),
-    mysteryValue: rec.mysteryValue,
-    mysteryOutlier: mysteryOutlierFlag(rec.mysteryValue),
-    seed: null,
-    x: null,
-    y: null,
-  };
+  const rec = MINTED_TRAITS_SNAPSHOT?.get(Number(tokenId));
+  return rec ? snapshotTraits(rec) : null;
 }
 
 // ─── TOP COLLECTION-WIDE BID ──────────────────────────────────────────────────
@@ -452,6 +372,20 @@ try {
   console.warn('[floor-history] floor-history.json not found — /sales will use current floor for all sales');
 }
 
+// Every live floor this process reads is also a history sample. The committed
+// file only reaches production when something is pushed (the daily refit, at
+// best once a day), so without these a sale from this afternoon resolves to
+// yesterday's floor. In memory only: a restart falls back to the file.
+const FLOOR_SAMPLE_MIN_GAP_S = 10 * 60;
+const FLOOR_HISTORY_MAX = 20_000;
+function recordFloorSample(nowMs, floor) {
+  const ts = Math.floor(nowMs / 1000);
+  const last = FLOOR_HISTORY[FLOOR_HISTORY.length - 1];
+  if (last && ts - last.ts < FLOOR_SAMPLE_MIN_GAP_S) return;
+  FLOOR_HISTORY.push({ ts, floor });
+  if (FLOOR_HISTORY.length > FLOOR_HISTORY_MAX) FLOOR_HISTORY.shift();
+}
+
 // Resolve the floor price at a given Unix-seconds timestamp using nearest-prior
 // matching against FLOOR_HISTORY. Returns null if no prior sample exists; caller
 // should fall back to the current live floor in that case.
@@ -502,6 +436,7 @@ async function getFloorPrice() {
     const floor = data?.openSea?.floorPrice ?? data?.looksRare?.floorPrice;
     if (typeof floor !== 'number' || floor <= 0) throw new Error('Unexpected response shape');
     floorCache = { price: floor, fetchedAt: now, isLive: true };
+    recordFloorSample(now, floor);
     console.log(`[floor] Live floor updated: ${floor} ETH`);
   } catch (err) {
     console.warn(`[floor] Fetch failed (${err.message}), using fallback ${FLOOR_PRICE_ETH} ETH`);
@@ -1036,7 +971,7 @@ async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = tr
       // '???' trait — the watermark level, controlling how much of the parcel surface is flooded by
       // the liquid animation. Derived from Perlin Noise; locked on-chain but delegatable to an external
       // contract. Present on ~89% of tokens. Not used in pricing (collection-wide distribution, no
-      // rarity correlation). Surfaced as a high/low outlier flag — see MYSTERY_P5/MYSTERY_P95 below.
+      // rarity correlation). Surfaced as a high/low outlier flag — see MYSTERY_P5/MYSTERY_P95 in snapshotTraits.js.
       const rawMystery = attrs.find(a => a.trait_type === '???')?.value;
       mysteryValue = rawMystery != null ? Number(rawMystery) : null;
     }
@@ -1932,17 +1867,17 @@ async function buildWeeklyReportData() {
       chroma: s.traits?.chroma ?? null,
       specialType: s.traits?.specialType ?? null,
       price_eth: s.salePrice,
-      // v2, side-matched, with v1 only as a fallback — the same basis /listings,
-      // /listings and every parcel page use. This read s.pricing.estimatedValue
-      // (v1, retired 2026-08-26), so the newsletter graded sales against a model
-      // the site no longer shows: #4363 sold 0.65 on 2026-09-21 and was reported
-      // as 2.30x estimate against v1's 0.332, while v2 called the same sale a 41%
-      // discount to 1.110.
-      estimated_value_eth: weeklyEstimate(s),
-      price_to_estimate_ratio: (() => {
-        const est = weeklyEstimate(s);
-        return est > 0 ? Math.round((s.salePrice / est) * 100) / 100 : null;
-      })(),
+      // Exactly what /sales shows for this sale: the reference decideBasis chose
+      // (the ask-side estimate, or the floor for a plain parcel that sold below
+      // it) and the sale measured against it. What a parcel is worth is what it
+      // would clear at if listed, so the bid side is never the yardstick.
+      //
+      // This was the side-matched estimate, which put a WETH sale against the bid
+      // side — the newsletter and the site then disagreed about the same sale, and
+      // a parcel dumped into a bid read as fairly priced. Before that it was v1.
+      estimated_value_eth: s.reference ?? null,
+      price_to_estimate_ratio: s.reference > 0 ? Math.round((s.salePrice / s.reference) * 100) / 100 : null,
+      comparison_basis: s.basis ?? null,
       buyer_wallet: s.winner,
       seller_wallet: s.seller,
       timestamp: typeof s.closingDate === 'number' ? new Date(s.closingDate * 1000).toISOString() : s.closingDate,
@@ -2022,27 +1957,21 @@ async function buildWeeklyReportData() {
 const weeklyReportResource = createCachedResource({
   compute: buildWeeklyReportData,
   ttlMs: WEEKLY_REPORT_CACHE_TTL,
-  backoffMs: 0, // no failure backoff — retry on the next request (matches prior behavior)
+  // A failed build is a full OpenSea pagination plus sales, collectors and price
+  // lookups. With no backoff every request retried it, so while OpenSea was
+  // erroring the public endpoint turned each hit (200/min allowed) into another
+  // burst against the API key. One retry a minute, like the other feeds.
+  backoffMs: 60_000,
   swr: false,
 });
-
-// The estimate a weekly-report sale is graded against: the hedonic sub-model
-// matching how it settled (ETH = taken listing, WETH/BETH = accepted offer),
-// falling back to v1 only when the hedonic fit could not score the parcel.
-function weeklyEstimate(sale) {
-  const v2 = sale.pricingV2;
-  if (v2) {
-    const side = sale.sideV2 || 'on';
-    const v = v2[side];
-    if (v > 0) return v;
-  }
-  return sale.pricing?.estimatedValue > 0 ? sale.pricing.estimatedValue : null;
-}
 
 app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
   try {
     res.json(await weeklyReportResource.get());
   } catch (err) {
+    if (err instanceof ResourceUnavailableError) {
+      return res.status(503).json({ error: 'Weekly report data temporarily unavailable. Try again shortly.' });
+    }
     console.error('[weekly-report-data] error:', err.message);
     res.status(500).json({ error: 'Failed to build weekly report data.' });
   }
