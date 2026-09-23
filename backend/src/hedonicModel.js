@@ -45,7 +45,11 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // 2.1.0 (2026-09-03) IS a refit: the sales DB was three weeks stale, and the live
 // feed alpha was tuned against was missing ~30% of its sales (Blur Pool fills,
 // which are bid-side). With both fixed the alpha minimum moves 30 -> 10.
-const HEDONIC_MODEL_VERSION = '2.1.0';
+// 2.2.0 (2026-09-23) changes the features: 1of1 / S0 / Spine are fitted rather
+// than v1 premiums stacked on the fit, Daydream/Terraform parcels get a fitted
+// discount on their biome premium, and the fit runs at half-life 180d / alpha 3.
+// Chosen by a rolling-origin backtest — see HALF_LIFE_D in fit_hedonic.py.
+const HEDONIC_MODEL_VERSION = '2.2.0';
 
 // Tier-2: too few sales to fit, so the whole price is v1's prior and both
 // sub-models return the same number. Spine and 1of1 are NOT here — they are
@@ -58,11 +62,10 @@ const MODE_GROUP = {
   'Origin Daydream': 'ORIG', 'Origin Terraform': 'ORIG',
 };
 
-// Not fitted features — carried over from v1 as priors, matching the fit's
-// treatment so predictions here agree with sales database/predict.js.
-const SPINE_PREMIUM = 1.20;
-const ONE_OF_ONE_PREMIUM = 1.05;
-const S0_PREMIUM = 1.05;
+// v1's premiums for the three parcel flags. Since 2.2.0 the fit estimates these
+// itself (multipliers.extra); the v1 values are only used by a coefficients file
+// that predates that, so an older JSON still prices the way it was fitted to.
+const V1_FLAG_PREMIUMS = { spine: 1.20, one_of_one: 1.05, s0: 1.05 };
 
 // The fit's target divides by the ENDOGENOUS floor index, which sits below the
 // live listing floor. Applying a fitted multiple to a live floor without dividing
@@ -156,6 +159,11 @@ function subModelMultiple(modelKey, traits) {
     mult *= m; push(g === 'DDTF' ? 'daydream/terraform' : 'origin', m);
   }
 
+  // Daydream/Terraform hide the terrain, so the biome premium is scaled down by a
+  // fitted per-biome factor (prior ** beta, beta < 0). Absent in pre-2.2 files.
+  const modeBiome = M.mode_biome?.[g]?.[String(traits.biome)];
+  if (modeBiome != null) { mult *= modeBiome; push(`biome ${traits.biome} in ${g === 'DDTF' ? 'daydream/terraform' : g}`, modeBiome); }
+
   const flags = badgeFlags(traits, g);
   for (const [name, on] of Object.entries(flags)) {
     if (!on) continue;
@@ -163,9 +171,14 @@ function subModelMultiple(modelKey, traits) {
     mult *= b; push(name, b);
   }
 
-  if (traits.specialType === 'Spine') { mult *= SPINE_PREMIUM; push('spine (v1 prior)', SPINE_PREMIUM); }
-  if (traits.isOneOfOne) { mult *= ONE_OF_ONE_PREMIUM; push('1of1 (v1 prior)', ONE_OF_ONE_PREMIUM); }
-  if (traits.isS0) { mult *= S0_PREMIUM; push('S0 (v1 prior)', S0_PREMIUM); }
+  const fitted = M.extra || {};
+  const flag = (key, label) => {
+    const v = fitted[key] ?? V1_FLAG_PREMIUMS[key];
+    mult *= v; push(`${label}${fitted[key] == null ? ' (v1 prior)' : ''}`, v);
+  };
+  if (traits.specialType === 'Spine') flag('spine', 'spine');
+  if (traits.isOneOfOne) flag('one_of_one', '1of1');
+  if (traits.isS0) flag('s0', 'S0');
 
   return { multiple: mult, parts };
 }

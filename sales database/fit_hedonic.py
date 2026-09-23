@@ -11,8 +11,10 @@ Sub-models:
   money_sword_ON  (retail ask):   weight mass 80% ASK / 20% BID
 
 Features: zone, biome, chroma(Flow base), mode-group(Terrain base), level,
-          named look-badges. Override specials (Godmode/Plague/seeds/Lith0)
-          excluded -> Tier-2, handled separately with v1 priors.
+          named look-badges, the 1of1 / S0 / Spine flags, and one interaction:
+          Daydream/Terraform x ln(v1 biome prior). Override specials
+          (Godmode/Plague/seeds/Lith0) excluded -> Tier-2, handled separately
+          with v1 priors.
 
 Outputs:  pricing-v2-coeffs.json  (+ a readable console report)
 Deps:     numpy, scikit-learn, stdlib sqlite3/json  (no pandas needed)
@@ -26,12 +28,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(HERE, os.environ.get('DB_PATH', 'terraforms_sales.db'))
 MINTED = os.path.join(HERE, '..', 'backend', 'src', 'minted-traits.json')
 SPECIAL = os.path.join(HERE, '..', 'backend', 'src', 'special-tokens.json')
+ONE_OF_ONE = os.path.join(HERE, '..', 'backend', 'src', 'one-of-one-ids.json')
 PRIORS = os.path.join(HERE, 'v1-priors.json')
 OUT = os.path.join(HERE, 'pricing-v2-coeffs.json')
 
-# 60d chosen by sweep against ab_vs_v1.js (H in {30,45,60,120,365,730,none} x
-# K in {0,15,30,60,120}): shorter is better, and the gain is flat below ~60d.
-HALF_LIFE_D = float(os.environ.get('HALF_LIFE_DAYS', 60))
+# Half-life of the recency weights.
+#
+# 2026-09-23: 60 -> 180, chosen by a rolling-origin backtest rather than a single
+# holdout: refit every 14 days on sales up to that day, calibrate the level on the
+# preceding 30 days (the way production does), score the next 14 days. Median
+# absolute error, side-matched, over two separate years of out-of-sample sales:
+#
+#                                         2024-09..2025-09   2025-09..2026-09
+#   H=60  alpha=10, v1 premia (was live)       11.05%              9.95%
+#   H=180 alpha=3, fitted extras + DDTF x biome 10.73%              8.85%
+#
+# The level is recalibrated daily against sales, so the half-life only has to
+# carry the SHAPE — relative trait premiums — which moves slowly. 60 days threw
+# most of the data away to track it. 120-270 is a flat optimum; 30 is worse.
+# The earlier sweep (ab_vs_v1.js) scored one 20% holdout adjacent to training,
+# the same flaw noted on ALPHA below.
+HALF_LIFE_D = float(os.environ.get('HALF_LIFE_DAYS', 180))
 # Grid extends below 1.0 so CV can find the true optimum instead of pinning to the
 # grid floor (the prior fit selected alpha=1 for both sub-models — a boundary hit
 # that means the search never bracketed the minimum).
@@ -86,8 +103,13 @@ SIDE_MODEL = os.environ.get('SIDE_MODEL', 'dummy')
 # sales — backend/src/sales.js dropped Blur Pool ETH fills, which are bid-side,
 # so alpha was being chosen against an ask-skewed sample. With the full feed the
 # minimum moves to 10, which also lands nearly unbiased (+0.8% vs +1.9%).
-# Re-check as the feed grows: set ALPHA= to re-test, or ALPHA=cv for the CV pick.
-ALPHA = os.environ.get('ALPHA', '10')
+#
+# 2026-09-23: 10 -> 3, from the rolling-origin backtest described at HALF_LIFE_D
+# (~3,200 out-of-sample sales, not 50). At H=180: alpha 3 / 10 / 30 scored
+# 10.83 / 11.04 / 11.01% on the older year and 8.77 / 9.00 / 9.51% on the recent
+# one. The prior shrinkage already handles thin traits, so the penalty has less
+# to do. Re-check with ALPHA=, or ALPHA=cv for the (untrustworthy) CV pick.
+ALPHA = os.environ.get('ALPHA', '3')
 # Rare-zone pooling is off by default now that priors exist: shrinking a thin zone
 # toward its OWN v1 prior strictly beats merging it into a 'ZONE_rare' bucket that
 # averages mythical 1-of-1 zones together with floor zones. Set >0 to re-enable.
@@ -101,6 +123,21 @@ MODE_GROUP = {'Terrain': 'Terrain', 'Daydream': 'DDTF', 'Terraform': 'DDTF',
 # interior cells learn large spurious premiums/discounts from noise — e.g. the
 # prior fit priced L17–L19 BELOW floor (0.46–0.60x) and missed L1 entirely.
 EXTREME_LEVELS = {1, 2, 3, 18, 19, 20}
+# Parcel flags fitted as features. These were v1 premiums multiplied on AFTER the
+# fit (1of1 x1.05, S0 x1.05, Spine x1.20) while the fit itself never saw them, so
+# their effect was partly absorbed into the zone/biome coefficients of the traits
+# they co-occur with and then applied again. Fitted on 1,618 / 3,870 / 96 eligible
+# sales they come out at ~1.03 / ~0.98 / ~1.18: S0 carries no premium at all, and
+# priced at +5% it read 3% over on every S0 sale in the backtest.
+EXTRA_FLAGS = ['one_of_one', 's0', 'spine']
+S0_MIN, S0_MAX = 1703376000, 1705190399     # MUST match snapshotTraits.js
+# Daydream / Terraform hide the terrain, so a biome premium should not carry over
+# in full — v1 already weights biome at 0.15 in those modes against 0.5 in
+# Terrain. One interaction captures it: DDTF x ln(v1 biome prior), fitted, so a
+# DDTF parcel's biome effect is scaled by prior^beta. It fits at beta ~ -0.5 on
+# 469 sales. Before it, Daydream/Terraform parcels on premium biomes ran ~25%
+# over their sale prices (#4363, a biome-0 Daydream, quoted ~1.1 ETH, sold 0.65).
+DDTF_BIOME_INTERACTION = os.environ.get('DDTF_BIOME', '1') != '0'
 # Plausible floor-multiple band; outside = data error / uncaught wash -> drop.
 MULT_LO, MULT_HI = 0.25, 40.0
 
@@ -108,9 +145,17 @@ def load_aux():
     mt = {e['tokenId']: e for e in json.load(open(MINTED))}
     special = json.load(open(SPECIAL))
     override_ids = {int(k) for k, v in special.items() if v in OVERRIDE_SPECIALS}
-    return mt, override_ids
+    flags = {
+        'one_of_one': set(json.load(open(ONE_OF_ONE))),
+        'spine': {int(k) for k, v in special.items() if v == 'Spine'},
+    }
+    return mt, override_ids, flags
 
-def load_records(mt, override_ids):
+def is_s0(m):
+    ts = m.get('antennaFirstTs') or 0
+    return bool(m.get('antennaOn')) and S0_MIN <= ts <= S0_MAX
+
+def load_records(mt, override_ids, flags):
     con = sqlite3.connect(DB)
     rows = con.execute("""
         SELECT token_id, event_unix, price_native, floor_at_sale, side,
@@ -140,6 +185,9 @@ def load_records(mt, override_ids):
             'mode_group': MODE_GROUP.get(mode or m['mode'], 'Terrain'),
             'chroma': m['chroma'],                 # Flow / Pulse / Hyper
             'mystery': m['mysteryValue'],
+            'one_of_one': tid in flags['one_of_one'],
+            's0': is_s0(m),
+            'spine': tid in flags['spine'],
         })
     return recs, dropped
 
@@ -166,7 +214,15 @@ def pool_rare_zones(recs, min_n):
             r['zone'] = 'ZONE_rare'
     return len(rare), sum(cnt[z] for z in rare)
 
-def build_design(recs):
+def ddtf_biome_x(r, priors):
+    """Interaction regressor: ln(v1 biome prior) on Daydream/Terraform parcels, 0
+    elsewhere. The prior is a fixed, pre-fit quantity, so this is one extra column
+    rather than a second biome table."""
+    if r['mode_group'] != 'DDTF':
+        return 0.0
+    return math.log(max(float(priors['biome'].get(r['biome'], 1.0)), 1e-6))
+
+def build_design(recs, priors):
     # REF_ZONE / REF_BIOME are dropped: they ARE the baseline, so their coefficient
     # is 1.0 by construction and estimating one would make the design collinear.
     zones = sorted({r['zone'] for r in recs} - {REF_ZONE})
@@ -178,7 +234,9 @@ def build_design(recs):
     badge_names = ['mesa', 'matrix', 'heartbeat', 'gm', 'biome0_flow']
     cols = ([f'zone={z}' for z in zones] + [f'biome={b}' for b in biomes] +
             [f'level={l}' for l in levels] + [f'chroma={c}' for c in chromas] +
-            [f'mode={m}' for m in modes] + [f'badge={b}' for b in badge_names])
+            [f'mode={m}' for m in modes] + [f'badge={b}' for b in badge_names] +
+            [f'extra={e}' for e in EXTRA_FLAGS] +
+            (['inter=ddtf_biome'] if DDTF_BIOME_INTERACTION else []))
     # Settlement side as a feature rather than as a pair of reweighted fits. BID is
     # the baseline; the ASK coefficient IS the bid/ask spread, estimated once from
     # all 20,271 sales instead of inferred by differencing two independent fits.
@@ -194,6 +252,10 @@ def build_design(recs):
         if r['mode_group'] in modes: X[i, idx[f"mode={r['mode_group']}"]] = 1
         for bn, bv in badges(r).items():
             if bv: X[i, idx[f'badge={bn}']] = 1
+        for e in EXTRA_FLAGS:
+            if r[e]: X[i, idx[f'extra={e}']] = 1
+        if DDTF_BIOME_INTERACTION:
+            X[i, idx['inter=ddtf_biome']] = ddtf_biome_x(r, priors)
         if SIDE_MODEL == 'dummy' and r['side'] == 'ASK': X[i, idx['side=ask']] = 1
     return X, cols
 
@@ -275,15 +337,25 @@ def fit_submodel(recs, X, y, u, label, bid_share, alpha=None):
                      holdout_median_pct_err=holdout_err, weighted_r2=float(r2),
                      n=len(y))
 
-def coeffs_to_multipliers(mdl, cols):
+def coeffs_to_multipliers(mdl, cols, priors):
     out = {'baseline_multiple': float(math.exp(mdl.intercept_)),
-           'zone': {}, 'biome': {}, 'level': {}, 'chroma': {}, 'mode': {}, 'badge': {}}
+           'zone': {}, 'biome': {}, 'level': {}, 'chroma': {}, 'mode': {}, 'badge': {},
+           'extra': {}}
     for c, b in zip(cols, mdl.coef_):
         kind, name = c.split('=', 1)
         # side=ask is the bid/ask spread, not a trait. It scales the baseline, so
         # it is returned separately rather than dropped into a multiplier table
         # that consumers apply per parcel.
         if kind == 'side':
+            continue
+        if kind == 'inter':
+            # Expanded to a per-biome table so the backend needs no v1 priors at
+            # runtime: a DDTF parcel on biome b multiplies by prior_b ** beta.
+            beta = float(b)
+            out['ddtf_biome_beta'] = round(beta, 6)
+            out['mode_biome'] = {'DDTF': {
+                str(k): round(math.exp(beta * math.log(max(float(v), 1e-6))), 4)
+                for k, v in priors['biome'].items()}}
             continue
         out[kind][name] = round(float(math.exp(b)), 4)
     return out
@@ -348,7 +420,7 @@ def shrink_to_priors(mult, counts, priors, K):
                           'fitted': fitted, 'prior': prior, 'blended': round(blended, 4)})
     return audit
 
-def emit_side_dummy(result, recs, X, y, u, cols, counts, priors):
+def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
     """Single fit, side as a feature. Emits the same two-sub-model schema the
     backend already reads, so hedonicModel.js needs no change: identical trait
     multipliers on both sides, baselines differing by exactly the fitted premium.
@@ -377,7 +449,7 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors):
     r2 = float(1 - np.sum(w * (y - pred) ** 2) / np.sum(w * (y - ybar) ** 2))
 
     premium = ask_premium(mdl, cols)
-    base = coeffs_to_multipliers(mdl, cols)
+    base = coeffs_to_multipliers(mdl, cols, all_priors)
     audit = shrink_to_priors(base, counts, priors, PRIOR_K)
     base['zone'][REF_ZONE] = 1.0
     base['biome'][REF_BIOME] = 1.0
@@ -395,6 +467,10 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors):
     print(f"  fitted ask premium: {premium:.4f}x  ({premium - 1:+.1%})")
     print(f"  baseline floor-multiple: bid {base['baseline_multiple']:.2f}x  "
           f"ask {base['baseline_multiple'] * premium:.2f}x")
+    print(f"  fitted flags: " + ", ".join(f"{k} {v:.3f}x" for k, v in base['extra'].items()))
+    if 'ddtf_biome_beta' in base:
+        print(f"  DDTF x ln(biome prior) beta {base['ddtf_biome_beta']:+.3f} "
+              f"(biome 0 in Daydream/Terraform x{base['mode_biome']['DDTF'].get('0', 1):.3f})")
 
     result['meta']['alpha_selection'] = 'single fit, side as a feature'
     result['meta']['side_model'] = 'dummy'
@@ -414,8 +490,10 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors):
 
 
 def main():
-    mt, override_ids = load_aux()
-    recs, dropped = load_records(mt, override_ids)
+    mt, override_ids, flags = load_aux()
+    recs, dropped = load_records(mt, override_ids, flags)
+    # The interaction needs the v1 biome priors whatever PRIOR_K is.
+    priors = json.load(open(PRIORS))
     # A/B mode: train on the oldest (1-frac); hold out the newest frac for ab_vs_v1.js.
     ab_frac = float(os.environ.get('AB_TEST_FRAC', 0))
     cutoff = None
@@ -428,7 +506,7 @@ def main():
     out_path = os.path.join(HERE, 'pricing-v2-coeffs-train.json') if cutoff else OUT
     n_rare_zones, n_rare_sales = pool_rare_zones(recs, MIN_ZONE_N)
     print(f"Pooled {n_rare_zones} thin zones (<{MIN_ZONE_N} sales, {n_rare_sales} sales) → 'ZONE_rare'")
-    X, cols = build_design(recs)
+    X, cols = build_design(recs, priors)
     y = np.array([r['y'] for r in recs])
     u = [r['u'] for r in recs]
     print(f"Records: {len(recs)} eligible structural sales "
@@ -446,7 +524,8 @@ def main():
         'built': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         'target': 'ln(price_native / floor_at_sale)',
         'floor': 'endogenous p12 trailing index (build_floor_index.js)',
-        'half_life_days': HALF_LIFE_D, 'estimator': 'weighted Ridge (alpha by CV)',
+        'half_life_days': HALF_LIFE_D,
+        'estimator': 'weighted Ridge (alpha by CV)' if ALPHA == 'cv' else f'weighted Ridge (alpha {ALPHA}, fixed)',
         'n_eligible': len(recs), 'features': len(cols),
         'train_cutoff_unix': cutoff,
         'reference_parcel': {'zone': REF_ZONE, 'biome': REF_BIOME, 'level': 'interior L4-17',
@@ -454,13 +533,18 @@ def main():
         'prior_k': PRIOR_K,
         'priors': 'v1-priors.json (build_priors.js)' if PRIOR_K > 0 else 'none (pure data fit)',
         'excluded': 'override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades',
+        'fitted_flags': EXTRA_FLAGS,
+        'interactions': ['DDTF x ln(v1 biome prior)'] if DDTF_BIOME_INTERACTION else [],
         'caveat': 'mode is current snapshot, not mode-as-of-sale (firstDaydreamTs pending)'}}
 
-    priors = json.load(open(PRIORS)) if PRIOR_K > 0 else {}
     counts = trait_counts(recs)
+    if PRIOR_K <= 0:
+        priors_for_shrink = {}
+    else:
+        priors_for_shrink = priors
 
     if SIDE_MODEL == 'dummy':
-        emit_side_dummy(result, recs, X, y, u, cols, counts, priors)
+        emit_side_dummy(result, recs, X, y, u, cols, counts, priors_for_shrink, priors)
         json.dump(result, open(out_path, 'w'), indent=1)
         print(f"\nWrote {out_path}")
         return
@@ -477,8 +561,8 @@ def main():
 
     for label, bid_share in sub_models:
         mdl, diag = fit_submodel(recs, X, y, u, label, bid_share, alpha=shared_alpha)
-        mult = coeffs_to_multipliers(mdl, cols)
-        audit = shrink_to_priors(mult, counts, priors, PRIOR_K)
+        mult = coeffs_to_multipliers(mdl, cols, priors)
+        audit = shrink_to_priors(mult, counts, priors_for_shrink, PRIOR_K)
         # The reference levels carry no dummy, so state their 1.0 explicitly rather
         # than leaving consumers to infer it from a missing key.
         mult['zone'][REF_ZONE] = 1.0
