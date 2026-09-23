@@ -154,10 +154,9 @@ export default function SetsPage() {
 
         <p className="opacity-55 text-sm mb-10 max-w-2xl">
           Sets are groupings of parcels built around a common theme in the collection.
-          Some are easy to complete, others are almost impossible. Each is shown here with
-          one example parcel per member — Terrain mode and Flow chroma throughout, so the
-          only thing that changes across a row is the trait the set is about. The estimator
-          detects which sets you hold when you view your collection.
+          Some are easy to complete, whilst others are almost impossible. Each set is shown
+          here with examples of the parcels required to complete them. The estimator detects
+          which sets you hold when you view your collection.
         </p>
 
         {error && <p className="text-sm opacity-70 mb-8">[error: {error}]</p>}
