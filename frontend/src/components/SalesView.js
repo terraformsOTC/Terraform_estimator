@@ -34,10 +34,6 @@ function formatWhen(closingDate) {
   return new Date(closingDate * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function signedPct(x) {
-  return `${x > 0 ? '+' : ''}${(x * 100).toFixed(1)}%`;
-}
-
 export default function SalesView({ data, rows, loading, loadingMore, error, ethUsd, filtered, onLoadMore }) {
   if (loading && !data) {
     return <div className="text-sm opacity-75">[loading sales...]</div>;
@@ -63,21 +59,7 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
         {since ? ` since ${since}` : ''}
         {summary?.volume != null && <>{' · '}{summary.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} ETH volume</>}
         {floor != null && <>{' · '}floor {floor.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}</>}
-        {summary?.vsFloor && (
-          <>
-            {' · '}{summary.vsFloor.n.toLocaleString()} vs floor, median{' '}
-            <span style={{ color: errorColor(summary.vsFloor.median) }}>{signedPct(summary.vsFloor.median)}</span>
-          </>
-        )}
-        {summary?.vsEstimate && (
-          <>
-            {' · '}{summary.vsEstimate.n.toLocaleString()} vs estimate, median{' '}
-            <span style={{ color: errorColor(summary.vsEstimate.median) }}>{signedPct(summary.vsEstimate.median)}</span>
-          </>
-        )}
       </div>
-
-      <p className="mb-6 text-xs opacity-50">every recorded sale since mint, newest first. a floor-value parcel that sold below the floor at the time is measured against that floor — a discount. everything else, including a parcel we price above floor that still sold under it, is measured against our listed-price estimate: today&apos;s model at the floor on the day it sold, so on older sales the gap also shows how far the market has re-rated a trait since. what a parcel is worth is what it would clear at if listed, so bids are never used as the yardstick. that floor is the live listing floor from may 2026 and the model&apos;s own floor index before it. filters use each parcel&apos;s traits today, which can differ from when it sold. a bundle sold as one order carries the order total, so it is not measured.</p>
 
       {error && <p className="mb-4 text-xs opacity-70">[error: {error}]</p>}
 
