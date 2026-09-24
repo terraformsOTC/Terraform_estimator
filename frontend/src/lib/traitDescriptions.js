@@ -24,8 +24,6 @@ export const TRAIT_DESCRIPTIONS = {
   'lith0like': 'A Lith0 look-alike. In order to have this trait the opening frame of a parcel’s animation cycle must be a flat, single block of colour.',
   'mesa': 'Biome 39 parcels in terrain mode with a ??? value under 30,000. This is the only biome in the collection with gaps in the character set, and when combined with a low ??? value produces a heightmap topographically reminiscent of mesa rock formations.',
   'matrix': 'Terrain mode parcels with the Intro Forest zone colour palette and Biome 58 character set. Digital rain in the Hypercastle.',
-  'big-grass': 'Terrain mode parcels with the biome 42 character set. The distinctive Tibetan script characters create an illusion of grass being blown in the wind.',
-  'little-grass': 'Terrain mode parcels with the biome 65 character set. Using the same Tibetan script character as biome 42, but with smaller size, this is the understated sibling to Big Grass parcels.',
   'heartbeat': 'Terrain mode parcels with the [BLOOD] zone and a Pulse chroma. The beating heart of the Hypercastle.',
   'gm': 'Terrain mode parcels with a low ??? value and Biome 71 character set. Parcels with this trait print a clean "gm" in the heightmap animation.',
   'basement': 'Parcels on level 1, the bottom of the Hypercastle.',

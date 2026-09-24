@@ -20,8 +20,6 @@ const BADGE_KEY = {
   'lith0like': 'Lith0like',
   'mesa': 'Mesa',
   'matrix': 'Matrix',
-  'big-grass': 'BigGrass',
-  'little-grass': 'LittleGrass',
   'heartbeat': 'Heartbeat',
   'gm': 'gm',
   'basement': 'Basement',

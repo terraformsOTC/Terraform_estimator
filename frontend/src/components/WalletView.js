@@ -34,8 +34,6 @@ const ALL_HIGHLIGHTS = [
   { key: 'mystery_low',   label: 'low ???',      color: '#f87171' },
   { key: 'S0',            label: 's0',           color: '#9ebbc1' },
   { key: '1of1',          label: '1 of 1',       color: '#cb8175' },
-  { key: 'LittleGrass',   label: 'little grass', color: '#a8c8a6' },
-  { key: 'BigGrass',      label: 'big grass',    color: '#b0e111' },
   { key: 'gm',            label: 'gm',           color: '#f7c948' },
   { key: 'Matrix',        label: 'matrix',       color: '#369e40' },
   { key: 'Heartbeat',     label: 'heartbeat',    color: '#ee0000' },
@@ -79,8 +77,6 @@ function computeOwnedHighlights(parcels) {
     if (biome === 0 && specialType !== 'Lith0') owned.add('Biome0');
     if (isLith0like) owned.add('Lith0like');
     if (isGm) owned.add('gm');
-    if (isTerrain && biome === 42) owned.add('BigGrass');
-    if (isTerrain && biome === 65) owned.add('LittleGrass');
     if (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse') owned.add('Heartbeat');
     if (isTerrain && biome === 58 && zone === 'Intro Forest') owned.add('Matrix');
     if (isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000) owned.add('Mesa');
@@ -123,8 +119,6 @@ function parcelHasBadge(parcel, key) {
     case 'Biome0':           return biome === 0 && specialType !== 'Lith0';
     case 'Lith0like':        return !!isLith0like;
     case 'gm':               return !!isGm;
-    case 'BigGrass':         return isTerrain && biome === 42;
-    case 'LittleGrass':      return isTerrain && biome === 65;
     case 'Heartbeat':        return isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
     case 'Matrix':           return isTerrain && biome === 58 && zone === 'Intro Forest';
     case 'Mesa':             return isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000;

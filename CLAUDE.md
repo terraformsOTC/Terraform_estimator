@@ -51,8 +51,6 @@ Applies to both minted and unminted from trait data:
 - **Basement** — Level 1
 - **Penthouse** — Level 20
 - **Biome0** — Biome 0
-- **BigGrass** — Biome 42
-- **LittleGrass** — Biome 65
 - **Matrix** — Biome 58 / Intro Forest
 - **Heartbeat** — Zone `[BLOOD]` / Chroma Pulse
 - **Mesa** — Biome 39 / Terrain / mystery < 30000

@@ -181,8 +181,6 @@ export const SPECIAL_TYPE_BADGES = {
   'Mesa':             { label: 'mesa',               color: '#fc5602' },
   'gm':               { label: 'gm',                 color: '#f7c948' },
   'Synchro':          { label: 'synchro',            color: '#c4a675' },
-  'BigGrass':         { label: 'big grass',         color: '#b0e111' },
-  'LittleGrass':      { label: 'little grass',      color: '#a8c8a6' },
   'Heartbeat':        { label: 'heartbeat',          color: '#ee0000' },
   'Basement':         { label: 'basement',          color: '#bbbbbb' },
   'Penthouse':        { label: 'penthouse',         color: '#d77c11' },
@@ -214,8 +212,6 @@ export function AutoBadgeStack({ traits, opacity = 0.85 }) {
       {biome === 0 && specialType !== 'Lith0'           && <SpecialBadge type="Biome0" opacity={opacity} />}
       {isLith0like                                      && <SpecialBadge type="Lith0like" opacity={opacity} />}
       {isGm                                             && <SpecialBadge type="gm" opacity={opacity} />}
-      {isTerrain && biome === 42                        && <SpecialBadge type="BigGrass" opacity={opacity} />}
-      {isTerrain && biome === 65                        && <SpecialBadge type="LittleGrass" opacity={opacity} />}
       {isTerrain && zone === '[BLOOD]' && chroma === 'Pulse' && <SpecialBadge type="Heartbeat" opacity={opacity} />}
       {isTerrain && biome === 58 && zone === 'Intro Forest'  && <SpecialBadge type="Matrix" opacity={opacity} />}
       {/* 30000: manually determined from parcel animations — independent of MYSTERY_P5 (20000) */}
@@ -235,8 +231,6 @@ export function hasBadges(traits) {
     || (biome === 0 && specialType !== 'Lith0')
     || isLith0like
     || isGm
-    || (isTerrain && biome === 42)
-    || (isTerrain && biome === 65)
     || (isTerrain && zone === '[BLOOD]' && chroma === 'Pulse')
     || (isTerrain && biome === 58 && zone === 'Intro Forest')
     || (isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000)

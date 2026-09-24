@@ -1395,8 +1395,6 @@ const TRAIT_TYPES = [
   { type: 'lith0like',        label: 'Lith0-like',       group: 'visual' },
   { type: 'mesa',             label: 'Mesa',             group: 'visual' },
   { type: 'matrix',           label: 'Matrix',           group: 'visual' },
-  { type: 'big-grass',        label: 'Big Grass',        group: 'visual' },
-  { type: 'little-grass',     label: 'Little Grass',     group: 'visual' },
   { type: 'heartbeat',        label: 'Heartbeat',        group: 'visual' },
   { type: 'gm',               label: 'gm',               group: 'visual' },
   { type: 'basement',         label: 'Basement',         group: 'level' },
@@ -1423,8 +1421,6 @@ function matchesTrait(traits, type) {
     case 'lith0like':        return !!isLith0like;
     case 'mesa':             return isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000;
     case 'matrix':           return isTerrain && biome === 58 && zone === 'Intro Forest';
-    case 'big-grass':        return isTerrain && biome === 42;
-    case 'little-grass':     return isTerrain && biome === 65;
     case 'heartbeat':        return isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
     case 'gm':               return !!isGm;
     case 'basement':         return level === 1;

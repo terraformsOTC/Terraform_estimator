@@ -38,7 +38,13 @@ const nextConfig = {
   // /faq shipped briefly under that name and went out in the sitemap before being
   // renamed. Cheap insurance against a dead link; permanent so it is not re-crawled.
   async redirects() {
-    return [{ source: '/faq', destination: '/methodology', permanent: true }];
+    return [
+      { source: '/faq', destination: '/methodology', permanent: true },
+      // Big Grass and Little Grass stopped being traits when biomes 42 and 65
+      // were rolled into the Meadow biomes set; old links land on the sets page.
+      { source: '/traits/big-grass', destination: '/sets', permanent: true },
+      { source: '/traits/little-grass', destination: '/sets', permanent: true },
+    ];
   },
   async headers() {
     return [

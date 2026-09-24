@@ -80,8 +80,6 @@ export default function GlossaryPage() {
           <GlossaryRow badge={<SpecialBadge type="Mesa" />}        description={TRAIT_DESCRIPTIONS['mesa']} />
           <GlossaryRow badge={<SpecialBadge type="gm" />}          description={TRAIT_DESCRIPTIONS['gm']} />
           <GlossaryRow badge={<SpecialBadge type="Matrix" />}      description={TRAIT_DESCRIPTIONS['matrix']} />
-          <GlossaryRow badge={<SpecialBadge type="BigGrass" />}    description={TRAIT_DESCRIPTIONS['big-grass']} />
-          <GlossaryRow badge={<SpecialBadge type="LittleGrass" />} description={TRAIT_DESCRIPTIONS['little-grass']} />
           <GlossaryRow badge={<SpecialBadge type="Heartbeat" />}   description={TRAIT_DESCRIPTIONS['heartbeat']} />
           <GlossaryRow
             badge={<SpecialBadge type="Synchro" />}
