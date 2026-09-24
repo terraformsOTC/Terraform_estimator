@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink, vsModelColor } from './shared';
+import { matchesFilters, hasActiveFilters } from './ParcelFilters';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -15,16 +16,22 @@ function timeAgo(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function ListingsView({ data, loading, error, viewMode = 'list' }) {
+export default function ListingsView({ data, loading, error, viewMode = 'list', filters = null }) {
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
 
   // `discount` is computed server-side against the model's LISTED-PRICE side, so a
   // live ask is compared with a modelled ask. Scoring listings against the
   // liquidation side would mark every listing on the site overpriced by the spread.
-  const sorted = useMemo(() => {
+  const filtered = hasActiveFilters(filters ?? {});
+  // Trait filters first, so the header can say how many listings match them.
+  const matched = useMemo(() => {
     if (!data?.parcels) return [];
-    const list = bargainsOnly ? data.parcels.filter(p => p.discount > 0) : data.parcels;
+    return filtered ? data.parcels.filter(p => matchesFilters(p, filters)) : data.parcels;
+  }, [data, filters, filtered]);
+
+  const sorted = useMemo(() => {
+    const list = bargainsOnly ? matched.filter(p => p.discount > 0) : matched;
     if (sort === 'price') return [...list].sort((a, b) => a.listedPrice - b.listedPrice);
     if (sort === 'discount') return [...list].sort((a, b) => b.discount - a.discount);
     return [...list].sort((a, b) => {
@@ -33,7 +40,7 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
       if (!b.listedAt) return -1;
       return b.listedAt - a.listedAt;
     });
-  }, [data, sort, bargainsOnly]);
+  }, [matched, sort, bargainsOnly]);
 
   if (loading) {
     return (
@@ -65,7 +72,7 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
   return (
     <div>
       <div className="mb-4 text-xs opacity-50">
-        {totalListings} listings · floor {floor?.toFixed(3)} ETH · cached at {fetchedDate}
+        {filtered ? `${matched.length} of ${totalListings} listings match` : `${totalListings} listings`} · floor {floor?.toFixed(3)} ETH · cached at {fetchedDate}
       </div>
 
       {hiddenBelow && (
@@ -107,7 +114,10 @@ export default function ListingsView({ data, loading, error, viewMode = 'list' }
       </div>
 
       {sorted.length === 0 ? (
-        <p className="text-sm opacity-75">{bargainsOnly ? 'no bargains currently listed.' : 'no listings found.'}</p>
+        <p className="text-sm opacity-75">
+          {filtered && matched.length === 0 ? 'no listings match these filters.'
+            : bargainsOnly ? 'no bargains currently listed.' : 'no listings found.'}
+        </p>
       ) : viewMode === 'cards' ? (
         <div className="grid w-full gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {sorted.map(p => (

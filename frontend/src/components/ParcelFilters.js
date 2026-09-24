@@ -130,15 +130,68 @@ export function optionsFromFacets(facets = {}) {
 // counts sales. Defaults keep the wallet exactly as it was.
 const WALLET_VOCAB = { title: 'filter parcels', have: 'owned', none: 'none owned', one: 'parcel', many: 'parcels' };
 
-export function matchesFilters(parcel, filters) {
+export function matchesFilters(parcel, filters, skipKey = null) {
   const traits = parcel?.traits;
   if (!traits) return false;
   return FILTER_ATTRS.every(attr => {
+    if (attr.key === skipKey) return true;
     const selected = filters[attr.key];
     if (!selected || selected.size === 0) return true;
     const value = attr.get(traits);
     return value != null && selected.has(value);
   });
+}
+
+// Like buildFilterOptions, but each attribute is counted over the parcels that
+// match every OTHER active filter — the rule the sales history uses server-side.
+// Picking a zone then shows how that zone's parcels split by biome, while the
+// zone list keeps offering every zone that has any.
+export function buildFacetedOptions(parcels, filters) {
+  return Object.fromEntries(
+    FILTER_ATTRS.map(attr => {
+      const counts = new Map();
+      for (const p of parcels) {
+        if (!p?.traits || !matchesFilters(p, filters, attr.key)) continue;
+        const value = attr.get(p.traits);
+        if (value != null) counts.set(value, (counts.get(value) ?? 0) + 1);
+      }
+      const values = [...new Set([...attr.domain, ...counts.keys()])].sort(attr.compare);
+      return [attr.key, values.map(value => ({ value, label: attr.format(value), count: counts.get(value) ?? 0 }))];
+    }),
+  );
+}
+
+// ?zone=Alto,Holo&biome=0 — a filtered view is a link. The sales history API
+// takes the same encoding, so its request is the page URL's own query.
+export function filtersToQuery(filters) {
+  const qs = new URLSearchParams();
+  for (const attr of FILTER_ATTRS) {
+    const set = filters?.[attr.key];
+    if (set?.size) qs.set(attr.key, [...set].join(','));
+  }
+  return qs;
+}
+
+export function filtersFromLocation() {
+  if (typeof window === 'undefined') return EMPTY_FILTERS;
+  const qs = new URLSearchParams(window.location.search);
+  const filters = { ...EMPTY_FILTERS };
+  for (const attr of FILTER_ATTRS) {
+    const raw = qs.get(attr.key);
+    if (!raw) continue;
+    const numeric = typeof attr.domain[0] === 'number';
+    filters[attr.key] = new Set(raw.split(',').filter(Boolean).map(v => (numeric ? Number(v) : v)));
+  }
+  return filters;
+}
+
+// Mirror the filters into the address bar without adding history entries, and
+// keep any other params the page already carries.
+export function writeFiltersToLocation(filters) {
+  const url = new URL(window.location.href);
+  for (const attr of FILTER_ATTRS) url.searchParams.delete(attr.key);
+  for (const [k, v] of filtersToQuery(filters)) url.searchParams.set(k, v);
+  window.history.replaceState(null, '', url.search ? `${url.pathname}${url.search}` : url.pathname);
 }
 
 // Immutable toggle — returns a new filters object with `value` flipped.

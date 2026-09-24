@@ -8,38 +8,16 @@ import {
   ParcelFilterPanel,
   ActiveFilterChips,
   EMPTY_FILTERS,
-  FILTER_ATTRS,
   toggleFilterValue,
   countActiveFilters,
   optionsFromFacets,
+  filtersToQuery,
+  filtersFromLocation,
+  writeFiltersToLocation,
 } from '@/components/ParcelFilters';
 
 const PAGE_SIZE = 50;
 const SALES_VOCAB = { title: 'filter sales', have: 'with sales', none: 'no sales', one: 'sale', many: 'sales' };
-
-// ?zone=Alto,Holo&biome=0 — the same encoding the API takes, so a filtered view
-// is a shareable link and the request is the page URL's own query.
-function filtersToQuery(filters) {
-  const qs = new URLSearchParams();
-  for (const attr of FILTER_ATTRS) {
-    const set = filters[attr.key];
-    if (set?.size) qs.set(attr.key, [...set].join(','));
-  }
-  return qs;
-}
-
-function filtersFromLocation() {
-  if (typeof window === 'undefined') return EMPTY_FILTERS;
-  const qs = new URLSearchParams(window.location.search);
-  const filters = { ...EMPTY_FILTERS };
-  for (const attr of FILTER_ATTRS) {
-    const raw = qs.get(attr.key);
-    if (!raw) continue;
-    const numeric = typeof attr.domain[0] === 'number';
-    filters[attr.key] = new Set(raw.split(',').filter(Boolean).map(v => (numeric ? Number(v) : v)));
-  }
-  return filters;
-}
 
 export default function SalesPage() {
   const [filters, setFilters] = useState(null);   // null until read from the URL
@@ -108,8 +86,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     if (!filters) return;
-    const qs = filtersToQuery(filters).toString();
-    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+    writeFiltersToLocation(filters);
     load();
   }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 

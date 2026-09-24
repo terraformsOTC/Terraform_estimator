@@ -1,15 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
 import ListingsView from '@/components/ListingsView';
 import { connectAndRedirect, Footer } from '@/components/shared';
+import {
+  ParcelFilterPanel,
+  ActiveFilterChips,
+  EMPTY_FILTERS,
+  toggleFilterValue,
+  countActiveFilters,
+  buildFacetedOptions,
+  filtersFromLocation,
+  writeFiltersToLocation,
+} from '@/components/ParcelFilters';
+
+const LISTINGS_VOCAB = { title: 'filter listings', have: 'listed', none: 'none listed', one: 'listing', many: 'listings' };
 
 export default function ListingsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('list');
+  // Every listing is already in the page, so filtering is local — same panel,
+  // same rules and same URL encoding as the sales page, without a round trip.
+  const [filters, setFilters] = useState(null);   // null until read from the URL
+  const [showFilters, setShowFilters] = useState(false);
 
   // force → ?refresh=1, which tells the backend to bypass its 30-minute listings
   // cache. Without it the button re-fetches the cached payload. The backend still
@@ -32,7 +48,22 @@ export default function ListingsPage() {
     }
   }
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    const initial = filtersFromLocation();
+    setFilters(initial);
+    if (countActiveFilters(initial) > 0) setShowFilters(true);
+  }, []);
+
+  useEffect(() => { if (filters) writeFiltersToLocation(filters); }, [filters]);
+
+  const options = useMemo(
+    () => buildFacetedOptions(data?.parcels ?? [], filters ?? EMPTY_FILTERS),
+    [data, filters],
+  );
+  const toggle = (key, value) => setFilters(f => toggleFilterValue(f, key, value));
+  const reset = () => setFilters(EMPTY_FILTERS);
+  const activeCount = filters ? countActiveFilters(filters) : 0;
 
   return (
     <div className="content-wrapper">
@@ -48,7 +79,11 @@ export default function ListingsPage() {
 
         <div className="px-6">
           {data && !loading && (
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-4 flex items-center gap-2 flex-wrap">
+              <button className="btn-primary btn-sm text-xs" onClick={() => setShowFilters(v => !v)}>
+                {showFilters ? '[hide filters]' : '[filter listings]'}
+                {activeCount > 0 && <span style={{ opacity: 0.6 }}> · {activeCount}</span>}
+              </button>
               <button className="btn-primary btn-sm text-xs" onClick={() => fetchData({ force: true })}>
                 [refresh listings]
               </button>
@@ -60,7 +95,22 @@ export default function ListingsPage() {
               </button>
             </div>
           )}
-          <ListingsView data={data} loading={loading} error={error} viewMode={viewMode} />
+          {data && !loading && filters && (
+            <>
+              {showFilters && (
+                <ParcelFilterPanel
+                  options={options}
+                  filters={filters}
+                  onToggle={toggle}
+                  onReset={reset}
+                  onClose={() => setShowFilters(false)}
+                  vocab={LISTINGS_VOCAB}
+                />
+              )}
+              <ActiveFilterChips filters={filters} onToggle={toggle} onReset={reset} />
+            </>
+          )}
+          <ListingsView data={data} loading={loading} error={error} viewMode={viewMode} filters={filters} />
         </div>
       </main>
       <Footer />
