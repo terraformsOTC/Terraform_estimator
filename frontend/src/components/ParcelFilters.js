@@ -109,6 +109,27 @@ export function buildFilterOptions(parcels) {
   );
 }
 
+// Same shape as buildFilterOptions, from counts the server already computed —
+// the sales history is too big to ship to the browser and tally here. Facet keys
+// arrive as JSON object keys, so numeric values are looked up as strings.
+export function optionsFromFacets(facets = {}) {
+  return Object.fromEntries(
+    FILTER_ATTRS.map(attr => {
+      const counts = facets[attr.key] || {};
+      const seen = Object.keys(counts).map(k => (typeof attr.domain[0] === 'number' ? Number(k) : k));
+      const values = [...new Set([...attr.domain, ...seen])].sort(attr.compare);
+      return [
+        attr.key,
+        values.map(value => ({ value, label: attr.format(value), count: counts[String(value)] ?? 0 })),
+      ];
+    }),
+  );
+}
+
+// Wording for the panel. The wallet counts parcels a wallet owns; the sales page
+// counts sales. Defaults keep the wallet exactly as it was.
+const WALLET_VOCAB = { title: 'filter parcels', have: 'owned', none: 'none owned', one: 'parcel', many: 'parcels' };
+
 export function matchesFilters(parcel, filters) {
   const traits = parcel?.traits;
   if (!traits) return false;
@@ -156,7 +177,7 @@ function FilterChip({ label, count, active, owned, title, onClick }) {
   );
 }
 
-function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen }) {
+function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen, vocab }) {
   const selectedCount = selected?.size ?? 0;
   const ownedCount = options.filter(o => o.count > 0).length;
 
@@ -171,8 +192,8 @@ function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen }
           active={selected?.has(value)}
           title={
             count > 0
-              ? `${attr.label} ${label} — ${count} ${count === 1 ? 'parcel' : 'parcels'}`
-              : `${attr.label} ${label} — none owned`
+              ? `${attr.label} ${label} — ${count} ${count === 1 ? vocab.one : vocab.many}`
+              : `${attr.label} ${label} — ${vocab.none}`
           }
           onClick={() => onToggle(attr.key, value)}
         />
@@ -199,7 +220,7 @@ function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen }
       >
         <span className="uppercase tracking-widest" style={{ opacity: 0.4 }}>{attr.label}</span>
         <span style={{ opacity: 0.5 }}>{open ? '[−]' : '[+]'}</span>
-        <span style={{ opacity: 0.3 }}>{ownedCount}/{options.length} owned</span>
+        <span style={{ opacity: 0.3 }}>{ownedCount}/{options.length} {vocab.have}</span>
         {selectedCount > 0 && (
           <span style={{ opacity: 0.75 }}>· {selectedCount} selected</span>
         )}
@@ -209,7 +230,7 @@ function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen }
   );
 }
 
-export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose }) {
+export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose, vocab = WALLET_VOCAB }) {
   // Long sections start collapsed so the panel opens compact.
   const [openSections, setOpenSections] = useState(() => new Set());
   const toggleSection = key =>
@@ -222,7 +243,7 @@ export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose
   return (
     <div className="mb-6 p-3" style={{ border: '1px solid rgba(232,232,232,0.15)' }}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm opacity-80">filter parcels</span>
+        <span className="text-sm opacity-80">{vocab.title}</span>
         <div className="flex items-center gap-2 text-xs">
           <button onClick={onReset} style={{ opacity: 0.6 }}>[reset]</button>
           <button onClick={onClose} style={{ opacity: 0.6 }}>[close]</button>
@@ -238,6 +259,7 @@ export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose
           onToggle={onToggle}
           open={openSections.has(attr.key)}
           onToggleOpen={() => toggleSection(attr.key)}
+          vocab={vocab}
         />
       ))}
     </div>

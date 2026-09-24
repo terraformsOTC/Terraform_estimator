@@ -1,45 +1,121 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import SalesView from '@/components/SalesView';
-import { connectAndRedirect, Footer } from '@/components/shared';
+import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
+import {
+  ParcelFilterPanel,
+  ActiveFilterChips,
+  EMPTY_FILTERS,
+  FILTER_ATTRS,
+  toggleFilterValue,
+  countActiveFilters,
+  optionsFromFacets,
+} from '@/components/ParcelFilters';
+
+const PAGE_SIZE = 50;
+const SALES_VOCAB = { title: 'filter sales', have: 'with sales', none: 'no sales', one: 'sale', many: 'sales' };
+
+// ?zone=Alto,Holo&biome=0 — the same encoding the API takes, so a filtered view
+// is a shareable link and the request is the page URL's own query.
+function filtersToQuery(filters) {
+  const qs = new URLSearchParams();
+  for (const attr of FILTER_ATTRS) {
+    const set = filters[attr.key];
+    if (set?.size) qs.set(attr.key, [...set].join(','));
+  }
+  return qs;
+}
+
+function filtersFromLocation() {
+  if (typeof window === 'undefined') return EMPTY_FILTERS;
+  const qs = new URLSearchParams(window.location.search);
+  const filters = { ...EMPTY_FILTERS };
+  for (const attr of FILTER_ATTRS) {
+    const raw = qs.get(attr.key);
+    if (!raw) continue;
+    const numeric = typeof attr.domain[0] === 'number';
+    filters[attr.key] = new Set(raw.split(',').filter(Boolean).map(v => (numeric ? Number(v) : v)));
+  }
+  return filters;
+}
 
 export default function SalesPage() {
-  const [data, setData] = useState(null);
+  const [filters, setFilters] = useState(null);   // null until read from the URL
+  const [data, setData] = useState(null);         // summary, facets and totals for the filter
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [ethUsd, setEthUsd] = useState(null);
+  // Each filter change starts a new request; a slower earlier one must not land
+  // on top of it.
+  const requestId = useRef(0);
 
   useEffect(() => {
     fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
       .then(r => r.json())
       .then(d => { const p = parseFloat(d?.data?.amount); if (Number.isFinite(p)) setEthUsd(p); })
       .catch(() => {});
+    const initial = filtersFromLocation();
+    setFilters(initial);
+    if (countActiveFilters(initial) > 0) setShowFilters(true);
   }, []);
 
-  // force → ?refresh=1, which tells the backend to bypass its 30-minute sales
-  // cache. Without it the button re-fetches the identical cached payload and the
-  // feed looks stuck. The backend still rate-limits how often it will recompute.
-  async function fetchData({ force = false } = {}) {
+  async function fetchPage(offset, { force = false } = {}) {
+    const qs = filtersToQuery(filters);
+    qs.set('limit', String(PAGE_SIZE));
+    if (offset) qs.set('offset', String(offset));
+    // force -> ?refresh=1: the backend re-reads the live OpenSea feed (at most
+    // once a minute) instead of serving its 30-minute cache.
+    if (force) qs.set('refresh', '1');
+    const res = await fetch(`${API_URL}/sales-history?${qs}`, force ? { cache: 'no-store' } : undefined);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Failed to load sales.');
+    return json;
+  }
+
+  async function load({ force = false } = {}) {
+    const id = ++requestId.current;
     setLoading(true);
     setError(null);
     try {
-      // Through the same-origin edge proxy (src/app/api/feed) rather than straight
-      // to Render: cached at the PoP nearest the visitor instead of one round
-      // trip to a single region. A forced refresh is passed through uncached.
-      const res = await fetch(`/api/feed/sales${force ? '?refresh=1' : ''}`, { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
+      const json = await fetchPage(0, { force });
+      if (id !== requestId.current) return;
       setData(json);
+      setRows(json.sales);
     } catch (err) {
-      setError(err.message || 'Failed to load sales.');
+      if (id === requestId.current) setError(err.message);
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }
 
-  useEffect(() => { fetchData(); }, []);
+  async function loadMore() {
+    const id = requestId.current;
+    setLoadingMore(true);
+    try {
+      const json = await fetchPage(rows.length);
+      if (id === requestId.current) setRows(prev => [...prev, ...json.sales]);
+    } catch (err) {
+      if (id === requestId.current) setError(err.message);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!filters) return;
+    const qs = filtersToQuery(filters).toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+    load();
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggle = (key, value) => setFilters(f => toggleFilterValue(f, key, value));
+  const reset = () => setFilters(EMPTY_FILTERS);
+  const activeCount = filters ? countActiveFilters(filters) : 0;
 
   return (
     <div className="content-wrapper">
@@ -54,14 +130,44 @@ export default function SalesPage() {
         </div>
 
         <div className="px-6">
-          {data && !loading && (
+          {filters && (
             <div className="mb-4">
-              <button className="btn-primary btn-sm text-xs" onClick={() => fetchData({ force: true })}>
-                [refresh sales]
-              </button>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button className="btn-primary btn-sm text-xs" onClick={() => setShowFilters(v => !v)}>
+                  {showFilters ? '[hide filters]' : '[filter sales]'}
+                  {activeCount > 0 && <span style={{ opacity: 0.6 }}> · {activeCount}</span>}
+                </button>
+                {data && !loading && (
+                  <button className="btn-primary btn-sm text-xs" onClick={() => load({ force: true })}>
+                    [refresh sales]
+                  </button>
+                )}
+              </div>
+
+              {showFilters && (
+                <ParcelFilterPanel
+                  options={optionsFromFacets(data?.facets)}
+                  filters={filters}
+                  onToggle={toggle}
+                  onReset={reset}
+                  onClose={() => setShowFilters(false)}
+                  vocab={SALES_VOCAB}
+                />
+              )}
+              <ActiveFilterChips filters={filters} onToggle={toggle} onReset={reset} />
             </div>
           )}
-          <SalesView data={data} loading={loading} error={error} ethUsd={ethUsd} />
+
+          <SalesView
+            data={data}
+            rows={rows}
+            loading={loading}
+            loadingMore={loadingMore}
+            error={error}
+            ethUsd={ethUsd}
+            filtered={activeCount > 0}
+            onLoadMore={loadMore}
+          />
         </div>
       </main>
       <Footer />
