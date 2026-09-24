@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory } from './shared';
+import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory, WalletLink } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 import { SET_COLORS } from '@/lib/setsGlossary';
 import {
@@ -140,6 +140,14 @@ function getParcelTierRank({ traits, pricing }) {
   return top ? (CATEGORY_ORDER[top] ?? 4) : 4;
 }
 
+// What the loading line calls the wallet: several for a combined view, an ENS
+// name as typed, or a shortened address.
+function loadingLabel(address) {
+  if (!address) return '';
+  if (address.includes(',')) return `${address.split(',').length} wallets`;
+  return address.startsWith('0x') ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
+}
+
 export default function WalletView({ data, loading, address }) {
   const [sortBy, setSortBy] = useState('id');
   const [highlightFilter, setHighlightFilter] = useState(new Set());
@@ -181,7 +189,7 @@ export default function WalletView({ data, loading, address }) {
   if (loading) {
     return (
       <div className="text-sm opacity-75">
-        [loading parcels for {address?.slice(0, 6)}...{address?.slice(-4)}]
+        [loading parcels for {loadingLabel(address)}]
         <br />
         <span className="opacity-55 text-xs">this may take a moment for large collections...</span>
       </div>
@@ -196,6 +204,18 @@ export default function WalletView({ data, loading, address }) {
 
   return (
     <div>
+      {/* A combined view: every wallet in it, each linking to its own view. */}
+      {data.aggregate && (
+        <div className="mb-6 text-xs opacity-60 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>combined view of {data.wallets.length} wallets:</span>
+          {data.wallets.map(w => (
+            <span key={w.address} className="whitespace-nowrap">
+              <WalletLink address={w.address} ens={w.ens} />
+              <span className="opacity-60"> · {w.totalParcels} {w.totalParcels === 1 ? 'parcel' : 'parcels'}</span>
+            </span>
+          ))}
+        </div>
+      )}
       {/* Attribute filters — zone / biome / mode / chroma, collapsed by default */}
       {sortedParcels.length > 0 && (
         <div className="mb-6">

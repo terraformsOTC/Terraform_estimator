@@ -294,9 +294,13 @@ export default function Home() {
       setWhaleData(data);
       // Swap the typed name for the address it resolved to, so a copied link is
       // stable even if the ENS record later points somewhere else. replaceState,
-      // not push: this is the same view, spelled canonically.
-      if (pushUrl && data.address) {
-        window.history.replaceState({}, '', `/?address=${data.address}`);
+      // not push: this is the same view, spelled canonically. A combined view
+      // keeps every wallet, comma-separated.
+      const canonical = data.aggregate
+        ? (data.wallets || []).map(w => w.address).join(',')
+        : data.address;
+      if (pushUrl && canonical) {
+        window.history.replaceState({}, '', `/?address=${canonical}`);
       }
     } catch (err) {
       if (myId !== walletFetchId.current) return;
@@ -314,8 +318,12 @@ export default function Home() {
   // typed or linked, so it can be an ENS name already — pass it through rather
   // than truncating something that is not an address.
   const whaleAddr = whaleData?.address || whaleIdentifier;
-  const whaleLabel = whaleData?.ens
-    || (whaleAddr?.startsWith('0x') ? shortAddr(whaleAddr) : whaleAddr);
+  const walletName = (w) => w?.ens || (w?.address?.startsWith('0x') ? shortAddr(w.address) : w?.address);
+  // A combined view is named by its first wallet plus a count of the rest.
+  const whaleLabel = whaleData?.aggregate
+    ? `${walletName(whaleData.wallets[0])} +${whaleData.wallets.length - 1}`
+    : whaleData?.ens
+      || (whaleAddr?.startsWith('0x') ? shortAddr(whaleAddr) : whaleAddr);
 
   return (
     <div className="content-wrapper">

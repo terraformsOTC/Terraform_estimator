@@ -8,6 +8,10 @@ import { useState } from 'react';
 const ADDRESS = /^0x[a-fA-F0-9]{40}$/;
 const ENS = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.eth$/i;
 const MAX_TOKEN_ID = 11104;
+// Several wallets, comma-separated, open as one combined view. Matches the
+// backend's MAX_AGGREGATE_WALLETS.
+const MAX_WALLETS = 4;
+const isWallet = (s) => ADDRESS.test(s) || ENS.test(s);
 
 export default function ParcelSearch({ onSearch, onAddress, loading }) {
   const [value, setValue] = useState('');
@@ -19,7 +23,22 @@ export default function ParcelSearch({ onSearch, onAddress, loading }) {
     if (!raw) return;
     setError(null);
 
-    if (ADDRESS.test(raw) || ENS.test(raw)) {
+    if (raw.includes(',')) {
+      const parts = [...new Set(raw.split(',').map(p => p.trim()).filter(Boolean))];
+      if (parts.length > MAX_WALLETS) {
+        setError(`Up to ${MAX_WALLETS} addresses at a time.`);
+        return;
+      }
+      const bad = parts.find(p => !isWallet(p));
+      if (bad) {
+        setError(`Not an ETH address or ENS name: ${bad}`);
+        return;
+      }
+      onAddress(parts.join(','));
+      return;
+    }
+
+    if (isWallet(raw)) {
       onAddress(raw);
       return;
     }
@@ -44,13 +63,13 @@ export default function ParcelSearch({ onSearch, onAddress, loading }) {
   return (
     <div className="max-w-lg">
       <p className="mb-4 opacity-75 text-sm">
-        Enter a token ID (1–11,104) or ETH address to get a valuation estimate.
+        Enter a token ID (1–11,104) or ETH address to get a valuation estimate. Input multiple ETH addresses separated by a comma to get an aggregate view of the parcels those addresses hold.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <input
           id="token-id"
           name="tokenId"
-          className="text-sm transition-all w-64"
+          className="text-sm transition-all w-64 sm:w-96"
           value={value}
           onChange={e => { setValue(e.target.value); if (error) setError(null); }}
           type="text"

@@ -1196,56 +1196,107 @@ app.get('/estimate/:tokenId', async (req, res) => {
 });
 
 // GET /wallet/:address
+// Up to this many wallets in one combined view — a collector's parcels spread
+// across a vault and a hot wallet, say. Each costs its own enumeration, so the
+// cap bounds the RPC one request can trigger.
+const MAX_AGGREGATE_WALLETS = 4;
+const MAX_WALLET_TOKENS = 500;        // per wallet, as before
+const MAX_AGGREGATE_TOKENS = 1000;    // across all of them
+
+// ENS name or address -> checksummed address, or throws a user-facing message.
+async function resolveWalletInput(input) {
+  if (ethers.isAddress(input)) return ethers.getAddress(input);
+  const safe = String(input).slice(0, 100).replace(/[<>"']/g, '');
+  let resolved;
+  try {
+    // Supports .eth names including emoji ENS like 🐒.eth
+    resolved = await withTimeout(getProvider().provider.resolveName(input), 10_000);
+  } catch {
+    throw Object.assign(new Error(`Invalid address or unresolvable name: ${safe}`), { status: 400 });
+  }
+  if (!resolved) throw Object.assign(new Error(`Could not resolve ENS name: ${safe}`), { status: 400 });
+  console.log(`[wallet] ENS resolved: ${input} → ${resolved}`);
+  return resolved;
+}
+
+// GET /wallet/:address — one wallet, or up to MAX_AGGREGATE_WALLETS separated by
+// commas (/wallet/jwpe.eth,secure.jwpe.eth), viewed as if one entity held every
+// parcel: one grid, one set of totals, and sets detected across all of them.
 app.get('/wallet/:address', async (req, res) => {
   try {
-    let address = req.params.address;
-    if (!ethers.isAddress(address)) {
-      // Attempt ENS resolution (supports .eth names including emoji ENS like 🐒.eth)
-      const { provider } = getProvider();
-      try {
-        const resolved = await withTimeout(provider.resolveName(address), 10_000);
-        if (!resolved) {
-          const safe = String(req.params.address).slice(0, 100).replace(/[<>"']/g, '');
-          return res.status(400).json({ error: `Could not resolve ENS name: ${safe}` });
-        }
-        address = resolved;
-        console.log(`[wallet] ENS resolved: ${req.params.address} → ${address}`);
-      } catch (ensErr) {
-        const safe = String(req.params.address).slice(0, 100).replace(/[<>"']/g, '');
-        return res.status(400).json({ error: `Invalid address or unresolvable name: ${safe}` });
-      }
+    const inputs = [];
+    for (const raw of String(req.params.address).split(',')) {
+      const v = raw.trim();
+      if (v && !inputs.some(x => x.toLowerCase() === v.toLowerCase())) inputs.push(v);
+    }
+    if (inputs.length === 0) return res.status(400).json({ error: 'Enter an address or ENS name.' });
+    if (inputs.length > MAX_AGGREGATE_WALLETS) {
+      return res.status(400).json({ error: `Up to ${MAX_AGGREGATE_WALLETS} addresses at a time.` });
     }
 
-    const { contract } = getProvider();
-    const balance = await withTimeout(contract.balanceOf(address));
-    const count = Number(balance);
-    const MAX_WALLET_TOKENS = 500;
-    const fetchCount = Math.min(count, MAX_WALLET_TOKENS);
-    if (count > MAX_WALLET_TOKENS) {
-      console.warn(`[wallet] ${address}: balance=${count} exceeds cap, clamping to ${MAX_WALLET_TOKENS}`);
+    let resolved;
+    try {
+      resolved = await Promise.all(inputs.map(async input => ({ input, address: await resolveWalletInput(input) })));
+    } catch (err) {
+      if (err.status === 400) return res.status(400).json({ error: err.message });
+      throw err;
     }
+    // Two names can point at one wallet; count it once.
+    const wallets = [];
+    for (const w of resolved) {
+      if (!wallets.some(x => x.address.toLowerCase() === w.address.toLowerCase())) wallets.push(w);
+    }
+    const address = wallets[0].address;
+
+    const { contract } = getProvider();
+    const balances = await Promise.all(wallets.map(w => withTimeout(contract.balanceOf(w.address))));
+    let budget = MAX_AGGREGATE_TOKENS;
+    for (let i = 0; i < wallets.length; i++) {
+      wallets[i].totalParcels = Number(balances[i]);
+      wallets[i].fetchCount = Math.min(wallets[i].totalParcels, MAX_WALLET_TOKENS, budget);
+      budget -= wallets[i].fetchCount;
+      if (wallets[i].fetchCount < wallets[i].totalParcels) {
+        console.warn(`[wallet] ${wallets[i].address}: balance=${wallets[i].totalParcels} exceeds cap, clamping to ${wallets[i].fetchCount}`);
+      }
+    }
+    const count = wallets.reduce((n, w) => n + w.totalParcels, 0);
+    const fetchCount = wallets.reduce((n, w) => n + w.fetchCount, 0);
 
     const { price: liveFloor, isLive: floorIsLive } = await getFloorPrice();
 
     if (fetchCount === 0) {
-      return res.json({ address, parcels: [], sets: [], totalEstimatedValue: 0, floor: liveFloor, floorIsLive });
+      const ensMap0 = await resolveEnsNames(wallets.map(w => w.address));
+      return res.json({
+        address, ens: ensMap0[address.toLowerCase()] || null, parcels: [], sets: [],
+        totalParcels: count, fetchedParcels: 0,
+        totalEstimatedValue: 0, totalListedValue: 0, floor: liveFloor, floorIsLive,
+        wallets: wallets.map(w => ({ input: w.input, address: w.address, ens: ensMap0[w.address.toLowerCase()] || null, totalParcels: w.totalParcels, fetchedParcels: 0 })),
+        aggregate: wallets.length > 1,
+      });
     }
 
     // Batched enumeration — fan-out is capped per batch so public RPCs (which
     // silently rate-limit beyond ~20–50 concurrent requests) don't drop calls
     // and corrupt the token list. Each call still gets the standard RPC timeout
     // via withTimeout inside getCachedTokenURI; the outer 30s budget here just
-    // bounds the total enumeration walltime for very large wallets.
+    // bounds the total enumeration walltime, across every wallet in the request.
     const ENUM_BATCH_SIZE = 20;
     const tokenIds = [];
+    const holderOf = new Map();   // tokenId -> the wallet holding it
     const enumStart = Date.now();
-    for (let i = 0; i < fetchCount; i += ENUM_BATCH_SIZE) {
-      if (Date.now() - enumStart > 30_000) throw new Error('Wallet enumeration timed out');
-      const batchEnd = Math.min(i + ENUM_BATCH_SIZE, fetchCount);
-      const batch = await Promise.all(
-        Array.from({ length: batchEnd - i }, (_, k) => withTimeout(contract.tokenOfOwnerByIndex(address, i + k))),
-      );
-      tokenIds.push(...batch);
+    for (const w of wallets) {
+      for (let i = 0; i < w.fetchCount; i += ENUM_BATCH_SIZE) {
+        if (Date.now() - enumStart > 30_000) throw new Error('Wallet enumeration timed out');
+        const batchEnd = Math.min(i + ENUM_BATCH_SIZE, w.fetchCount);
+        const batch = await Promise.all(
+          Array.from({ length: batchEnd - i }, (_, k) => withTimeout(contract.tokenOfOwnerByIndex(w.address, i + k))),
+        );
+        for (const id of batch) {
+          if (holderOf.has(Number(id))) continue;
+          holderOf.set(Number(id), w.address);
+          tokenIds.push(id);
+        }
+      }
     }
 
     // Batch fetch live traits for all tokens (needed for accurate set detection
@@ -1326,6 +1377,7 @@ app.get('/wallet/:address', async (req, res) => {
       traits: p,
       pricing: estimatePrice(p, liveFloor),
       pricingV2: safeHedonic(p, liveFloor),
+      holder: holderOf.get(Number(p.tokenId)) || null,
     }));
 
     // Portfolio totals use the BID side: a collection is worth what selling it
@@ -1339,9 +1391,12 @@ app.get('/wallet/:address', async (req, res) => {
     const totalEstimatedValue = pricedParcels.reduce((sum, p) => sum + parcelValue(p.pricing, p.pricingV2), 0);
     const totalListedValue = pricedParcels.reduce((sum, p) => sum + askValue(p.pricing, p.pricingV2), 0);
 
-    // ENS for the wallet itself, so the UI can name a collector the way the
-    // listings and sales tables already do rather than showing a raw address.
-    const walletEns = (await resolveEnsNames([address]))[address.toLowerCase()] || null;
+    // ENS for each wallet, so the UI can name a collector the way the listings
+    // and sales tables already do rather than showing a raw address.
+    const ensMap = await resolveEnsNames(wallets.map(w => w.address));
+    const walletEns = ensMap[address.toLowerCase()] || null;
+    const fetchedBy = new Map();
+    for (const p of pricedParcels) if (p.holder) fetchedBy.set(p.holder, (fetchedBy.get(p.holder) || 0) + 1);
 
     res.json({
       address,
@@ -1361,6 +1416,15 @@ app.get('/wallet/:address', async (req, res) => {
       // true when the trait budget cut the walk short — totals below are a
       // floor on the real figure, not the whole wallet.
       traitsTruncated,
+      // Every wallet in the view; one entry for a plain single-wallet request.
+      wallets: wallets.map(w => ({
+        input: w.input,
+        address: w.address,
+        ens: ensMap[w.address.toLowerCase()] || null,
+        totalParcels: w.totalParcels,
+        fetchedParcels: fetchedBy.get(w.address) || 0,
+      })),
+      aggregate: wallets.length > 1,
     });
   } catch (err) {
     console.error(`[wallet] ${req.params.address}:`, err.message);
