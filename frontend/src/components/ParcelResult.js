@@ -1,9 +1,9 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate } from './shared';
+import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate, WalletLink } from './shared';
 
 export default function ParcelResult({ parcel, ethUsd }) {
-  const { tokenId, traits, pricing, pricingV2, listing } = parcel;
+  const { tokenId, traits, pricing, pricingV2, listing, owner } = parcel;
   const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue, mysteryOutlier, seed, x, y } = traits;
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
 
@@ -31,6 +31,10 @@ export default function ParcelResult({ parcel, ethUsd }) {
         />
 
         <div className="flex flex-col gap-0">
+          {/* Links to the owner's wallet view: every parcel that address holds. */}
+          {owner?.address && (
+            <SimpleRow label="owner" value={<WalletLink address={owner.address} ens={owner.ens} />} />
+          )}
           {isSpecial
             ? <SimpleRow label="zone" value={zone || '—'} />
             : <TraitRow label="zone" value={zone || '—'} category={zoneCategory} />}

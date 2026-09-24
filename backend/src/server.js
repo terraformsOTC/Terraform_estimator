@@ -1130,6 +1130,43 @@ app.get('/image/:tokenId', async (req, res) => {
   }
 });
 
+// ─── PARCEL OWNER ─────────────────────────────────────────────────────────────
+// Who holds a parcel right now, for the owner row on the parcel page. ownerOf is
+// one RPC call; a minute of cache spares repeat views without letting a sale
+// show the old owner for long. A parcel in a loan escrow reports the escrow
+// contract, which is the truth on chain.
+const OWNER_TTL_MS = 60 * 1000;
+const ownerCache = new Map();   // tokenId -> { address, at }
+
+async function getOwner(tokenId) {
+  const hit = ownerCache.get(tokenId);
+  if (hit && Date.now() - hit.at < OWNER_TTL_MS) return hit.address;
+  try {
+    const address = await withTimeout(getProvider().contract.ownerOf(tokenId), 8_000);
+    ownerCache.set(tokenId, { address, at: Date.now() });
+    if (ownerCache.size > 5000) {
+      for (const k of ownerCache.keys()) { ownerCache.delete(k); if (ownerCache.size <= 4000) break; }
+    }
+    return address;
+  } catch (err) {
+    // The owner is context, never a reason to fail the estimate.
+    console.warn(`[owner] ${tokenId}: ${err.message}`);
+    return null;
+  }
+}
+
+// The owner's ENS name, waiting at most a few seconds. A slower lookup still
+// finishes and lands in the ENS cache, so the next view shows the name.
+async function ownerEnsName(address) {
+  if (!address) return null;
+  try {
+    const names = await withTimeout(resolveEnsNames([address]), 3_000);
+    return names[address.toLowerCase()] || null;
+  } catch {
+    return null;
+  }
+}
+
 // GET /estimate/:tokenId
 app.get('/estimate/:tokenId', async (req, res) => {
   try {
@@ -1139,17 +1176,19 @@ app.get('/estimate/:tokenId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid token ID (must be 1–9911)' });
     }
 
-    const [traits, { price: floor, isLive: floorIsLive }] = await Promise.all([
+    const [traits, { price: floor, isLive: floorIsLive }, ownerAddress] = await Promise.all([
       getParcelTraits(tokenId),
       getFloorPrice(),
+      getOwner(tokenId),
     ]);
     const pricing = estimatePrice(traits, floor);
     // v1, kept alongside for /legacy. The headline estimate is pricingV2.
     const pricingV2 = safeHedonic(traits, floor);
-    const listing = await getBestListing(tokenId);
+    const [listing, ownerEns] = await Promise.all([getBestListing(tokenId), ownerEnsName(ownerAddress)]);
+    const owner = ownerAddress ? { address: ownerAddress, ens: ownerEns } : null;
 
     res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
-    res.json({ tokenId, traits, pricing, pricingV2, listing, floorIsLive });
+    res.json({ tokenId, traits, pricing, pricingV2, listing, owner, floorIsLive });
   } catch (err) {
     console.error(`[estimate] ${req.params.tokenId}:`, err.message);
     res.status(500).json({ error: 'Failed to fetch parcel data.' });
