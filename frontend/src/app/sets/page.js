@@ -18,10 +18,10 @@ function ExampleCard({ example }) {
   return (
     <a
       href={`/?token=${tokenId}`}
-      className="flex-shrink-0 w-[158px] no-underline"
+      className="flex-shrink-0 w-[190px] no-underline"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <ParcelArt tokenId={tokenId} width={158} height={228} alt={`Parcel ${tokenId} — ${label}`} />
+      <ParcelArt tokenId={tokenId} width={190} height={274} alt={`Parcel ${tokenId} — ${label}`} />
       <div className="mt-2 flex flex-col gap-0.5">
         <span className="text-sm opacity-90">{label}</span>
         <span className="text-xs opacity-45">
