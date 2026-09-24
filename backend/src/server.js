@@ -1203,6 +1203,13 @@ const MAX_AGGREGATE_WALLETS = 4;
 const MAX_WALLET_TOKENS = 500;        // per wallet, as before
 const MAX_AGGREGATE_TOKENS = 1000;    // across all of them
 
+// The name to show for a wallet: its primary ENS name, or else the name that
+// was typed for it — which just resolved to this address, so it is a true name
+// for the wallet even when no reverse record is set (secure.jwpe.eth, say).
+function walletDisplayName(ensMap, w) {
+  return ensMap[w.address.toLowerCase()] || (ethers.isAddress(w.input) ? null : w.input.toLowerCase());
+}
+
 // ENS name or address -> checksummed address, or throws a user-facing message.
 async function resolveWalletInput(input) {
   if (ethers.isAddress(input)) return ethers.getAddress(input);
@@ -1267,10 +1274,10 @@ app.get('/wallet/:address', async (req, res) => {
     if (fetchCount === 0) {
       const ensMap0 = await resolveEnsNames(wallets.map(w => w.address));
       return res.json({
-        address, ens: ensMap0[address.toLowerCase()] || null, parcels: [], sets: [],
+        address, ens: walletDisplayName(ensMap0, wallets[0]), parcels: [], sets: [],
         totalParcels: count, fetchedParcels: 0,
         totalEstimatedValue: 0, totalListedValue: 0, floor: liveFloor, floorIsLive,
-        wallets: wallets.map(w => ({ input: w.input, address: w.address, ens: ensMap0[w.address.toLowerCase()] || null, totalParcels: w.totalParcels, fetchedParcels: 0 })),
+        wallets: wallets.map(w => ({ input: w.input, address: w.address, ens: walletDisplayName(ensMap0, w), totalParcels: w.totalParcels, fetchedParcels: 0 })),
         aggregate: wallets.length > 1,
       });
     }
@@ -1394,7 +1401,7 @@ app.get('/wallet/:address', async (req, res) => {
     // ENS for each wallet, so the UI can name a collector the way the listings
     // and sales tables already do rather than showing a raw address.
     const ensMap = await resolveEnsNames(wallets.map(w => w.address));
-    const walletEns = ensMap[address.toLowerCase()] || null;
+    const walletEns = walletDisplayName(ensMap, wallets[0]);
     const fetchedBy = new Map();
     for (const p of pricedParcels) if (p.holder) fetchedBy.set(p.holder, (fetchedBy.get(p.holder) || 0) + 1);
 
@@ -1420,7 +1427,7 @@ app.get('/wallet/:address', async (req, res) => {
       wallets: wallets.map(w => ({
         input: w.input,
         address: w.address,
-        ens: ensMap[w.address.toLowerCase()] || null,
+        ens: walletDisplayName(ensMap, w),
         totalParcels: w.totalParcels,
         fetchedParcels: fetchedBy.get(w.address) || 0,
       })),
