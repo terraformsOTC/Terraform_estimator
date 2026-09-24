@@ -180,6 +180,9 @@ async function fetchOpenSeaSales({ apiKey, fetchWithRetry, maxPages = 3, limit =
 
       sales.push({
         eventId,
+        // What the sales history is keyed on (tx:token), so a live sale that
+        // has since been exported is not shown twice.
+        txHash: ev.transaction ? String(ev.transaction).toLowerCase() : null,
         tokenId,
         salePrice,
         currency: symbol || 'UNKNOWN',

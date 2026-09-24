@@ -642,6 +642,34 @@ async function resolveEnsNames(addresses) {
   return out;
 }
 
+// Cache-first ENS for pages of the sales history: answer from the cache at once
+// and resolve misses in the background, so paging through thousands of sales
+// never waits on hundreds of reverse lookups. Names fill in on the next load.
+// The pending cap bounds background RPC however fast someone pages.
+const ENS_BACKGROUND_MAX = 300;
+const ensPending = new Set();
+function ensNamesFromCache(addresses) {
+  const now = Date.now();
+  const out = {};
+  const misses = [];
+  for (const raw of addresses || []) {
+    if (!raw) continue;
+    const addr = raw.toLowerCase();
+    if (addr in out) continue;
+    const hit = ensNameCache.get(addr);
+    if (hit && now - hit.ts < ENS_NAME_TTL_MS) { out[addr] = hit.name; continue; }
+    out[addr] = null;
+    if (!ensPending.has(addr) && ensPending.size < ENS_BACKGROUND_MAX) misses.push(addr);
+  }
+  if (misses.length) {
+    for (const a of misses) ensPending.add(a);
+    resolveEnsNames(misses)
+      .catch(() => {})
+      .finally(() => { for (const a of misses) ensPending.delete(a); });
+  }
+  return out;
+}
+
 // ─── ALL LISTINGS ─────────────────────────────────────────────────────────────
 // Fetches every active listing (paginate until exhausted), scores each against
 // the pricing model, and returns the full dataset so the frontend can sort/filter.
@@ -884,6 +912,51 @@ app.get('/sales', async (req, res) => {
     }
     console.error('[sales]', err.message);
     res.status(500).json({ error: 'Failed to fetch recent sales.' });
+  }
+});
+
+// ─── SALES HISTORY ────────────────────────────────────────────────────────────
+// Every sale since mint, exported nightly from the maintainer's sales DB (see
+// salesHistory.js), plus live sales newer than the export. Filterable by mode,
+// chroma, level, zone and biome; paged newest first.
+//
+// Its own path, not /sales/history: app.use('/sales', feedLimiter) would also
+// match that, and a filter panel sends a request per click.
+const { createSalesHistory } = require('./salesHistory');
+function loadOptionalJson(name) {
+  try { return require(`./${name}`); } catch { return null; }
+}
+const salesHistory = createSalesHistory({
+  history: loadOptionalJson('sales-history.json'),
+  floorIndex: loadOptionalJson('floor-index.json'),
+  getSnapshotTraits,
+  floorHistory: () => FLOOR_HISTORY,
+});
+
+app.use('/sales-history', standardLimiter);
+app.get('/sales-history', async (req, res) => {
+  try {
+    const force = req.query.refresh === '1' || req.query.refresh === 'true';
+    // The live feed only tops up the history, so a cold one never blocks: serve
+    // what the export holds and let the feed fill in behind.
+    let live = null;
+    if (force || salesResource.stats().warm) {
+      try { live = await salesResource.get({ force }); } catch { /* history alone */ }
+    } else {
+      salesResource.get().catch(() => {});
+    }
+    const result = salesHistory.query(req.query, live);
+    const ens = ensNamesFromCache(result.sales.flatMap(s => [s.seller, s.winner]));
+    for (const s of result.sales) {
+      s.sellerEns = s.seller ? ens[s.seller.toLowerCase()] || null : null;
+      s.winnerEns = s.winner ? ens[s.winner.toLowerCase()] || null : null;
+    }
+    const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+    res.set('Cache-Control', force ? 'no-store' : FEED_CACHE_CONTROL);
+    res.json({ ...result, floor, floorIsLive, liveFetchedAt: live?.fetchedAt ?? null });
+  } catch (err) {
+    console.error('[sales-history]', err.message);
+    res.status(500).json({ error: 'Failed to load sales history.' });
   }
 });
 
@@ -1709,6 +1782,7 @@ app.get('/health', async (_req, res) => {
       mintedTraitsSnapshot: MINTED_TRAITS_SNAPSHOT ? MINTED_TRAITS_SNAPSHOT.size : 0,
       unmintedParcels: UNMINTED_PARCELS.length,
       floorHistorySamples: FLOOR_HISTORY.length,
+      salesHistory: salesHistory.size(),
     },
   });
 });

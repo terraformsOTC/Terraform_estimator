@@ -69,6 +69,9 @@ sales database/*
 # independent check on OpenSea, and the reason it exists (Alchemy's getNFTSales
 # is removed 2026-09-30) means nothing else will be.
 !sales database/chain_reconcile.js
+# Exports every sale to backend/src/sales-history.json for the site's sales page;
+# run nightly by ops/daily-refit.sh. Reads only the DB, holds no credentials.
+!sales database/export_sales_history.js
 
 # Misc
 .DS_Store

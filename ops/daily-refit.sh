@@ -78,7 +78,7 @@ cd "$REPO"
 # checking it made every scheduled run refuse. Its only writers are the sampler,
 # the pre-push hook and step 1 below, all append-only, so committing whatever it
 # holds is exactly what the next push would do anyway.
-if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json 'sales database/v1-priors.json')" ]; then
+if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json 'sales database/v1-priors.json' backend/src/sales-history.json backend/src/floor-index.json)" ]; then
   fail "pricing artifacts already modified in the working tree — resolve by hand first"
 fi
 git rev-parse --abbrev-ref HEAD | grep -qx main || fail "not on main"
@@ -94,6 +94,11 @@ node enrich_usd.js   || fail "enrich_usd"
 
 echo "[refit] 3/7 floor index"
 node build_floor_index.js >/dev/null || fail "build_floor_index"
+
+# The site's sales page serves every sale from this export. Not fatal: a failed
+# export leaves yesterday's file in place, which beats blocking the model refit.
+echo "[refit] 3b/7 export sales history"
+node export_sales_history.js || echo "[refit] WARNING: sales history export failed — keeping the previous export"
 
 echo "[refit] 4/7 views + priors"
 node -e "require('better-sqlite3')('terraforms_sales.db').exec(require('fs').readFileSync('views.sql','utf8'))" || fail "views"
@@ -135,17 +140,19 @@ node ops/verify-model.js || fail "verification (production keeps the previous co
 # collapsed) against the coefficients about to ship.
 (cd backend && npm test --silent >/dev/null 2>&1) || fail "backend tests (production keeps the previous coefficients)"
 
-if [ -z "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json backend/src/floor-history.json 'sales database/v1-priors.json')" ]; then
+ARTIFACTS=(backend/src/pricing-v2-coeffs.json backend/src/floor-history.json "sales database/v1-priors.json" backend/src/sales-history.json backend/src/floor-index.json)
+if [ -z "$(git status --porcelain -- "${ARTIFACTS[@]}")" ]; then
   echo "[refit] no artifact changed — nothing to ship"
   exit 0
 fi
 
-git add backend/src/pricing-v2-coeffs.json backend/src/floor-history.json "sales database/v1-priors.json"
+git add "${ARTIFACTS[@]}"
 git commit -q -m "model: daily refit $(date -u +%F)
 
 Automated by ops/daily-refit.sh. Coefficients refitted against sales through
 $(date -u +%F); floor_calibration re-solved against the last 30 days of settled
-sales at the live floor in effect when each one sold.
+sales at the live floor in effect when each one sold; the sales history the site
+serves re-exported from the sales DB.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 

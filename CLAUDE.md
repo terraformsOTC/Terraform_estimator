@@ -32,6 +32,7 @@ Backend: `:3001` | Frontend: `:3000`
 - `pricingModel.js` — v1 hand-tuned model. Only served on `/legacy`, used for Tier-2 prices and as the fit's priors (`build_priors.js`). Also holds `SETS` / `detectSets`.
 - `snapshotTraits.js` — lookup-derived traits (special tokens, 1of1, Godmode, gm, Lith0-like, S0 window, ??? thresholds). Shared by the API and the offline pricing scripts — change them here only.
 - `sales.js` — OpenSea sales feed and the `decideBasis` over/under rule (ask-anchored; see `test/basis.test.js`).
+- `salesHistory.js` — every sale since mint for `GET /sales-history` (filters: mode, chroma, level, zone, biome; paged, newest first, with facet counts and totals). Loads `sales-history.json` + `floor-index.json`, exported nightly from the sales DB by `sales database/export_sales_history.js` (run in `ops/daily-refit.sh`), prices each sale at its day's floor, and merges live OpenSea sales newer than the export.
 - `special-tokens.json` — Minted special parcel overrides.
 - `minted-traits.json` — Pre-baked attribute-derived traits for all 9911 minted parcels (zone/biome/level/chroma/mode/mysteryValue/antennaOn/antennaFirstTs). Used by `/undervalued` and `/api/weekly-report-data` to skip per-token RPC fetches on cold compute. See "Minted Traits Snapshot" below.
 - `floor-history.json` — Time-series of `{ts, floor, bid?}` samples (hourly sampler + pre-push hook). Used by `/sales` and `calibrate-floor.js` to anchor estimates to the floor at time of sale. See "Floor Price History" below.
