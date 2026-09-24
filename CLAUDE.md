@@ -123,3 +123,8 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 
 1. **X/Y coords** — unminted shows `X3/Y4` in subtitle, minted does not — should be consistent.
 2. **1-of-1 unminted** — handle separately, not yet done.
+3. **Thumbnail weight** — parcel SVGs already reach browsers through the edge-cached `/img/:id`
+   proxy (`frontend/src/app/img`). Still not done, in priority order: pre-bake all 9,911 SVGs to
+   static files (tokenURI is immutable; `backend/scripts/bake-minted-traits.js` is the precedent);
+   raster thumbnails — the list view draws a ~30KB 277×400 SVG into a 67×97 box, where a 2× WebP
+   is ~2–4KB; then `srcset`/`sizes` so list rows get the small asset and cards the large one.
