@@ -2,18 +2,18 @@
 // Builds src/trait-tiers.json — the desirability tier shown on every zone and
 // biome badge, derived from two measurements (the rubric on /glossary):
 //
-//   premium   — the fitted multiple for the trait in the live hedonic model
+//   multiple  — the fitted price multiple for the trait in the live hedonic model
 //               (pricing-v2-coeffs.json, prior-blended), i.e. what a parcel
 //               carrying it sells for against an otherwise identical common
 //               parcel (Holo / biome 46, Terrain, mid-level).
 //   scarcity  — how many of the minted parcels carry it (minted-traits.json).
 //
-//   Mythical  premium >= 2.5x, OR <= 25 parcels with < 30 sales (too scarce to
-//             have traded enough to measure, so scarcity stands in for price)
-//   Rare      premium >= 1.3x AND <= 100 parcels
-//   Premium   premium >= 1.1x
-//   Uncommon  below that, and fewer than 2% of minted parcels carry it
-//   Floor     below that, and 2% or more carry it
+//   Mythical  multiple >= 2.5x, OR <= 25 parcels with < 30 sales (too scarce
+//             to have traded enough to measure, so scarcity stands in for price)
+//   Rare      multiple >= 1.3x AND <= 100 parcels
+//   Premium   multiple >= 1.1x
+//   Uncommon  below that, and 200 parcels or fewer carry it
+//   Floor     below that, and more than 200 carry it
 //
 // Deliberately a committed snapshot, not computed at load: the model refits
 // nightly and traits sitting on a boundary (biome 12 is 1.30x) would otherwise
@@ -30,13 +30,13 @@ const coeffs = require(path.join(SRC, 'pricing-v2-coeffs.json'));
 const minted = require(path.join(SRC, 'minted-traits.json'));
 
 const RULES = {
-  mythicalPremium: 2.5,
+  mythicalMultiple: 2.5,
   mythicalMaxParcels: 25,
   mythicalMaxSales: 30,
-  rarePremium: 1.3,
+  rareMultiple: 1.3,
   rareMaxParcels: 100,
-  premiumPremium: 1.1,
-  commonShare: 0.02,
+  premiumMultiple: 1.1,
+  uncommonMaxParcels: 200,
 };
 
 // The ask-side fit; the two fits share trait multipliers, only the level differs.
@@ -49,21 +49,20 @@ for (const p of minted) {
   if (p.zone) counts.zone[p.zone] = (counts.zone[p.zone] || 0) + 1;
   if (p.biome != null) counts.biome[p.biome] = (counts.biome[p.biome] || 0) + 1;
 }
-const commonMin = Math.ceil(minted.length * RULES.commonShare);
 
-function tierFor(premium, parcels, sales) {
-  if (premium >= RULES.mythicalPremium) return 'Mythical';
+function tierFor(multiple, parcels, sales) {
+  if (multiple >= RULES.mythicalMultiple) return 'Mythical';
   if (parcels <= RULES.mythicalMaxParcels && sales < RULES.mythicalMaxSales) return 'Mythical';
-  if (premium >= RULES.rarePremium && parcels <= RULES.rareMaxParcels) return 'Rare';
-  if (premium >= RULES.premiumPremium) return 'Premium';
-  return parcels >= commonMin ? 'Floor' : 'Uncommon';
+  if (multiple >= RULES.rareMultiple && parcels <= RULES.rareMaxParcels) return 'Rare';
+  if (multiple >= RULES.premiumMultiple) return 'Premium';
+  return parcels <= RULES.uncommonMaxParcels ? 'Uncommon' : 'Floor';
 }
 
 const out = {
   built: new Date().toISOString(),
   model: coeffs.meta.built,
   minted: minted.length,
-  rules: { ...RULES, commonMinParcels: commonMin },
+  rules: RULES,
   zone: {},
   biome: {},
 };
@@ -71,12 +70,12 @@ for (const kind of ['zone', 'biome']) {
   const multipliers = fit.multipliers[kind];
   for (const name of Object.keys(counts[kind]).sort((a, b) => String(a).localeCompare(String(b), 'en', { numeric: true }))) {
     // The reference trait (Holo, biome 46) is the model's 1.0 and has no row.
-    const premium = multipliers[name] ?? 1;
+    const multiple = multipliers[name] ?? 1;
     const parcels = counts[kind][name];
     const sales = salesFor[`${kind}:${name}`] ?? null;
     out[kind][name] = {
-      tier: tierFor(premium, parcels, sales ?? Infinity),
-      premium: Math.round(premium * 100) / 100,
+      tier: tierFor(multiple, parcels, sales ?? Infinity),
+      multiple: Math.round(multiple * 100) / 100,
       parcels,
       sales,
     };

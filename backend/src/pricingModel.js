@@ -293,7 +293,7 @@ function getCategoryFromMultiple(multiple) {
   return "Floor";
 }
 
-// Badge tiers, from the objective rubric on /glossary: fitted price premium in
+// Badge tiers, from the objective rubric on /glossary: fitted price multiple in
 // the live model plus how many parcels carry the trait. Built by
 // scripts/build-trait-tiers.js and committed as a snapshot so a nightly refit
 // cannot flip a badge sitting on a boundary.

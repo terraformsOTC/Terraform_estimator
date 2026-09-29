@@ -19,27 +19,34 @@ export default function GlossaryPage() {
         {/* ── DESIRABILITY TIERS ───────────────────────────────────── */}
         <Section title="Desirability Tiers">
           <p className="text-sm opacity-65 mb-4">
-            Every zone, biome and level is tiered on two measurements. <strong>Premium</strong> is what parcels carrying the trait sell for against an otherwise identical common parcel (Terrain, mid-level), fitted across 20,000+ sales with recent sales weighted most. <strong>Scarcity</strong> is the share of the 9,911 minted parcels that carry it. Premium sets the top three tiers; scarcity separates Uncommon from Floor, and stands in for price when a trait is too scarce to have traded 30 times.
+            Every trait is assigned a desirability tier based on how numerous they are in the collection and how avidly they are sought after by collectors. Usually, the rarer a trait the more highly it is valued.
           </p>
+          <p className="text-sm opacity-65 mb-2">
+            The model assesses each zone, biome and level on two metrics:
+          </p>
+          <ul className="text-sm opacity-65 mb-4 list-disc pl-5 space-y-1">
+            <li><strong>Price multiple</strong> is what parcels carrying the trait sell for against an otherwise identical parcel, fitted across 20,000+ sales with recent trades weighted most.</li>
+            <li><strong>Scarcity</strong> is the number of the 9,911 minted parcels which carry that specific trait.</li>
+          </ul>
           <GlossaryRow
             badge={<CategoryBadge label="Mythical" color={CATEGORY_COLORS.Mythical} />}
-            description="A premium of 2.5× or more, or 25 parcels or fewer (under 0.25% of the collection) with too few sales to measure a price."
+            description="The most coveted traits in the collection. Parcels carrying a Mythical trait command a price multiple over 2.5×, and/or have a scarcity of 25 parcels or less where there is not enough sales data to calculate the multiple."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Rare" color={CATEGORY_COLORS.Rare} />}
-            description="A premium of 1.3× or more, on a trait carried by 100 parcels or fewer (1% of the collection)."
+            description="High-demand traits with a price multiple of 1.3× or more, and a scarcity of 100 parcels or less (<1% of the collection)."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Premium" color={CATEGORY_COLORS.Premium} />}
-            description="A premium of 1.1× or more. Includes traits with a Rare-sized premium that are too common to be Rare."
+            description="Desirable traits that carry a price multiple of 1.1× or more, but fall short of Rare on either multiple or scarcity."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Uncommon" color={CATEGORY_COLORS['Uncommon']} />}
-            description="No measurable premium (under 1.1×), but carried by fewer than 2% of parcels (under ~200)."
+            description="No significant multiple (under 1.1×), but has a scarcity value of 200 parcels or less."
           />
           <GlossaryRow
             badge={<CategoryBadge label="Floor" color="rgba(232,232,232,0.4)" />}
-            description="No measurable premium, and carried by 2% of parcels or more."
+            description="The most common traits with no price multiple and a scarcity value of 200 parcels or more."
           />
         </Section>
 
