@@ -13,6 +13,10 @@ const KINDS = [
   { key: 'level', label: 'Levels', name: n => `L${n}` },
 ];
 
+// Below this many sales the multiple leans on the model's prior rather than on
+// trades, and scarcity sets the tier. Mirrors mythicalMaxSales in the rules.
+const thinData = (row, rules) => row.sales != null && row.sales < rules.mythicalMaxSales;
+
 export default function DesirabilityTiersPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -36,11 +40,12 @@ export default function DesirabilityTiersPage() {
         {error && <p className="text-sm opacity-70">[error: {error}]</p>}
         {!data && !error && <p className="text-sm opacity-60">[loading tiers...]</p>}
 
-        {data && KINDS.map(kind => <KindSection key={kind.key} kind={kind} rows={data[kind.key]} />)}
+        {data && KINDS.map(kind => <KindSection key={kind.key} kind={kind} rows={data[kind.key]} rules={data.rules} />)}
         {data && (
-          <p className="text-xs opacity-45 mb-12">
-            Price multiples from the pricing model fitted {data.model?.slice(0, 10)}, against a Holo, biome 46, mid-level parcel (1.00×). Parcel counts cover the {data.minted.toLocaleString()} minted parcels.
-          </p>
+          <div className="text-xs opacity-45 mt-10 mb-12 space-y-2">
+            <p>* Fewer than {data.rules.mythicalMaxSales} sales: the multiple leans on the model&apos;s prior, and scarcity sets the tier.</p>
+            <p>Price multiples from the pricing model fitted {data.model?.slice(0, 10)}, against a Holo, biome 46, mid-level parcel (1.00×). Parcel counts cover the {data.minted.toLocaleString()} minted parcels.</p>
+          </div>
         )}
       </main>
       <Footer />
@@ -48,37 +53,43 @@ export default function DesirabilityTiersPage() {
   );
 }
 
-function KindSection({ kind, rows }) {
+function KindSection({ kind, rows, rules }) {
   const entries = Object.entries(rows || {}).map(([name, row]) => ({ name, ...row }));
   return (
-    <section className="mb-12">
-      <h2 className="text-lg mb-1 opacity-80">{kind.label}</h2>
-      <div className="mb-4" style={{ borderBottom: '1px solid rgba(232,232,232,0.1)' }} />
-      {TIERS.map(tier => {
-        const group = entries
-          .filter(r => r.tier === tier)
-          .sort((a, b) => b.multiple - a.multiple || a.parcels - b.parcels);
-        if (group.length === 0) return null;
-        return (
-          <div key={tier} className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <TierBadge tier={tier} />
-              <span className="text-xs opacity-45">{group.length}</span>
+    <details className="group mb-2" style={{ borderBottom: '1px solid rgba(232,232,232,0.1)' }}>
+      <summary className="flex items-baseline gap-3 py-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <span className="text-lg opacity-80">{kind.label}</span>
+        <span className="text-xs opacity-45">{entries.length}</span>
+        <span className="ml-auto text-sm opacity-50 group-open:hidden">[+]</span>
+        <span className="ml-auto text-sm opacity-50 hidden group-open:inline">[−]</span>
+      </summary>
+      <div className="pt-3 pb-4">
+        {TIERS.map(tier => {
+          const group = entries
+            .filter(r => r.tier === tier)
+            .sort((a, b) => b.multiple - a.multiple || a.parcels - b.parcels);
+          if (group.length === 0) return null;
+          return (
+            <div key={tier} className="mb-8">
+              <div className="flex items-center gap-3 mb-2">
+                <TierBadge tier={tier} />
+                <span className="text-xs opacity-45">{group.length}</span>
+              </div>
+              <div className="flex text-xs opacity-40 pb-1">
+                <span className="flex-1">{kind.label.slice(0, -1).toLowerCase()}</span>
+                <span className="w-20 text-right">multiple</span>
+                <span className="w-20 text-right">parcels</span>
+              </div>
+              {group.map(r => <TraitLine key={r.name} kind={kind} row={r} thin={thinData(r, rules)} />)}
             </div>
-            <div className="flex text-xs opacity-40 pb-1">
-              <span className="flex-1">{kind.label.slice(0, -1).toLowerCase()}</span>
-              <span className="w-20 text-right">multiple</span>
-              <span className="w-20 text-right">parcels</span>
-            </div>
-            {group.map(r => <TraitLine key={r.name} kind={kind} row={r} />)}
-          </div>
-        );
-      })}
-    </section>
+          );
+        })}
+      </div>
+    </details>
   );
 }
 
-function TraitLine({ kind, row }) {
+function TraitLine({ kind, row, thin }) {
   const label = kind.name(row.name);
   const lore = kind.key === 'zone' ? getZoneLoreUrl(row.name) : null;
   return (
@@ -88,7 +99,7 @@ function TraitLine({ kind, row }) {
           ? <a href={lore} target="_blank" rel="noopener noreferrer" className="no-underline hover:underline">{label}</a>
           : label}
       </span>
-      <span className="w-20 text-right tabular-nums opacity-80">{row.multiple.toFixed(2)}×</span>
+      <span className="w-20 text-right tabular-nums opacity-80">{row.multiple.toFixed(2)}×{thin ? '*' : ''}</span>
       <span className="w-20 text-right tabular-nums opacity-60">{row.parcels.toLocaleString()}</span>
     </div>
   );
