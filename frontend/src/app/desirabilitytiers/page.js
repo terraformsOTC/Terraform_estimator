@@ -42,9 +42,8 @@ export default function DesirabilityTiersPage() {
 
         {data && KINDS.map(kind => <KindSection key={kind.key} kind={kind} rows={data[kind.key]} rules={data.rules} />)}
         {data && (
-          <div className="text-xs opacity-45 mt-10 mb-12 space-y-2">
+          <div className="text-xs opacity-45 mt-10 mb-12">
             <p>* Fewer than {data.rules.mythicalMaxSales} sales: the multiple leans on the model&apos;s prior, and scarcity sets the tier.</p>
-            <p>Price multiples from the pricing model fitted {data.model?.slice(0, 10)}, against a Holo, biome 46, mid-level parcel (1.00×). Parcel counts cover the {data.minted.toLocaleString()} minted parcels.</p>
           </div>
         )}
       </main>
