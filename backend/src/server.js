@@ -1665,6 +1665,15 @@ function getTraitsIndex() {
   return TRAITS_INDEX;
 }
 
+// GET /trait-tiers — the desirability tier, price multiple, parcel count and
+// sales count of every zone, biome and level, for the /desirabilitytiers page.
+// A committed snapshot (scripts/build-trait-tiers.js), so it is served as-is.
+app.use('/trait-tiers', standardLimiter);
+app.get('/trait-tiers', (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.json(require('./trait-tiers.json'));
+});
+
 app.use('/traits', standardLimiter);
 
 // GET /traits — list of trait types with parcel counts

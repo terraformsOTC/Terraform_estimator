@@ -1,5 +1,5 @@
 {
- "built": "2026-09-29T12:41:06.553Z",
+ "built": "2026-09-29T12:51:28.844Z",
  "model": "2026-09-29T02:20:10Z",
  "minted": 9911,
  "rules": {
@@ -1015,6 +1015,128 @@
    "multiple": 1.18,
    "parcels": 52,
    "sales": 68
+  }
+ },
+ "level": {
+  "1": {
+   "tier": "Mythical",
+   "multiple": 9.7,
+   "parcels": 13,
+   "sales": 8
+  },
+  "2": {
+   "tier": "Rare",
+   "multiple": 1.74,
+   "parcels": 58,
+   "sales": 56
+  },
+  "3": {
+   "tier": "Rare",
+   "multiple": 1.35,
+   "parcels": 59,
+   "sales": 79
+  },
+  "4": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 222,
+   "sales": null
+  },
+  "5": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 217,
+   "sales": null
+  },
+  "6": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 523,
+   "sales": null
+  },
+  "7": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 515,
+   "sales": null
+  },
+  "8": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 513,
+   "sales": null
+  },
+  "9": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 230,
+   "sales": null
+  },
+  "10": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 924,
+   "sales": null
+  },
+  "11": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 913,
+   "sales": null
+  },
+  "12": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 227,
+   "sales": null
+  },
+  "13": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 2075,
+   "sales": null
+  },
+  "14": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 2044,
+   "sales": null
+  },
+  "15": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 509,
+   "sales": null
+  },
+  "16": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 513,
+   "sales": null
+  },
+  "17": {
+   "tier": "Floor",
+   "multiple": 1,
+   "parcels": 236,
+   "sales": null
+  },
+  "18": {
+   "tier": "Rare",
+   "multiple": 1.35,
+   "parcels": 53,
+   "sales": 81
+  },
+  "19": {
+   "tier": "Rare",
+   "multiple": 1.6,
+   "parcels": 54,
+   "sales": 57
+  },
+  "20": {
+   "tier": "Mythical",
+   "multiple": 11.37,
+   "parcels": 13,
+   "sales": 12
   }
  }
 }

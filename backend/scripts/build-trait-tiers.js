@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Builds src/trait-tiers.json — the desirability tier shown on every zone and
-// biome badge, derived from two measurements (the rubric on /glossary):
+// Builds src/trait-tiers.json — the desirability tier of every zone, biome and
+// level (served at GET /trait-tiers for the /desirabilitytiers page; zone and
+// biome badges read it directly), derived from two measurements (the rubric on /glossary):
 //
 //   multiple  — the fitted price multiple for the trait in the live hedonic model
 //               (pricing-v2-coeffs.json, prior-blended), i.e. what a parcel
@@ -44,10 +45,11 @@ const fit = coeffs.money_sword_on;
 const salesFor = {};
 for (const a of fit.prior_audit) salesFor[`${a.kind}:${a.name}`] = a.n;
 
-const counts = { zone: {}, biome: {} };
+const counts = { zone: {}, biome: {}, level: {} };
 for (const p of minted) {
   if (p.zone) counts.zone[p.zone] = (counts.zone[p.zone] || 0) + 1;
   if (p.biome != null) counts.biome[p.biome] = (counts.biome[p.biome] || 0) + 1;
+  if (p.level != null) counts.level[p.level] = (counts.level[p.level] || 0) + 1;
 }
 
 function tierFor(multiple, parcels, sales) {
@@ -65,11 +67,13 @@ const out = {
   rules: RULES,
   zone: {},
   biome: {},
+  level: {},
 };
-for (const kind of ['zone', 'biome']) {
+for (const kind of ['zone', 'biome', 'level']) {
   const multipliers = fit.multipliers[kind];
   for (const name of Object.keys(counts[kind]).sort((a, b) => String(a).localeCompare(String(b), 'en', { numeric: true }))) {
-    // The reference trait (Holo, biome 46) is the model's 1.0 and has no row.
+    // The reference traits (Holo, biome 46, levels 4-17) are the model's 1.0
+    // and have no row.
     const multiple = multipliers[name] ?? 1;
     const parcels = counts[kind][name];
     const sales = salesFor[`${kind}:${name}`] ?? null;
@@ -88,3 +92,4 @@ const tally = kind => Object.values(out[kind]).reduce((t, r) => ((t[r.tier] = (t
 console.log(`wrote ${path.relative(process.cwd(), dest)}`);
 console.log('zones ', tally('zone'));
 console.log('biomes', tally('biome'));
+console.log('levels', tally('level'));

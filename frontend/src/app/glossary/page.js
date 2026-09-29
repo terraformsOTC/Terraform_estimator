@@ -48,6 +48,9 @@ export default function GlossaryPage() {
             badge={<CategoryBadge label="Floor" color="rgba(232,232,232,0.4)" />}
             description="The most common traits with no price multiple and a scarcity value of 200 parcels or more."
           />
+          <p className="text-sm opacity-65 leading-relaxed">
+            You can view the full rubric for desirability tiers and how they are applied to traits <a href="/desirabilitytiers" className="underline">here</a>.
+          </p>
         </Section>
 
         {/* ── SPECIAL PARCEL TYPES ─────────────────────────────────── */}
