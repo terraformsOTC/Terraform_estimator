@@ -13,10 +13,6 @@ const KINDS = [
   { key: 'level', label: 'Levels', name: n => `L${n}` },
 ];
 
-// Below this many sales the multiple leans on the model's prior rather than on
-// trades, and the tier is set by scarcity. Mirrors mythicalMaxSales in the rules.
-const thinData = (row, rules) => row.sales != null && row.sales < rules.mythicalMaxSales;
-
 export default function DesirabilityTiersPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -40,8 +36,7 @@ export default function DesirabilityTiersPage() {
         {error && <p className="text-sm opacity-70">[error: {error}]</p>}
         {!data && !error && <p className="text-sm opacity-60">[loading tiers...]</p>}
 
-        {data && <Rubric rules={data.rules} />}
-        {data && KINDS.map(kind => <KindSection key={kind.key} kind={kind} rows={data[kind.key]} rules={data.rules} />)}
+        {data && KINDS.map(kind => <KindSection key={kind.key} kind={kind} rows={data[kind.key]} />)}
         {data && (
           <p className="text-xs opacity-45 mb-12">
             Price multiples from the pricing model fitted {data.model?.slice(0, 10)}, against a Holo, biome 46, mid-level parcel (1.00×). Parcel counts cover the {data.minted.toLocaleString()} minted parcels.
@@ -53,37 +48,7 @@ export default function DesirabilityTiersPage() {
   );
 }
 
-function Rubric({ rules }) {
-  const rows = [
-    ['Mythical', `Price multiple ${rules.mythicalMultiple}× or more, or ${rules.mythicalMaxParcels} parcels or fewer with under ${rules.mythicalMaxSales} sales`],
-    ['Rare',     `Price multiple ${rules.rareMultiple}× or more, and ${rules.rareMaxParcels} parcels or fewer`],
-    ['Premium',  `Price multiple ${rules.premiumMultiple}× or more, short of Rare on multiple or scarcity`],
-    ['Uncommon', `Price multiple under ${rules.premiumMultiple}×, and ${rules.uncommonMaxParcels} parcels or fewer`],
-    ['Floor',    `Price multiple under ${rules.premiumMultiple}×, and more than ${rules.uncommonMaxParcels} parcels`],
-  ];
-  return (
-    <section className="mb-12">
-      <h2 className="text-lg mb-1 opacity-80">Rubric</h2>
-      <div className="mb-4" style={{ borderBottom: '1px solid rgba(232,232,232,0.1)' }} />
-      <p className="text-sm opacity-65 mb-4 leading-relaxed">
-        <strong>Price multiple</strong> is what parcels carrying the trait sell for against an otherwise identical parcel, fitted across 20,000+ sales with recent trades weighted most. <strong>Scarcity</strong> is the number of minted parcels carrying the trait. A trait takes the highest tier whose test it passes.
-      </p>
-      <div className="flex flex-col gap-2">
-        {rows.map(([tier, rule]) => (
-          <div key={tier} className="flex items-baseline gap-3 text-sm">
-            <span className="shrink-0 w-20"><TierBadge tier={tier} /></span>
-            <span className="opacity-65">{rule}</span>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs opacity-45 mt-4">
-        † fewer than {rules.mythicalMaxSales} sales: the multiple leans on the model&apos;s prior, and scarcity sets the tier.
-      </p>
-    </section>
-  );
-}
-
-function KindSection({ kind, rows, rules }) {
+function KindSection({ kind, rows }) {
   const entries = Object.entries(rows || {}).map(([name, row]) => ({ name, ...row }));
   return (
     <section className="mb-12">
@@ -105,7 +70,7 @@ function KindSection({ kind, rows, rules }) {
               <span className="w-20 text-right">multiple</span>
               <span className="w-20 text-right">parcels</span>
             </div>
-            {group.map(r => <TraitLine key={r.name} kind={kind} row={r} thin={thinData(r, rules)} />)}
+            {group.map(r => <TraitLine key={r.name} kind={kind} row={r} />)}
           </div>
         );
       })}
@@ -113,7 +78,7 @@ function KindSection({ kind, rows, rules }) {
   );
 }
 
-function TraitLine({ kind, row, thin }) {
+function TraitLine({ kind, row }) {
   const label = kind.name(row.name);
   const lore = kind.key === 'zone' ? getZoneLoreUrl(row.name) : null;
   return (
@@ -123,7 +88,7 @@ function TraitLine({ kind, row, thin }) {
           ? <a href={lore} target="_blank" rel="noopener noreferrer" className="no-underline hover:underline">{label}</a>
           : label}
       </span>
-      <span className="w-20 text-right tabular-nums opacity-80">{row.multiple.toFixed(2)}×{thin ? '†' : ''}</span>
+      <span className="w-20 text-right tabular-nums opacity-80">{row.multiple.toFixed(2)}×</span>
       <span className="w-20 text-right tabular-nums opacity-60">{row.parcels.toLocaleString()}</span>
     </div>
   );
