@@ -32,6 +32,9 @@ const FLOOR_PRICE_ETH = 0.2; // Update as market moves
 const PRICING_MODEL_VERSION = '2.10.1';
 
 // ─── ZONE MULTIPLES ────────────────────────────────────────────────────────────
+// The group labels below are v1's own price bands, which still drive the v1
+// seed and biome 0 tier multipliers. They are NOT the badges — those come from
+// trait-tiers.json (see getDisplayCategory).
 const ZONE_MULTIPLES = {
   // Mythical (individual)
   "Shahra": 25.2, "Antenna": 18.9, "Aetherking": 15,
@@ -75,12 +78,12 @@ const BIOME_MULTIPLES = {
   77: 11.25,
   78: 10, 81: 10,
   76: 9.375, 79: 9.375,
-  // Rare (3.6x) — see BIOME_CATEGORY_OVERRIDES
+  // Rare (3.6x)
   10: 3.6, 11: 3.6, 17: 3.6,
   // Rare (2.4x)
   14: 2.4, 15: 2.4, 16: 2.4, 18: 2.4, 19: 2.4, 20: 2.4,
   39: 2.4, 75: 2.4, 80: 2.4, 87: 2.4, 88: 2.4,
-  // Rare (2x — category override, see BIOME_CATEGORY_OVERRIDES)
+  // Rare (2x)
   12: 2, 13: 2, 82: 2,
   // Premium (1.73x)
   1: 1.73, 2: 1.73, 8: 1.73, 40: 1.73, 42: 1.73,
@@ -103,15 +106,6 @@ const BIOME_MULTIPLES = {
   51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1,
   59: 1, 60: 1, 61: 1, 62: 1, 63: 1, 64: 1,
   70: 1, 71: 1, 72: 1,
-};
-
-// ─── BIOME CATEGORY OVERRIDES ──────────────────────────────────────────────────
-// Biomes whose display category differs from what getCategoryFromMultiple() returns.
-const BIOME_CATEGORY_OVERRIDES = {
-  // 10, 11, 17 removed — 3.6x now correctly resolves to "Rare" via getCategoryFromMultiple
-  12: "Rare",     // Rare badge despite 2x pricing
-  13: "Rare",     // Rare badge despite 2x pricing
-  82: "Rare",     // Rare badge despite 2x pricing
 };
 
 // ─── LEVEL MULTIPLES ───────────────────────────────────────────────────────────
@@ -299,46 +293,28 @@ function getCategoryFromMultiple(multiple) {
   return "Floor";
 }
 
-// Zone parcel counts, derived from the minted snapshot rather than hardcoded so
-// they track the collection as the remaining parcels mint.
-const ZONE_PARCEL_COUNTS = (() => {
-  const counts = {};
+// Badge tiers, from the objective rubric on /glossary: fitted price premium in
+// the live model plus how many parcels carry the trait. Built by
+// scripts/build-trait-tiers.js and committed as a snapshot so a nightly refit
+// cannot flip a badge sitting on a boundary.
+const TRAIT_TIERS = (() => {
   try {
-    for (const p of require('./minted-traits.json')) {
-      if (p.zone) counts[p.zone] = (counts[p.zone] || 0) + 1;
-    }
+    return require('./trait-tiers.json');
   } catch (err) {
-    console.warn(`[pricing] minted-traits.json unavailable (${err.message}) — zone scarcity tiers fall back to price bands`);
+    console.warn(`[pricing] trait-tiers.json unavailable (${err.message}) — badges fall back to v1 price bands`);
+    return { zone: {}, biome: {} };
   }
-  return counts;
 })();
 
-// Above this many parcels a zone reads as a common part of the collection.
-// Calibrated against the minted counts: 12 zones sit at or above it (Mirage 240
-// is the smallest) and 63 below (Dynacrypts 214 the largest), so Dynacrypts is
-// the first Uncommon zone. Dynacrypts is ~16 mints from crossing, so expect the
-// boundary to move as the remaining unminted parcels are claimed.
-const ZONE_COMMON_THRESHOLD = 230;
-
 /**
- * The tier shown on a zone badge.
+ * The tier shown on a zone or biome badge.
  *
- * Premium and above stay priced: a zone that commands a real premium has earned
- * its badge on value. Below that, the Floor/Uncommon split is about SCARCITY,
- * not price — both are priced at or near floor, and what separates them is how
- * present the zone is in the collection. Holo has 617 parcels and [SEP] 173, so
- * a floor-priced [SEP] is a materially rarer thing to hold than a floor-priced
- * Holo, and the badge is what says so.
- *
- * Display only. estimatePrice's internal zone tiering still runs off the price
- * multiple, so /legacy keeps reproducing the quotes it always did.
+ * Display only. estimatePrice's internal tiering (seed zone tier, biome 0 zone
+ * bump) still runs off the v1 multiples, so /legacy and the Tier-2 special
+ * prices keep reproducing the quotes they always did.
  */
-function getZoneDisplayCategory(zone, multiple) {
-  const priced = getCategoryFromMultiple(multiple);
-  if (priced !== "Floor" && priced !== "Uncommon") return priced;
-  const n = ZONE_PARCEL_COUNTS[zone];
-  if (n == null) return priced;         // unknown zone — leave the price band alone
-  return n >= ZONE_COMMON_THRESHOLD ? "Floor" : "Uncommon";
+function getDisplayCategory(kind, name, multiple) {
+  return TRAIT_TIERS[kind]?.[name]?.tier ?? getCategoryFromMultiple(multiple);
 }
 
 function getZoneMultiple(zoneName) {
@@ -550,10 +526,10 @@ function estimatePrice(traits, floorOverride) {
     originModeMultiple,
     biome0ZoneTierBump,
     totalMultiple: Math.round(totalMultiple * 100) / 100,
-    // Badge tier — scarcity-aware, see getZoneDisplayCategory. `zoneCategory` above
-    // stays the price-derived one and keeps driving biome0ZoneTierBump.
-    zoneCategory: getZoneDisplayCategory(zone, zoneMultiple),
-    biomeCategory: BIOME_CATEGORY_OVERRIDES[biome] ?? getCategoryFromMultiple(biomeMultiple),
+    // Badge tiers — see getDisplayCategory. `zoneCategory` above stays the
+    // v1 price-derived one and keeps driving biome0ZoneTierBump.
+    zoneCategory: getDisplayCategory('zone', zone, zoneMultiple),
+    biomeCategory: getDisplayCategory('biome', biome, biomeMultiple),
     formula,
   };
 }
@@ -615,8 +591,6 @@ module.exports = {
   // Read-only consumers — nothing here mutates them.
   ZONE_MULTIPLES,
   BIOME_MULTIPLES,
-  ZONE_PARCEL_COUNTS,
-  ZONE_COMMON_THRESHOLD,
   LEVEL_MULTIPLES,
   TRAIT_PREMIUMS,
 };

@@ -1,0 +1,1021 @@
+{
+ "built": "2026-09-29T11:17:48.988Z",
+ "model": "2026-09-29T02:20:10Z",
+ "minted": 9911,
+ "rules": {
+  "mythicalPremium": 2.5,
+  "mythicalMaxParcels": 25,
+  "mythicalMaxSales": 30,
+  "rarePremium": 1.3,
+  "rareMaxParcels": 100,
+  "premiumPremium": 1.1,
+  "commonShare": 0.02,
+  "commonMinParcels": 199
+ },
+ "zone": {
+  "[BLOOD]": {
+   "tier": "Premium",
+   "premium": 1.11,
+   "parcels": 190,
+   "sales": 297
+  },
+  "[BOSS]": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 131,
+   "sales": 260
+  },
+  "[CUR2]": {
+   "tier": "Uncommon",
+   "premium": 0.98,
+   "parcels": 136,
+   "sales": 247
+  },
+  "[DARK]": {
+   "tier": "Uncommon",
+   "premium": 1.02,
+   "parcels": 167,
+   "sales": 263
+  },
+  "[HOME]": {
+   "tier": "Rare",
+   "premium": 1.36,
+   "parcels": 96,
+   "sales": 134
+  },
+  "[HYCA]": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 146,
+   "sales": 309
+  },
+  "[MENU]": {
+   "tier": "Uncommon",
+   "premium": 0.91,
+   "parcels": 163,
+   "sales": 343
+  },
+  "[MOON]": {
+   "tier": "Uncommon",
+   "premium": 0.94,
+   "parcels": 150,
+   "sales": 318
+  },
+  "[NEON]": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 102,
+   "sales": 173
+  },
+  "[NOV]": {
+   "tier": "Rare",
+   "premium": 1.68,
+   "parcels": 41,
+   "sales": 45
+  },
+  "[SEP]": {
+   "tier": "Uncommon",
+   "premium": 0.99,
+   "parcels": 173,
+   "sales": 369
+  },
+  "[SOON]": {
+   "tier": "Mythical",
+   "premium": 3.07,
+   "parcels": 21,
+   "sales": 15
+  },
+  "[SUN]": {
+   "tier": "Mythical",
+   "premium": 3.31,
+   "parcels": 23,
+   "sales": 26
+  },
+  "[WEN]": {
+   "tier": "Uncommon",
+   "premium": 0.94,
+   "parcels": 145,
+   "sales": 285
+  },
+  "[YUNA]": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 153,
+   "sales": 316
+  },
+  "Aetherking": {
+   "tier": "Mythical",
+   "premium": 5.95,
+   "parcels": 22,
+   "sales": 13
+  },
+  "Akileaf": {
+   "tier": "Uncommon",
+   "premium": 1.06,
+   "parcels": 84,
+   "sales": 130
+  },
+  "Alto": {
+   "tier": "Floor",
+   "premium": 1.04,
+   "parcels": 356,
+   "sales": 599
+  },
+  "Angel": {
+   "tier": "Premium",
+   "premium": 1.25,
+   "parcels": 82,
+   "sales": 89
+  },
+  "Antenna": {
+   "tier": "Mythical",
+   "premium": 8.28,
+   "parcels": 14,
+   "sales": 15
+  },
+  "Arc": {
+   "tier": "Floor",
+   "premium": 0.94,
+   "parcels": 328,
+   "sales": 779
+  },
+  "Aria": {
+   "tier": "Rare",
+   "premium": 1.71,
+   "parcels": 69,
+   "sales": 95
+  },
+  "Avidana": {
+   "tier": "Rare",
+   "premium": 1.88,
+   "parcels": 45,
+   "sales": 53
+  },
+  "Blossom": {
+   "tier": "Premium",
+   "premium": 1.13,
+   "parcels": 77,
+   "sales": 111
+  },
+  "Blushing": {
+   "tier": "Uncommon",
+   "premium": 1.05,
+   "parcels": 76,
+   "sales": 112
+  },
+  "Bubble": {
+   "tier": "Premium",
+   "premium": 1.25,
+   "parcels": 81,
+   "sales": 126
+  },
+  "Calyx": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 113,
+   "sales": 203
+  },
+  "Cradle": {
+   "tier": "Premium",
+   "premium": 1.23,
+   "parcels": 74,
+   "sales": 99
+  },
+  "Dhampir": {
+   "tier": "Rare",
+   "premium": 1.38,
+   "parcels": 70,
+   "sales": 112
+  },
+  "Dread": {
+   "tier": "Mythical",
+   "premium": 3.55,
+   "parcels": 23,
+   "sales": 26
+  },
+  "Dynacrypts": {
+   "tier": "Premium",
+   "premium": 1.33,
+   "parcels": 214,
+   "sales": 365
+  },
+  "Ender": {
+   "tier": "Uncommon",
+   "premium": 1.04,
+   "parcels": 166,
+   "sales": 242
+  },
+  "Everglades": {
+   "tier": "Uncommon",
+   "premium": 1.05,
+   "parcels": 85,
+   "sales": 141
+  },
+  "Exduo": {
+   "tier": "Floor",
+   "premium": 0.93,
+   "parcels": 310,
+   "sales": 913
+  },
+  "First Earth": {
+   "tier": "Rare",
+   "premium": 1.86,
+   "parcels": 71,
+   "sales": 103
+  },
+  "Gemina": {
+   "tier": "Mythical",
+   "premium": 4.75,
+   "parcels": 19,
+   "sales": 24
+  },
+  "Greysunn": {
+   "tier": "Rare",
+   "premium": 1.44,
+   "parcels": 78,
+   "sales": 112
+  },
+  "Grove": {
+   "tier": "Floor",
+   "premium": 0.96,
+   "parcels": 244,
+   "sales": 620
+  },
+  "Holo": {
+   "tier": "Floor",
+   "premium": 1,
+   "parcels": 617,
+   "sales": null
+  },
+  "Hypermage": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 512,
+   "sales": 1443
+  },
+  "Hyphae": {
+   "tier": "Floor",
+   "premium": 0.94,
+   "parcels": 279,
+   "sales": 775
+  },
+  "Intro Forest": {
+   "tier": "Premium",
+   "premium": 1.2,
+   "parcels": 118,
+   "sales": 203
+  },
+  "Jadeite": {
+   "tier": "Premium",
+   "premium": 1.13,
+   "parcels": 77,
+   "sales": 133
+  },
+  "Kairo": {
+   "tier": "Floor",
+   "premium": 1.01,
+   "parcels": 352,
+   "sales": 686
+  },
+  "Killscreen": {
+   "tier": "Rare",
+   "premium": 1.91,
+   "parcels": 60,
+   "sales": 96
+  },
+  "Kippsun": {
+   "tier": "Premium",
+   "premium": 1.2,
+   "parcels": 82,
+   "sales": 130
+  },
+  "Linosim": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 98,
+   "sales": 191
+  },
+  "Mecha": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 280,
+   "sales": 720
+  },
+  "Mirage": {
+   "tier": "Floor",
+   "premium": 0.91,
+   "parcels": 240,
+   "sales": 618
+  },
+  "Mori": {
+   "tier": "Rare",
+   "premium": 1.55,
+   "parcels": 51,
+   "sales": 99
+  },
+  "Mould": {
+   "tier": "Rare",
+   "premium": 1.72,
+   "parcels": 74,
+   "sales": 76
+  },
+  "Mt Zuka": {
+   "tier": "Premium",
+   "premium": 1.41,
+   "parcels": 130,
+   "sales": 193
+  },
+  "Muxtai X1": {
+   "tier": "Premium",
+   "premium": 1.12,
+   "parcels": 92,
+   "sales": 189
+  },
+  "Nightrose": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 361,
+   "sales": 990
+  },
+  "Ouallada": {
+   "tier": "Uncommon",
+   "premium": 0.99,
+   "parcels": 99,
+   "sales": 166
+  },
+  "Palace": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 135,
+   "sales": 286
+  },
+  "Pepo": {
+   "tier": "Uncommon",
+   "premium": 1.08,
+   "parcels": 82,
+   "sales": 156
+  },
+  "pfpfpfpbbx80": {
+   "tier": "Premium",
+   "premium": 1.12,
+   "parcels": 93,
+   "sales": 133
+  },
+  "Promiselands": {
+   "tier": "Rare",
+   "premium": 1.45,
+   "parcels": 75,
+   "sales": 87
+  },
+  "Radiant": {
+   "tier": "Rare",
+   "premium": 1.47,
+   "parcels": 52,
+   "sales": 62
+  },
+  "Riso": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 290,
+   "sales": 857
+  },
+  "Rocket": {
+   "tier": "Premium",
+   "premium": 1.29,
+   "parcels": 46,
+   "sales": 50
+  },
+  "Royal": {
+   "tier": "Rare",
+   "premium": 1.78,
+   "parcels": 82,
+   "sales": 110
+  },
+  "Shahra": {
+   "tier": "Mythical",
+   "premium": 10.96,
+   "parcels": 10,
+   "sales": 9
+  },
+  "Shiro": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 180,
+   "sales": 479
+  },
+  "Tetsu": {
+   "tier": "Rare",
+   "premium": 1.77,
+   "parcels": 59,
+   "sales": 69
+  },
+  "Toad": {
+   "tier": "Premium",
+   "premium": 1.28,
+   "parcels": 97,
+   "sales": 137
+  },
+  "Treasure": {
+   "tier": "Rare",
+   "premium": 1.5,
+   "parcels": 90,
+   "sales": 109
+  },
+  "Uwo": {
+   "tier": "Rare",
+   "premium": 1.52,
+   "parcels": 72,
+   "sales": 93
+  },
+  "Valeria": {
+   "tier": "Premium",
+   "premium": 1.25,
+   "parcels": 54,
+   "sales": 100
+  },
+  "Venmon": {
+   "tier": "Rare",
+   "premium": 1.58,
+   "parcels": 72,
+   "sales": 69
+  },
+  "Warp": {
+   "tier": "Uncommon",
+   "premium": 0.97,
+   "parcels": 76,
+   "sales": 180
+  },
+  "Wastelands": {
+   "tier": "Premium",
+   "premium": 1.18,
+   "parcels": 91,
+   "sales": 138
+  },
+  "Xleph": {
+   "tier": "Rare",
+   "premium": 1.56,
+   "parcels": 76,
+   "sales": 102
+  },
+  "Zerinia": {
+   "tier": "Uncommon",
+   "premium": 1.09,
+   "parcels": 119,
+   "sales": 222
+  }
+ },
+ "biome": {
+  "0": {
+   "tier": "Mythical",
+   "premium": 2.63,
+   "parcels": 113,
+   "sales": 158
+  },
+  "1": {
+   "tier": "Premium",
+   "premium": 1.24,
+   "parcels": 112,
+   "sales": 178
+  },
+  "2": {
+   "tier": "Premium",
+   "premium": 1.13,
+   "parcels": 118,
+   "sales": 146
+  },
+  "3": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 128,
+   "sales": 208
+  },
+  "4": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 110,
+   "sales": 156
+  },
+  "5": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 93,
+   "sales": 118
+  },
+  "6": {
+   "tier": "Uncommon",
+   "premium": 1.07,
+   "parcels": 109,
+   "sales": 212
+  },
+  "7": {
+   "tier": "Uncommon",
+   "premium": 1.08,
+   "parcels": 122,
+   "sales": 202
+  },
+  "8": {
+   "tier": "Premium",
+   "premium": 1.2,
+   "parcels": 99,
+   "sales": 146
+  },
+  "9": {
+   "tier": "Premium",
+   "premium": 1.26,
+   "parcels": 102,
+   "sales": 130
+  },
+  "10": {
+   "tier": "Rare",
+   "premium": 1.88,
+   "parcels": 34,
+   "sales": 41
+  },
+  "11": {
+   "tier": "Rare",
+   "premium": 1.9,
+   "parcels": 43,
+   "sales": 47
+  },
+  "12": {
+   "tier": "Rare",
+   "premium": 1.3,
+   "parcels": 49,
+   "sales": 79
+  },
+  "13": {
+   "tier": "Rare",
+   "premium": 1.32,
+   "parcels": 43,
+   "sales": 61
+  },
+  "14": {
+   "tier": "Rare",
+   "premium": 1.48,
+   "parcels": 44,
+   "sales": 49
+  },
+  "15": {
+   "tier": "Rare",
+   "premium": 1.39,
+   "parcels": 36,
+   "sales": 61
+  },
+  "16": {
+   "tier": "Rare",
+   "premium": 1.48,
+   "parcels": 48,
+   "sales": 73
+  },
+  "17": {
+   "tier": "Rare",
+   "premium": 2.16,
+   "parcels": 34,
+   "sales": 36
+  },
+  "18": {
+   "tier": "Rare",
+   "premium": 1.44,
+   "parcels": 46,
+   "sales": 60
+  },
+  "19": {
+   "tier": "Rare",
+   "premium": 1.42,
+   "parcels": 47,
+   "sales": 69
+  },
+  "20": {
+   "tier": "Rare",
+   "premium": 1.45,
+   "parcels": 21,
+   "sales": 33
+  },
+  "21": {
+   "tier": "Uncommon",
+   "premium": 1.08,
+   "parcels": 88,
+   "sales": 170
+  },
+  "22": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 81,
+   "sales": 133
+  },
+  "23": {
+   "tier": "Uncommon",
+   "premium": 1.04,
+   "parcels": 90,
+   "sales": 180
+  },
+  "24": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 91,
+   "sales": 192
+  },
+  "25": {
+   "tier": "Uncommon",
+   "premium": 1.07,
+   "parcels": 83,
+   "sales": 152
+  },
+  "26": {
+   "tier": "Uncommon",
+   "premium": 0.99,
+   "parcels": 98,
+   "sales": 228
+  },
+  "27": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 121,
+   "sales": 198
+  },
+  "28": {
+   "tier": "Uncommon",
+   "premium": 0.94,
+   "parcels": 109,
+   "sales": 186
+  },
+  "29": {
+   "tier": "Uncommon",
+   "premium": 0.98,
+   "parcels": 98,
+   "sales": 166
+  },
+  "30": {
+   "tier": "Uncommon",
+   "premium": 0.94,
+   "parcels": 80,
+   "sales": 165
+  },
+  "31": {
+   "tier": "Uncommon",
+   "premium": 0.98,
+   "parcels": 150,
+   "sales": 349
+  },
+  "32": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 153,
+   "sales": 362
+  },
+  "33": {
+   "tier": "Uncommon",
+   "premium": 0.95,
+   "parcels": 136,
+   "sales": 349
+  },
+  "34": {
+   "tier": "Uncommon",
+   "premium": 1.02,
+   "parcels": 130,
+   "sales": 235
+  },
+  "35": {
+   "tier": "Premium",
+   "premium": 1.11,
+   "parcels": 135,
+   "sales": 233
+  },
+  "36": {
+   "tier": "Uncommon",
+   "premium": 0.97,
+   "parcels": 123,
+   "sales": 226
+  },
+  "37": {
+   "tier": "Uncommon",
+   "premium": 1.02,
+   "parcels": 111,
+   "sales": 196
+  },
+  "38": {
+   "tier": "Uncommon",
+   "premium": 1,
+   "parcels": 135,
+   "sales": 251
+  },
+  "39": {
+   "tier": "Rare",
+   "premium": 1.73,
+   "parcels": 79,
+   "sales": 102
+  },
+  "40": {
+   "tier": "Premium",
+   "premium": 1.18,
+   "parcels": 59,
+   "sales": 111
+  },
+  "41": {
+   "tier": "Uncommon",
+   "premium": 0.99,
+   "parcels": 92,
+   "sales": 146
+  },
+  "42": {
+   "tier": "Premium",
+   "premium": 1.19,
+   "parcels": 104,
+   "sales": 198
+  },
+  "43": {
+   "tier": "Floor",
+   "premium": 0.91,
+   "parcels": 233,
+   "sales": 530
+  },
+  "44": {
+   "tier": "Floor",
+   "premium": 0.94,
+   "parcels": 237,
+   "sales": 589
+  },
+  "45": {
+   "tier": "Floor",
+   "premium": 0.93,
+   "parcels": 216,
+   "sales": 494
+  },
+  "46": {
+   "tier": "Floor",
+   "premium": 1,
+   "parcels": 268,
+   "sales": null
+  },
+  "47": {
+   "tier": "Floor",
+   "premium": 0.94,
+   "parcels": 229,
+   "sales": 635
+  },
+  "48": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 256,
+   "sales": 682
+  },
+  "49": {
+   "tier": "Floor",
+   "premium": 0.97,
+   "parcels": 217,
+   "sales": 538
+  },
+  "50": {
+   "tier": "Floor",
+   "premium": 0.93,
+   "parcels": 239,
+   "sales": 558
+  },
+  "51": {
+   "tier": "Floor",
+   "premium": 0.95,
+   "parcels": 212,
+   "sales": 498
+  },
+  "52": {
+   "tier": "Floor",
+   "premium": 0.93,
+   "parcels": 204,
+   "sales": 532
+  },
+  "53": {
+   "tier": "Floor",
+   "premium": 0.98,
+   "parcels": 208,
+   "sales": 416
+  },
+  "54": {
+   "tier": "Floor",
+   "premium": 0.96,
+   "parcels": 199,
+   "sales": 467
+  },
+  "55": {
+   "tier": "Uncommon",
+   "premium": 0.93,
+   "parcels": 183,
+   "sales": 567
+  },
+  "56": {
+   "tier": "Uncommon",
+   "premium": 0.94,
+   "parcels": 191,
+   "sales": 517
+  },
+  "57": {
+   "tier": "Uncommon",
+   "premium": 0.92,
+   "parcels": 167,
+   "sales": 449
+  },
+  "58": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 192,
+   "sales": 505
+  },
+  "59": {
+   "tier": "Uncommon",
+   "premium": 0.93,
+   "parcels": 133,
+   "sales": 315
+  },
+  "60": {
+   "tier": "Uncommon",
+   "premium": 0.93,
+   "parcels": 126,
+   "sales": 243
+  },
+  "61": {
+   "tier": "Uncommon",
+   "premium": 0.95,
+   "parcels": 133,
+   "sales": 252
+  },
+  "62": {
+   "tier": "Uncommon",
+   "premium": 0.92,
+   "parcels": 152,
+   "sales": 368
+  },
+  "63": {
+   "tier": "Uncommon",
+   "premium": 0.92,
+   "parcels": 119,
+   "sales": 287
+  },
+  "64": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 146,
+   "sales": 330
+  },
+  "65": {
+   "tier": "Uncommon",
+   "premium": 0.93,
+   "parcels": 125,
+   "sales": 241
+  },
+  "66": {
+   "tier": "Uncommon",
+   "premium": 0.97,
+   "parcels": 97,
+   "sales": 214
+  },
+  "67": {
+   "tier": "Uncommon",
+   "premium": 0.95,
+   "parcels": 102,
+   "sales": 234
+  },
+  "68": {
+   "tier": "Uncommon",
+   "premium": 0.97,
+   "parcels": 99,
+   "sales": 164
+  },
+  "69": {
+   "tier": "Uncommon",
+   "premium": 0.97,
+   "parcels": 102,
+   "sales": 228
+  },
+  "70": {
+   "tier": "Uncommon",
+   "premium": 0.93,
+   "parcels": 122,
+   "sales": 312
+  },
+  "71": {
+   "tier": "Uncommon",
+   "premium": 0.96,
+   "parcels": 121,
+   "sales": 270
+  },
+  "72": {
+   "tier": "Uncommon",
+   "premium": 0.95,
+   "parcels": 164,
+   "sales": 298
+  },
+  "73": {
+   "tier": "Mythical",
+   "premium": 2.89,
+   "parcels": 18,
+   "sales": 34
+  },
+  "74": {
+   "tier": "Mythical",
+   "premium": 6.5,
+   "parcels": 5,
+   "sales": 6
+  },
+  "75": {
+   "tier": "Rare",
+   "premium": 1.62,
+   "parcels": 59,
+   "sales": 76
+  },
+  "76": {
+   "tier": "Mythical",
+   "premium": 3.99,
+   "parcels": 12,
+   "sales": 14
+  },
+  "77": {
+   "tier": "Mythical",
+   "premium": 5.01,
+   "parcels": 7,
+   "sales": 7
+  },
+  "78": {
+   "tier": "Mythical",
+   "premium": 4.5,
+   "parcels": 8,
+   "sales": 8
+  },
+  "79": {
+   "tier": "Mythical",
+   "premium": 4.21,
+   "parcels": 11,
+   "sales": 9
+  },
+  "80": {
+   "tier": "Premium",
+   "premium": 1.22,
+   "parcels": 71,
+   "sales": 129
+  },
+  "81": {
+   "tier": "Mythical",
+   "premium": 4.2,
+   "parcels": 9,
+   "sales": 15
+  },
+  "82": {
+   "tier": "Rare",
+   "premium": 1.33,
+   "parcels": 30,
+   "sales": 46
+  },
+  "83": {
+   "tier": "Uncommon",
+   "premium": 0.95,
+   "parcels": 96,
+   "sales": 149
+  },
+  "84": {
+   "tier": "Uncommon",
+   "premium": 1.05,
+   "parcels": 69,
+   "sales": 110
+  },
+  "85": {
+   "tier": "Premium",
+   "premium": 1.25,
+   "parcels": 58,
+   "sales": 76
+  },
+  "86": {
+   "tier": "Uncommon",
+   "premium": 1.03,
+   "parcels": 70,
+   "sales": 108
+  },
+  "87": {
+   "tier": "Rare",
+   "premium": 1.53,
+   "parcels": 64,
+   "sales": 68
+  },
+  "88": {
+   "tier": "Rare",
+   "premium": 1.35,
+   "parcels": 49,
+   "sales": 58
+  },
+  "89": {
+   "tier": "Uncommon",
+   "premium": 1.08,
+   "parcels": 66,
+   "sales": 118
+  },
+  "90": {
+   "tier": "Uncommon",
+   "premium": 1.01,
+   "parcels": 68,
+   "sales": 115
+  },
+  "91": {
+   "tier": "Premium",
+   "premium": 1.18,
+   "parcels": 52,
+   "sales": 68
+  }
+ }
+}
