@@ -1,11 +1,11 @@
 {
   "meta": {
-    "built": "2026-10-01T02:20:13Z",
+    "built": "2026-10-02T02:20:11Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
     "estimator": "weighted Ridge (alpha 3, fixed)",
-    "n_eligible": 20440,
+    "n_eligible": 20452,
     "features": 185,
     "train_cutoff_unix": null,
     "reference_parcel": {
@@ -31,1420 +31,1420 @@
     "side_model": "dummy"
   },
   "ask_premium": {
-    "value": 1.16123,
+    "value": 1.159662,
     "note": "ask = bid x this. One fit, is-ask indicator; guarantees ask >= bid for every parcel."
   },
   "money_sword_off": {
     "label": "money_sword_off",
     "bid_share": 0.8,
-    "holdout_median_pct_err": 0.07243641457589511,
+    "holdout_median_pct_err": 0.0739215167494302,
     "alpha": 3,
-    "weighted_r2": 0.7476934766484258,
-    "n": 20440,
+    "weighted_r2": 0.7442379403885734,
+    "n": 20452,
     "prior_audit": [
       {
         "kind": "zone",
         "name": "Aetherking",
         "n": 13,
         "w": 0.098,
-        "fitted": 1.0797,
-        "prior": 7.159257575372687,
-        "blended": 5.9507
+        "fitted": 1.078,
+        "prior": 7.127397564644761,
+        "blended": 5.9258
       },
       {
         "kind": "zone",
         "name": "Akileaf",
-        "n": 130,
-        "w": 0.52,
-        "fitted": 0.9968,
-        "prior": 1.1231085321365901,
-        "blended": 1.0555
+        "n": 132,
+        "w": 0.524,
+        "fitted": 1.0471,
+        "prior": 1.118110492953647,
+        "blended": 1.0803
       },
       {
         "kind": "zone",
         "name": "Alto",
         "n": 599,
         "w": 0.833,
-        "fitted": 1.0512,
-        "prior": 0.9664997726753127,
-        "blended": 1.0366
+        "fitted": 1.0509,
+        "prior": 0.9621986712270428,
+        "blended": 1.0355
       },
       {
         "kind": "zone",
         "name": "Angel",
         "n": 90,
         "w": 0.429,
-        "fitted": 1.2287,
-        "prior": 1.261819147659436,
-        "blended": 1.2475
+        "fitted": 1.222,
+        "prior": 1.2562038207686392,
+        "blended": 1.2414
       },
       {
         "kind": "zone",
         "name": "Antenna",
         "n": 15,
         "w": 0.111,
-        "fitted": 4.6375,
-        "prior": 8.904326609369779,
-        "blended": 8.2817
+        "fitted": 4.5734,
+        "prior": 8.86470072102692,
+        "blended": 8.2362
       },
       {
         "kind": "zone",
         "name": "Arc",
-        "n": 779,
+        "n": 780,
         "w": 0.867,
-        "fitted": 0.9479,
-        "prior": 0.8949071969215858,
-        "blended": 0.9406
+        "fitted": 0.9509,
+        "prior": 0.8909246955805952,
+        "blended": 0.9427
       },
       {
         "kind": "zone",
         "name": "Aria",
         "n": 95,
         "w": 0.442,
-        "fitted": 1.7521,
-        "prior": 1.6779509942279736,
-        "blended": 1.7103
+        "fitted": 1.7416,
+        "prior": 1.6704838042136159,
+        "blended": 1.7015
       },
       {
         "kind": "zone",
         "name": "Avidana",
         "n": 53,
         "w": 0.306,
-        "fitted": 2.2335,
-        "prior": 1.7450690339970925,
-        "blended": 1.8821
+        "fitted": 2.201,
+        "prior": 1.7373031563821606,
+        "blended": 1.8679
       },
       {
         "kind": "zone",
         "name": "Blossom",
         "n": 111,
         "w": 0.481,
-        "fitted": 1.231,
-        "prior": 1.0425668844136475,
-        "blended": 1.1292
+        "fitted": 1.2198,
+        "prior": 1.0379272703513933,
+        "blended": 1.1217
       },
       {
         "kind": "zone",
         "name": "Blushing",
         "n": 112,
         "w": 0.483,
-        "fitted": 0.9744,
-        "prior": 1.1231085321365901,
-        "blended": 1.0487
+        "fitted": 0.9706,
+        "prior": 1.118110492953647,
+        "blended": 1.0443
       },
       {
         "kind": "zone",
         "name": "Bubble",
         "n": 126,
         "w": 0.512,
-        "fitted": 1.2451,
-        "prior": 1.261819147659436,
-        "blended": 1.2532
+        "fitted": 1.2386,
+        "prior": 1.2562038207686392,
+        "blended": 1.2472
       },
       {
         "kind": "zone",
         "name": "Calyx",
         "n": 203,
         "w": 0.628,
-        "fitted": 0.998,
-        "prior": 1.0425668844136475,
-        "blended": 1.0143
+        "fitted": 0.9993,
+        "prior": 1.0379272703513933,
+        "blended": 1.0135
       },
       {
         "kind": "zone",
         "name": "Cradle",
         "n": 99,
         "w": 0.452,
-        "fitted": 1.2018,
-        "prior": 1.261819147659436,
-        "blended": 1.2343
+        "fitted": 1.1932,
+        "prior": 1.2562038207686392,
+        "blended": 1.2273
       },
       {
         "kind": "zone",
         "name": "Dhampir",
         "n": 112,
         "w": 0.483,
-        "fitted": 1.4289,
-        "prior": 1.337886259397771,
-        "blended": 1.3811
+        "fitted": 1.4227,
+        "prior": 1.3319324198929898,
+        "blended": 1.375
       },
       {
         "kind": "zone",
         "name": "Dread",
         "n": 26,
         "w": 0.178,
-        "fitted": 4.5763,
-        "prior": 3.355901988455947,
-        "blended": 3.5465
+        "fitted": 4.5239,
+        "prior": 3.3409676084272317,
+        "blended": 3.5263
       },
       {
         "kind": "zone",
         "name": "Dynacrypts",
-        "n": 365,
+        "n": 366,
         "w": 0.753,
-        "fitted": 1.3552,
-        "prior": 1.261819147659436,
-        "blended": 1.3315
+        "fitted": 1.381,
+        "prior": 1.2562038207686392,
+        "blended": 1.3491
       },
       {
         "kind": "zone",
         "name": "Ender",
         "n": 243,
         "w": 0.669,
-        "fitted": 1.0257,
-        "prior": 1.1231085321365901,
-        "blended": 1.0569
+        "fitted": 1.0116,
+        "prior": 1.118110492953647,
+        "blended": 1.0456
       },
       {
         "kind": "zone",
         "name": "Everglades",
         "n": 141,
         "w": 0.54,
-        "fitted": 0.8958,
-        "prior": 1.261819147659436,
-        "blended": 1.0486
+        "fitted": 0.8917,
+        "prior": 1.2562038207686392,
+        "blended": 1.0439
       },
       {
         "kind": "zone",
         "name": "Exduo",
         "n": 913,
         "w": 0.884,
-        "fitted": 0.9316,
-        "prior": 0.8949071969215858,
-        "blended": 0.9273
+        "fitted": 0.9292,
+        "prior": 0.8909246955805952,
+        "blended": 0.9247
       },
       {
         "kind": "zone",
         "name": "First Earth",
         "n": 103,
         "w": 0.462,
-        "fitted": 2.101,
-        "prior": 1.6779509942279736,
-        "blended": 1.8616
+        "fitted": 2.0919,
+        "prior": 1.6704838042136159,
+        "blended": 1.8534
       },
       {
         "kind": "zone",
         "name": "Gemina",
         "n": 24,
         "w": 0.167,
-        "fitted": 4.5241,
-        "prior": 4.7967025754997,
-        "blended": 4.7502
+        "fitted": 4.4827,
+        "prior": 4.77535636831199,
+        "blended": 4.7253
       },
       {
         "kind": "zone",
         "name": "Greysunn",
         "n": 112,
         "w": 0.483,
-        "fitted": 1.3185,
-        "prior": 1.575036666581991,
-        "blended": 1.4455
+        "fitted": 1.3198,
+        "prior": 1.5680274642218475,
+        "blended": 1.4429
       },
       {
         "kind": "zone",
         "name": "Grove",
         "n": 620,
         "w": 0.838,
-        "fitted": 0.9754,
-        "prior": 0.8949071969215858,
-        "blended": 0.9619
+        "fitted": 0.9709,
+        "prior": 0.8909246955805952,
+        "blended": 0.9575
       },
       {
         "kind": "zone",
         "name": "Hypermage",
         "n": 1444,
         "w": 0.923,
-        "fitted": 0.96,
-        "prior": 0.8949071969215858,
-        "blended": 0.9548
+        "fitted": 0.9576,
+        "prior": 0.8909246955805952,
+        "blended": 0.9523
       },
       {
         "kind": "zone",
         "name": "Hyphae",
         "n": 775,
         "w": 0.866,
-        "fitted": 0.9423,
-        "prior": 0.8949071969215858,
-        "blended": 0.9358
+        "fitted": 0.9405,
+        "prior": 0.8909246955805952,
+        "blended": 0.9337
       },
       {
         "kind": "zone",
         "name": "Intro Forest",
         "n": 203,
         "w": 0.628,
-        "fitted": 1.1631,
-        "prior": 1.261819147659436,
-        "blended": 1.1988
+        "fitted": 1.1613,
+        "prior": 1.2562038207686392,
+        "blended": 1.1957
       },
       {
         "kind": "zone",
         "name": "Jadeite",
         "n": 133,
         "w": 0.526,
-        "fitted": 0.9676,
-        "prior": 1.337886259397771,
-        "blended": 1.1283
+        "fitted": 0.9634,
+        "prior": 1.3319324198929898,
+        "blended": 1.1234
       },
       {
         "kind": "zone",
         "name": "Kairo",
         "n": 686,
         "w": 0.851,
-        "fitted": 1.0214,
-        "prior": 0.9664997726753127,
-        "blended": 1.013
+        "fitted": 1.0185,
+        "prior": 0.9621986712270428,
+        "blended": 1.0099
       },
       {
         "kind": "zone",
         "name": "Killscreen",
         "n": 96,
         "w": 0.444,
-        "fitted": 2.1354,
-        "prior": 1.7450690339970925,
-        "blended": 1.9089
+        "fitted": 2.1247,
+        "prior": 1.7373031563821606,
+        "blended": 1.8999
       },
       {
         "kind": "zone",
         "name": "Kippsun",
         "n": 130,
         "w": 0.52,
-        "fitted": 1.1572,
-        "prior": 1.261819147659436,
-        "blended": 1.2063
+        "fitted": 1.1525,
+        "prior": 1.2562038207686392,
+        "blended": 1.2012
       },
       {
         "kind": "zone",
         "name": "Linosim",
         "n": 191,
         "w": 0.614,
-        "fitted": 0.9793,
-        "prior": 1.0425668844136475,
-        "blended": 1.0032
+        "fitted": 0.9791,
+        "prior": 1.0379272703513933,
+        "blended": 1.0014
       },
       {
         "kind": "zone",
         "name": "Mecha",
         "n": 720,
         "w": 0.857,
-        "fitted": 0.9572,
-        "prior": 0.8949071969215858,
-        "blended": 0.948
+        "fitted": 0.9561,
+        "prior": 0.8909246955805952,
+        "blended": 0.9465
       },
       {
         "kind": "zone",
         "name": "Mirage",
         "n": 618,
         "w": 0.837,
-        "fitted": 0.9083,
-        "prior": 0.8949071969215858,
-        "blended": 0.9061
+        "fitted": 0.909,
+        "prior": 0.8909246955805952,
+        "blended": 0.906
       },
       {
         "kind": "zone",
         "name": "Mori",
         "n": 99,
         "w": 0.452,
-        "fitted": 1.5153,
-        "prior": 1.575036666581991,
-        "blended": 1.5477
+        "fitted": 1.5017,
+        "prior": 1.5680274642218475,
+        "blended": 1.5377
       },
       {
         "kind": "zone",
         "name": "Mould",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.8026,
-        "prior": 1.6779509942279736,
-        "blended": 1.7252
+        "fitted": 1.7696,
+        "prior": 1.6704838042136159,
+        "blended": 1.7082
       },
       {
         "kind": "zone",
         "name": "Mt Zuka",
         "n": 194,
         "w": 0.618,
-        "fitted": 1.4421,
-        "prior": 1.337886259397771,
-        "blended": 1.4013
+        "fitted": 1.4376,
+        "prior": 1.3319324198929898,
+        "blended": 1.3963
       },
       {
         "kind": "zone",
         "name": "Muxtai X1",
-        "n": 190,
-        "w": 0.613,
-        "fitted": 1.0318,
-        "prior": 1.261819147659436,
-        "blended": 1.1154
+        "n": 191,
+        "w": 0.614,
+        "fitted": 1.0521,
+        "prior": 1.2562038207686392,
+        "blended": 1.1266
       },
       {
         "kind": "zone",
         "name": "Nightrose",
         "n": 990,
         "w": 0.892,
-        "fitted": 0.958,
-        "prior": 0.8949071969215858,
-        "blended": 0.951
+        "fitted": 0.9555,
+        "prior": 0.8909246955805952,
+        "blended": 0.9483
       },
       {
         "kind": "zone",
         "name": "Ouallada",
         "n": 166,
         "w": 0.58,
-        "fitted": 1.0662,
-        "prior": 0.8949071969215858,
-        "blended": 0.9907
+        "fitted": 1.0603,
+        "prior": 0.8909246955805952,
+        "blended": 0.9856
       },
       {
         "kind": "zone",
         "name": "Palace",
         "n": 286,
         "w": 0.704,
-        "fitted": 0.9884,
-        "prior": 1.0425668844136475,
-        "blended": 1.0041
+        "fitted": 0.9831,
+        "prior": 1.0379272703513933,
+        "blended": 0.999
       },
       {
         "kind": "zone",
         "name": "Pepo",
         "n": 156,
         "w": 0.565,
-        "fitted": 1.0579,
-        "prior": 1.1231085321365901,
-        "blended": 1.0858
+        "fitted": 1.0525,
+        "prior": 1.118110492953647,
+        "blended": 1.0805
       },
       {
         "kind": "zone",
         "name": "Promiselands",
-        "n": 87,
-        "w": 0.42,
-        "fitted": 1.3039,
-        "prior": 1.575036666581991,
-        "blended": 1.4548
+        "n": 88,
+        "w": 0.423,
+        "fitted": 1.4409,
+        "prior": 1.5680274642218475,
+        "blended": 1.5129
       },
       {
         "kind": "zone",
         "name": "Radiant",
-        "n": 62,
-        "w": 0.341,
-        "fitted": 1.2787,
-        "prior": 1.575036666581991,
-        "blended": 1.4671
+        "n": 63,
+        "w": 0.344,
+        "fitted": 1.3078,
+        "prior": 1.5680274642218475,
+        "blended": 1.4731
       },
       {
         "kind": "zone",
         "name": "Riso",
         "n": 857,
         "w": 0.877,
-        "fitted": 0.9583,
-        "prior": 0.8949071969215858,
-        "blended": 0.9503
+        "fitted": 0.957,
+        "prior": 0.8909246955805952,
+        "blended": 0.9486
       },
       {
         "kind": "zone",
         "name": "Rocket",
         "n": 50,
         "w": 0.294,
-        "fitted": 1.1721,
-        "prior": 1.337886259397771,
-        "blended": 1.2868
+        "fitted": 1.1705,
+        "prior": 1.3319324198929898,
+        "blended": 1.2823
       },
       {
         "kind": "zone",
         "name": "Royal",
         "n": 110,
         "w": 0.478,
-        "fitted": 1.8152,
-        "prior": 1.7450690339970925,
-        "blended": 1.7783
+        "fitted": 1.8107,
+        "prior": 1.7373031563821606,
+        "blended": 1.772
       },
       {
         "kind": "zone",
         "name": "Shahra",
         "n": 9,
         "w": 0.07,
-        "fitted": 4.4621,
-        "prior": 11.723284279672775,
-        "blended": 10.9593
+        "fitted": 4.4073,
+        "prior": 11.671113512105796,
+        "blended": 10.9045
       },
       {
         "kind": "zone",
         "name": "Shiro",
         "n": 479,
         "w": 0.8,
-        "fitted": 0.9771,
-        "prior": 0.8949071969215858,
-        "blended": 0.9601
+        "fitted": 0.9728,
+        "prior": 0.8909246955805952,
+        "blended": 0.9558
       },
       {
         "kind": "zone",
         "name": "Tetsu",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.948,
-        "prior": 1.6779509942279736,
-        "blended": 1.7719
+        "fitted": 1.9382,
+        "prior": 1.6704838042136159,
+        "blended": 1.7636
       },
       {
         "kind": "zone",
         "name": "Toad",
         "n": 137,
         "w": 0.533,
-        "fitted": 1.3017,
-        "prior": 1.261819147659436,
-        "blended": 1.2829
+        "fitted": 1.2734,
+        "prior": 1.2562038207686392,
+        "blended": 1.2653
       },
       {
         "kind": "zone",
         "name": "Treasure",
         "n": 109,
         "w": 0.476,
-        "fitted": 1.4332,
-        "prior": 1.575036666581991,
-        "blended": 1.5059
+        "fitted": 1.4325,
+        "prior": 1.5680274642218475,
+        "blended": 1.502
       },
       {
         "kind": "zone",
         "name": "Uwo",
         "n": 94,
         "w": 0.439,
-        "fitted": 1.4748,
-        "prior": 1.575036666581991,
-        "blended": 1.5302
+        "fitted": 1.4699,
+        "prior": 1.5680274642218475,
+        "blended": 1.5241
       },
       {
         "kind": "zone",
         "name": "Valeria",
         "n": 100,
         "w": 0.455,
-        "fitted": 1.1509,
-        "prior": 1.337886259397771,
-        "blended": 1.2494
+        "fitted": 1.147,
+        "prior": 1.3319324198929898,
+        "blended": 1.2444
       },
       {
         "kind": "zone",
         "name": "Venmon",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.5887,
-        "prior": 1.575036666581991,
-        "blended": 1.58
+        "fitted": 1.5842,
+        "prior": 1.5680274642218475,
+        "blended": 1.5739
       },
       {
         "kind": "zone",
         "name": "Warp",
-        "n": 180,
-        "w": 0.6,
-        "fitted": 0.9283,
-        "prior": 1.0425668844136475,
-        "blended": 0.9724
+        "n": 182,
+        "w": 0.603,
+        "fitted": 0.9686,
+        "prior": 1.0379272703513933,
+        "blended": 0.9956
       },
       {
         "kind": "zone",
         "name": "Wastelands",
         "n": 138,
         "w": 0.535,
-        "fitted": 1.2362,
-        "prior": 1.1231085321365901,
-        "blended": 1.1822
+        "fitted": 1.2306,
+        "prior": 1.118110492953647,
+        "blended": 1.1769
       },
       {
         "kind": "zone",
         "name": "Xleph",
         "n": 103,
         "w": 0.462,
-        "fitted": 1.3859,
-        "prior": 1.6779509942279736,
-        "blended": 1.5361
+        "fitted": 1.3864,
+        "prior": 1.6704838042136159,
+        "blended": 1.5327
       },
       {
         "kind": "zone",
         "name": "Zerinia",
         "n": 222,
         "w": 0.649,
-        "fitted": 1.1176,
-        "prior": 1.0425668844136475,
-        "blended": 1.0907
+        "fitted": 1.1149,
+        "prior": 1.0379272703513933,
+        "blended": 1.0873
       },
       {
         "kind": "zone",
         "name": "[BLOOD]",
         "n": 297,
         "w": 0.712,
-        "fitted": 1.1097,
-        "prior": 1.1231085321365901,
-        "blended": 1.1135
+        "fitted": 1.1083,
+        "prior": 1.118110492953647,
+        "blended": 1.1111
       },
       {
         "kind": "zone",
         "name": "[BOSS]",
         "n": 260,
         "w": 0.684,
-        "fitted": 0.9666,
-        "prior": 1.1231085321365901,
-        "blended": 1.0135
+        "fitted": 0.9632,
+        "prior": 1.118110492953647,
+        "blended": 1.0096
       },
       {
         "kind": "zone",
         "name": "[CUR2]",
         "n": 247,
         "w": 0.673,
-        "fitted": 0.9475,
-        "prior": 1.0425668844136475,
-        "blended": 0.9776
+        "fitted": 0.9461,
+        "prior": 1.0379272703513933,
+        "blended": 0.9752
       },
       {
         "kind": "zone",
         "name": "[DARK]",
         "n": 263,
         "w": 0.687,
-        "fitted": 1.0149,
-        "prior": 1.0425668844136475,
-        "blended": 1.0235
+        "fitted": 1.01,
+        "prior": 1.0379272703513933,
+        "blended": 1.0187
       },
       {
         "kind": "zone",
         "name": "[HOME]",
         "n": 134,
         "w": 0.528,
-        "fitted": 1.1897,
-        "prior": 1.575036666581991,
-        "blended": 1.3583
+        "fitted": 1.1868,
+        "prior": 1.5680274642218475,
+        "blended": 1.3537
       },
       {
         "kind": "zone",
         "name": "[HYCA]",
         "n": 309,
         "w": 0.72,
-        "fitted": 0.9533,
-        "prior": 0.9664997726753127,
-        "blended": 0.957
+        "fitted": 0.9518,
+        "prior": 0.9621986712270428,
+        "blended": 0.9547
       },
       {
         "kind": "zone",
         "name": "[MENU]",
         "n": 343,
         "w": 0.741,
-        "fitted": 0.8976,
-        "prior": 0.9664997726753127,
-        "blended": 0.915
+        "fitted": 0.8942,
+        "prior": 0.9621986712270428,
+        "blended": 0.9113
       },
       {
         "kind": "zone",
         "name": "[MOON]",
         "n": 318,
         "w": 0.726,
-        "fitted": 0.9553,
-        "prior": 0.8949071969215858,
-        "blended": 0.9384
+        "fitted": 0.9537,
+        "prior": 0.8909246955805952,
+        "blended": 0.9361
       },
       {
         "kind": "zone",
         "name": "[NEON]",
         "n": 173,
         "w": 0.59,
-        "fitted": 0.994,
-        "prior": 1.0425668844136475,
-        "blended": 1.0136
+        "fitted": 0.9874,
+        "prior": 1.0379272703513933,
+        "blended": 1.0078
       },
       {
         "kind": "zone",
         "name": "[NOV]",
         "n": 45,
         "w": 0.273,
-        "fitted": 1.5335,
-        "prior": 1.7450690339970925,
-        "blended": 1.6846
+        "fitted": 1.5203,
+        "prior": 1.7373031563821606,
+        "blended": 1.6752
       },
       {
         "kind": "zone",
         "name": "[SEP]",
         "n": 369,
         "w": 0.755,
-        "fitted": 1.0211,
-        "prior": 0.8949071969215858,
-        "blended": 0.9886
+        "fitted": 1.0202,
+        "prior": 0.8909246955805952,
+        "blended": 0.9868
       },
       {
         "kind": "zone",
         "name": "[SOON]",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.5294,
-        "prior": 3.355901988455947,
-        "blended": 3.0753
+        "fitted": 1.5177,
+        "prior": 3.3409676084272317,
+        "blended": 3.0605
       },
       {
         "kind": "zone",
         "name": "[SUN]",
         "n": 26,
         "w": 0.178,
-        "fitted": 3.0879,
-        "prior": 3.355901988455947,
-        "blended": 3.3065
+        "fitted": 3.0533,
+        "prior": 3.3409676084272317,
+        "blended": 3.2878
       },
       {
         "kind": "zone",
         "name": "[WEN]",
         "n": 285,
         "w": 0.704,
-        "fitted": 0.965,
-        "prior": 0.8949071969215858,
-        "blended": 0.9437
+        "fitted": 0.9622,
+        "prior": 0.8909246955805952,
+        "blended": 0.9405
       },
       {
         "kind": "zone",
         "name": "[YUNA]",
-        "n": 316,
-        "w": 0.725,
-        "fitted": 0.9551,
-        "prior": 0.9664997726753127,
-        "blended": 0.9582
+        "n": 319,
+        "w": 0.727,
+        "fitted": 0.969,
+        "prior": 0.9621986712270428,
+        "blended": 0.9671
       },
       {
         "kind": "zone",
         "name": "pfpfpfpbbx80",
         "n": 133,
         "w": 0.526,
-        "fitted": 1.0096,
-        "prior": 1.261819147659436,
-        "blended": 1.1222
+        "fitted": 1.0076,
+        "prior": 1.2562038207686392,
+        "blended": 1.1187
       },
       {
         "kind": "biome",
         "name": "0",
         "n": 158,
         "w": 0.568,
-        "fitted": 2.1992,
-        "prior": 3.311604082208328,
-        "blended": 2.6242
+        "fitted": 2.1948,
+        "prior": 3.2968668359959925,
+        "blended": 2.6162
       },
       {
         "kind": "biome",
         "name": "1",
-        "n": 178,
-        "w": 0.597,
-        "fitted": 1.2472,
-        "prior": 1.2215483237979647,
-        "blended": 1.2368
+        "n": 179,
+        "w": 0.599,
+        "fitted": 1.262,
+        "prior": 1.2161122094675123,
+        "blended": 1.2434
       },
       {
         "kind": "biome",
         "name": "2",
-        "n": 146,
-        "w": 0.549,
-        "fitted": 1.0609,
-        "prior": 1.2215483237979647,
-        "blended": 1.1306
+        "n": 148,
+        "w": 0.552,
+        "fitted": 1.0937,
+        "prior": 1.2161122094675123,
+        "blended": 1.1469
       },
       {
         "kind": "biome",
         "name": "3",
         "n": 209,
         "w": 0.635,
-        "fitted": 1.0256,
-        "prior": 0.9396525567676652,
-        "blended": 0.9934
+        "fitted": 1.0226,
+        "prior": 0.935470930359625,
+        "blended": 0.9899
       },
       {
         "kind": "biome",
         "name": "4",
-        "n": 156,
-        "w": 0.565,
-        "fitted": 0.9983,
-        "prior": 1.015719668506,
-        "blended": 1.0058
+        "n": 157,
+        "w": 0.567,
+        "fitted": 1.1073,
+        "prior": 1.0111995294839755,
+        "blended": 1.0646
       },
       {
         "kind": "biome",
         "name": "5",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.0735,
-        "prior": 0.9396525567676652,
-        "blended": 1.0038
+        "fitted": 1.0724,
+        "prior": 0.935470930359625,
+        "blended": 1.001
       },
       {
         "kind": "biome",
         "name": "6",
         "n": 212,
         "w": 0.639,
-        "fitted": 1.1592,
-        "prior": 0.9396525567676652,
-        "blended": 1.0745
+        "fitted": 1.1569,
+        "prior": 0.935470930359625,
+        "blended": 1.0714
       },
       {
         "kind": "biome",
         "name": "7",
         "n": 202,
         "w": 0.627,
-        "fitted": 1.176,
-        "prior": 0.9396525567676652,
-        "blended": 1.0817
+        "fitted": 1.1744,
+        "prior": 0.935470930359625,
+        "blended": 1.079
       },
       {
         "kind": "biome",
         "name": "8",
         "n": 146,
         "w": 0.549,
-        "fitted": 1.1805,
-        "prior": 1.2215483237979647,
-        "blended": 1.1988
+        "fitted": 1.1769,
+        "prior": 1.2161122094675123,
+        "blended": 1.1944
       },
       {
         "kind": "biome",
         "name": "9",
         "n": 130,
         "w": 0.52,
-        "fitted": 1.5302,
-        "prior": 1.015719668506,
-        "blended": 1.257
+        "fitted": 1.5185,
+        "prior": 1.0111995294839755,
+        "blended": 1.2493
       },
       {
         "kind": "biome",
         "name": "10",
         "n": 41,
         "w": 0.255,
-        "fitted": 1.4505,
-        "prior": 2.0582865529196472,
-        "blended": 1.8828
+        "fitted": 1.4456,
+        "prior": 2.049126799835369,
+        "blended": 1.8749
       },
       {
         "kind": "biome",
         "name": "11",
         "n": 47,
         "w": 0.281,
-        "fitted": 1.5551,
-        "prior": 2.0582865529196472,
-        "blended": 1.9021
+        "fitted": 1.5516,
+        "prior": 2.049126799835369,
+        "blended": 1.8948
       },
       {
         "kind": "biome",
         "name": "12",
         "n": 79,
         "w": 0.397,
-        "fitted": 1.2366,
-        "prior": 1.3423607953823788,
-        "blended": 1.2993
+        "fitted": 1.2363,
+        "prior": 1.3363870433708929,
+        "blended": 1.2957
       },
       {
         "kind": "biome",
         "name": "13",
         "n": 61,
         "w": 0.337,
-        "fitted": 1.2753,
-        "prior": 1.3423607953823788,
-        "blended": 1.3194
+        "fitted": 1.2675,
+        "prior": 1.3363870433708929,
+        "blended": 1.3128
       },
       {
         "kind": "biome",
         "name": "14",
         "n": 49,
         "w": 0.29,
-        "fitted": 1.3687,
-        "prior": 1.5213422347666958,
-        "blended": 1.4754
+        "fitted": 1.3635,
+        "prior": 1.5145719824870119,
+        "blended": 1.4691
       },
       {
         "kind": "biome",
         "name": "15",
         "n": 61,
         "w": 0.337,
-        "fitted": 1.1709,
-        "prior": 1.5213422347666958,
-        "blended": 1.3929
+        "fitted": 1.1437,
+        "prior": 1.5145719824870119,
+        "blended": 1.3778
       },
       {
         "kind": "biome",
         "name": "16",
         "n": 73,
         "w": 0.378,
-        "fitted": 1.4092,
-        "prior": 1.5213422347666958,
-        "blended": 1.4779
+        "fitted": 1.3955,
+        "prior": 1.5145719824870119,
+        "blended": 1.4684
       },
       {
         "kind": "biome",
         "name": "17",
         "n": 36,
         "w": 0.231,
-        "fitted": 2.5237,
-        "prior": 2.0582865529196472,
-        "blended": 2.1574
+        "fitted": 2.5123,
+        "prior": 2.049126799835369,
+        "blended": 2.1478
       },
       {
         "kind": "biome",
         "name": "18",
         "n": 60,
         "w": 0.333,
-        "fitted": 1.2966,
-        "prior": 1.5213422347666958,
-        "blended": 1.4424
+        "fitted": 1.2856,
+        "prior": 1.5145719824870119,
+        "blended": 1.434
       },
       {
         "kind": "biome",
         "name": "19",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.2584,
-        "prior": 1.5213422347666958,
-        "blended": 1.4195
+        "fitted": 1.2567,
+        "prior": 1.5145719824870119,
+        "blended": 1.4148
       },
       {
         "kind": "biome",
         "name": "20",
         "n": 33,
         "w": 0.216,
-        "fitted": 1.2203,
-        "prior": 1.5213422347666958,
-        "blended": 1.4507
+        "fitted": 1.2006,
+        "prior": 1.5145719824870119,
+        "blended": 1.4406
       },
       {
         "kind": "biome",
         "name": "21",
         "n": 170,
         "w": 0.586,
-        "fitted": 1.1346,
-        "prior": 1.015719668506,
-        "blended": 1.0838
+        "fitted": 1.1304,
+        "prior": 1.0111995294839755,
+        "blended": 1.0795
       },
       {
         "kind": "biome",
         "name": "22",
-        "n": 133,
-        "w": 0.526,
-        "fitted": 1.0065,
-        "prior": 1.015719668506,
-        "blended": 1.0109
+        "n": 134,
+        "w": 0.528,
+        "fitted": 1.0151,
+        "prior": 1.0111995294839755,
+        "blended": 1.0133
       },
       {
         "kind": "biome",
         "name": "23",
         "n": 180,
         "w": 0.6,
-        "fitted": 1.0512,
-        "prior": 1.015719668506,
-        "blended": 1.0369
+        "fitted": 1.0502,
+        "prior": 1.0111995294839755,
+        "blended": 1.0344
       },
       {
         "kind": "biome",
         "name": "24",
-        "n": 192,
-        "w": 0.615,
-        "fitted": 1.0457,
-        "prior": 0.9396525567676652,
-        "blended": 1.0036
+        "n": 193,
+        "w": 0.617,
+        "fitted": 1.0645,
+        "prior": 0.935470930359625,
+        "blended": 1.0131
       },
       {
         "kind": "biome",
         "name": "25",
         "n": 152,
         "w": 0.559,
-        "fitted": 1.1161,
-        "prior": 1.015719668506,
-        "blended": 1.0706
+        "fitted": 1.1143,
+        "prior": 1.0111995294839755,
+        "blended": 1.0676
       },
       {
         "kind": "biome",
         "name": "26",
         "n": 228,
         "w": 0.655,
-        "fitted": 0.9714,
-        "prior": 1.015719668506,
-        "blended": 0.9865
+        "fitted": 0.9687,
+        "prior": 1.0111995294839755,
+        "blended": 0.9831
       },
       {
         "kind": "biome",
         "name": "27",
-        "n": 198,
-        "w": 0.623,
-        "fitted": 1.0889,
-        "prior": 0.8949071969215858,
-        "blended": 1.0112
+        "n": 199,
+        "w": 0.624,
+        "fitted": 1.0967,
+        "prior": 0.8909246955805952,
+        "blended": 1.0142
       },
       {
         "kind": "biome",
         "name": "28",
         "n": 186,
         "w": 0.608,
-        "fitted": 0.9333,
-        "prior": 0.9396525567676652,
-        "blended": 0.9358
+        "fitted": 0.9328,
+        "prior": 0.935470930359625,
+        "blended": 0.9338
       },
       {
         "kind": "biome",
         "name": "29",
         "n": 166,
         "w": 0.58,
-        "fitted": 1.0071,
-        "prior": 0.9396525567676652,
-        "blended": 0.9782
+        "fitted": 1.0059,
+        "prior": 0.935470930359625,
+        "blended": 0.9757
       },
       {
         "kind": "biome",
         "name": "30",
         "n": 165,
         "w": 0.579,
-        "fitted": 0.9352,
-        "prior": 0.9396525567676652,
-        "blended": 0.9371
+        "fitted": 0.9263,
+        "prior": 0.935470930359625,
+        "blended": 0.9302
       },
       {
         "kind": "biome",
         "name": "31",
         "n": 349,
         "w": 0.744,
-        "fitted": 1.0045,
-        "prior": 0.8949071969215858,
-        "blended": 0.9752
+        "fitted": 1.0008,
+        "prior": 0.8909246955805952,
+        "blended": 0.9715
       },
       {
         "kind": "biome",
         "name": "32",
         "n": 362,
         "w": 0.751,
-        "fitted": 0.9773,
-        "prior": 0.8949071969215858,
-        "blended": 0.9561
+        "fitted": 0.9754,
+        "prior": 0.8909246955805952,
+        "blended": 0.9536
       },
       {
         "kind": "biome",
         "name": "33",
         "n": 349,
         "w": 0.744,
-        "fitted": 0.9644,
-        "prior": 0.8949071969215858,
-        "blended": 0.9461
+        "fitted": 0.9633,
+        "prior": 0.8909246955805952,
+        "blended": 0.9442
       },
       {
         "kind": "biome",
         "name": "34",
         "n": 235,
         "w": 0.662,
-        "fitted": 1.0683,
-        "prior": 0.9396525567676652,
-        "blended": 1.023
+        "fitted": 1.067,
+        "prior": 0.935470930359625,
+        "blended": 1.0206
       },
       {
         "kind": "biome",
         "name": "35",
         "n": 233,
         "w": 0.66,
-        "fitted": 1.208,
-        "prior": 0.9396525567676652,
-        "blended": 1.1091
+        "fitted": 1.2018,
+        "prior": 0.935470930359625,
+        "blended": 1.1037
       },
       {
         "kind": "biome",
         "name": "36",
         "n": 227,
         "w": 0.654,
-        "fitted": 0.9988,
-        "prior": 0.9396525567676652,
-        "blended": 0.9779
+        "fitted": 0.9956,
+        "prior": 0.935470930359625,
+        "blended": 0.9744
       },
       {
         "kind": "biome",
         "name": "37",
         "n": 196,
         "w": 0.62,
-        "fitted": 1.0795,
-        "prior": 0.9396525567676652,
-        "blended": 1.0241
+        "fitted": 1.0739,
+        "prior": 0.935470930359625,
+        "blended": 1.0191
       },
       {
         "kind": "biome",
         "name": "38",
         "n": 252,
         "w": 0.677,
-        "fitted": 1.03,
-        "prior": 0.9396525567676652,
-        "blended": 0.9999
+        "fitted": 1.0236,
+        "prior": 0.935470930359625,
+        "blended": 0.9943
       },
       {
         "kind": "biome",
         "name": "39",
         "n": 102,
         "w": 0.459,
-        "fitted": 2.0117,
-        "prior": 1.5213422347666958,
-        "blended": 1.7297
+        "fitted": 2.003,
+        "prior": 1.5145719824870119,
+        "blended": 1.7221
       },
       {
         "kind": "biome",
         "name": "40",
         "n": 111,
         "w": 0.481,
-        "fitted": 1.1434,
-        "prior": 1.2215483237979647,
-        "blended": 1.1834
+        "fitted": 1.1427,
+        "prior": 1.2161122094675123,
+        "blended": 1.1803
       },
       {
         "kind": "biome",
         "name": "41",
         "n": 146,
         "w": 0.549,
-        "fitted": 0.9734,
-        "prior": 1.015719668506,
-        "blended": 0.9923
+        "fitted": 0.9718,
+        "prior": 1.0111995294839755,
+        "blended": 0.9894
       },
       {
         "kind": "biome",
         "name": "42",
-        "n": 198,
-        "w": 0.623,
-        "fitted": 1.1559,
-        "prior": 1.2215483237979647,
-        "blended": 1.1802
+        "n": 199,
+        "w": 0.624,
+        "fitted": 1.1992,
+        "prior": 1.2161122094675123,
+        "blended": 1.2055
       },
       {
         "kind": "biome",
         "name": "43",
         "n": 530,
         "w": 0.815,
-        "fitted": 0.914,
-        "prior": 0.8949071969215858,
-        "blended": 0.9104
+        "fitted": 0.9124,
+        "prior": 0.8909246955805952,
+        "blended": 0.9084
       },
       {
         "kind": "biome",
         "name": "44",
         "n": 589,
         "w": 0.831,
-        "fitted": 0.954,
-        "prior": 0.8949071969215858,
-        "blended": 0.9437
+        "fitted": 0.9537,
+        "prior": 0.8909246955805952,
+        "blended": 0.9428
       },
       {
         "kind": "biome",
         "name": "45",
         "n": 494,
         "w": 0.805,
-        "fitted": 0.9443,
-        "prior": 0.8949071969215858,
-        "blended": 0.9344
+        "fitted": 0.9431,
+        "prior": 0.8909246955805952,
+        "blended": 0.9327
       },
       {
         "kind": "biome",
         "name": "47",
         "n": 636,
         "w": 0.841,
-        "fitted": 0.9503,
-        "prior": 0.8949071969215858,
-        "blended": 0.9413
+        "fitted": 0.9439,
+        "prior": 0.8909246955805952,
+        "blended": 0.9353
       },
       {
         "kind": "biome",
         "name": "48",
         "n": 682,
         "w": 0.85,
-        "fitted": 0.9633,
-        "prior": 0.8949071969215858,
-        "blended": 0.9527
+        "fitted": 0.9603,
+        "prior": 0.8909246955805952,
+        "blended": 0.9496
       },
       {
         "kind": "biome",
         "name": "49",
         "n": 538,
         "w": 0.818,
-        "fitted": 0.982,
-        "prior": 0.8949071969215858,
-        "blended": 0.9655
+        "fitted": 0.9808,
+        "prior": 0.8909246955805952,
+        "blended": 0.9638
       },
       {
         "kind": "biome",
         "name": "50",
-        "n": 558,
-        "w": 0.823,
-        "fitted": 0.9399,
-        "prior": 0.8949071969215858,
-        "blended": 0.9318
+        "n": 560,
+        "w": 0.824,
+        "fitted": 0.9561,
+        "prior": 0.8909246955805952,
+        "blended": 0.9443
       },
       {
         "kind": "biome",
         "name": "51",
         "n": 498,
         "w": 0.806,
-        "fitted": 0.9658,
-        "prior": 0.8949071969215858,
-        "blended": 0.9516
+        "fitted": 0.9638,
+        "prior": 0.8909246955805952,
+        "blended": 0.9492
       },
       {
         "kind": "biome",
         "name": "52",
         "n": 532,
         "w": 0.816,
-        "fitted": 0.9353,
-        "prior": 0.8949071969215858,
-        "blended": 0.9277
+        "fitted": 0.936,
+        "prior": 0.8909246955805952,
+        "blended": 0.9275
       },
       {
         "kind": "biome",
         "name": "53",
         "n": 416,
         "w": 0.776,
-        "fitted": 1.0097,
-        "prior": 0.8949071969215858,
-        "blended": 0.9828
+        "fitted": 1.0083,
+        "prior": 0.8909246955805952,
+        "blended": 0.9807
       },
       {
         "kind": "biome",
         "name": "54",
         "n": 467,
         "w": 0.796,
-        "fitted": 0.9765,
-        "prior": 0.8949071969215858,
-        "blended": 0.9592
+        "fitted": 0.9763,
+        "prior": 0.8909246955805952,
+        "blended": 0.9582
       },
       {
         "kind": "biome",
         "name": "55",
         "n": 567,
         "w": 0.825,
-        "fitted": 0.9379,
-        "prior": 0.8949071969215858,
-        "blended": 0.9302
+        "fitted": 0.937,
+        "prior": 0.8909246955805952,
+        "blended": 0.9288
       },
       {
         "kind": "biome",
         "name": "56",
         "n": 518,
         "w": 0.812,
-        "fitted": 0.9517,
-        "prior": 0.8949071969215858,
-        "blended": 0.9407
+        "fitted": 0.9505,
+        "prior": 0.8909246955805952,
+        "blended": 0.939
       },
       {
         "kind": "biome",
         "name": "57",
         "n": 449,
         "w": 0.789,
-        "fitted": 0.9301,
-        "prior": 0.8949071969215858,
-        "blended": 0.9226
+        "fitted": 0.9293,
+        "prior": 0.8909246955805952,
+        "blended": 0.9211
       },
       {
         "kind": "biome",
         "name": "58",
         "n": 505,
         "w": 0.808,
-        "fitted": 1.0041,
-        "prior": 1.015719668506,
-        "blended": 1.0063
+        "fitted": 1.0037,
+        "prior": 1.0111995294839755,
+        "blended": 1.0051
       },
       {
         "kind": "biome",
         "name": "59",
         "n": 315,
         "w": 0.724,
-        "fitted": 0.9435,
-        "prior": 0.8949071969215858,
-        "blended": 0.9298
+        "fitted": 0.9415,
+        "prior": 0.8909246955805952,
+        "blended": 0.9273
       },
       {
         "kind": "biome",
         "name": "60",
         "n": 243,
         "w": 0.669,
-        "fitted": 0.9549,
-        "prior": 0.8949071969215858,
-        "blended": 0.9346
+        "fitted": 0.9523,
+        "prior": 0.8909246955805952,
+        "blended": 0.9316
       },
       {
         "kind": "biome",
         "name": "61",
         "n": 252,
         "w": 0.677,
-        "fitted": 0.9745,
-        "prior": 0.8949071969215858,
-        "blended": 0.9481
+        "fitted": 0.9732,
+        "prior": 0.8909246955805952,
+        "blended": 0.9459
       },
       {
         "kind": "biome",
         "name": "62",
-        "n": 368,
-        "w": 0.754,
-        "fitted": 0.9277,
-        "prior": 0.8949071969215858,
-        "blended": 0.9195
+        "n": 369,
+        "w": 0.755,
+        "fitted": 0.9303,
+        "prior": 0.8909246955805952,
+        "blended": 0.9205
       },
       {
         "kind": "biome",
         "name": "63",
         "n": 287,
         "w": 0.705,
-        "fitted": 0.9354,
-        "prior": 0.8949071969215858,
-        "blended": 0.9233
+        "fitted": 0.9323,
+        "prior": 0.8909246955805952,
+        "blended": 0.9199
       },
       {
         "kind": "biome",
         "name": "64",
         "n": 330,
         "w": 0.733,
-        "fitted": 0.99,
-        "prior": 0.8949071969215858,
-        "blended": 0.9637
+        "fitted": 0.9869,
+        "prior": 0.8909246955805952,
+        "blended": 0.9603
       },
       {
         "kind": "biome",
         "name": "65",
         "n": 241,
         "w": 0.668,
-        "fitted": 0.9254,
-        "prior": 0.9396525567676652,
-        "blended": 0.9301
+        "fitted": 0.921,
+        "prior": 0.935470930359625,
+        "blended": 0.9258
       },
       {
         "kind": "biome",
         "name": "66",
         "n": 214,
         "w": 0.641,
-        "fitted": 0.9923,
-        "prior": 0.9396525567676652,
-        "blended": 0.9731
+        "fitted": 0.9912,
+        "prior": 0.935470930359625,
+        "blended": 0.9708
       },
       {
         "kind": "biome",
         "name": "67",
         "n": 234,
         "w": 0.661,
-        "fitted": 0.9565,
-        "prior": 0.9396525567676652,
-        "blended": 0.9508
+        "fitted": 0.9576,
+        "prior": 0.935470930359625,
+        "blended": 0.95
       },
       {
         "kind": "biome",
         "name": "68",
         "n": 164,
         "w": 0.577,
-        "fitted": 0.9863,
-        "prior": 0.9396525567676652,
-        "blended": 0.9663
+        "fitted": 0.9858,
+        "prior": 0.935470930359625,
+        "blended": 0.9642
       },
       {
         "kind": "biome",
         "name": "69",
         "n": 228,
         "w": 0.655,
-        "fitted": 0.9832,
-        "prior": 0.9396525567676652,
-        "blended": 0.968
+        "fitted": 0.9825,
+        "prior": 0.935470930359625,
+        "blended": 0.966
       },
       {
         "kind": "biome",
         "name": "70",
         "n": 312,
         "w": 0.722,
-        "fitted": 0.944,
-        "prior": 0.8949071969215858,
-        "blended": 0.9301
+        "fitted": 0.939,
+        "prior": 0.8909246955805952,
+        "blended": 0.9254
       },
       {
         "kind": "biome",
         "name": "71",
         "n": 270,
         "w": 0.692,
-        "fitted": 0.9869,
-        "prior": 0.8949071969215858,
-        "blended": 0.9576
+        "fitted": 0.9771,
+        "prior": 0.8909246955805952,
+        "blended": 0.9497
       },
       {
         "kind": "biome",
         "name": "72",
         "n": 299,
         "w": 0.714,
-        "fitted": 0.9898,
-        "prior": 0.8949071969215858,
-        "blended": 0.9616
+        "fitted": 0.9895,
+        "prior": 0.8909246955805952,
+        "blended": 0.9602
       },
       {
         "kind": "biome",
         "name": "73",
         "n": 34,
         "w": 0.221,
-        "fitted": 1.7831,
-        "prior": 3.3111566286098677,
-        "blended": 2.8882
+        "fitted": 1.7862,
+        "prior": 3.296421373648202,
+        "blended": 2.8793
       },
       {
         "kind": "biome",
         "name": "74",
         "n": 6,
         "w": 0.048,
-        "fitted": 4.758,
-        "prior": 6.599940577296696,
-        "blended": 6.4979
+        "fitted": 4.7423,
+        "prior": 6.570569629906889,
+        "blended": 6.4693
       },
       {
         "kind": "biome",
         "name": "75",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.787,
-        "prior": 1.5213422347666958,
-        "blended": 1.6193
+        "fitted": 1.7872,
+        "prior": 1.5145719824870119,
+        "blended": 1.615
       },
       {
         "kind": "biome",
         "name": "76",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0973,
-        "prior": 4.642778537629187,
-        "blended": 3.9933
+        "fitted": 1.0965,
+        "prior": 4.622117320672127,
+        "blended": 3.977
       },
       {
         "kind": "biome",
         "name": "77",
         "n": 7,
         "w": 0.055,
-        "fitted": 1.0942,
-        "prior": 5.481306581144714,
-        "blended": 5.0155
+        "fitted": 1.093,
+        "prior": 5.456913760431146,
+        "blended": 4.9941
       },
       {
         "kind": "biome",
         "name": "78",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.177,
-        "prior": 4.921989583068722,
-        "blended": 4.501
+        "fitted": 1.1746,
+        "prior": 4.9000858256932736,
+        "blended": 4.4816
       },
       {
         "kind": "biome",
         "name": "79",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1551,
-        "prior": 4.642778537629187,
-        "blended": 4.2133
+        "fitted": 1.1528,
+        "prior": 4.622117320672127,
+        "blended": 4.1953
       },
       {
         "kind": "biome",
         "name": "80",
         "n": 129,
         "w": 0.518,
-        "fitted": 0.9996,
-        "prior": 1.5213422347666958,
-        "blended": 1.2239
+        "fitted": 1.0002,
+        "prior": 1.5145719824870119,
+        "blended": 1.2216
       },
       {
         "kind": "biome",
         "name": "81",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.1792,
-        "prior": 4.921989583068722,
-        "blended": 4.1994
+        "fitted": 1.1768,
+        "prior": 4.9000858256932736,
+        "blended": 4.1819
       },
       {
         "kind": "biome",
         "name": "82",
         "n": 46,
         "w": 0.277,
-        "fitted": 1.3096,
-        "prior": 1.3423607953823788,
-        "blended": 1.3332
+        "fitted": 1.3028,
+        "prior": 1.3363870433708929,
+        "blended": 1.327
       },
       {
         "kind": "biome",
@@ -1452,150 +1452,150 @@
         "n": 149,
         "w": 0.554,
         "fitted": 0.9652,
-        "prior": 0.9396525567676652,
-        "blended": 0.9537
+        "prior": 0.935470930359625,
+        "blended": 0.9518
       },
       {
         "kind": "biome",
         "name": "84",
         "n": 110,
         "w": 0.478,
-        "fitted": 0.9807,
-        "prior": 1.1231085321365901,
-        "blended": 1.0526
+        "fitted": 0.9794,
+        "prior": 1.118110492953647,
+        "blended": 1.0495
       },
       {
         "kind": "biome",
         "name": "85",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.3088,
-        "prior": 1.2215483237979647,
-        "blended": 1.2547
+        "fitted": 1.3054,
+        "prior": 1.2161122094675123,
+        "blended": 1.25
       },
       {
         "kind": "biome",
         "name": "86",
         "n": 108,
         "w": 0.474,
-        "fitted": 1.0526,
-        "prior": 1.015719668506,
-        "blended": 1.033
+        "fitted": 1.0511,
+        "prior": 1.0111995294839755,
+        "blended": 1.0299
       },
       {
         "kind": "biome",
         "name": "87",
         "n": 68,
         "w": 0.362,
-        "fitted": 1.5319,
-        "prior": 1.5213422347666958,
-        "blended": 1.5252
+        "fitted": 1.5318,
+        "prior": 1.5145719824870119,
+        "blended": 1.5208
       },
       {
         "kind": "biome",
         "name": "88",
         "n": 58,
         "w": 0.326,
-        "fitted": 1.0551,
-        "prior": 1.5213422347666958,
-        "blended": 1.3503
+        "fitted": 1.0519,
+        "prior": 1.5145719824870119,
+        "blended": 1.3449
       },
       {
         "kind": "biome",
         "name": "89",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.0307,
-        "prior": 1.1231085321365901,
-        "blended": 1.0763
+        "fitted": 1.0269,
+        "prior": 1.118110492953647,
+        "blended": 1.0719
       },
       {
         "kind": "biome",
         "name": "90",
         "n": 115,
         "w": 0.489,
-        "fitted": 0.9127,
-        "prior": 1.1231085321365901,
-        "blended": 1.0147
+        "fitted": 0.9131,
+        "prior": 1.118110492953647,
+        "blended": 1.0126
       },
       {
         "kind": "biome",
         "name": "91",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.0958,
-        "prior": 1.2215483237979647,
-        "blended": 1.174
+        "fitted": 1.0913,
+        "prior": 1.2161122094675123,
+        "blended": 1.169
       },
       {
         "kind": "level",
         "name": "1",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.151,
-        "prior": 11.186339961519824,
-        "blended": 9.7043
+        "fitted": 1.1497,
+        "prior": 11.13655869475744,
+        "blended": 9.6631
       },
       {
         "kind": "level",
         "name": "2",
         "n": 56,
         "w": 0.318,
-        "fitted": 1.6516,
-        "prior": 1.7898143938431716,
-        "blended": 1.7446
+        "fitted": 1.6558,
+        "prior": 1.7818493911611903,
+        "blended": 1.7407
       },
       {
         "kind": "level",
         "name": "3",
         "n": 79,
         "w": 0.397,
-        "fitted": 1.0866,
-        "prior": 1.5660875946127752,
-        "blended": 1.3546
+        "fitted": 1.0915,
+        "prior": 1.5591182172660416,
+        "blended": 1.3533
       },
       {
         "kind": "level",
         "name": "18",
         "n": 81,
         "w": 0.403,
-        "fitted": 1.0791,
-        "prior": 1.5660875946127752,
-        "blended": 1.3478
+        "fitted": 1.079,
+        "prior": 1.5591182172660416,
+        "blended": 1.3442
       },
       {
         "kind": "level",
         "name": "19",
         "n": 57,
         "w": 0.322,
-        "fitted": 1.2693,
-        "prior": 1.7898143938431716,
-        "blended": 1.6023
+        "fitted": 1.2692,
+        "prior": 1.7818493911611903,
+        "blended": 1.5974
       },
       {
         "kind": "level",
         "name": "20",
         "n": 12,
         "w": 0.091,
-        "fitted": 13.3899,
-        "prior": 11.186339961519824,
-        "blended": 11.3707
+        "fitted": 13.2121,
+        "prior": 11.13655869475744,
+        "blended": 11.3109
       },
       {
         "kind": "badge",
         "name": "mesa",
         "n": 15,
         "w": 0.111,
-        "fitted": 0.9207,
+        "fitted": 0.9224,
         "prior": 1.25,
-        "blended": 1.2082
+        "blended": 1.2085
       },
       {
         "kind": "badge",
         "name": "matrix",
         "n": 1,
         "w": 0.008,
-        "fitted": 1.1101,
+        "fitted": 1.1089,
         "prior": 1.5,
         "blended": 1.4963
       },
@@ -1604,276 +1604,276 @@
         "name": "heartbeat",
         "n": 68,
         "w": 0.362,
-        "fitted": 1.0923,
+        "fitted": 1.0898,
         "prior": 1.35,
-        "blended": 1.2504
+        "blended": 1.2494
       },
       {
         "kind": "badge",
         "name": "gm",
         "n": 45,
         "w": 0.273,
-        "fitted": 0.9203,
+        "fitted": 0.9286,
         "prior": 1.15,
-        "blended": 1.0822
+        "blended": 1.0849
       },
       {
         "kind": "badge",
         "name": "biome0_flow",
         "n": 94,
         "w": 0.439,
-        "fitted": 2.5513,
+        "fitted": 2.5334,
         "prior": 1.5598,
-        "blended": 1.9361
+        "blended": 1.9301
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.1174343031768272,
+      "baseline_multiple": 1.1224293197398945,
       "zone": {
-        "Aetherking": 5.9507,
-        "Akileaf": 1.0555,
-        "Alto": 1.0366,
-        "Angel": 1.2475,
-        "Antenna": 8.2817,
-        "Arc": 0.9406,
-        "Aria": 1.7103,
-        "Avidana": 1.8821,
-        "Blossom": 1.1292,
-        "Blushing": 1.0487,
-        "Bubble": 1.2532,
-        "Calyx": 1.0143,
-        "Cradle": 1.2343,
-        "Dhampir": 1.3811,
-        "Dread": 3.5465,
-        "Dynacrypts": 1.3315,
-        "Ender": 1.0569,
-        "Everglades": 1.0486,
-        "Exduo": 0.9273,
-        "First Earth": 1.8616,
-        "Gemina": 4.7502,
-        "Greysunn": 1.4455,
-        "Grove": 0.9619,
-        "Hypermage": 0.9548,
-        "Hyphae": 0.9358,
-        "Intro Forest": 1.1988,
-        "Jadeite": 1.1283,
-        "Kairo": 1.013,
-        "Killscreen": 1.9089,
-        "Kippsun": 1.2063,
-        "Linosim": 1.0032,
-        "Mecha": 0.948,
-        "Mirage": 0.9061,
-        "Mori": 1.5477,
-        "Mould": 1.7252,
-        "Mt Zuka": 1.4013,
-        "Muxtai X1": 1.1154,
-        "Nightrose": 0.951,
-        "Ouallada": 0.9907,
-        "Palace": 1.0041,
-        "Pepo": 1.0858,
-        "Promiselands": 1.4548,
-        "Radiant": 1.4671,
-        "Riso": 0.9503,
-        "Rocket": 1.2868,
-        "Royal": 1.7783,
-        "Shahra": 10.9593,
-        "Shiro": 0.9601,
-        "Tetsu": 1.7719,
-        "Toad": 1.2829,
-        "Treasure": 1.5059,
-        "Uwo": 1.5302,
-        "Valeria": 1.2494,
-        "Venmon": 1.58,
-        "Warp": 0.9724,
-        "Wastelands": 1.1822,
-        "Xleph": 1.5361,
-        "Zerinia": 1.0907,
-        "[BLOOD]": 1.1135,
-        "[BOSS]": 1.0135,
-        "[CUR2]": 0.9776,
-        "[DARK]": 1.0235,
-        "[HOME]": 1.3583,
-        "[HYCA]": 0.957,
-        "[MENU]": 0.915,
-        "[MOON]": 0.9384,
-        "[NEON]": 1.0136,
-        "[NOV]": 1.6846,
-        "[SEP]": 0.9886,
-        "[SOON]": 3.0753,
-        "[SUN]": 3.3065,
-        "[WEN]": 0.9437,
-        "[YUNA]": 0.9582,
-        "pfpfpfpbbx80": 1.1222,
+        "Aetherking": 5.9258,
+        "Akileaf": 1.0803,
+        "Alto": 1.0355,
+        "Angel": 1.2414,
+        "Antenna": 8.2362,
+        "Arc": 0.9427,
+        "Aria": 1.7015,
+        "Avidana": 1.8679,
+        "Blossom": 1.1217,
+        "Blushing": 1.0443,
+        "Bubble": 1.2472,
+        "Calyx": 1.0135,
+        "Cradle": 1.2273,
+        "Dhampir": 1.375,
+        "Dread": 3.5263,
+        "Dynacrypts": 1.3491,
+        "Ender": 1.0456,
+        "Everglades": 1.0439,
+        "Exduo": 0.9247,
+        "First Earth": 1.8534,
+        "Gemina": 4.7253,
+        "Greysunn": 1.4429,
+        "Grove": 0.9575,
+        "Hypermage": 0.9523,
+        "Hyphae": 0.9337,
+        "Intro Forest": 1.1957,
+        "Jadeite": 1.1234,
+        "Kairo": 1.0099,
+        "Killscreen": 1.8999,
+        "Kippsun": 1.2012,
+        "Linosim": 1.0014,
+        "Mecha": 0.9465,
+        "Mirage": 0.906,
+        "Mori": 1.5377,
+        "Mould": 1.7082,
+        "Mt Zuka": 1.3963,
+        "Muxtai X1": 1.1266,
+        "Nightrose": 0.9483,
+        "Ouallada": 0.9856,
+        "Palace": 0.999,
+        "Pepo": 1.0805,
+        "Promiselands": 1.5129,
+        "Radiant": 1.4731,
+        "Riso": 0.9486,
+        "Rocket": 1.2823,
+        "Royal": 1.772,
+        "Shahra": 10.9045,
+        "Shiro": 0.9558,
+        "Tetsu": 1.7636,
+        "Toad": 1.2653,
+        "Treasure": 1.502,
+        "Uwo": 1.5241,
+        "Valeria": 1.2444,
+        "Venmon": 1.5739,
+        "Warp": 0.9956,
+        "Wastelands": 1.1769,
+        "Xleph": 1.5327,
+        "Zerinia": 1.0873,
+        "[BLOOD]": 1.1111,
+        "[BOSS]": 1.0096,
+        "[CUR2]": 0.9752,
+        "[DARK]": 1.0187,
+        "[HOME]": 1.3537,
+        "[HYCA]": 0.9547,
+        "[MENU]": 0.9113,
+        "[MOON]": 0.9361,
+        "[NEON]": 1.0078,
+        "[NOV]": 1.6752,
+        "[SEP]": 0.9868,
+        "[SOON]": 3.0605,
+        "[SUN]": 3.2878,
+        "[WEN]": 0.9405,
+        "[YUNA]": 0.9671,
+        "pfpfpfpbbx80": 1.1187,
         "Holo": 1
       },
       "biome": {
-        "0": 2.6242,
-        "1": 1.2368,
-        "2": 1.1306,
-        "3": 0.9934,
-        "4": 1.0058,
-        "5": 1.0038,
-        "6": 1.0745,
-        "7": 1.0817,
-        "8": 1.1988,
-        "9": 1.257,
-        "10": 1.8828,
-        "11": 1.9021,
-        "12": 1.2993,
-        "13": 1.3194,
-        "14": 1.4754,
-        "15": 1.3929,
-        "16": 1.4779,
-        "17": 2.1574,
-        "18": 1.4424,
-        "19": 1.4195,
-        "20": 1.4507,
-        "21": 1.0838,
-        "22": 1.0109,
-        "23": 1.0369,
-        "24": 1.0036,
-        "25": 1.0706,
-        "26": 0.9865,
-        "27": 1.0112,
-        "28": 0.9358,
-        "29": 0.9782,
-        "30": 0.9371,
-        "31": 0.9752,
-        "32": 0.9561,
-        "33": 0.9461,
-        "34": 1.023,
-        "35": 1.1091,
-        "36": 0.9779,
-        "37": 1.0241,
-        "38": 0.9999,
-        "39": 1.7297,
-        "40": 1.1834,
-        "41": 0.9923,
-        "42": 1.1802,
-        "43": 0.9104,
-        "44": 0.9437,
-        "45": 0.9344,
+        "0": 2.6162,
+        "1": 1.2434,
+        "2": 1.1469,
+        "3": 0.9899,
+        "4": 1.0646,
+        "5": 1.001,
+        "6": 1.0714,
+        "7": 1.079,
+        "8": 1.1944,
+        "9": 1.2493,
+        "10": 1.8749,
+        "11": 1.8948,
+        "12": 1.2957,
+        "13": 1.3128,
+        "14": 1.4691,
+        "15": 1.3778,
+        "16": 1.4684,
+        "17": 2.1478,
+        "18": 1.434,
+        "19": 1.4148,
+        "20": 1.4406,
+        "21": 1.0795,
+        "22": 1.0133,
+        "23": 1.0344,
+        "24": 1.0131,
+        "25": 1.0676,
+        "26": 0.9831,
+        "27": 1.0142,
+        "28": 0.9338,
+        "29": 0.9757,
+        "30": 0.9302,
+        "31": 0.9715,
+        "32": 0.9536,
+        "33": 0.9442,
+        "34": 1.0206,
+        "35": 1.1037,
+        "36": 0.9744,
+        "37": 1.0191,
+        "38": 0.9943,
+        "39": 1.7221,
+        "40": 1.1803,
+        "41": 0.9894,
+        "42": 1.2055,
+        "43": 0.9084,
+        "44": 0.9428,
+        "45": 0.9327,
         "46": 1,
-        "47": 0.9413,
-        "48": 0.9527,
-        "49": 0.9655,
-        "50": 0.9318,
-        "51": 0.9516,
-        "52": 0.9277,
-        "53": 0.9828,
-        "54": 0.9592,
-        "55": 0.9302,
-        "56": 0.9407,
-        "57": 0.9226,
-        "58": 1.0063,
-        "59": 0.9298,
-        "60": 0.9346,
-        "61": 0.9481,
-        "62": 0.9195,
-        "63": 0.9233,
-        "64": 0.9637,
-        "65": 0.9301,
-        "66": 0.9731,
-        "67": 0.9508,
-        "68": 0.9663,
-        "69": 0.968,
-        "70": 0.9301,
-        "71": 0.9576,
-        "72": 0.9616,
-        "73": 2.8882,
-        "74": 6.4979,
-        "75": 1.6193,
-        "76": 3.9933,
-        "77": 5.0155,
-        "78": 4.501,
-        "79": 4.2133,
-        "80": 1.2239,
-        "81": 4.1994,
-        "82": 1.3332,
-        "83": 0.9537,
-        "84": 1.0526,
-        "85": 1.2547,
-        "86": 1.033,
-        "87": 1.5252,
-        "88": 1.3503,
-        "89": 1.0763,
-        "90": 1.0147,
-        "91": 1.174
+        "47": 0.9353,
+        "48": 0.9496,
+        "49": 0.9638,
+        "50": 0.9443,
+        "51": 0.9492,
+        "52": 0.9275,
+        "53": 0.9807,
+        "54": 0.9582,
+        "55": 0.9288,
+        "56": 0.939,
+        "57": 0.9211,
+        "58": 1.0051,
+        "59": 0.9273,
+        "60": 0.9316,
+        "61": 0.9459,
+        "62": 0.9205,
+        "63": 0.9199,
+        "64": 0.9603,
+        "65": 0.9258,
+        "66": 0.9708,
+        "67": 0.95,
+        "68": 0.9642,
+        "69": 0.966,
+        "70": 0.9254,
+        "71": 0.9497,
+        "72": 0.9602,
+        "73": 2.8793,
+        "74": 6.4693,
+        "75": 1.615,
+        "76": 3.977,
+        "77": 4.9941,
+        "78": 4.4816,
+        "79": 4.1953,
+        "80": 1.2216,
+        "81": 4.1819,
+        "82": 1.327,
+        "83": 0.9518,
+        "84": 1.0495,
+        "85": 1.25,
+        "86": 1.0299,
+        "87": 1.5208,
+        "88": 1.3449,
+        "89": 1.0719,
+        "90": 1.0126,
+        "91": 1.169
       },
       "level": {
-        "1": 9.7043,
-        "2": 1.7446,
-        "3": 1.3546,
-        "18": 1.3478,
-        "19": 1.6023,
-        "20": 11.3707
+        "1": 9.6631,
+        "2": 1.7407,
+        "3": 1.3533,
+        "18": 1.3442,
+        "19": 1.5974,
+        "20": 11.3109
       },
       "chroma": {
-        "Pulse": 0.9847,
-        "Hyper": 0.9948
+        "Pulse": 0.9818,
+        "Hyper": 0.9968
       },
       "mode": {
-        "DDTF": 0.9861,
-        "ORIG": 2.7775
+        "DDTF": 0.9831,
+        "ORIG": 2.7642
       },
       "badge": {
-        "mesa": 1.2082,
+        "mesa": 1.2085,
         "matrix": 1.4963,
-        "heartbeat": 1.2504,
-        "gm": 1.0822,
-        "biome0_flow": 1.9361
+        "heartbeat": 1.2494,
+        "gm": 1.0849,
+        "biome0_flow": 1.9301
       },
       "extra": {
-        "one_of_one": 1.0234,
-        "s0": 0.98,
-        "spine": 1.1905
+        "one_of_one": 1.0359,
+        "s0": 0.9787,
+        "spine": 1.1901
       },
-      "ddtf_biome_beta": -0.490211,
+      "ddtf_biome_beta": -0.486651,
       "mode_biome": {
         "DDTF": {
-          "0": 0.5265,
-          "1": 0.8585,
-          "2": 0.8585,
-          "3": 0.9764,
-          "4": 0.9398,
-          "5": 0.9764,
-          "6": 0.9764,
-          "7": 0.9764,
-          "8": 0.8585,
-          "9": 0.9398,
-          "10": 0.6648,
-          "11": 0.6648,
-          "12": 0.8197,
-          "13": 0.8197,
-          "14": 0.771,
-          "15": 0.771,
-          "16": 0.771,
-          "17": 0.6648,
-          "18": 0.771,
-          "19": 0.771,
-          "20": 0.771,
-          "21": 0.9398,
-          "22": 0.9398,
-          "23": 0.9398,
-          "24": 0.9764,
-          "25": 0.9398,
-          "26": 0.9398,
+          "0": 0.529,
+          "1": 0.8595,
+          "2": 0.8595,
+          "3": 0.9765,
+          "4": 0.9402,
+          "5": 0.9765,
+          "6": 0.9765,
+          "7": 0.9765,
+          "8": 0.8595,
+          "9": 0.9402,
+          "10": 0.6668,
+          "11": 0.6668,
+          "12": 0.8209,
+          "13": 0.8209,
+          "14": 0.7724,
+          "15": 0.7724,
+          "16": 0.7724,
+          "17": 0.6668,
+          "18": 0.7724,
+          "19": 0.7724,
+          "20": 0.7724,
+          "21": 0.9402,
+          "22": 0.9402,
+          "23": 0.9402,
+          "24": 0.9765,
+          "25": 0.9402,
+          "26": 0.9402,
           "27": 1,
-          "28": 0.9764,
-          "29": 0.9764,
-          "30": 0.9764,
+          "28": 0.9765,
+          "29": 0.9765,
+          "30": 0.9765,
           "31": 1,
           "32": 1,
           "33": 1,
-          "34": 0.9764,
-          "35": 0.9764,
-          "36": 0.9764,
-          "37": 0.9764,
-          "38": 0.9764,
-          "39": 0.771,
-          "40": 0.8585,
-          "41": 0.9398,
-          "42": 0.8585,
+          "34": 0.9765,
+          "35": 0.9765,
+          "36": 0.9765,
+          "37": 0.9765,
+          "38": 0.9765,
+          "39": 0.7724,
+          "40": 0.8595,
+          "41": 0.9402,
+          "42": 0.8595,
           "43": 1,
           "44": 1,
           "45": 1,
@@ -1889,40 +1889,40 @@
           "55": 1,
           "56": 1,
           "57": 1,
-          "58": 0.9398,
+          "58": 0.9402,
           "59": 1,
           "60": 1,
           "61": 1,
           "62": 1,
           "63": 1,
           "64": 1,
-          "65": 0.9764,
-          "66": 0.9764,
-          "67": 0.9764,
-          "68": 0.9764,
-          "69": 0.9764,
+          "65": 0.9765,
+          "66": 0.9765,
+          "67": 0.9765,
+          "68": 0.9765,
+          "69": 0.9765,
           "70": 1,
           "71": 1,
           "72": 1,
-          "73": 0.5266,
-          "74": 0.3755,
-          "75": 0.771,
-          "76": 0.4462,
-          "77": 0.4113,
-          "78": 0.4336,
-          "79": 0.4462,
-          "80": 0.771,
-          "81": 0.4336,
-          "82": 0.8197,
-          "83": 0.9764,
-          "84": 0.8946,
-          "85": 0.8585,
-          "86": 0.9398,
-          "87": 0.771,
-          "88": 0.771,
-          "89": 0.8946,
-          "90": 0.8946,
-          "91": 0.8585
+          "73": 0.529,
+          "74": 0.3782,
+          "75": 0.7724,
+          "76": 0.4488,
+          "77": 0.414,
+          "78": 0.4362,
+          "79": 0.4488,
+          "80": 0.7724,
+          "81": 0.4362,
+          "82": 0.8209,
+          "83": 0.9765,
+          "84": 0.8954,
+          "85": 0.8595,
+          "86": 0.9402,
+          "87": 0.7724,
+          "88": 0.7724,
+          "89": 0.8954,
+          "90": 0.8954,
+          "91": 0.8595
         }
       }
     }
@@ -1930,1414 +1930,1414 @@
   "money_sword_on": {
     "label": "money_sword_on",
     "bid_share": 0.2,
-    "holdout_median_pct_err": 0.12211145091701314,
+    "holdout_median_pct_err": 0.12152872166677375,
     "alpha": 3,
-    "weighted_r2": 0.7476934766484258,
-    "n": 20440,
+    "weighted_r2": 0.7442379403885734,
+    "n": 20452,
     "prior_audit": [
       {
         "kind": "zone",
         "name": "Aetherking",
         "n": 13,
         "w": 0.098,
-        "fitted": 1.0797,
-        "prior": 7.159257575372687,
-        "blended": 5.9507
+        "fitted": 1.078,
+        "prior": 7.127397564644761,
+        "blended": 5.9258
       },
       {
         "kind": "zone",
         "name": "Akileaf",
-        "n": 130,
-        "w": 0.52,
-        "fitted": 0.9968,
-        "prior": 1.1231085321365901,
-        "blended": 1.0555
+        "n": 132,
+        "w": 0.524,
+        "fitted": 1.0471,
+        "prior": 1.118110492953647,
+        "blended": 1.0803
       },
       {
         "kind": "zone",
         "name": "Alto",
         "n": 599,
         "w": 0.833,
-        "fitted": 1.0512,
-        "prior": 0.9664997726753127,
-        "blended": 1.0366
+        "fitted": 1.0509,
+        "prior": 0.9621986712270428,
+        "blended": 1.0355
       },
       {
         "kind": "zone",
         "name": "Angel",
         "n": 90,
         "w": 0.429,
-        "fitted": 1.2287,
-        "prior": 1.261819147659436,
-        "blended": 1.2475
+        "fitted": 1.222,
+        "prior": 1.2562038207686392,
+        "blended": 1.2414
       },
       {
         "kind": "zone",
         "name": "Antenna",
         "n": 15,
         "w": 0.111,
-        "fitted": 4.6375,
-        "prior": 8.904326609369779,
-        "blended": 8.2817
+        "fitted": 4.5734,
+        "prior": 8.86470072102692,
+        "blended": 8.2362
       },
       {
         "kind": "zone",
         "name": "Arc",
-        "n": 779,
+        "n": 780,
         "w": 0.867,
-        "fitted": 0.9479,
-        "prior": 0.8949071969215858,
-        "blended": 0.9406
+        "fitted": 0.9509,
+        "prior": 0.8909246955805952,
+        "blended": 0.9427
       },
       {
         "kind": "zone",
         "name": "Aria",
         "n": 95,
         "w": 0.442,
-        "fitted": 1.7521,
-        "prior": 1.6779509942279736,
-        "blended": 1.7103
+        "fitted": 1.7416,
+        "prior": 1.6704838042136159,
+        "blended": 1.7015
       },
       {
         "kind": "zone",
         "name": "Avidana",
         "n": 53,
         "w": 0.306,
-        "fitted": 2.2335,
-        "prior": 1.7450690339970925,
-        "blended": 1.8821
+        "fitted": 2.201,
+        "prior": 1.7373031563821606,
+        "blended": 1.8679
       },
       {
         "kind": "zone",
         "name": "Blossom",
         "n": 111,
         "w": 0.481,
-        "fitted": 1.231,
-        "prior": 1.0425668844136475,
-        "blended": 1.1292
+        "fitted": 1.2198,
+        "prior": 1.0379272703513933,
+        "blended": 1.1217
       },
       {
         "kind": "zone",
         "name": "Blushing",
         "n": 112,
         "w": 0.483,
-        "fitted": 0.9744,
-        "prior": 1.1231085321365901,
-        "blended": 1.0487
+        "fitted": 0.9706,
+        "prior": 1.118110492953647,
+        "blended": 1.0443
       },
       {
         "kind": "zone",
         "name": "Bubble",
         "n": 126,
         "w": 0.512,
-        "fitted": 1.2451,
-        "prior": 1.261819147659436,
-        "blended": 1.2532
+        "fitted": 1.2386,
+        "prior": 1.2562038207686392,
+        "blended": 1.2472
       },
       {
         "kind": "zone",
         "name": "Calyx",
         "n": 203,
         "w": 0.628,
-        "fitted": 0.998,
-        "prior": 1.0425668844136475,
-        "blended": 1.0143
+        "fitted": 0.9993,
+        "prior": 1.0379272703513933,
+        "blended": 1.0135
       },
       {
         "kind": "zone",
         "name": "Cradle",
         "n": 99,
         "w": 0.452,
-        "fitted": 1.2018,
-        "prior": 1.261819147659436,
-        "blended": 1.2343
+        "fitted": 1.1932,
+        "prior": 1.2562038207686392,
+        "blended": 1.2273
       },
       {
         "kind": "zone",
         "name": "Dhampir",
         "n": 112,
         "w": 0.483,
-        "fitted": 1.4289,
-        "prior": 1.337886259397771,
-        "blended": 1.3811
+        "fitted": 1.4227,
+        "prior": 1.3319324198929898,
+        "blended": 1.375
       },
       {
         "kind": "zone",
         "name": "Dread",
         "n": 26,
         "w": 0.178,
-        "fitted": 4.5763,
-        "prior": 3.355901988455947,
-        "blended": 3.5465
+        "fitted": 4.5239,
+        "prior": 3.3409676084272317,
+        "blended": 3.5263
       },
       {
         "kind": "zone",
         "name": "Dynacrypts",
-        "n": 365,
+        "n": 366,
         "w": 0.753,
-        "fitted": 1.3552,
-        "prior": 1.261819147659436,
-        "blended": 1.3315
+        "fitted": 1.381,
+        "prior": 1.2562038207686392,
+        "blended": 1.3491
       },
       {
         "kind": "zone",
         "name": "Ender",
         "n": 243,
         "w": 0.669,
-        "fitted": 1.0257,
-        "prior": 1.1231085321365901,
-        "blended": 1.0569
+        "fitted": 1.0116,
+        "prior": 1.118110492953647,
+        "blended": 1.0456
       },
       {
         "kind": "zone",
         "name": "Everglades",
         "n": 141,
         "w": 0.54,
-        "fitted": 0.8958,
-        "prior": 1.261819147659436,
-        "blended": 1.0486
+        "fitted": 0.8917,
+        "prior": 1.2562038207686392,
+        "blended": 1.0439
       },
       {
         "kind": "zone",
         "name": "Exduo",
         "n": 913,
         "w": 0.884,
-        "fitted": 0.9316,
-        "prior": 0.8949071969215858,
-        "blended": 0.9273
+        "fitted": 0.9292,
+        "prior": 0.8909246955805952,
+        "blended": 0.9247
       },
       {
         "kind": "zone",
         "name": "First Earth",
         "n": 103,
         "w": 0.462,
-        "fitted": 2.101,
-        "prior": 1.6779509942279736,
-        "blended": 1.8616
+        "fitted": 2.0919,
+        "prior": 1.6704838042136159,
+        "blended": 1.8534
       },
       {
         "kind": "zone",
         "name": "Gemina",
         "n": 24,
         "w": 0.167,
-        "fitted": 4.5241,
-        "prior": 4.7967025754997,
-        "blended": 4.7502
+        "fitted": 4.4827,
+        "prior": 4.77535636831199,
+        "blended": 4.7253
       },
       {
         "kind": "zone",
         "name": "Greysunn",
         "n": 112,
         "w": 0.483,
-        "fitted": 1.3185,
-        "prior": 1.575036666581991,
-        "blended": 1.4455
+        "fitted": 1.3198,
+        "prior": 1.5680274642218475,
+        "blended": 1.4429
       },
       {
         "kind": "zone",
         "name": "Grove",
         "n": 620,
         "w": 0.838,
-        "fitted": 0.9754,
-        "prior": 0.8949071969215858,
-        "blended": 0.9619
+        "fitted": 0.9709,
+        "prior": 0.8909246955805952,
+        "blended": 0.9575
       },
       {
         "kind": "zone",
         "name": "Hypermage",
         "n": 1444,
         "w": 0.923,
-        "fitted": 0.96,
-        "prior": 0.8949071969215858,
-        "blended": 0.9548
+        "fitted": 0.9576,
+        "prior": 0.8909246955805952,
+        "blended": 0.9523
       },
       {
         "kind": "zone",
         "name": "Hyphae",
         "n": 775,
         "w": 0.866,
-        "fitted": 0.9423,
-        "prior": 0.8949071969215858,
-        "blended": 0.9358
+        "fitted": 0.9405,
+        "prior": 0.8909246955805952,
+        "blended": 0.9337
       },
       {
         "kind": "zone",
         "name": "Intro Forest",
         "n": 203,
         "w": 0.628,
-        "fitted": 1.1631,
-        "prior": 1.261819147659436,
-        "blended": 1.1988
+        "fitted": 1.1613,
+        "prior": 1.2562038207686392,
+        "blended": 1.1957
       },
       {
         "kind": "zone",
         "name": "Jadeite",
         "n": 133,
         "w": 0.526,
-        "fitted": 0.9676,
-        "prior": 1.337886259397771,
-        "blended": 1.1283
+        "fitted": 0.9634,
+        "prior": 1.3319324198929898,
+        "blended": 1.1234
       },
       {
         "kind": "zone",
         "name": "Kairo",
         "n": 686,
         "w": 0.851,
-        "fitted": 1.0214,
-        "prior": 0.9664997726753127,
-        "blended": 1.013
+        "fitted": 1.0185,
+        "prior": 0.9621986712270428,
+        "blended": 1.0099
       },
       {
         "kind": "zone",
         "name": "Killscreen",
         "n": 96,
         "w": 0.444,
-        "fitted": 2.1354,
-        "prior": 1.7450690339970925,
-        "blended": 1.9089
+        "fitted": 2.1247,
+        "prior": 1.7373031563821606,
+        "blended": 1.8999
       },
       {
         "kind": "zone",
         "name": "Kippsun",
         "n": 130,
         "w": 0.52,
-        "fitted": 1.1572,
-        "prior": 1.261819147659436,
-        "blended": 1.2063
+        "fitted": 1.1525,
+        "prior": 1.2562038207686392,
+        "blended": 1.2012
       },
       {
         "kind": "zone",
         "name": "Linosim",
         "n": 191,
         "w": 0.614,
-        "fitted": 0.9793,
-        "prior": 1.0425668844136475,
-        "blended": 1.0032
+        "fitted": 0.9791,
+        "prior": 1.0379272703513933,
+        "blended": 1.0014
       },
       {
         "kind": "zone",
         "name": "Mecha",
         "n": 720,
         "w": 0.857,
-        "fitted": 0.9572,
-        "prior": 0.8949071969215858,
-        "blended": 0.948
+        "fitted": 0.9561,
+        "prior": 0.8909246955805952,
+        "blended": 0.9465
       },
       {
         "kind": "zone",
         "name": "Mirage",
         "n": 618,
         "w": 0.837,
-        "fitted": 0.9083,
-        "prior": 0.8949071969215858,
-        "blended": 0.9061
+        "fitted": 0.909,
+        "prior": 0.8909246955805952,
+        "blended": 0.906
       },
       {
         "kind": "zone",
         "name": "Mori",
         "n": 99,
         "w": 0.452,
-        "fitted": 1.5153,
-        "prior": 1.575036666581991,
-        "blended": 1.5477
+        "fitted": 1.5017,
+        "prior": 1.5680274642218475,
+        "blended": 1.5377
       },
       {
         "kind": "zone",
         "name": "Mould",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.8026,
-        "prior": 1.6779509942279736,
-        "blended": 1.7252
+        "fitted": 1.7696,
+        "prior": 1.6704838042136159,
+        "blended": 1.7082
       },
       {
         "kind": "zone",
         "name": "Mt Zuka",
         "n": 194,
         "w": 0.618,
-        "fitted": 1.4421,
-        "prior": 1.337886259397771,
-        "blended": 1.4013
+        "fitted": 1.4376,
+        "prior": 1.3319324198929898,
+        "blended": 1.3963
       },
       {
         "kind": "zone",
         "name": "Muxtai X1",
-        "n": 190,
-        "w": 0.613,
-        "fitted": 1.0318,
-        "prior": 1.261819147659436,
-        "blended": 1.1154
+        "n": 191,
+        "w": 0.614,
+        "fitted": 1.0521,
+        "prior": 1.2562038207686392,
+        "blended": 1.1266
       },
       {
         "kind": "zone",
         "name": "Nightrose",
         "n": 990,
         "w": 0.892,
-        "fitted": 0.958,
-        "prior": 0.8949071969215858,
-        "blended": 0.951
+        "fitted": 0.9555,
+        "prior": 0.8909246955805952,
+        "blended": 0.9483
       },
       {
         "kind": "zone",
         "name": "Ouallada",
         "n": 166,
         "w": 0.58,
-        "fitted": 1.0662,
-        "prior": 0.8949071969215858,
-        "blended": 0.9907
+        "fitted": 1.0603,
+        "prior": 0.8909246955805952,
+        "blended": 0.9856
       },
       {
         "kind": "zone",
         "name": "Palace",
         "n": 286,
         "w": 0.704,
-        "fitted": 0.9884,
-        "prior": 1.0425668844136475,
-        "blended": 1.0041
+        "fitted": 0.9831,
+        "prior": 1.0379272703513933,
+        "blended": 0.999
       },
       {
         "kind": "zone",
         "name": "Pepo",
         "n": 156,
         "w": 0.565,
-        "fitted": 1.0579,
-        "prior": 1.1231085321365901,
-        "blended": 1.0858
+        "fitted": 1.0525,
+        "prior": 1.118110492953647,
+        "blended": 1.0805
       },
       {
         "kind": "zone",
         "name": "Promiselands",
-        "n": 87,
-        "w": 0.42,
-        "fitted": 1.3039,
-        "prior": 1.575036666581991,
-        "blended": 1.4548
+        "n": 88,
+        "w": 0.423,
+        "fitted": 1.4409,
+        "prior": 1.5680274642218475,
+        "blended": 1.5129
       },
       {
         "kind": "zone",
         "name": "Radiant",
-        "n": 62,
-        "w": 0.341,
-        "fitted": 1.2787,
-        "prior": 1.575036666581991,
-        "blended": 1.4671
+        "n": 63,
+        "w": 0.344,
+        "fitted": 1.3078,
+        "prior": 1.5680274642218475,
+        "blended": 1.4731
       },
       {
         "kind": "zone",
         "name": "Riso",
         "n": 857,
         "w": 0.877,
-        "fitted": 0.9583,
-        "prior": 0.8949071969215858,
-        "blended": 0.9503
+        "fitted": 0.957,
+        "prior": 0.8909246955805952,
+        "blended": 0.9486
       },
       {
         "kind": "zone",
         "name": "Rocket",
         "n": 50,
         "w": 0.294,
-        "fitted": 1.1721,
-        "prior": 1.337886259397771,
-        "blended": 1.2868
+        "fitted": 1.1705,
+        "prior": 1.3319324198929898,
+        "blended": 1.2823
       },
       {
         "kind": "zone",
         "name": "Royal",
         "n": 110,
         "w": 0.478,
-        "fitted": 1.8152,
-        "prior": 1.7450690339970925,
-        "blended": 1.7783
+        "fitted": 1.8107,
+        "prior": 1.7373031563821606,
+        "blended": 1.772
       },
       {
         "kind": "zone",
         "name": "Shahra",
         "n": 9,
         "w": 0.07,
-        "fitted": 4.4621,
-        "prior": 11.723284279672775,
-        "blended": 10.9593
+        "fitted": 4.4073,
+        "prior": 11.671113512105796,
+        "blended": 10.9045
       },
       {
         "kind": "zone",
         "name": "Shiro",
         "n": 479,
         "w": 0.8,
-        "fitted": 0.9771,
-        "prior": 0.8949071969215858,
-        "blended": 0.9601
+        "fitted": 0.9728,
+        "prior": 0.8909246955805952,
+        "blended": 0.9558
       },
       {
         "kind": "zone",
         "name": "Tetsu",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.948,
-        "prior": 1.6779509942279736,
-        "blended": 1.7719
+        "fitted": 1.9382,
+        "prior": 1.6704838042136159,
+        "blended": 1.7636
       },
       {
         "kind": "zone",
         "name": "Toad",
         "n": 137,
         "w": 0.533,
-        "fitted": 1.3017,
-        "prior": 1.261819147659436,
-        "blended": 1.2829
+        "fitted": 1.2734,
+        "prior": 1.2562038207686392,
+        "blended": 1.2653
       },
       {
         "kind": "zone",
         "name": "Treasure",
         "n": 109,
         "w": 0.476,
-        "fitted": 1.4332,
-        "prior": 1.575036666581991,
-        "blended": 1.5059
+        "fitted": 1.4325,
+        "prior": 1.5680274642218475,
+        "blended": 1.502
       },
       {
         "kind": "zone",
         "name": "Uwo",
         "n": 94,
         "w": 0.439,
-        "fitted": 1.4748,
-        "prior": 1.575036666581991,
-        "blended": 1.5302
+        "fitted": 1.4699,
+        "prior": 1.5680274642218475,
+        "blended": 1.5241
       },
       {
         "kind": "zone",
         "name": "Valeria",
         "n": 100,
         "w": 0.455,
-        "fitted": 1.1509,
-        "prior": 1.337886259397771,
-        "blended": 1.2494
+        "fitted": 1.147,
+        "prior": 1.3319324198929898,
+        "blended": 1.2444
       },
       {
         "kind": "zone",
         "name": "Venmon",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.5887,
-        "prior": 1.575036666581991,
-        "blended": 1.58
+        "fitted": 1.5842,
+        "prior": 1.5680274642218475,
+        "blended": 1.5739
       },
       {
         "kind": "zone",
         "name": "Warp",
-        "n": 180,
-        "w": 0.6,
-        "fitted": 0.9283,
-        "prior": 1.0425668844136475,
-        "blended": 0.9724
+        "n": 182,
+        "w": 0.603,
+        "fitted": 0.9686,
+        "prior": 1.0379272703513933,
+        "blended": 0.9956
       },
       {
         "kind": "zone",
         "name": "Wastelands",
         "n": 138,
         "w": 0.535,
-        "fitted": 1.2362,
-        "prior": 1.1231085321365901,
-        "blended": 1.1822
+        "fitted": 1.2306,
+        "prior": 1.118110492953647,
+        "blended": 1.1769
       },
       {
         "kind": "zone",
         "name": "Xleph",
         "n": 103,
         "w": 0.462,
-        "fitted": 1.3859,
-        "prior": 1.6779509942279736,
-        "blended": 1.5361
+        "fitted": 1.3864,
+        "prior": 1.6704838042136159,
+        "blended": 1.5327
       },
       {
         "kind": "zone",
         "name": "Zerinia",
         "n": 222,
         "w": 0.649,
-        "fitted": 1.1176,
-        "prior": 1.0425668844136475,
-        "blended": 1.0907
+        "fitted": 1.1149,
+        "prior": 1.0379272703513933,
+        "blended": 1.0873
       },
       {
         "kind": "zone",
         "name": "[BLOOD]",
         "n": 297,
         "w": 0.712,
-        "fitted": 1.1097,
-        "prior": 1.1231085321365901,
-        "blended": 1.1135
+        "fitted": 1.1083,
+        "prior": 1.118110492953647,
+        "blended": 1.1111
       },
       {
         "kind": "zone",
         "name": "[BOSS]",
         "n": 260,
         "w": 0.684,
-        "fitted": 0.9666,
-        "prior": 1.1231085321365901,
-        "blended": 1.0135
+        "fitted": 0.9632,
+        "prior": 1.118110492953647,
+        "blended": 1.0096
       },
       {
         "kind": "zone",
         "name": "[CUR2]",
         "n": 247,
         "w": 0.673,
-        "fitted": 0.9475,
-        "prior": 1.0425668844136475,
-        "blended": 0.9776
+        "fitted": 0.9461,
+        "prior": 1.0379272703513933,
+        "blended": 0.9752
       },
       {
         "kind": "zone",
         "name": "[DARK]",
         "n": 263,
         "w": 0.687,
-        "fitted": 1.0149,
-        "prior": 1.0425668844136475,
-        "blended": 1.0235
+        "fitted": 1.01,
+        "prior": 1.0379272703513933,
+        "blended": 1.0187
       },
       {
         "kind": "zone",
         "name": "[HOME]",
         "n": 134,
         "w": 0.528,
-        "fitted": 1.1897,
-        "prior": 1.575036666581991,
-        "blended": 1.3583
+        "fitted": 1.1868,
+        "prior": 1.5680274642218475,
+        "blended": 1.3537
       },
       {
         "kind": "zone",
         "name": "[HYCA]",
         "n": 309,
         "w": 0.72,
-        "fitted": 0.9533,
-        "prior": 0.9664997726753127,
-        "blended": 0.957
+        "fitted": 0.9518,
+        "prior": 0.9621986712270428,
+        "blended": 0.9547
       },
       {
         "kind": "zone",
         "name": "[MENU]",
         "n": 343,
         "w": 0.741,
-        "fitted": 0.8976,
-        "prior": 0.9664997726753127,
-        "blended": 0.915
+        "fitted": 0.8942,
+        "prior": 0.9621986712270428,
+        "blended": 0.9113
       },
       {
         "kind": "zone",
         "name": "[MOON]",
         "n": 318,
         "w": 0.726,
-        "fitted": 0.9553,
-        "prior": 0.8949071969215858,
-        "blended": 0.9384
+        "fitted": 0.9537,
+        "prior": 0.8909246955805952,
+        "blended": 0.9361
       },
       {
         "kind": "zone",
         "name": "[NEON]",
         "n": 173,
         "w": 0.59,
-        "fitted": 0.994,
-        "prior": 1.0425668844136475,
-        "blended": 1.0136
+        "fitted": 0.9874,
+        "prior": 1.0379272703513933,
+        "blended": 1.0078
       },
       {
         "kind": "zone",
         "name": "[NOV]",
         "n": 45,
         "w": 0.273,
-        "fitted": 1.5335,
-        "prior": 1.7450690339970925,
-        "blended": 1.6846
+        "fitted": 1.5203,
+        "prior": 1.7373031563821606,
+        "blended": 1.6752
       },
       {
         "kind": "zone",
         "name": "[SEP]",
         "n": 369,
         "w": 0.755,
-        "fitted": 1.0211,
-        "prior": 0.8949071969215858,
-        "blended": 0.9886
+        "fitted": 1.0202,
+        "prior": 0.8909246955805952,
+        "blended": 0.9868
       },
       {
         "kind": "zone",
         "name": "[SOON]",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.5294,
-        "prior": 3.355901988455947,
-        "blended": 3.0753
+        "fitted": 1.5177,
+        "prior": 3.3409676084272317,
+        "blended": 3.0605
       },
       {
         "kind": "zone",
         "name": "[SUN]",
         "n": 26,
         "w": 0.178,
-        "fitted": 3.0879,
-        "prior": 3.355901988455947,
-        "blended": 3.3065
+        "fitted": 3.0533,
+        "prior": 3.3409676084272317,
+        "blended": 3.2878
       },
       {
         "kind": "zone",
         "name": "[WEN]",
         "n": 285,
         "w": 0.704,
-        "fitted": 0.965,
-        "prior": 0.8949071969215858,
-        "blended": 0.9437
+        "fitted": 0.9622,
+        "prior": 0.8909246955805952,
+        "blended": 0.9405
       },
       {
         "kind": "zone",
         "name": "[YUNA]",
-        "n": 316,
-        "w": 0.725,
-        "fitted": 0.9551,
-        "prior": 0.9664997726753127,
-        "blended": 0.9582
+        "n": 319,
+        "w": 0.727,
+        "fitted": 0.969,
+        "prior": 0.9621986712270428,
+        "blended": 0.9671
       },
       {
         "kind": "zone",
         "name": "pfpfpfpbbx80",
         "n": 133,
         "w": 0.526,
-        "fitted": 1.0096,
-        "prior": 1.261819147659436,
-        "blended": 1.1222
+        "fitted": 1.0076,
+        "prior": 1.2562038207686392,
+        "blended": 1.1187
       },
       {
         "kind": "biome",
         "name": "0",
         "n": 158,
         "w": 0.568,
-        "fitted": 2.1992,
-        "prior": 3.311604082208328,
-        "blended": 2.6242
+        "fitted": 2.1948,
+        "prior": 3.2968668359959925,
+        "blended": 2.6162
       },
       {
         "kind": "biome",
         "name": "1",
-        "n": 178,
-        "w": 0.597,
-        "fitted": 1.2472,
-        "prior": 1.2215483237979647,
-        "blended": 1.2368
+        "n": 179,
+        "w": 0.599,
+        "fitted": 1.262,
+        "prior": 1.2161122094675123,
+        "blended": 1.2434
       },
       {
         "kind": "biome",
         "name": "2",
-        "n": 146,
-        "w": 0.549,
-        "fitted": 1.0609,
-        "prior": 1.2215483237979647,
-        "blended": 1.1306
+        "n": 148,
+        "w": 0.552,
+        "fitted": 1.0937,
+        "prior": 1.2161122094675123,
+        "blended": 1.1469
       },
       {
         "kind": "biome",
         "name": "3",
         "n": 209,
         "w": 0.635,
-        "fitted": 1.0256,
-        "prior": 0.9396525567676652,
-        "blended": 0.9934
+        "fitted": 1.0226,
+        "prior": 0.935470930359625,
+        "blended": 0.9899
       },
       {
         "kind": "biome",
         "name": "4",
-        "n": 156,
-        "w": 0.565,
-        "fitted": 0.9983,
-        "prior": 1.015719668506,
-        "blended": 1.0058
+        "n": 157,
+        "w": 0.567,
+        "fitted": 1.1073,
+        "prior": 1.0111995294839755,
+        "blended": 1.0646
       },
       {
         "kind": "biome",
         "name": "5",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.0735,
-        "prior": 0.9396525567676652,
-        "blended": 1.0038
+        "fitted": 1.0724,
+        "prior": 0.935470930359625,
+        "blended": 1.001
       },
       {
         "kind": "biome",
         "name": "6",
         "n": 212,
         "w": 0.639,
-        "fitted": 1.1592,
-        "prior": 0.9396525567676652,
-        "blended": 1.0745
+        "fitted": 1.1569,
+        "prior": 0.935470930359625,
+        "blended": 1.0714
       },
       {
         "kind": "biome",
         "name": "7",
         "n": 202,
         "w": 0.627,
-        "fitted": 1.176,
-        "prior": 0.9396525567676652,
-        "blended": 1.0817
+        "fitted": 1.1744,
+        "prior": 0.935470930359625,
+        "blended": 1.079
       },
       {
         "kind": "biome",
         "name": "8",
         "n": 146,
         "w": 0.549,
-        "fitted": 1.1805,
-        "prior": 1.2215483237979647,
-        "blended": 1.1988
+        "fitted": 1.1769,
+        "prior": 1.2161122094675123,
+        "blended": 1.1944
       },
       {
         "kind": "biome",
         "name": "9",
         "n": 130,
         "w": 0.52,
-        "fitted": 1.5302,
-        "prior": 1.015719668506,
-        "blended": 1.257
+        "fitted": 1.5185,
+        "prior": 1.0111995294839755,
+        "blended": 1.2493
       },
       {
         "kind": "biome",
         "name": "10",
         "n": 41,
         "w": 0.255,
-        "fitted": 1.4505,
-        "prior": 2.0582865529196472,
-        "blended": 1.8828
+        "fitted": 1.4456,
+        "prior": 2.049126799835369,
+        "blended": 1.8749
       },
       {
         "kind": "biome",
         "name": "11",
         "n": 47,
         "w": 0.281,
-        "fitted": 1.5551,
-        "prior": 2.0582865529196472,
-        "blended": 1.9021
+        "fitted": 1.5516,
+        "prior": 2.049126799835369,
+        "blended": 1.8948
       },
       {
         "kind": "biome",
         "name": "12",
         "n": 79,
         "w": 0.397,
-        "fitted": 1.2366,
-        "prior": 1.3423607953823788,
-        "blended": 1.2993
+        "fitted": 1.2363,
+        "prior": 1.3363870433708929,
+        "blended": 1.2957
       },
       {
         "kind": "biome",
         "name": "13",
         "n": 61,
         "w": 0.337,
-        "fitted": 1.2753,
-        "prior": 1.3423607953823788,
-        "blended": 1.3194
+        "fitted": 1.2675,
+        "prior": 1.3363870433708929,
+        "blended": 1.3128
       },
       {
         "kind": "biome",
         "name": "14",
         "n": 49,
         "w": 0.29,
-        "fitted": 1.3687,
-        "prior": 1.5213422347666958,
-        "blended": 1.4754
+        "fitted": 1.3635,
+        "prior": 1.5145719824870119,
+        "blended": 1.4691
       },
       {
         "kind": "biome",
         "name": "15",
         "n": 61,
         "w": 0.337,
-        "fitted": 1.1709,
-        "prior": 1.5213422347666958,
-        "blended": 1.3929
+        "fitted": 1.1437,
+        "prior": 1.5145719824870119,
+        "blended": 1.3778
       },
       {
         "kind": "biome",
         "name": "16",
         "n": 73,
         "w": 0.378,
-        "fitted": 1.4092,
-        "prior": 1.5213422347666958,
-        "blended": 1.4779
+        "fitted": 1.3955,
+        "prior": 1.5145719824870119,
+        "blended": 1.4684
       },
       {
         "kind": "biome",
         "name": "17",
         "n": 36,
         "w": 0.231,
-        "fitted": 2.5237,
-        "prior": 2.0582865529196472,
-        "blended": 2.1574
+        "fitted": 2.5123,
+        "prior": 2.049126799835369,
+        "blended": 2.1478
       },
       {
         "kind": "biome",
         "name": "18",
         "n": 60,
         "w": 0.333,
-        "fitted": 1.2966,
-        "prior": 1.5213422347666958,
-        "blended": 1.4424
+        "fitted": 1.2856,
+        "prior": 1.5145719824870119,
+        "blended": 1.434
       },
       {
         "kind": "biome",
         "name": "19",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.2584,
-        "prior": 1.5213422347666958,
-        "blended": 1.4195
+        "fitted": 1.2567,
+        "prior": 1.5145719824870119,
+        "blended": 1.4148
       },
       {
         "kind": "biome",
         "name": "20",
         "n": 33,
         "w": 0.216,
-        "fitted": 1.2203,
-        "prior": 1.5213422347666958,
-        "blended": 1.4507
+        "fitted": 1.2006,
+        "prior": 1.5145719824870119,
+        "blended": 1.4406
       },
       {
         "kind": "biome",
         "name": "21",
         "n": 170,
         "w": 0.586,
-        "fitted": 1.1346,
-        "prior": 1.015719668506,
-        "blended": 1.0838
+        "fitted": 1.1304,
+        "prior": 1.0111995294839755,
+        "blended": 1.0795
       },
       {
         "kind": "biome",
         "name": "22",
-        "n": 133,
-        "w": 0.526,
-        "fitted": 1.0065,
-        "prior": 1.015719668506,
-        "blended": 1.0109
+        "n": 134,
+        "w": 0.528,
+        "fitted": 1.0151,
+        "prior": 1.0111995294839755,
+        "blended": 1.0133
       },
       {
         "kind": "biome",
         "name": "23",
         "n": 180,
         "w": 0.6,
-        "fitted": 1.0512,
-        "prior": 1.015719668506,
-        "blended": 1.0369
+        "fitted": 1.0502,
+        "prior": 1.0111995294839755,
+        "blended": 1.0344
       },
       {
         "kind": "biome",
         "name": "24",
-        "n": 192,
-        "w": 0.615,
-        "fitted": 1.0457,
-        "prior": 0.9396525567676652,
-        "blended": 1.0036
+        "n": 193,
+        "w": 0.617,
+        "fitted": 1.0645,
+        "prior": 0.935470930359625,
+        "blended": 1.0131
       },
       {
         "kind": "biome",
         "name": "25",
         "n": 152,
         "w": 0.559,
-        "fitted": 1.1161,
-        "prior": 1.015719668506,
-        "blended": 1.0706
+        "fitted": 1.1143,
+        "prior": 1.0111995294839755,
+        "blended": 1.0676
       },
       {
         "kind": "biome",
         "name": "26",
         "n": 228,
         "w": 0.655,
-        "fitted": 0.9714,
-        "prior": 1.015719668506,
-        "blended": 0.9865
+        "fitted": 0.9687,
+        "prior": 1.0111995294839755,
+        "blended": 0.9831
       },
       {
         "kind": "biome",
         "name": "27",
-        "n": 198,
-        "w": 0.623,
-        "fitted": 1.0889,
-        "prior": 0.8949071969215858,
-        "blended": 1.0112
+        "n": 199,
+        "w": 0.624,
+        "fitted": 1.0967,
+        "prior": 0.8909246955805952,
+        "blended": 1.0142
       },
       {
         "kind": "biome",
         "name": "28",
         "n": 186,
         "w": 0.608,
-        "fitted": 0.9333,
-        "prior": 0.9396525567676652,
-        "blended": 0.9358
+        "fitted": 0.9328,
+        "prior": 0.935470930359625,
+        "blended": 0.9338
       },
       {
         "kind": "biome",
         "name": "29",
         "n": 166,
         "w": 0.58,
-        "fitted": 1.0071,
-        "prior": 0.9396525567676652,
-        "blended": 0.9782
+        "fitted": 1.0059,
+        "prior": 0.935470930359625,
+        "blended": 0.9757
       },
       {
         "kind": "biome",
         "name": "30",
         "n": 165,
         "w": 0.579,
-        "fitted": 0.9352,
-        "prior": 0.9396525567676652,
-        "blended": 0.9371
+        "fitted": 0.9263,
+        "prior": 0.935470930359625,
+        "blended": 0.9302
       },
       {
         "kind": "biome",
         "name": "31",
         "n": 349,
         "w": 0.744,
-        "fitted": 1.0045,
-        "prior": 0.8949071969215858,
-        "blended": 0.9752
+        "fitted": 1.0008,
+        "prior": 0.8909246955805952,
+        "blended": 0.9715
       },
       {
         "kind": "biome",
         "name": "32",
         "n": 362,
         "w": 0.751,
-        "fitted": 0.9773,
-        "prior": 0.8949071969215858,
-        "blended": 0.9561
+        "fitted": 0.9754,
+        "prior": 0.8909246955805952,
+        "blended": 0.9536
       },
       {
         "kind": "biome",
         "name": "33",
         "n": 349,
         "w": 0.744,
-        "fitted": 0.9644,
-        "prior": 0.8949071969215858,
-        "blended": 0.9461
+        "fitted": 0.9633,
+        "prior": 0.8909246955805952,
+        "blended": 0.9442
       },
       {
         "kind": "biome",
         "name": "34",
         "n": 235,
         "w": 0.662,
-        "fitted": 1.0683,
-        "prior": 0.9396525567676652,
-        "blended": 1.023
+        "fitted": 1.067,
+        "prior": 0.935470930359625,
+        "blended": 1.0206
       },
       {
         "kind": "biome",
         "name": "35",
         "n": 233,
         "w": 0.66,
-        "fitted": 1.208,
-        "prior": 0.9396525567676652,
-        "blended": 1.1091
+        "fitted": 1.2018,
+        "prior": 0.935470930359625,
+        "blended": 1.1037
       },
       {
         "kind": "biome",
         "name": "36",
         "n": 227,
         "w": 0.654,
-        "fitted": 0.9988,
-        "prior": 0.9396525567676652,
-        "blended": 0.9779
+        "fitted": 0.9956,
+        "prior": 0.935470930359625,
+        "blended": 0.9744
       },
       {
         "kind": "biome",
         "name": "37",
         "n": 196,
         "w": 0.62,
-        "fitted": 1.0795,
-        "prior": 0.9396525567676652,
-        "blended": 1.0241
+        "fitted": 1.0739,
+        "prior": 0.935470930359625,
+        "blended": 1.0191
       },
       {
         "kind": "biome",
         "name": "38",
         "n": 252,
         "w": 0.677,
-        "fitted": 1.03,
-        "prior": 0.9396525567676652,
-        "blended": 0.9999
+        "fitted": 1.0236,
+        "prior": 0.935470930359625,
+        "blended": 0.9943
       },
       {
         "kind": "biome",
         "name": "39",
         "n": 102,
         "w": 0.459,
-        "fitted": 2.0117,
-        "prior": 1.5213422347666958,
-        "blended": 1.7297
+        "fitted": 2.003,
+        "prior": 1.5145719824870119,
+        "blended": 1.7221
       },
       {
         "kind": "biome",
         "name": "40",
         "n": 111,
         "w": 0.481,
-        "fitted": 1.1434,
-        "prior": 1.2215483237979647,
-        "blended": 1.1834
+        "fitted": 1.1427,
+        "prior": 1.2161122094675123,
+        "blended": 1.1803
       },
       {
         "kind": "biome",
         "name": "41",
         "n": 146,
         "w": 0.549,
-        "fitted": 0.9734,
-        "prior": 1.015719668506,
-        "blended": 0.9923
+        "fitted": 0.9718,
+        "prior": 1.0111995294839755,
+        "blended": 0.9894
       },
       {
         "kind": "biome",
         "name": "42",
-        "n": 198,
-        "w": 0.623,
-        "fitted": 1.1559,
-        "prior": 1.2215483237979647,
-        "blended": 1.1802
+        "n": 199,
+        "w": 0.624,
+        "fitted": 1.1992,
+        "prior": 1.2161122094675123,
+        "blended": 1.2055
       },
       {
         "kind": "biome",
         "name": "43",
         "n": 530,
         "w": 0.815,
-        "fitted": 0.914,
-        "prior": 0.8949071969215858,
-        "blended": 0.9104
+        "fitted": 0.9124,
+        "prior": 0.8909246955805952,
+        "blended": 0.9084
       },
       {
         "kind": "biome",
         "name": "44",
         "n": 589,
         "w": 0.831,
-        "fitted": 0.954,
-        "prior": 0.8949071969215858,
-        "blended": 0.9437
+        "fitted": 0.9537,
+        "prior": 0.8909246955805952,
+        "blended": 0.9428
       },
       {
         "kind": "biome",
         "name": "45",
         "n": 494,
         "w": 0.805,
-        "fitted": 0.9443,
-        "prior": 0.8949071969215858,
-        "blended": 0.9344
+        "fitted": 0.9431,
+        "prior": 0.8909246955805952,
+        "blended": 0.9327
       },
       {
         "kind": "biome",
         "name": "47",
         "n": 636,
         "w": 0.841,
-        "fitted": 0.9503,
-        "prior": 0.8949071969215858,
-        "blended": 0.9413
+        "fitted": 0.9439,
+        "prior": 0.8909246955805952,
+        "blended": 0.9353
       },
       {
         "kind": "biome",
         "name": "48",
         "n": 682,
         "w": 0.85,
-        "fitted": 0.9633,
-        "prior": 0.8949071969215858,
-        "blended": 0.9527
+        "fitted": 0.9603,
+        "prior": 0.8909246955805952,
+        "blended": 0.9496
       },
       {
         "kind": "biome",
         "name": "49",
         "n": 538,
         "w": 0.818,
-        "fitted": 0.982,
-        "prior": 0.8949071969215858,
-        "blended": 0.9655
+        "fitted": 0.9808,
+        "prior": 0.8909246955805952,
+        "blended": 0.9638
       },
       {
         "kind": "biome",
         "name": "50",
-        "n": 558,
-        "w": 0.823,
-        "fitted": 0.9399,
-        "prior": 0.8949071969215858,
-        "blended": 0.9318
+        "n": 560,
+        "w": 0.824,
+        "fitted": 0.9561,
+        "prior": 0.8909246955805952,
+        "blended": 0.9443
       },
       {
         "kind": "biome",
         "name": "51",
         "n": 498,
         "w": 0.806,
-        "fitted": 0.9658,
-        "prior": 0.8949071969215858,
-        "blended": 0.9516
+        "fitted": 0.9638,
+        "prior": 0.8909246955805952,
+        "blended": 0.9492
       },
       {
         "kind": "biome",
         "name": "52",
         "n": 532,
         "w": 0.816,
-        "fitted": 0.9353,
-        "prior": 0.8949071969215858,
-        "blended": 0.9277
+        "fitted": 0.936,
+        "prior": 0.8909246955805952,
+        "blended": 0.9275
       },
       {
         "kind": "biome",
         "name": "53",
         "n": 416,
         "w": 0.776,
-        "fitted": 1.0097,
-        "prior": 0.8949071969215858,
-        "blended": 0.9828
+        "fitted": 1.0083,
+        "prior": 0.8909246955805952,
+        "blended": 0.9807
       },
       {
         "kind": "biome",
         "name": "54",
         "n": 467,
         "w": 0.796,
-        "fitted": 0.9765,
-        "prior": 0.8949071969215858,
-        "blended": 0.9592
+        "fitted": 0.9763,
+        "prior": 0.8909246955805952,
+        "blended": 0.9582
       },
       {
         "kind": "biome",
         "name": "55",
         "n": 567,
         "w": 0.825,
-        "fitted": 0.9379,
-        "prior": 0.8949071969215858,
-        "blended": 0.9302
+        "fitted": 0.937,
+        "prior": 0.8909246955805952,
+        "blended": 0.9288
       },
       {
         "kind": "biome",
         "name": "56",
         "n": 518,
         "w": 0.812,
-        "fitted": 0.9517,
-        "prior": 0.8949071969215858,
-        "blended": 0.9407
+        "fitted": 0.9505,
+        "prior": 0.8909246955805952,
+        "blended": 0.939
       },
       {
         "kind": "biome",
         "name": "57",
         "n": 449,
         "w": 0.789,
-        "fitted": 0.9301,
-        "prior": 0.8949071969215858,
-        "blended": 0.9226
+        "fitted": 0.9293,
+        "prior": 0.8909246955805952,
+        "blended": 0.9211
       },
       {
         "kind": "biome",
         "name": "58",
         "n": 505,
         "w": 0.808,
-        "fitted": 1.0041,
-        "prior": 1.015719668506,
-        "blended": 1.0063
+        "fitted": 1.0037,
+        "prior": 1.0111995294839755,
+        "blended": 1.0051
       },
       {
         "kind": "biome",
         "name": "59",
         "n": 315,
         "w": 0.724,
-        "fitted": 0.9435,
-        "prior": 0.8949071969215858,
-        "blended": 0.9298
+        "fitted": 0.9415,
+        "prior": 0.8909246955805952,
+        "blended": 0.9273
       },
       {
         "kind": "biome",
         "name": "60",
         "n": 243,
         "w": 0.669,
-        "fitted": 0.9549,
-        "prior": 0.8949071969215858,
-        "blended": 0.9346
+        "fitted": 0.9523,
+        "prior": 0.8909246955805952,
+        "blended": 0.9316
       },
       {
         "kind": "biome",
         "name": "61",
         "n": 252,
         "w": 0.677,
-        "fitted": 0.9745,
-        "prior": 0.8949071969215858,
-        "blended": 0.9481
+        "fitted": 0.9732,
+        "prior": 0.8909246955805952,
+        "blended": 0.9459
       },
       {
         "kind": "biome",
         "name": "62",
-        "n": 368,
-        "w": 0.754,
-        "fitted": 0.9277,
-        "prior": 0.8949071969215858,
-        "blended": 0.9195
+        "n": 369,
+        "w": 0.755,
+        "fitted": 0.9303,
+        "prior": 0.8909246955805952,
+        "blended": 0.9205
       },
       {
         "kind": "biome",
         "name": "63",
         "n": 287,
         "w": 0.705,
-        "fitted": 0.9354,
-        "prior": 0.8949071969215858,
-        "blended": 0.9233
+        "fitted": 0.9323,
+        "prior": 0.8909246955805952,
+        "blended": 0.9199
       },
       {
         "kind": "biome",
         "name": "64",
         "n": 330,
         "w": 0.733,
-        "fitted": 0.99,
-        "prior": 0.8949071969215858,
-        "blended": 0.9637
+        "fitted": 0.9869,
+        "prior": 0.8909246955805952,
+        "blended": 0.9603
       },
       {
         "kind": "biome",
         "name": "65",
         "n": 241,
         "w": 0.668,
-        "fitted": 0.9254,
-        "prior": 0.9396525567676652,
-        "blended": 0.9301
+        "fitted": 0.921,
+        "prior": 0.935470930359625,
+        "blended": 0.9258
       },
       {
         "kind": "biome",
         "name": "66",
         "n": 214,
         "w": 0.641,
-        "fitted": 0.9923,
-        "prior": 0.9396525567676652,
-        "blended": 0.9731
+        "fitted": 0.9912,
+        "prior": 0.935470930359625,
+        "blended": 0.9708
       },
       {
         "kind": "biome",
         "name": "67",
         "n": 234,
         "w": 0.661,
-        "fitted": 0.9565,
-        "prior": 0.9396525567676652,
-        "blended": 0.9508
+        "fitted": 0.9576,
+        "prior": 0.935470930359625,
+        "blended": 0.95
       },
       {
         "kind": "biome",
         "name": "68",
         "n": 164,
         "w": 0.577,
-        "fitted": 0.9863,
-        "prior": 0.9396525567676652,
-        "blended": 0.9663
+        "fitted": 0.9858,
+        "prior": 0.935470930359625,
+        "blended": 0.9642
       },
       {
         "kind": "biome",
         "name": "69",
         "n": 228,
         "w": 0.655,
-        "fitted": 0.9832,
-        "prior": 0.9396525567676652,
-        "blended": 0.968
+        "fitted": 0.9825,
+        "prior": 0.935470930359625,
+        "blended": 0.966
       },
       {
         "kind": "biome",
         "name": "70",
         "n": 312,
         "w": 0.722,
-        "fitted": 0.944,
-        "prior": 0.8949071969215858,
-        "blended": 0.9301
+        "fitted": 0.939,
+        "prior": 0.8909246955805952,
+        "blended": 0.9254
       },
       {
         "kind": "biome",
         "name": "71",
         "n": 270,
         "w": 0.692,
-        "fitted": 0.9869,
-        "prior": 0.8949071969215858,
-        "blended": 0.9576
+        "fitted": 0.9771,
+        "prior": 0.8909246955805952,
+        "blended": 0.9497
       },
       {
         "kind": "biome",
         "name": "72",
         "n": 299,
         "w": 0.714,
-        "fitted": 0.9898,
-        "prior": 0.8949071969215858,
-        "blended": 0.9616
+        "fitted": 0.9895,
+        "prior": 0.8909246955805952,
+        "blended": 0.9602
       },
       {
         "kind": "biome",
         "name": "73",
         "n": 34,
         "w": 0.221,
-        "fitted": 1.7831,
-        "prior": 3.3111566286098677,
-        "blended": 2.8882
+        "fitted": 1.7862,
+        "prior": 3.296421373648202,
+        "blended": 2.8793
       },
       {
         "kind": "biome",
         "name": "74",
         "n": 6,
         "w": 0.048,
-        "fitted": 4.758,
-        "prior": 6.599940577296696,
-        "blended": 6.4979
+        "fitted": 4.7423,
+        "prior": 6.570569629906889,
+        "blended": 6.4693
       },
       {
         "kind": "biome",
         "name": "75",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.787,
-        "prior": 1.5213422347666958,
-        "blended": 1.6193
+        "fitted": 1.7872,
+        "prior": 1.5145719824870119,
+        "blended": 1.615
       },
       {
         "kind": "biome",
         "name": "76",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0973,
-        "prior": 4.642778537629187,
-        "blended": 3.9933
+        "fitted": 1.0965,
+        "prior": 4.622117320672127,
+        "blended": 3.977
       },
       {
         "kind": "biome",
         "name": "77",
         "n": 7,
         "w": 0.055,
-        "fitted": 1.0942,
-        "prior": 5.481306581144714,
-        "blended": 5.0155
+        "fitted": 1.093,
+        "prior": 5.456913760431146,
+        "blended": 4.9941
       },
       {
         "kind": "biome",
         "name": "78",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.177,
-        "prior": 4.921989583068722,
-        "blended": 4.501
+        "fitted": 1.1746,
+        "prior": 4.9000858256932736,
+        "blended": 4.4816
       },
       {
         "kind": "biome",
         "name": "79",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1551,
-        "prior": 4.642778537629187,
-        "blended": 4.2133
+        "fitted": 1.1528,
+        "prior": 4.622117320672127,
+        "blended": 4.1953
       },
       {
         "kind": "biome",
         "name": "80",
         "n": 129,
         "w": 0.518,
-        "fitted": 0.9996,
-        "prior": 1.5213422347666958,
-        "blended": 1.2239
+        "fitted": 1.0002,
+        "prior": 1.5145719824870119,
+        "blended": 1.2216
       },
       {
         "kind": "biome",
         "name": "81",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.1792,
-        "prior": 4.921989583068722,
-        "blended": 4.1994
+        "fitted": 1.1768,
+        "prior": 4.9000858256932736,
+        "blended": 4.1819
       },
       {
         "kind": "biome",
         "name": "82",
         "n": 46,
         "w": 0.277,
-        "fitted": 1.3096,
-        "prior": 1.3423607953823788,
-        "blended": 1.3332
+        "fitted": 1.3028,
+        "prior": 1.3363870433708929,
+        "blended": 1.327
       },
       {
         "kind": "biome",
@@ -3345,150 +3345,150 @@
         "n": 149,
         "w": 0.554,
         "fitted": 0.9652,
-        "prior": 0.9396525567676652,
-        "blended": 0.9537
+        "prior": 0.935470930359625,
+        "blended": 0.9518
       },
       {
         "kind": "biome",
         "name": "84",
         "n": 110,
         "w": 0.478,
-        "fitted": 0.9807,
-        "prior": 1.1231085321365901,
-        "blended": 1.0526
+        "fitted": 0.9794,
+        "prior": 1.118110492953647,
+        "blended": 1.0495
       },
       {
         "kind": "biome",
         "name": "85",
         "n": 76,
         "w": 0.388,
-        "fitted": 1.3088,
-        "prior": 1.2215483237979647,
-        "blended": 1.2547
+        "fitted": 1.3054,
+        "prior": 1.2161122094675123,
+        "blended": 1.25
       },
       {
         "kind": "biome",
         "name": "86",
         "n": 108,
         "w": 0.474,
-        "fitted": 1.0526,
-        "prior": 1.015719668506,
-        "blended": 1.033
+        "fitted": 1.0511,
+        "prior": 1.0111995294839755,
+        "blended": 1.0299
       },
       {
         "kind": "biome",
         "name": "87",
         "n": 68,
         "w": 0.362,
-        "fitted": 1.5319,
-        "prior": 1.5213422347666958,
-        "blended": 1.5252
+        "fitted": 1.5318,
+        "prior": 1.5145719824870119,
+        "blended": 1.5208
       },
       {
         "kind": "biome",
         "name": "88",
         "n": 58,
         "w": 0.326,
-        "fitted": 1.0551,
-        "prior": 1.5213422347666958,
-        "blended": 1.3503
+        "fitted": 1.0519,
+        "prior": 1.5145719824870119,
+        "blended": 1.3449
       },
       {
         "kind": "biome",
         "name": "89",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.0307,
-        "prior": 1.1231085321365901,
-        "blended": 1.0763
+        "fitted": 1.0269,
+        "prior": 1.118110492953647,
+        "blended": 1.0719
       },
       {
         "kind": "biome",
         "name": "90",
         "n": 115,
         "w": 0.489,
-        "fitted": 0.9127,
-        "prior": 1.1231085321365901,
-        "blended": 1.0147
+        "fitted": 0.9131,
+        "prior": 1.118110492953647,
+        "blended": 1.0126
       },
       {
         "kind": "biome",
         "name": "91",
         "n": 69,
         "w": 0.365,
-        "fitted": 1.0958,
-        "prior": 1.2215483237979647,
-        "blended": 1.174
+        "fitted": 1.0913,
+        "prior": 1.2161122094675123,
+        "blended": 1.169
       },
       {
         "kind": "level",
         "name": "1",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.151,
-        "prior": 11.186339961519824,
-        "blended": 9.7043
+        "fitted": 1.1497,
+        "prior": 11.13655869475744,
+        "blended": 9.6631
       },
       {
         "kind": "level",
         "name": "2",
         "n": 56,
         "w": 0.318,
-        "fitted": 1.6516,
-        "prior": 1.7898143938431716,
-        "blended": 1.7446
+        "fitted": 1.6558,
+        "prior": 1.7818493911611903,
+        "blended": 1.7407
       },
       {
         "kind": "level",
         "name": "3",
         "n": 79,
         "w": 0.397,
-        "fitted": 1.0866,
-        "prior": 1.5660875946127752,
-        "blended": 1.3546
+        "fitted": 1.0915,
+        "prior": 1.5591182172660416,
+        "blended": 1.3533
       },
       {
         "kind": "level",
         "name": "18",
         "n": 81,
         "w": 0.403,
-        "fitted": 1.0791,
-        "prior": 1.5660875946127752,
-        "blended": 1.3478
+        "fitted": 1.079,
+        "prior": 1.5591182172660416,
+        "blended": 1.3442
       },
       {
         "kind": "level",
         "name": "19",
         "n": 57,
         "w": 0.322,
-        "fitted": 1.2693,
-        "prior": 1.7898143938431716,
-        "blended": 1.6023
+        "fitted": 1.2692,
+        "prior": 1.7818493911611903,
+        "blended": 1.5974
       },
       {
         "kind": "level",
         "name": "20",
         "n": 12,
         "w": 0.091,
-        "fitted": 13.3899,
-        "prior": 11.186339961519824,
-        "blended": 11.3707
+        "fitted": 13.2121,
+        "prior": 11.13655869475744,
+        "blended": 11.3109
       },
       {
         "kind": "badge",
         "name": "mesa",
         "n": 15,
         "w": 0.111,
-        "fitted": 0.9207,
+        "fitted": 0.9224,
         "prior": 1.25,
-        "blended": 1.2082
+        "blended": 1.2085
       },
       {
         "kind": "badge",
         "name": "matrix",
         "n": 1,
         "w": 0.008,
-        "fitted": 1.1101,
+        "fitted": 1.1089,
         "prior": 1.5,
         "blended": 1.4963
       },
@@ -3497,276 +3497,276 @@
         "name": "heartbeat",
         "n": 68,
         "w": 0.362,
-        "fitted": 1.0923,
+        "fitted": 1.0898,
         "prior": 1.35,
-        "blended": 1.2504
+        "blended": 1.2494
       },
       {
         "kind": "badge",
         "name": "gm",
         "n": 45,
         "w": 0.273,
-        "fitted": 0.9203,
+        "fitted": 0.9286,
         "prior": 1.15,
-        "blended": 1.0822
+        "blended": 1.0849
       },
       {
         "kind": "badge",
         "name": "biome0_flow",
         "n": 94,
         "w": 0.439,
-        "fitted": 2.5513,
+        "fitted": 2.5334,
         "prior": 1.5598,
-        "blended": 1.9361
+        "blended": 1.9301
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.2975982873257834,
+      "baseline_multiple": 1.3016384234310467,
       "zone": {
-        "Aetherking": 5.9507,
-        "Akileaf": 1.0555,
-        "Alto": 1.0366,
-        "Angel": 1.2475,
-        "Antenna": 8.2817,
-        "Arc": 0.9406,
-        "Aria": 1.7103,
-        "Avidana": 1.8821,
-        "Blossom": 1.1292,
-        "Blushing": 1.0487,
-        "Bubble": 1.2532,
-        "Calyx": 1.0143,
-        "Cradle": 1.2343,
-        "Dhampir": 1.3811,
-        "Dread": 3.5465,
-        "Dynacrypts": 1.3315,
-        "Ender": 1.0569,
-        "Everglades": 1.0486,
-        "Exduo": 0.9273,
-        "First Earth": 1.8616,
-        "Gemina": 4.7502,
-        "Greysunn": 1.4455,
-        "Grove": 0.9619,
-        "Hypermage": 0.9548,
-        "Hyphae": 0.9358,
-        "Intro Forest": 1.1988,
-        "Jadeite": 1.1283,
-        "Kairo": 1.013,
-        "Killscreen": 1.9089,
-        "Kippsun": 1.2063,
-        "Linosim": 1.0032,
-        "Mecha": 0.948,
-        "Mirage": 0.9061,
-        "Mori": 1.5477,
-        "Mould": 1.7252,
-        "Mt Zuka": 1.4013,
-        "Muxtai X1": 1.1154,
-        "Nightrose": 0.951,
-        "Ouallada": 0.9907,
-        "Palace": 1.0041,
-        "Pepo": 1.0858,
-        "Promiselands": 1.4548,
-        "Radiant": 1.4671,
-        "Riso": 0.9503,
-        "Rocket": 1.2868,
-        "Royal": 1.7783,
-        "Shahra": 10.9593,
-        "Shiro": 0.9601,
-        "Tetsu": 1.7719,
-        "Toad": 1.2829,
-        "Treasure": 1.5059,
-        "Uwo": 1.5302,
-        "Valeria": 1.2494,
-        "Venmon": 1.58,
-        "Warp": 0.9724,
-        "Wastelands": 1.1822,
-        "Xleph": 1.5361,
-        "Zerinia": 1.0907,
-        "[BLOOD]": 1.1135,
-        "[BOSS]": 1.0135,
-        "[CUR2]": 0.9776,
-        "[DARK]": 1.0235,
-        "[HOME]": 1.3583,
-        "[HYCA]": 0.957,
-        "[MENU]": 0.915,
-        "[MOON]": 0.9384,
-        "[NEON]": 1.0136,
-        "[NOV]": 1.6846,
-        "[SEP]": 0.9886,
-        "[SOON]": 3.0753,
-        "[SUN]": 3.3065,
-        "[WEN]": 0.9437,
-        "[YUNA]": 0.9582,
-        "pfpfpfpbbx80": 1.1222,
+        "Aetherking": 5.9258,
+        "Akileaf": 1.0803,
+        "Alto": 1.0355,
+        "Angel": 1.2414,
+        "Antenna": 8.2362,
+        "Arc": 0.9427,
+        "Aria": 1.7015,
+        "Avidana": 1.8679,
+        "Blossom": 1.1217,
+        "Blushing": 1.0443,
+        "Bubble": 1.2472,
+        "Calyx": 1.0135,
+        "Cradle": 1.2273,
+        "Dhampir": 1.375,
+        "Dread": 3.5263,
+        "Dynacrypts": 1.3491,
+        "Ender": 1.0456,
+        "Everglades": 1.0439,
+        "Exduo": 0.9247,
+        "First Earth": 1.8534,
+        "Gemina": 4.7253,
+        "Greysunn": 1.4429,
+        "Grove": 0.9575,
+        "Hypermage": 0.9523,
+        "Hyphae": 0.9337,
+        "Intro Forest": 1.1957,
+        "Jadeite": 1.1234,
+        "Kairo": 1.0099,
+        "Killscreen": 1.8999,
+        "Kippsun": 1.2012,
+        "Linosim": 1.0014,
+        "Mecha": 0.9465,
+        "Mirage": 0.906,
+        "Mori": 1.5377,
+        "Mould": 1.7082,
+        "Mt Zuka": 1.3963,
+        "Muxtai X1": 1.1266,
+        "Nightrose": 0.9483,
+        "Ouallada": 0.9856,
+        "Palace": 0.999,
+        "Pepo": 1.0805,
+        "Promiselands": 1.5129,
+        "Radiant": 1.4731,
+        "Riso": 0.9486,
+        "Rocket": 1.2823,
+        "Royal": 1.772,
+        "Shahra": 10.9045,
+        "Shiro": 0.9558,
+        "Tetsu": 1.7636,
+        "Toad": 1.2653,
+        "Treasure": 1.502,
+        "Uwo": 1.5241,
+        "Valeria": 1.2444,
+        "Venmon": 1.5739,
+        "Warp": 0.9956,
+        "Wastelands": 1.1769,
+        "Xleph": 1.5327,
+        "Zerinia": 1.0873,
+        "[BLOOD]": 1.1111,
+        "[BOSS]": 1.0096,
+        "[CUR2]": 0.9752,
+        "[DARK]": 1.0187,
+        "[HOME]": 1.3537,
+        "[HYCA]": 0.9547,
+        "[MENU]": 0.9113,
+        "[MOON]": 0.9361,
+        "[NEON]": 1.0078,
+        "[NOV]": 1.6752,
+        "[SEP]": 0.9868,
+        "[SOON]": 3.0605,
+        "[SUN]": 3.2878,
+        "[WEN]": 0.9405,
+        "[YUNA]": 0.9671,
+        "pfpfpfpbbx80": 1.1187,
         "Holo": 1
       },
       "biome": {
-        "0": 2.6242,
-        "1": 1.2368,
-        "2": 1.1306,
-        "3": 0.9934,
-        "4": 1.0058,
-        "5": 1.0038,
-        "6": 1.0745,
-        "7": 1.0817,
-        "8": 1.1988,
-        "9": 1.257,
-        "10": 1.8828,
-        "11": 1.9021,
-        "12": 1.2993,
-        "13": 1.3194,
-        "14": 1.4754,
-        "15": 1.3929,
-        "16": 1.4779,
-        "17": 2.1574,
-        "18": 1.4424,
-        "19": 1.4195,
-        "20": 1.4507,
-        "21": 1.0838,
-        "22": 1.0109,
-        "23": 1.0369,
-        "24": 1.0036,
-        "25": 1.0706,
-        "26": 0.9865,
-        "27": 1.0112,
-        "28": 0.9358,
-        "29": 0.9782,
-        "30": 0.9371,
-        "31": 0.9752,
-        "32": 0.9561,
-        "33": 0.9461,
-        "34": 1.023,
-        "35": 1.1091,
-        "36": 0.9779,
-        "37": 1.0241,
-        "38": 0.9999,
-        "39": 1.7297,
-        "40": 1.1834,
-        "41": 0.9923,
-        "42": 1.1802,
-        "43": 0.9104,
-        "44": 0.9437,
-        "45": 0.9344,
+        "0": 2.6162,
+        "1": 1.2434,
+        "2": 1.1469,
+        "3": 0.9899,
+        "4": 1.0646,
+        "5": 1.001,
+        "6": 1.0714,
+        "7": 1.079,
+        "8": 1.1944,
+        "9": 1.2493,
+        "10": 1.8749,
+        "11": 1.8948,
+        "12": 1.2957,
+        "13": 1.3128,
+        "14": 1.4691,
+        "15": 1.3778,
+        "16": 1.4684,
+        "17": 2.1478,
+        "18": 1.434,
+        "19": 1.4148,
+        "20": 1.4406,
+        "21": 1.0795,
+        "22": 1.0133,
+        "23": 1.0344,
+        "24": 1.0131,
+        "25": 1.0676,
+        "26": 0.9831,
+        "27": 1.0142,
+        "28": 0.9338,
+        "29": 0.9757,
+        "30": 0.9302,
+        "31": 0.9715,
+        "32": 0.9536,
+        "33": 0.9442,
+        "34": 1.0206,
+        "35": 1.1037,
+        "36": 0.9744,
+        "37": 1.0191,
+        "38": 0.9943,
+        "39": 1.7221,
+        "40": 1.1803,
+        "41": 0.9894,
+        "42": 1.2055,
+        "43": 0.9084,
+        "44": 0.9428,
+        "45": 0.9327,
         "46": 1,
-        "47": 0.9413,
-        "48": 0.9527,
-        "49": 0.9655,
-        "50": 0.9318,
-        "51": 0.9516,
-        "52": 0.9277,
-        "53": 0.9828,
-        "54": 0.9592,
-        "55": 0.9302,
-        "56": 0.9407,
-        "57": 0.9226,
-        "58": 1.0063,
-        "59": 0.9298,
-        "60": 0.9346,
-        "61": 0.9481,
-        "62": 0.9195,
-        "63": 0.9233,
-        "64": 0.9637,
-        "65": 0.9301,
-        "66": 0.9731,
-        "67": 0.9508,
-        "68": 0.9663,
-        "69": 0.968,
-        "70": 0.9301,
-        "71": 0.9576,
-        "72": 0.9616,
-        "73": 2.8882,
-        "74": 6.4979,
-        "75": 1.6193,
-        "76": 3.9933,
-        "77": 5.0155,
-        "78": 4.501,
-        "79": 4.2133,
-        "80": 1.2239,
-        "81": 4.1994,
-        "82": 1.3332,
-        "83": 0.9537,
-        "84": 1.0526,
-        "85": 1.2547,
-        "86": 1.033,
-        "87": 1.5252,
-        "88": 1.3503,
-        "89": 1.0763,
-        "90": 1.0147,
-        "91": 1.174
+        "47": 0.9353,
+        "48": 0.9496,
+        "49": 0.9638,
+        "50": 0.9443,
+        "51": 0.9492,
+        "52": 0.9275,
+        "53": 0.9807,
+        "54": 0.9582,
+        "55": 0.9288,
+        "56": 0.939,
+        "57": 0.9211,
+        "58": 1.0051,
+        "59": 0.9273,
+        "60": 0.9316,
+        "61": 0.9459,
+        "62": 0.9205,
+        "63": 0.9199,
+        "64": 0.9603,
+        "65": 0.9258,
+        "66": 0.9708,
+        "67": 0.95,
+        "68": 0.9642,
+        "69": 0.966,
+        "70": 0.9254,
+        "71": 0.9497,
+        "72": 0.9602,
+        "73": 2.8793,
+        "74": 6.4693,
+        "75": 1.615,
+        "76": 3.977,
+        "77": 4.9941,
+        "78": 4.4816,
+        "79": 4.1953,
+        "80": 1.2216,
+        "81": 4.1819,
+        "82": 1.327,
+        "83": 0.9518,
+        "84": 1.0495,
+        "85": 1.25,
+        "86": 1.0299,
+        "87": 1.5208,
+        "88": 1.3449,
+        "89": 1.0719,
+        "90": 1.0126,
+        "91": 1.169
       },
       "level": {
-        "1": 9.7043,
-        "2": 1.7446,
-        "3": 1.3546,
-        "18": 1.3478,
-        "19": 1.6023,
-        "20": 11.3707
+        "1": 9.6631,
+        "2": 1.7407,
+        "3": 1.3533,
+        "18": 1.3442,
+        "19": 1.5974,
+        "20": 11.3109
       },
       "chroma": {
-        "Pulse": 0.9847,
-        "Hyper": 0.9948
+        "Pulse": 0.9818,
+        "Hyper": 0.9968
       },
       "mode": {
-        "DDTF": 0.9861,
-        "ORIG": 2.7775
+        "DDTF": 0.9831,
+        "ORIG": 2.7642
       },
       "badge": {
-        "mesa": 1.2082,
+        "mesa": 1.2085,
         "matrix": 1.4963,
-        "heartbeat": 1.2504,
-        "gm": 1.0822,
-        "biome0_flow": 1.9361
+        "heartbeat": 1.2494,
+        "gm": 1.0849,
+        "biome0_flow": 1.9301
       },
       "extra": {
-        "one_of_one": 1.0234,
-        "s0": 0.98,
-        "spine": 1.1905
+        "one_of_one": 1.0359,
+        "s0": 0.9787,
+        "spine": 1.1901
       },
-      "ddtf_biome_beta": -0.490211,
+      "ddtf_biome_beta": -0.486651,
       "mode_biome": {
         "DDTF": {
-          "0": 0.5265,
-          "1": 0.8585,
-          "2": 0.8585,
-          "3": 0.9764,
-          "4": 0.9398,
-          "5": 0.9764,
-          "6": 0.9764,
-          "7": 0.9764,
-          "8": 0.8585,
-          "9": 0.9398,
-          "10": 0.6648,
-          "11": 0.6648,
-          "12": 0.8197,
-          "13": 0.8197,
-          "14": 0.771,
-          "15": 0.771,
-          "16": 0.771,
-          "17": 0.6648,
-          "18": 0.771,
-          "19": 0.771,
-          "20": 0.771,
-          "21": 0.9398,
-          "22": 0.9398,
-          "23": 0.9398,
-          "24": 0.9764,
-          "25": 0.9398,
-          "26": 0.9398,
+          "0": 0.529,
+          "1": 0.8595,
+          "2": 0.8595,
+          "3": 0.9765,
+          "4": 0.9402,
+          "5": 0.9765,
+          "6": 0.9765,
+          "7": 0.9765,
+          "8": 0.8595,
+          "9": 0.9402,
+          "10": 0.6668,
+          "11": 0.6668,
+          "12": 0.8209,
+          "13": 0.8209,
+          "14": 0.7724,
+          "15": 0.7724,
+          "16": 0.7724,
+          "17": 0.6668,
+          "18": 0.7724,
+          "19": 0.7724,
+          "20": 0.7724,
+          "21": 0.9402,
+          "22": 0.9402,
+          "23": 0.9402,
+          "24": 0.9765,
+          "25": 0.9402,
+          "26": 0.9402,
           "27": 1,
-          "28": 0.9764,
-          "29": 0.9764,
-          "30": 0.9764,
+          "28": 0.9765,
+          "29": 0.9765,
+          "30": 0.9765,
           "31": 1,
           "32": 1,
           "33": 1,
-          "34": 0.9764,
-          "35": 0.9764,
-          "36": 0.9764,
-          "37": 0.9764,
-          "38": 0.9764,
-          "39": 0.771,
-          "40": 0.8585,
-          "41": 0.9398,
-          "42": 0.8585,
+          "34": 0.9765,
+          "35": 0.9765,
+          "36": 0.9765,
+          "37": 0.9765,
+          "38": 0.9765,
+          "39": 0.7724,
+          "40": 0.8595,
+          "41": 0.9402,
+          "42": 0.8595,
           "43": 1,
           "44": 1,
           "45": 1,
@@ -3782,52 +3782,52 @@
           "55": 1,
           "56": 1,
           "57": 1,
-          "58": 0.9398,
+          "58": 0.9402,
           "59": 1,
           "60": 1,
           "61": 1,
           "62": 1,
           "63": 1,
           "64": 1,
-          "65": 0.9764,
-          "66": 0.9764,
-          "67": 0.9764,
-          "68": 0.9764,
-          "69": 0.9764,
+          "65": 0.9765,
+          "66": 0.9765,
+          "67": 0.9765,
+          "68": 0.9765,
+          "69": 0.9765,
           "70": 1,
           "71": 1,
           "72": 1,
-          "73": 0.5266,
-          "74": 0.3755,
-          "75": 0.771,
-          "76": 0.4462,
-          "77": 0.4113,
-          "78": 0.4336,
-          "79": 0.4462,
-          "80": 0.771,
-          "81": 0.4336,
-          "82": 0.8197,
-          "83": 0.9764,
-          "84": 0.8946,
-          "85": 0.8585,
-          "86": 0.9398,
-          "87": 0.771,
-          "88": 0.771,
-          "89": 0.8946,
-          "90": 0.8946,
-          "91": 0.8585
+          "73": 0.529,
+          "74": 0.3782,
+          "75": 0.7724,
+          "76": 0.4488,
+          "77": 0.414,
+          "78": 0.4362,
+          "79": 0.4488,
+          "80": 0.7724,
+          "81": 0.4362,
+          "82": 0.8209,
+          "83": 0.9765,
+          "84": 0.8954,
+          "85": 0.8595,
+          "86": 0.9402,
+          "87": 0.7724,
+          "88": 0.7724,
+          "89": 0.8954,
+          "90": 0.8954,
+          "91": 0.8595
         }
       }
     }
   },
   "floor_calibration": {
-    "value": 0.8293,
-    "measured_at": "2026-10-01T02:20:13.437Z",
+    "value": 0.8084,
+    "measured_at": "2026-10-02T02:20:11.891Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
-    "n_sales": 97,
+    "n_sales": 108,
     "iqr": [
-      0.774,
+      0.736,
       0.888
     ],
     "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
