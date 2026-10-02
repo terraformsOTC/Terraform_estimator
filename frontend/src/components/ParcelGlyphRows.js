@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { abbreviateGlyphs, bladeFor, isOriginMode, originGlyphs } from '@/lib/parcelGlyphs';
+import { abbreviateGlyphs, customGlyphs, latentBlade } from '@/lib/parcelGlyphs';
 
 // The artwork's native viewBox.
 const ART_RATIO = 388 / 560;
@@ -29,19 +29,21 @@ function GlyphRow({ label, value, title, fontFamily }) {
 }
 
 /**
- * The parcel's blade — the glyph pattern its raised cells cycle, picked by
- * (biome + seed) as on the mandala tool — and, for Origin parcels, the custom
- * glyph set they animate in its place. Long blades show their opening and
- * closing runs; the full blade is on hover.
+ * The glyphs a parcel's raised cells cycle when it is dreamed or terraformed:
+ * its blade, picked by (biome + seed) as on the mandala tool, or the custom
+ * uni set the v2 renderer swaps in for it (origin parcels, seeds above 9950).
+ * A parcel shows one or the other, never both. On a Terrain parcel the blade
+ * row is latent — what dreaming it would show. Long blades show their opening
+ * and closing runs; the full blade is on hover.
  */
 export function ParcelGlyphRows({ biome, seed, mode }) {
-  const blade = bladeFor(biome, seed);
-  const origin = isOriginMode(mode) ? originGlyphs(seed) : null;
+  const blade = latentBlade(mode, biome, seed);
+  const custom = customGlyphs(mode, seed);
 
   return (
     <>
       {blade && <BladeRow blade={blade} />}
-      {origin && <OriginGlyphsRow origin={origin} />}
+      {custom && <CustomGlyphsRow custom={custom} />}
     </>
   );
 }
@@ -57,25 +59,27 @@ function BladeRow({ blade }) {
       {tail}
     </>
   );
-  return <GlyphRow label="blade" value={value} title={blade} fontFamily={BLADE_FONT} />;
+  const label = <>blade <span className="opacity-60">(v2)</span></>;
+  return <GlyphRow label={label} value={value} title={blade} fontFamily={BLADE_FONT} />;
 }
 
-function OriginGlyphsRow({ origin }) {
-  // Above seed 9000 the parcel runs all 28 sets at once — hundreds of glyphs.
-  if (origin.set == null) {
+function CustomGlyphsRow({ custom }) {
+  // The high-seed branches run all 28 sets at once — hundreds of glyphs.
+  if (custom.set == null) {
     return <GlyphRow label="glyphs" value="all 28 sets" />;
   }
   // These glyphs are not in the parcel's own font subset, so the animation
   // paints them in the system font, and so does this row.
-  const marksOnly = /^\p{M}+$/u.test(origin.glyphs);
+  const marksOnly = /^\p{M}+$/u.test(custom.glyphs);
+  const setLabel = `set ${custom.set}${custom.reversed ? ', reversed' : ''}`;
   return (
     <GlyphRow
       label="glyphs"
-      title={`set ${origin.set} of 28`}
+      title={`${setLabel} of 28`}
       value={
         <>
-          {marksOnly ? <span className="opacity-60">near-invisible marks</span> : origin.glyphs}
-          <span className="opacity-40">{`  set ${origin.set}`}</span>
+          {marksOnly ? <span className="opacity-60">near-invisible marks</span> : custom.glyphs}
+          <span className="opacity-40">{`  ${setLabel}`}</span>
         </>
       }
     />

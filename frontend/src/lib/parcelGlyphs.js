@@ -34,9 +34,8 @@ export const BLADES = [
   "||░░++▓▓――▆▇",
 ];
 
-// The renderer's `uni` table. Origin parcels (Origin Daydream / Origin
-// Terraform) animate a seed-picked 10-glyph run from it instead of the blade:
-// one run, ORIGIN_UNI[seed % 28], for seed <= 9000, and all 28 runs above that.
+// The renderer's `uni` table: 28 runs of 10 glyphs. Some parcels animate
+// these in place of the blade — see customGlyphs.
 export const ORIGIN_UNI = [
   9600, 9610, 9620, 3900, 9812, 9120, 9590, 143345, 48, 143672, 143682, 143692, 143702,
   820, 8210, 8680, 9573, 142080, 142085, 142990, 143010, 143030, 9580, 9540, 1470,
@@ -52,6 +51,15 @@ export function bladeFor(biome, seed) {
   return BLADES[(b + s) % BLADES.length];
 }
 
+// The v2 renderer animates the blade only on non-origin parcels with seed
+// <= 9950; above that, and on every origin parcel, it swaps in a uni set
+// instead (customGlyphs). The blade is drawn only in Daydream and Terraform
+// modes, so on a Terrain parcel this is latent: what dreaming it would show.
+export function latentBlade(mode, biome, seed) {
+  if (isOriginMode(mode) || Number(seed) > 9950) return null;
+  return bladeFor(biome, seed);
+}
+
 // makeSet() as the renderer has it: String.fromCharCode keeps only the low 16
 // bits, so table entries above 0xFFFF paint a wrapped code point, exactly as on
 // chain.
@@ -61,17 +69,31 @@ function makeSet(start) {
   return out;
 }
 
-// The glyph run an origin parcel animates: `set` is its 0-27 index, or null
-// when the parcel runs all 28 (seed > 9000). Combining marks are dropped: they
-// are zero-width, collapse onto their neighbours in a string, and paint as
-// blank cells in the animation anyway (set 13 is all marks, so it keeps the raw
-// run rather than vanish).
-export function originGlyphs(seed) {
+// The uni glyphs a parcel animates in place of its blade, mirroring the v2
+// renderer's seedSet branch:
+//   origin, seed <= 9000      one run, UNI[seed % 28]
+//   origin, seed  > 9000      all 28 runs
+//   non-origin, 9951-9970     UNI[seed % 3], reversed (the renderer's Y-seed)
+//   non-origin, seed  > 9970  all 28 runs (X-seed)
+//   anything else             null: the parcel shows its blade
+// Returns { set, glyphs, reversed }; `set` is the 0-27 index, or null for all
+// 28. Combining marks are dropped: they are zero-width, collapse onto their
+// neighbours in a string, and paint as blank cells in the animation anyway
+// (set 13 is all marks, so it keeps the raw run rather than vanish).
+export function customGlyphs(mode, seed) {
   const s = Math.floor(Number(seed));
   if (seed == null || !Number.isFinite(s)) return null;
-  if (s > 9000) return { set: null, glyphs: null };
-  const raw = makeSet(ORIGIN_UNI[s % ORIGIN_UNI.length]);
-  return { set: s % ORIGIN_UNI.length, glyphs: raw.replace(/\p{M}/gu, '') || raw };
+  const run = (set, reversed = false) => {
+    let raw = makeSet(ORIGIN_UNI[set]);
+    if (reversed) raw = Array.from(raw).reverse().join('');
+    return { set, glyphs: raw.replace(/\p{M}/gu, '') || raw, reversed };
+  };
+  if (isOriginMode(mode)) {
+    return s > 9000 ? { set: null, glyphs: null, reversed: false } : run(s % ORIGIN_UNI.length);
+  }
+  if (s > 9970) return { set: null, glyphs: null, reversed: false };
+  if (s > 9950) return run(s % 3, true);
+  return null;
 }
 
 // Long blades (up to 133 glyphs) read as their opening and closing runs:
