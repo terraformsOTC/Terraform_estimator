@@ -131,10 +131,11 @@ const ZONE_LORE_SLUGS = {
   '[MOON]': 'moon', '[SEP]': 'sep', 'Shiro': 'shiro', 'Mirage': 'mirage', 'Grove': 'grove',
   'Hyphae': 'hyphae', 'Mecha': 'mecha', 'Riso': 'riso', 'Exduo': 'exduo', 'Arc': 'arc',
   'Nightrose': 'nightrose', 'Hypermage': 'hypermage', 'Holo': 'holo', 'Ouallada': 'ouallada',
+  // No known reference yet — their lore pages say so.
+  '[BOSS]': 'boss', '[HOME]': 'home', '[WEN]': 'wen', 'Dynacrypts': 'dynacrypts',
+  'Valeria': 'valeria', 'pfpfpfpbbx80': 'pfpfpfpbbx80',
 };
 
-// [BOSS], [HOME], [WEN], Dynacrypts, Valeria and pfpfpfpbbx80 have no known
-// reference, and the lore site deliberately has no page for them.
 export function getZoneLoreUrl(zone) {
   const slug = ZONE_LORE_SLUGS[zone];
   return slug ? `https://www.terraformlore.xyz/zones/${slug}` : null;
