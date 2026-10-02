@@ -90,6 +90,15 @@ a:hover {
   line-height: normal;
 }
 
+/* Link buttons under a parcel: small enough that three fit on one row beside
+   the animation at its tallest. */
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: normal;
+  white-space: nowrap;
+}
+
 /* Inputs */
 input[type="text"],
 input[type="number"],

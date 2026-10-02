@@ -66,7 +66,7 @@ function BladeRow({ blade }) {
 function CustomGlyphsRow({ custom }) {
   // X-seeds run every one of the 28 uni sets at once — hundreds of glyphs.
   if (custom.kind === 'x-seed') {
-    return <GlyphRow label="glyphs" value="X-Seed (all possible unicode characters)" />;
+    return <GlyphRow label="glyphs" value="X-Seed (all 28 glyph sets)" />;
   }
   // These glyphs are not in the parcel's own font subset, so the animation
   // paints them in the system font, and so does this row.

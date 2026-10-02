@@ -121,7 +121,7 @@ const ZONE_LORE_SLUGS = {
   'Greysunn': 'greysunn', 'Treasure': 'treasure',
   'Dhampir': 'dhampir', 'Rocket': 'rocket', 'Mt Zuka': 'mt-zuka', 'Jadeite': 'jadeite',
   'Intro Forest': 'intro-forest',
-  'Bubble': 'bubble', 'Kippsun': 'kippsunn', 'Everglades': 'everglades',
+  'Bubble': 'bubble', 'Kippsun': 'kippsunn', 'Everglades': 'everglades', 'Cradle': 'cradle',
   'Muxtai X1': 'muxtai-x1', 'Toad': 'toad', 'Angel': 'angel',
   'Pepo': 'pepo', 'Wastelands': 'wastelands', '[BLOOD]': 'blood',
   'Blushing': 'blushing', 'Ender': 'ender', 'Akileaf': 'akileaf',
@@ -133,6 +133,8 @@ const ZONE_LORE_SLUGS = {
   'Nightrose': 'nightrose', 'Hypermage': 'hypermage', 'Holo': 'holo', 'Ouallada': 'ouallada',
 };
 
+// [BOSS], [HOME], [WEN], Dynacrypts, Valeria and pfpfpfpbbx80 have no known
+// reference, and the lore site deliberately has no page for them.
 export function getZoneLoreUrl(zone) {
   const slug = ZONE_LORE_SLUGS[zone];
   return slug ? `https://www.terraformlore.xyz/zones/${slug}` : null;

@@ -79,12 +79,12 @@ function UnmintedLinks({ level, x, y, zone }) {
   const terrafansUrl = `https://terrafans.xyz/all/index.php?level=${level}&x=${x}&y=${y}`;
   const loreUrl = getZoneLoreUrl(zone);
   return (
-    <div className="flex gap-2 mt-1 flex-wrap">
-      <a href={terrafansUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+    <div className="flex gap-1.5 mt-1">
+      <a href={terrafansUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-xs no-underline">
         [terrafans ↗]
       </a>
       {loreUrl && (
-        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-xs no-underline">
           [lore ↗]
         </a>
       )}

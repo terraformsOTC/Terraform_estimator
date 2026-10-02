@@ -108,15 +108,15 @@ function ParcelImage({ tokenId, width, height }) {
 function ExternalLinks({ tokenId, zone }) {
   const loreUrl = getZoneLoreUrl(zone);
   return (
-    <div className="flex gap-2 mt-1 flex-wrap">
-      <a href={`https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+    <div className="flex gap-1.5 mt-1">
+      <a href={`https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-xs no-underline">
         [opensea ↗]
       </a>
-      <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+      <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="btn-primary btn-xs no-underline">
         [explorer ↗]
       </a>
       {loreUrl && (
-        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-sm text-xs no-underline">
+        <a href={loreUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-xs no-underline">
           [lore ↗]
         </a>
       )}
