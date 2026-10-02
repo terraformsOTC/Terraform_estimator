@@ -64,18 +64,21 @@ function BladeRow({ blade }) {
 }
 
 function CustomGlyphsRow({ custom }) {
-  // The high-seed branches run all 28 sets at once — hundreds of glyphs.
-  if (custom.set == null) {
-    return <GlyphRow label="glyphs" value="all 28 sets" />;
+  // X-seeds run every one of the 28 uni sets at once — hundreds of glyphs.
+  if (custom.kind === 'x-seed') {
+    return <GlyphRow label="glyphs" value="X-Seed (all possible unicode characters)" />;
   }
   // These glyphs are not in the parcel's own font subset, so the animation
   // paints them in the system font, and so does this row.
   const marksOnly = /^\p{M}+$/u.test(custom.glyphs);
-  const setLabel = `set ${custom.set}${custom.reversed ? ', reversed' : ''}`;
+  // A Y-seed animates 1 of 3 possible sets (uni 0-2, reversed); an origin
+  // parcel 1 of 28.
+  const isYSeed = custom.kind === 'y-seed';
+  const setLabel = isYSeed ? `Y-Seed, set ${custom.set + 1} of 3` : `set ${custom.set}`;
   return (
     <GlyphRow
       label="glyphs"
-      title={`${setLabel} of 28`}
+      title={isYSeed ? setLabel : `set ${custom.set} of 28`}
       value={
         <>
           {marksOnly ? <span className="opacity-60">near-invisible marks</span> : custom.glyphs}

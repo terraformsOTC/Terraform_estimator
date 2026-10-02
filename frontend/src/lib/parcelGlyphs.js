@@ -76,23 +76,24 @@ function makeSet(start) {
 //   non-origin, 9951-9970     UNI[seed % 3], reversed (the renderer's Y-seed)
 //   non-origin, seed  > 9970  all 28 runs (X-seed)
 //   anything else             null: the parcel shows its blade
-// Returns { set, glyphs, reversed }; `set` is the 0-27 index, or null for all
-// 28. Combining marks are dropped: they are zero-width, collapse onto their
+// Returns { kind, set, glyphs }: kind is 'origin' (one seed-picked run),
+// 'y-seed' (one of 3 runs, reversed) or 'x-seed' (all 28 runs; the renderer
+// flags both high-seed branches isXSeed); `set` is the run's 0-27 index, null
+// for an X-seed. Combining marks are dropped: they are zero-width, collapse onto their
 // neighbours in a string, and paint as blank cells in the animation anyway
 // (set 13 is all marks, so it keeps the raw run rather than vanish).
 export function customGlyphs(mode, seed) {
   const s = Math.floor(Number(seed));
   if (seed == null || !Number.isFinite(s)) return null;
-  const run = (set, reversed = false) => {
+  const run = (kind, set, reversed = false) => {
     let raw = makeSet(ORIGIN_UNI[set]);
     if (reversed) raw = Array.from(raw).reverse().join('');
-    return { set, glyphs: raw.replace(/\p{M}/gu, '') || raw, reversed };
+    return { kind, set, glyphs: raw.replace(/\p{M}/gu, '') || raw };
   };
-  if (isOriginMode(mode)) {
-    return s > 9000 ? { set: null, glyphs: null, reversed: false } : run(s % ORIGIN_UNI.length);
-  }
-  if (s > 9970) return { set: null, glyphs: null, reversed: false };
-  if (s > 9950) return run(s % 3, true);
+  const xSeed = { kind: 'x-seed', set: null, glyphs: null };
+  if (isOriginMode(mode)) return s > 9000 ? xSeed : run('origin', s % ORIGIN_UNI.length);
+  if (s > 9970) return xSeed;
+  if (s > 9950) return run('y-seed', s % 3, true);
   return null;
 }
 
