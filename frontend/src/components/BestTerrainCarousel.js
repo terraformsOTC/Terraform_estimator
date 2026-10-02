@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ParcelArt from './ParcelArt';
-import { EthIcon, parcelImage, SpecialBadge, SPECIAL_TYPE_BADGES, CATEGORY_COLORS, vsModelColor } from './shared';
+import { EthIcon, parcelImage, SpecialBadge, CATEGORY_COLORS, vsModelColor, headlineBadges } from './shared';
 
 // How many cards the rail holds. /listings returns every active listing (~145
 // today, ~94 of them Terrain); past the first couple of dozen the "best deal"
@@ -41,11 +41,7 @@ function ParcelCard({ parcel, rank }) {
   // Flat shape from /listings-slim — no nested traits/pricing objects.
   const { tokenId, listedPrice, discount, mode, specialType, zoneCategory } = parcel;
 
-  const specialBadge = SPECIAL_TYPE_BADGES[
-    mode === 'Origin Daydream' ? 'Origin Daydream'
-    : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : specialType
-  ];
+  const headline = headlineBadges(mode, specialType);
 
   return (
     <a
@@ -79,8 +75,10 @@ function ParcelCard({ parcel, rank }) {
           <EthIcon />
           {listedPrice?.toFixed(3)}
         </div>
-        {specialBadge && (
-          <div className="flex"><SpecialBadge config={specialBadge} opacity={0.8} /></div>
+        {headline.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {headline.map(b => <SpecialBadge key={b.label} config={b} opacity={0.8} />)}
+          </div>
         )}
       </div>
     </a>

@@ -1,6 +1,6 @@
 'use client';
 
-import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate, WalletLink } from './shared';
+import { CATEGORY_COLORS, SpecialBadge, headlineBadges, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate, WalletLink } from './shared';
 import { ParcelGlyphRows, useAnimationHeight } from './ParcelGlyphRows';
 
 export default function ParcelResult({ parcel, ethUsd }) {
@@ -62,20 +62,18 @@ export default function ParcelResult({ parcel, ethUsd }) {
 
 function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier, mysteryValue }) {
   const traits = { mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, biome, level, zone, chroma, mysteryOutlier, mysteryValue };
-  const primaryKey = mode === 'Origin Daydream'  ? 'Origin Daydream'
-                   : mode === 'Origin Terraform' ? 'Origin Terraform'
-                   : specialType;
-  const primaryConfig = SPECIAL_TYPE_BADGES[primaryKey];
-  const hasNothing    = !primaryConfig && !hasBadges(traits);
+  const headline   = headlineBadges(mode, specialType);
+  const hasNothing = headline.length === 0 && !hasBadges(traits);
 
   return (
     <div className="flex justify-between items-center border-b pb-2 mb-2" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
       <span className="text-sm opacity-65">special</span>
       <div className="flex items-center gap-2 flex-wrap justify-end">
-        {primaryConfig  ? <SpecialBadge config={primaryConfig} />
-         : isOneOfOne   ? <SpecialBadge type="1of1" />
-         : hasNothing   ? <span className="text-sm opacity-35">No</span>
-         : null}
+        {headline.map(b => <SpecialBadge key={b.label} config={b} />)}
+        {/* A 1of1 with no special type of its own; AutoBadgeStack covers 1of1s
+            that also carry another type. */}
+        {isOneOfOne && !specialType && <SpecialBadge type="1of1" />}
+        {hasNothing && <span className="text-sm opacity-35">No</span>}
         <AutoBadgeStack traits={traits} />
       </div>
     </div>

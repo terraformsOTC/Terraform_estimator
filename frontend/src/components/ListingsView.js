@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink, vsModelColor } from './shared';
+import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, headlineBadges, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink, vsModelColor } from './shared';
 import { matchesFilters, hasActiveFilters } from './ParcelFilters';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -250,11 +250,7 @@ function ListingCard({ parcel }) {
 
   const isHighValueSpecial = (mode === 'Origin Daydream' || mode === 'Origin Terraform') || specialType in SPECIAL_TYPE_BADGES || isOneOfOne || isS0 || biome === 0;
   const showCategoryBadge = topCategory != null && !(topCategory === 'Floor' && isHighValueSpecial);
-  const specialBadge = SPECIAL_TYPE_BADGES[
-    mode === 'Origin Daydream' ? 'Origin Daydream'
-    : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : specialType
-  ];
+  const headline = headlineBadges(mode, specialType);
 
   const color = vsModelColor(discount);
   const sign = discount >= 0 ? '-' : '+';
@@ -301,7 +297,7 @@ function ListingCard({ parcel }) {
               {topCategory}
             </span>
           )}
-          {specialBadge && <SpecialBadge config={specialBadge} opacity={0.8} />}
+          {headline.map(b => <SpecialBadge key={b.label} config={b} opacity={0.8} />)}
           <AutoBadgeStack traits={traits} opacity={0.8} />
           <MysteryBadge outlier={mysteryOutlier} opacity={0.8} />
           <span

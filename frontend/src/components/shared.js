@@ -37,7 +37,7 @@ export function HedonicEstimate({ pricingV2, fallback, floor, ethUsd, listing })
       )}
       {collapsed && pricingV2?.tierReason && (
         <p className="text-xs opacity-45 mt-1">
-          {pricingV2.tierReason} — too few settled sales to price a range.
+          {pricingV2.tierReason} — not enough sales data to give a high confidence price estimate.
         </p>
       )}
       {listing !== undefined && <ListingRow listing={listing} />}
@@ -191,6 +191,17 @@ export const SPECIAL_TYPE_BADGES = {
   'Unminted':         { label: 'unminted',          color: '#eee8de' },
 };
 
+// The headline badges for a parcel: its origin mode and its special type. An
+// origin parcel can also be an X-Seed, Spine or 1of1 (#83 is both an Origin
+// Daydream and an X-Seed), so the two are listed together, never one in place
+// of the other.
+export function headlineBadges(mode, specialType) {
+  const out = [];
+  if (mode === 'Origin Daydream' || mode === 'Origin Terraform') out.push(SPECIAL_TYPE_BADGES[mode]);
+  if (SPECIAL_TYPE_BADGES[specialType]) out.push(SPECIAL_TYPE_BADGES[specialType]);
+  return out;
+}
+
 // Reusable badge chip — use type (key into SPECIAL_TYPE_BADGES) or config ({ color, label })
 export function SpecialBadge({ type, config: cfg, opacity = 0.85 }) {
   const config = cfg ?? SPECIAL_TYPE_BADGES[type];
@@ -341,11 +352,7 @@ export function PropertyStack({ traits, pricing, showMystery = false, opacity = 
   const levelCategory = getLevelCategory(level);
   const catColor = (cat) => (cat && cat !== 'Floor' ? CATEGORY_COLORS[cat] : undefined);
 
-  const specialBadge = SPECIAL_TYPE_BADGES[
-    mode === 'Origin Daydream' ? 'Origin Daydream'
-    : mode === 'Origin Terraform' ? 'Origin Terraform'
-    : specialType
-  ];
+  const headline = headlineBadges(mode, specialType);
 
   const Row = ({ k, color, children }) => (
     <div className="flex items-baseline gap-1.5 whitespace-nowrap">
@@ -354,7 +361,7 @@ export function PropertyStack({ traits, pricing, showMystery = false, opacity = 
     </div>
   );
 
-  const showBadgeRow = specialBadge || hasBadges(traits) || (showMystery && traits?.mysteryOutlier);
+  const showBadgeRow = headline.length > 0 || hasBadges(traits) || (showMystery && traits?.mysteryOutlier);
 
   return (
     <div className="flex flex-col gap-2">
@@ -366,7 +373,7 @@ export function PropertyStack({ traits, pricing, showMystery = false, opacity = 
       </div>
       {showBadgeRow && (
         <div className="flex items-center gap-1 flex-wrap">
-          {specialBadge && <SpecialBadge config={specialBadge} opacity={opacity} />}
+          {headline.map(b => <SpecialBadge key={b.label} config={b} opacity={opacity} />)}
           <AutoBadgeStack traits={traits} opacity={opacity} />
           {showMystery && <MysteryBadge outlier={traits?.mysteryOutlier} opacity={opacity} />}
         </div>
