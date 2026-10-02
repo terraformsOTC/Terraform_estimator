@@ -2,6 +2,7 @@
 
 import { SpecialBadge, AutoBadgeStack, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate } from './shared';
 import TerraformAnimation from './TerraformAnimation';
+import { ParcelGlyphRows, useAnimationHeight } from './ParcelGlyphRows';
 
 export default function UnmintedResult({ parcel, ethUsd }) {
   const { traits, pricing, pricingV2, animData } = parcel;
@@ -9,18 +10,19 @@ export default function UnmintedResult({ parcel, ethUsd }) {
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
 
   const levelCategory = getLevelCategory(level);
+  const { columnRef, rowsRef, width, height } = useAnimationHeight();
 
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
-        <UnmintedAnimation animData={animData} />
+        <UnmintedAnimation animData={animData} width={width} height={height} />
         <div className="mt-1">
           <p className="opacity-75 text-xs">#{id} · X{x}/Y{y}</p>
           <p className="opacity-55 text-xs">{zone}/B{biome}/{chroma || 'Flow'}/L{level}</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
+      <div ref={columnRef} className="flex flex-col gap-4 flex-1">
         <div>
           <HedonicEstimate
             pricingV2={pricingV2}
@@ -30,7 +32,7 @@ export default function UnmintedResult({ parcel, ethUsd }) {
           />
         </div>
 
-        <div className="flex flex-col gap-0">
+        <div ref={rowsRef} className="flex flex-col gap-0">
           {isSpecial
             ? <SimpleRow label="zone" value={zone || '—'} />
             : <TraitRow label="zone" value={zone || '—'} category={zoneCategory} />}
@@ -44,6 +46,7 @@ export default function UnmintedResult({ parcel, ethUsd }) {
           <SimpleRow label="mode" value="Terrain" />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           {seed != null && <SimpleRow label="seed" value={seed} />}
+          <ParcelGlyphRows biome={biome} seed={seed} mode="Terrain" />
           <UnmintedSpecialRow traits={traits} />
         </div>
 
@@ -68,8 +71,8 @@ function UnmintedSpecialRow({ traits }) {
   );
 }
 
-function UnmintedAnimation({ animData }) {
-  return <TerraformAnimation animData={animData} width={277} height={400} />;
+function UnmintedAnimation({ animData, width, height }) {
+  return <TerraformAnimation animData={animData} width={width} height={height} />;
 }
 
 function UnmintedLinks({ level, x, y, zone }) {

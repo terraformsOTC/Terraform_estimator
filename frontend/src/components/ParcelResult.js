@@ -1,6 +1,7 @@
 'use client';
 
 import { CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, hasBadges, TraitRow, SimpleRow, MysteryRow, getLevelCategory, getZoneLoreUrl, HedonicEstimate, WalletLink } from './shared';
+import { ParcelGlyphRows, useAnimationHeight } from './ParcelGlyphRows';
 
 export default function ParcelResult({ parcel, ethUsd }) {
   const { tokenId, traits, pricing, pricingV2, listing, owner } = parcel;
@@ -8,11 +9,12 @@ export default function ParcelResult({ parcel, ethUsd }) {
   const { estimatedValue, floor, zoneCategory, biomeCategory, isSpecial } = pricing;
 
   const levelCategory = getLevelCategory(level);
+  const { columnRef, rowsRef, width, height } = useAnimationHeight();
 
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-2xl">
       <div className="flex-shrink-0">
-        <ParcelImage tokenId={tokenId} />
+        <ParcelImage tokenId={tokenId} width={width} height={height} />
         <div className="mt-1">
           <p className="opacity-75 text-xs">
             <a href={`https://terraformexplorer.xyz/tokens/${tokenId}`} target="_blank" rel="noopener noreferrer" className="no-underline">{tokenId}</a>{x != null && y != null ? ` · X${x}/Y${y}` : ''}
@@ -21,7 +23,7 @@ export default function ParcelResult({ parcel, ethUsd }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
+      <div ref={columnRef} className="flex flex-col gap-4 flex-1">
         <HedonicEstimate
           pricingV2={pricingV2}
           fallback={estimatedValue}
@@ -30,7 +32,7 @@ export default function ParcelResult({ parcel, ethUsd }) {
           listing={listing ?? null}
         />
 
-        <div className="flex flex-col gap-0">
+        <div ref={rowsRef} className="flex flex-col gap-0">
           {/* Links to the owner's wallet view: every parcel that address holds. */}
           {owner?.address && (
             <SimpleRow label="owner" value={<WalletLink address={owner.address} ens={owner.ens} />} />
@@ -48,6 +50,7 @@ export default function ParcelResult({ parcel, ethUsd }) {
           <SimpleRow label="mode" value={mode || 'Terrain'} />
           {mysteryValue != null && <MysteryRow value={mysteryValue} outlier={mysteryOutlier} />}
           {seed != null && <SimpleRow label="seed" value={seed} />}
+          <ParcelGlyphRows biome={biome} seed={seed} mode={mode} />
           <SpecialTypeRow mode={mode} specialType={specialType} isOneOfOne={isOneOfOne} isGodmode={isGodmode} isS0={isS0} isLith0like={isLith0like} isGm={isGm} biome={biome} level={level} zone={zone} chroma={chroma} mysteryOutlier={mysteryOutlier} mysteryValue={mysteryValue} />
         </div>
 
@@ -79,9 +82,9 @@ function SpecialTypeRow({ mode, specialType, isOneOfOne, isGodmode, isS0, isLith
   );
 }
 
-function ParcelImage({ tokenId }) {
+function ParcelImage({ tokenId, width, height }) {
   return (
-    <div className="relative" style={{ width: 277, height: 400 }}>
+    <div className="relative" style={{ width, height }}>
       <span className="flex bg-placeholder w-full animate-pulse absolute top-0 left-0" style={{ height: '100%' }} />
       <iframe
         src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
@@ -89,8 +92,8 @@ function ParcelImage({ tokenId }) {
         scrolling="no"
         sandbox="allow-scripts"
         style={{
-          width: 277,
-          height: 400,
+          width,
+          height,
           border: 'none',
           display: 'block',
           position: 'absolute',
