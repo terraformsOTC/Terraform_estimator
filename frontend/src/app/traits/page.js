@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
+import SetsSection from '@/components/SetsSection';
 import { API_URL, SpecialBadge, connectAndRedirect, Footer } from '@/components/shared';
 
 // Maps backend trait slugs → SPECIAL_TYPE_BADGES keys for chip styling.
@@ -47,33 +48,43 @@ export default function TraitsIndexPage() {
   return (
     <div className="content-wrapper">
       <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
-      <main className="flex-1 px-6 max-w-2xl">
+      <main className="flex-1 px-6">
         <div className="mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">
             <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
             <span> / </span>
-            <span>[traits]</span>
+            <span>[traits &amp; sets]</span>
           </span>
         </div>
-        <p className="opacity-55 text-sm mb-10">
+        <p className="opacity-55 text-sm mb-4 max-w-2xl">
           Find every parcel — minted or unminted — matching a given special trait. Counts include both minted and unminted parcels.
+          Below them, the collecting sets and the parcels each one needs.
+        </p>
+        <p className="text-sm mb-10">
+          <a href="#traits" className="no-underline opacity-60 hover:opacity-100">[traits]</a>
+          {' '}
+          <a href="#sets" className="no-underline opacity-60 hover:opacity-100">[sets]</a>
         </p>
 
-        {error && <p className="text-sm opacity-70">[error: {error}]</p>}
-        {!types && !error && <p className="text-sm opacity-60">[loading trait counts...]</p>}
+        <div id="traits" className="max-w-2xl mb-16 scroll-mt-6">
+          {error && <p className="text-sm opacity-70">[error: {error}]</p>}
+          {!types && !error && <p className="text-sm opacity-60">[loading trait counts...]</p>}
 
-        {types && GROUPS.map(group => {
-          const groupTypes = types.filter(t => t.group === group.key);
-          if (groupTypes.length === 0) return null;
-          return (
-            <section key={group.key} className="mb-10">
-              <h2 className="text-xs opacity-50 uppercase tracking-widest mb-3">{group.label}</h2>
-              <div className="flex flex-col">
-                {groupTypes.map(t => <TraitRow key={t.type} trait={t} />)}
-              </div>
-            </section>
-          );
-        })}
+          {types && GROUPS.map(group => {
+            const groupTypes = types.filter(t => t.group === group.key);
+            if (groupTypes.length === 0) return null;
+            return (
+              <section key={group.key} className="mb-10">
+                <h2 className="text-xs opacity-50 uppercase tracking-widest mb-3">{group.label}</h2>
+                <div className="flex flex-col">
+                  {groupTypes.map(t => <TraitRow key={t.type} trait={t} />)}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <SetsSection />
       </main>
       <Footer />
     </div>

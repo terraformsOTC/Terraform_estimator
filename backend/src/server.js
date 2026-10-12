@@ -960,6 +960,105 @@ app.get('/sales-history', async (req, res) => {
   }
 });
 
+// ─── STATS ────────────────────────────────────────────────────────────────────
+// Market cap is every parcel priced by the live model and summed: the 9,911
+// minted parcels, then again with the 1,193 unminted ones, each valued at what it
+// should be worth once minted (see resolveUnminted). Both sides of the band are
+// summed, as for wallet totals — the bid side is what the collection would
+// realise, the ask side what it is listed at. Pure arithmetic on snapshot traits,
+// so it is cached per (floor, top offer) rather than on a timer.
+let marketCapCache = { key: null, value: null };
+function sumValues(traitsList, floor) {
+  let bid = 0, ask = 0, count = 0;
+  for (const traits of traitsList) {
+    const v2 = safeHedonic(traits, floor);
+    const v1 = v2 ? null : estimatePrice(traits, floor).estimatedValue;
+    bid += v2 ? v2.off : v1;
+    ask += v2 ? v2.on : v1;
+    count++;
+  }
+  return { bid: Math.round(bid * 10) / 10, ask: Math.round(ask * 10) / 10, count };
+}
+
+function computeMarketCap(floor) {
+  const key = `${floor}:${currentTopOffer()}`;
+  if (marketCapCache.key === key) return marketCapCache.value;
+  const mintedTraits = [];
+  for (const tokenId of MINTED_TRAITS_SNAPSHOT?.keys() || []) {
+    const t = getSnapshotTraits(tokenId);
+    if (t) mintedTraits.push(t);
+  }
+  const minted = sumValues(mintedTraits, floor);
+  const unminted = sumValues(UNMINTED_PARCELS.map(unmintedTraits), floor);
+  const value = {
+    minted,
+    unminted,
+    total: {
+      bid: Math.round((minted.bid + unminted.bid) * 10) / 10,
+      ask: Math.round((minted.ask + unminted.ask) * 10) / 10,
+      count: minted.count + unminted.count,
+    },
+    // The naive figure most collections quote, for comparison.
+    floorTimesSupply: Math.round(floor * minted.count * 10) / 10,
+  };
+  marketCapCache = { key, value };
+  return value;
+}
+
+function summarizeListings(full, mintedCount) {
+  const prices = (full.parcels || []).map(p => p.listedPrice).filter(x => x > 0).sort((a, b) => a - b);
+  const m = prices.length >> 1;
+  return {
+    count: full.totalListings,
+    shareOfSupply: mintedCount ? full.totalListings / mintedCount : null,
+    lowest: prices.length ? prices[0] : null,
+    median: prices.length ? (prices.length % 2 ? prices[m] : (prices[m - 1] + prices[m]) / 2) : null,
+    totalAsk: Math.round(prices.reduce((a, b) => a + b, 0) * 10) / 10,
+    // Listed below the model's listed-price estimate (see computeAllListings).
+    belowEstimate: (full.parcels || []).filter(p => p.discount > 0).length,
+    fetchedAt: full.fetchedAt,
+  };
+}
+
+// GET /stats — market cap, sales volume, listing counts.
+// Neither feed blocks: a cold listings cache would hold the page for the
+// 20-40s OpenSea fan-out, so it is started in the background and the response
+// says `listingsPending`; the page asks again. Sales volume comes from the
+// nightly export alone until the live feed is warm.
+app.use('/stats', standardLimiter);
+app.get('/stats', async (_req, res) => {
+  try {
+    const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+    const marketCap = computeMarketCap(floor);
+
+    let listings = null;
+    if (listingsResource.stats().warm) {
+      try { listings = summarizeListings(await listingsResource.get(), marketCap.minted.count); } catch { /* pending */ }
+    } else {
+      listingsResource.get().catch(() => {});
+    }
+    let live = null;
+    if (salesResource.stats().warm) {
+      try { live = await salesResource.get(); } catch { /* history alone */ }
+    } else {
+      salesResource.get().catch(() => {});
+    }
+
+    res.set('Cache-Control', listings ? FEED_CACHE_CONTROL : 'no-store');
+    res.json({
+      floor, floorIsLive,
+      topOffer: currentTopOffer(),
+      marketCap,
+      sales: salesHistory.volumes(live),
+      listings,
+      listingsPending: !listings,
+    });
+  } catch (err) {
+    console.error('[stats]', err.message);
+    res.status(500).json({ error: 'Failed to compute stats.' });
+  }
+});
+
 // Parse all traits from tokenURI metadata
 // Zone and Level are read from tokenURI attributes (trait_type "Zone" / "Level").
 // tokenSupplementalData has a struct ABI mismatch and is not used.
@@ -1487,14 +1586,19 @@ try {
 app.use('/unminted', standardLimiter);
 
 // Shared handler: resolve a parcel, price it, and attach anim data
-async function resolveUnminted(parcel, res) {
-  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
-  // Compute derivable special flags from parcel data.
-  // isS0 / isGodmode / isOneOfOne / isLith0like require manual curation — not applicable to unminted.
-  // isGm: Terrain + Biome 71 + low ??? (mirrors minted logic; visual pattern derives from these traits).
+// Pricing traits for an unminted parcel. Derivable special flags are computed
+// from parcel data; isS0 / isGodmode / isOneOfOne / isLith0like require manual
+// curation — not applicable to unminted.
+// isGm: Terrain + Biome 71 + low ??? (mirrors minted logic; visual pattern derives from these traits).
+function unmintedTraits(parcel) {
   const isGm = parcel.biome === 71 && parcel.mode === 'Terrain'
     && parcel.mysteryValue != null && parcel.mysteryValue < MYSTERY_P5;
-  const traits   = { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm };
+  return { ...parcel, isS0: false, isGodmode: false, isOneOfOne: false, isLith0like: false, isGm };
+}
+
+async function resolveUnminted(parcel, res) {
+  const { price: floor, isLive: floorIsLive } = await getFloorPrice();
+  const traits   = unmintedTraits(parcel);
   const pricing  = estimatePrice(traits, floor);
   // Unminted parcels carry every feature the hedonic model reads — zone, biome,
   // level, chroma, mode, mysteryValue are all known from the queue data, only the

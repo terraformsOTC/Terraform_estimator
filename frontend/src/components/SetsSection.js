@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import Header from '@/components/Header';
-import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
+import { API_URL } from '@/components/shared';
 import ParcelArt from '@/components/ParcelArt';
 import { SETS_GLOSSARY, setStyle } from '@/lib/setsGlossary';
 
@@ -118,7 +117,10 @@ function SetBlock({ set, data }) {
   );
 }
 
-export default function SetsPage() {
+// The sets half of /traits (they had their own /sets page until 2026-10-12;
+// that path now redirects to /traits#sets). Fetches its own data so the trait
+// list above it renders without waiting on the example parcels.
+export default function SetsSection() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
@@ -136,31 +138,20 @@ export default function SetsPage() {
   const byName = Object.fromEntries((data || []).map(s => [s.name, s]));
 
   return (
-    <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
-      <main className="flex-1 px-6">
-        <div className="mb-6">
-          <span className="text-[1.35rem] md:text-[1.6875rem]">
-            <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
-            <span> / </span>
-            <span>[sets]</span>
-          </span>
-        </div>
+    <section id="sets" className="scroll-mt-6">
+      <h2 className="text-xs opacity-50 uppercase tracking-widest mb-3">Sets</h2>
+      <p className="opacity-55 text-sm mb-10 max-w-2xl">
+        Sets are groupings of parcels built around a common theme in the collection.
+        Some are easy to complete, whilst others are almost impossible. Each set is shown
+        here with examples of the parcels required to complete them. The estimator detects
+        which sets you hold when you view your collection.
+      </p>
 
-        <p className="opacity-55 text-sm mb-10 max-w-2xl">
-          Sets are groupings of parcels built around a common theme in the collection.
-          Some are easy to complete, whilst others are almost impossible. Each set is shown
-          here with examples of the parcels required to complete them. The estimator detects
-          which sets you hold when you view your collection.
-        </p>
+      {error && <p className="text-sm opacity-70 mb-8">[error: {error}]</p>}
 
-        {error && <p className="text-sm opacity-70 mb-8">[error: {error}]</p>}
-
-        {SETS_GLOSSARY.map(set => (
-          <SetBlock key={set.name} set={set} data={byName[set.name]} />
-        ))}
-      </main>
-      <Footer />
-    </div>
+      {SETS_GLOSSARY.map(set => (
+        <SetBlock key={set.name} set={set} data={byName[set.name]} />
+      ))}
+    </section>
   );
 }

@@ -290,8 +290,43 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
     };
   }
 
-  return { query, size: () => historySales().length };
+  /**
+   * Sale count and volume over trailing windows and per calendar year (UTC),
+   * for /stats. Bundle orders count their total once, as in summarize().
+   */
+  function volumes(live = null, nowSec = Math.floor(Date.now() / 1000)) {
+    const { sales: all } = allSales(live);
+    const pick = (xs) => { const { count, volume } = summarize(xs); return { count, volume }; };
+    const windows = VOLUME_WINDOWS.map(({ key, seconds }) => ({
+      key,
+      ...pick(seconds == null ? all : all.filter((s) => s.closingDate > nowSec - seconds)),
+    }));
+    const byYear = new Map();
+    for (const s of all) {
+      const year = new Date(s.closingDate * 1000).getUTCFullYear();
+      if (!byYear.has(year)) byYear.set(year, []);
+      byYear.get(year).push(s);
+    }
+    const years = [...byYear.keys()].sort((a, b) => a - b).map((year) => ({ year, ...pick(byYear.get(year)) }));
+    return {
+      windows,
+      years,
+      first: all.length ? all[all.length - 1].closingDate : null,
+      historyExportedAt: history?.exportedAt ?? null,
+    };
+  }
+
+  return { query, volumes, size: () => historySales().length };
 }
+
+const VOLUME_WINDOWS = [
+  { key: '24h', seconds: 86_400 },
+  { key: '7d', seconds: 7 * 86_400 },
+  { key: '30d', seconds: 30 * 86_400 },
+  { key: '90d', seconds: 90 * 86_400 },
+  { key: '1y', seconds: 365 * 86_400 },
+  { key: 'all', seconds: null },
+];
 
 const ETH_LIKE = new Set(['ETH', 'WETH', 'BETH']);
 

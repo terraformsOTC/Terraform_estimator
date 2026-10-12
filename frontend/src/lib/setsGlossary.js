@@ -3,11 +3,11 @@
 // The backend's SETS rubric (backend/src/pricingModel.js) is the machine-readable
 // version — which biomes/zones/levels a set requires, and what detectSets checks a
 // wallet against. This is the prose that goes with it. `name` is the join key
-// across all three consumers (glossary, /sets, the wallet view), so it has to match
+// across all three consumers (glossary, /traits#sets, the wallet view), so it has to match
 // the backend's SETS keys exactly.
 //
 // `size` is how many parcels complete the set, and the list is kept in ascending
-// order of it — that is the order the /sets page renders, so the page reads from
+// order of it — that is the order the sets section of /traits renders, so the page reads from
 // the easiest set to the hardest without needing to sort.
 //
 // Colour is difficulty, which is NOT the same ordering — Grails needs only seven

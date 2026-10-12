@@ -41,9 +41,11 @@ const nextConfig = {
     return [
       { source: '/faq', destination: '/methodology', permanent: true },
       // Big Grass and Little Grass stopped being traits when biomes 42 and 65
-      // were rolled into the Meadow biomes set; old links land on the sets page.
-      { source: '/traits/big-grass', destination: '/sets', permanent: true },
-      { source: '/traits/little-grass', destination: '/sets', permanent: true },
+      // were rolled into the Meadow biomes set; old links land on the sets section.
+      { source: '/traits/big-grass', destination: '/traits#sets', permanent: true },
+      { source: '/traits/little-grass', destination: '/traits#sets', permanent: true },
+      // Sets merged into the traits page on 2026-10-12.
+      { source: '/sets', destination: '/traits#sets', permanent: true },
     ];
   },
   async headers() {

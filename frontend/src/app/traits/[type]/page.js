@@ -32,7 +32,7 @@ export default function TraitsDetailPage({ params }) {
           <span className="text-[1.35rem] md:text-[1.6875rem]">
             <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
             <span> / </span>
-            <a href="/traits" className="no-underline opacity-60 hover:opacity-100">[traits]</a>
+            <a href="/traits" className="no-underline opacity-60 hover:opacity-100">[traits &amp; sets]</a>
             <span> / </span>
             <span>[{data?.label?.toLowerCase() || type}]</span>
           </span>

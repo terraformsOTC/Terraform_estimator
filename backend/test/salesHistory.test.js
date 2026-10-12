@@ -84,3 +84,18 @@ test('pagination and bad input are clamped', () => {
   assert.strictEqual(h.query({ offset: '-5' }).offset, 0);
   assert.deepStrictEqual(parseFilters({ biome: 'x,42', level: '' }), { biome: new Set([42]) });
 });
+
+test('volumes: trailing windows and calendar years, bundle totals counted once', () => {
+  const v = make().volumes(null, 3500);
+  const w = Object.fromEntries(v.windows.map(({ key, ...x }) => [key, x]));
+  // Every fixture sale is within a day of t=3500; the bundle's 0.90 counts once.
+  assert.deepStrictEqual(w['24h'], { count: 4, volume: 1.4 });
+  assert.deepStrictEqual(w.all, { count: 4, volume: 1.4 });
+  assert.deepStrictEqual(v.years, [{ year: 1970, count: 4, volume: 1.4 }]);
+  assert.strictEqual(v.first, 1000);
+
+  // The window opens at t=1500: the t=1000 sale falls out, the rest stay.
+  const later = make().volumes(null, 1000 + 86_400 + 500);
+  const w2 = Object.fromEntries(later.windows.map(({ key, ...x }) => [key, x]));
+  assert.deepStrictEqual(w2['24h'], { count: 3, volume: 1.2 });
+});
