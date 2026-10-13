@@ -781,30 +781,47 @@ async function fetchContractOwners() {
 }
 
 async function computeCollectors() {
-  const owners = await fetchContractOwners();
+  const [owners, { price: floor }] = await Promise.all([fetchContractOwners(), getFloorPrice()]);
+  const values = mintedValues(floor);
 
-  const ranked = owners.map(o => {
+  // Portfolio value is the bid side, as for a wallet's total: what selling the
+  // holding would realise. Every holder is valued, not just the largest by count,
+  // so the value ranking finds a small, rare-heavy wallet the count ranking misses.
+  const all = owners.map(o => {
     const ids = (o.tokenBalances || []).map(b => Number(b.tokenId)).filter(Number.isFinite);
-    return { address: o.ownerAddress, tokenIds: ids, parcels: ids.length };
-  })
-    // Ties broken by address so the ordering is stable between refreshes rather
-    // than reshuffling equal-sized holders on every recompute.
-    .sort((a, b) => b.parcels - a.parcels || a.address.localeCompare(b.address))
-    .slice(0, COLLECTORS_LIMIT);
+    let value = 0, valueAsk = 0;
+    for (const id of ids) {
+      const v = values.get(id);
+      if (v) { value += v.bid; valueAsk += v.ask; }
+    }
+    return { address: o.ownerAddress, tokenIds: ids, parcels: ids.length, value, valueAsk };
+  });
+
+  // Ties broken by address so the ordering is stable between refreshes rather
+  // than reshuffling equal holders on every recompute.
+  const byParcels = [...all].sort((a, b) => b.parcels - a.parcels || a.address.localeCompare(b.address));
+  const byValue = [...all].sort((a, b) => b.value - a.value || b.parcels - a.parcels || a.address.localeCompare(b.address));
+  const rankByParcels = new Map(byParcels.slice(0, COLLECTORS_LIMIT).map((r, i) => [r.address, i + 1]));
+  const rankByValue = new Map(byValue.slice(0, COLLECTORS_LIMIT).map((r, i) => [r.address, i + 1]));
+  // Each list's top 100; most holders are on both, so this is ~100-150 rows.
+  const ranked = all.filter(r => rankByParcels.has(r.address) || rankByValue.has(r.address));
 
   const ensMap = await resolveEnsNames(ranked.map(r => r.address));
 
-  const collectors = ranked.map((r, i) => {
+  const collectors = ranked.map(r => {
     // Snapshot misses would silently shrink a holding, so count what resolved and
     // report it — a collector whose traits are incomplete has unreliable sets.
     const traits = r.tokenIds.map(getSnapshotTraits).filter(Boolean);
     const sets = traits.length ? detectSets(traits) : [];
     const completed = sets.filter(s => s.completed);
     return {
-      rank: i + 1,
+      rankByParcels: rankByParcels.get(r.address) ?? null,
+      rankByValue: rankByValue.get(r.address) ?? null,
       address: r.address,
       ens: ensMap[r.address.toLowerCase()] || null,
       parcels: r.parcels,
+      value: Math.round(r.value * 100) / 100,
+      valueAsk: Math.round(r.valueAsk * 100) / 100,
       traitsResolved: traits.length,
       setsCompleted: completed.length,
       sets: completed.map(s => s.name),
@@ -814,7 +831,9 @@ async function computeCollectors() {
   return {
     collectors,
     totalOwners: owners.length,
-    totalParcels: owners.reduce((sum, o) => sum + (o.tokenBalances || []).length, 0),
+    totalParcels: all.reduce((sum, r) => sum + r.parcels, 0),
+    totalValue: Math.round(all.reduce((sum, r) => sum + r.value, 0) * 10) / 10,
+    floor,
     fetchedAt: Date.now(),
   };
 }
@@ -968,28 +987,40 @@ app.get('/sales-history', async (req, res) => {
 // realise, the ask side what it is listed at. Pure arithmetic on snapshot traits,
 // so it is cached per (floor, top offer) rather than on a timer.
 let marketCapCache = { key: null, value: null };
-function sumValues(traitsList, floor) {
+// Bid and ask for one parcel, falling back to v1 as wallet totals do.
+function parcelBidAsk(traits, floor) {
+  const v2 = safeHedonic(traits, floor);
+  if (v2) return { bid: v2.off, ask: v2.on };
+  const v1 = estimatePrice(traits, floor).estimatedValue;
+  return { bid: v1, ask: v1 };
+}
+
+function sumValues(values) {
   let bid = 0, ask = 0, count = 0;
-  for (const traits of traitsList) {
-    const v2 = safeHedonic(traits, floor);
-    const v1 = v2 ? null : estimatePrice(traits, floor).estimatedValue;
-    bid += v2 ? v2.off : v1;
-    ask += v2 ? v2.on : v1;
-    count++;
-  }
+  for (const v of values) { bid += v.bid; ask += v.ask; count++; }
   return { bid: Math.round(bid * 10) / 10, ask: Math.round(ask * 10) / 10, count };
+}
+
+// tokenId -> { bid, ask } for every minted parcel in the snapshot, cached per
+// (floor, top offer). Shared by market cap and the collectors' portfolio values.
+let mintedValuesCache = { key: null, value: null };
+function mintedValues(floor) {
+  const key = `${floor}:${currentTopOffer()}`;
+  if (mintedValuesCache.key === key) return mintedValuesCache.value;
+  const value = new Map();
+  for (const tokenId of MINTED_TRAITS_SNAPSHOT?.keys() || []) {
+    const t = getSnapshotTraits(tokenId);
+    if (t) value.set(tokenId, parcelBidAsk(t, floor));
+  }
+  mintedValuesCache = { key, value };
+  return value;
 }
 
 function computeMarketCap(floor) {
   const key = `${floor}:${currentTopOffer()}`;
   if (marketCapCache.key === key) return marketCapCache.value;
-  const mintedTraits = [];
-  for (const tokenId of MINTED_TRAITS_SNAPSHOT?.keys() || []) {
-    const t = getSnapshotTraits(tokenId);
-    if (t) mintedTraits.push(t);
-  }
-  const minted = sumValues(mintedTraits, floor);
-  const unminted = sumValues(UNMINTED_PARCELS.map(unmintedTraits), floor);
+  const minted = sumValues(mintedValues(floor).values());
+  const unminted = sumValues(UNMINTED_PARCELS.map(p => parcelBidAsk(unmintedTraits(p), floor)));
   const value = {
     minted,
     unminted,
