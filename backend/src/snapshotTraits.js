@@ -44,7 +44,9 @@ function mysteryOutlierFlag(value) {
 }
 
 // S0 (Season 0): antenna first turned on inside the V2 launch window AND still on.
-// antennaFirstTs comes from getFirstAntennaModification on the Antenna contract.
+// Both come from the Antenna contract — on/off from getAntennaStatus (not the
+// tokenURI attribute, which v1-rendered parcels omit), antennaFirstTs from
+// getFirstAntennaModification. See scripts/trait-record.js.
 const S0_ANTENNA_TS_MIN = 1703376000; // 2023-12-24 00:00:00 UTC
 const S0_ANTENNA_TS_MAX = 1705190399; // 2024-01-13 23:59:59 UTC
 

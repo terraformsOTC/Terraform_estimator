@@ -78,13 +78,20 @@ cd "$REPO"
 # checking it made every scheduled run refuse. Its only writers are the sampler,
 # the pre-push hook and step 1 below, all append-only, so committing whatever it
 # holds is exactly what the next push would do anyway.
-if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json 'sales database/v1-priors.json' backend/src/sales-history.json backend/src/floor-index.json)" ]; then
+if [ -n "$(git status --porcelain -- backend/src/pricing-v2-coeffs.json 'sales database/v1-priors.json' backend/src/sales-history.json backend/src/floor-index.json backend/src/minted-traits.json)" ]; then
   fail "pricing artifacts already modified in the working tree — resolve by hand first"
 fi
 git rev-parse --abbrev-ref HEAD | grep -qx main || fail "not on main"
 
 echo "[refit] 1/7 sampling live floor"
 node --env-file="$ENV_FILE" backend/scripts/append-floor-history.js || fail "floor sample"
+
+# Repair parcels whose traits changed on-chain since the last bake (a dream, a
+# terraform, an antenna switched): the public terraformexplorer indexer flags
+# disagreements and each one is re-read from chain before anything is written.
+# Advisory — a third-party outage must not block the refit.
+echo "[refit] 1b/7 cross-check traits snapshot against the public indexer"
+node --env-file="$ENV_FILE" backend/scripts/crosscheck-indexer.js || echo "[refit] WARNING: traits cross-check failed — keeping the snapshot as is"
 
 cd "$SALES"
 echo "[refit] 2/7 catchup + enrich"
@@ -140,7 +147,7 @@ node ops/verify-model.js || fail "verification (production keeps the previous co
 # collapsed) against the coefficients about to ship.
 (cd backend && npm test --silent >/dev/null 2>&1) || fail "backend tests (production keeps the previous coefficients)"
 
-ARTIFACTS=(backend/src/pricing-v2-coeffs.json backend/src/floor-history.json "sales database/v1-priors.json" backend/src/sales-history.json backend/src/floor-index.json)
+ARTIFACTS=(backend/src/pricing-v2-coeffs.json backend/src/floor-history.json "sales database/v1-priors.json" backend/src/sales-history.json backend/src/floor-index.json backend/src/minted-traits.json)
 if [ -z "$(git status --porcelain -- "${ARTIFACTS[@]}")" ]; then
   echo "[refit] no artifact changed — nothing to ship"
   exit 0
@@ -152,7 +159,8 @@ git commit -q -m "model: daily refit $(date -u +%F)
 Automated by ops/daily-refit.sh. Coefficients refitted against sales through
 $(date -u +%F); floor_calibration re-solved against the last 30 days of settled
 sales at the live floor in effect when each one sold; the sales history the site
-serves re-exported from the sales DB.
+serves re-exported from the sales DB; minted-traits.json repaired for any
+parcel the indexer cross-check found changed on-chain.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 

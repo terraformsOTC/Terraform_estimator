@@ -113,10 +113,12 @@ const TERRAFORMS_ABI = [
   'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
 ];
 
-// Separate Antenna contract (V2 upgrade). Reverts when called on a tokenId
-// that has never had its antenna modified, so guard with antennaOn first.
+// Separate Antenna contract (V2 upgrade). getFirstAntennaModification reverts
+// on a tokenId that has never had its antenna modified, so guard with
+// getAntennaStatus first.
 const ANTENNA_ADDRESS = '0x331512A28A4cF80221aF949B5d43041fF0FC7f01';
 const ANTENNA_ABI = [
+  'function getAntennaStatus(uint256 tokenId) view returns (uint8)',
   'function getFirstAntennaModification(uint256 tokenId) view returns (tuple(uint8 modification, address satellite, uint256 timestamp))',
 ];
 
@@ -1157,13 +1159,21 @@ async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = tr
       isLith0like = LITH0LIKE_IDS.has(Number(tokenId));
       isGm        = GM_IDS.has(Number(tokenId));
       // S0 (Season 0) — parcels whose antenna was first turned on during the
-      // V2 launch window (2023-12-24 → 2024-01-13 UTC). Antenna activation
-      // timestamps live on a separate contract; query only when currently on.
-      const antennaOn = attrs.find(a => a.trait_type === 'Antenna')?.value === 'On';
+      // V2 launch window (2023-12-24 → 2024-01-13 UTC). Antenna state and
+      // activation timestamps live on a separate contract. On/off is the
+      // contract's getAntennaStatus, not the tokenURI's Antenna attribute, which
+      // a v1-rendered parcel omits even with its antenna on — same rule as
+      // scripts/trait-record.js, so a parcel page and the snapshot agree.
+      const { antennaContract: ac } = getProvider();
+      let antennaOn;
+      try {
+        antennaOn = Number(await withTimeout(ac.getAntennaStatus(tokenId))) === 1;
+      } catch (err) {
+        antennaOn = attrs.find(a => a.trait_type === 'Antenna')?.value === 'On';
+      }
       let antennaFirstTs = 0;
       if (antennaOn) {
         try {
-          const { antennaContract: ac } = getProvider();
           const rec = await withTimeout(ac.getFirstAntennaModification(tokenId));
           antennaFirstTs = Number(rec[2]);
         } catch (err) {

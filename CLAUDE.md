@@ -76,13 +76,15 @@ Lookups are nearest-prior. Before 2026-09-23 sampling was tied to pushes and has
 ### Minted Traits Snapshot
 `minted-traits.json` is a pre-baked snapshot of attribute-derived traits for all 9911 minted parcels (zone, biome, level, chroma, mode, mysteryValue, antennaOn, antennaFirstTs). It powers `/undervalued` and weekly-report bargains: scoring 200 listings drops from ~25–50s to ~1s on cold compute.
 
-Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`, `isS0`) are applied at query time via `snapshotTraits()` in `snapshotTraits.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` / S0 window bounds take effect without re-baking. `isS0` is true when `antennaOn === true` AND `antennaFirstTs` falls inside `[S0_ANTENNA_TS_MIN, S0_ANTENNA_TS_MAX]` (currently the V2 launch window 2023-12-24 → 2024-01-13 UTC). `antennaFirstTs` is read from `getFirstAntennaModification(tokenId).timestamp` on the Antenna contract `0x331512A28A4cF80221aF949B5d43041fF0FC7f01` — the V2 antenna state lives on a separate contract from the original Terraforms contract.
+Lookup-derived fields (`specialType`, `isOneOfOne`, `isGodmode`, `isLith0like`, `isGm`, `isS0`) are applied at query time via `snapshotTraits()` in `snapshotTraits.js`, so changes to `special-tokens.json` / `one-of-one-ids.json` / S0 window bounds take effect without re-baking. `isS0` is true when `antennaOn === true` AND `antennaFirstTs` falls inside `[S0_ANTENNA_TS_MIN, S0_ANTENNA_TS_MAX]` (currently the V2 launch window 2023-12-24 → 2024-01-13 UTC). `antennaOn` is `getAntennaStatus(tokenId) == 1` and `antennaFirstTs` is `getFirstAntennaModification(tokenId).timestamp`, both on the Antenna contract `0x331512A28A4cF80221aF949B5d43041fF0FC7f01` — the V2 antenna state lives on a separate contract from the original Terraforms contract. **Not** the tokenURI's `Antenna` attribute: a v1-rendered parcel omits it even with its antenna on, which hid 17 S0 parcels (#1351, #1915, …) until 2026-10-13. The live API (`getParcelTraits`) and the bake (`scripts/trait-record.js`) apply the same rule.
 
 **Refresh cadence**: chroma, mode, level, and mysteryValue can change on-chain when parcels are upgraded/terraformed. Stale traits skew estimates (worst case: a parcel that becomes Plague after the bake won't get the 5x specialType). Re-bake periodically:
 ```bash
 cd backend && npm run bake-traits -- --force   # ~22 min, batches of 8
 ```
 Then commit the updated `minted-traits.json`.
+
+**Nightly cross-check.** Between bakes, `ops/daily-refit.sh` step 1b runs `scripts/crosscheck-indexer.js`: it pulls every parcel from the public terraformexplorer indexer (`terraforms-indexer-production-d72b.up.railway.app/graphql`, run by team-tfx, ~8s), and for each parcel that disagrees with the snapshot re-reads the chain and writes only the chain's answer. The indexer is a redundancy check, never a source: it has been wrong (#7287 Daydream vs chain Terraform). Unreachable, lagging, or disagreeing on >300 parcels → nothing written, refit carries on. `--dry-run` to preview.
 
 **`--force` is required for a refresh.** The plain `npm run bake-traits` is
 resumable and only fetches tokenIds that are missing or predate the

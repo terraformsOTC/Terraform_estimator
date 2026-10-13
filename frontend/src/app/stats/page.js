@@ -10,6 +10,7 @@ import Header from '@/components/Header';
 import { API_URL, connectAndRedirect, EthIcon, Footer } from '@/components/shared';
 
 const WINDOW_LABELS = { '24h': 'last 24 hours', '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', '1y': 'last 12 months', all: 'all time' };
+const ARTGOD_CHART_URL = 'https://terraforms.artgod.network/chart?media_mode=snapshot';
 const LISTINGS_RETRY_MS = 8000;
 const LISTINGS_MAX_RETRIES = 8;
 
@@ -137,6 +138,10 @@ function Volume({ sales, ethUsd }) {
       <p className="text-xs opacity-45 mt-3 leading-relaxed">
         Every sale since {since || 'mint'}, in ETH, WETH and Blur&apos;s pool ETH. A bundle order counts its total once.
         Full list on <a href="/sales" className="opacity-80">[sales]</a>.
+      </p>
+      <p className="text-xs opacity-55 mt-2">
+        More granular sales data is available{' '}
+        <a href={ARTGOD_CHART_URL} target="_blank" rel="noopener noreferrer" className="opacity-90">here ↗</a>
       </p>
     </section>
   );
