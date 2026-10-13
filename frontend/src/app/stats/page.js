@@ -109,22 +109,12 @@ function MarketCap({ data, ethUsd }) {
       <div className="mb-6">
         <p className="text-sm opacity-75 mb-1">including unminted parcels <span className="opacity-60">({marketCap.total.count.toLocaleString()})</span></p>
         <Range bid={marketCap.total.bid} ask={marketCap.total.ask} ethUsd={ethUsd} />
-        <p className="text-xs opacity-45 mt-1">
-          of which the {marketCap.unminted.count.toLocaleString()} unminted parcels: {eth(marketCap.unminted.bid, 0)} – {eth(marketCap.unminted.ask, 0)} ETH
-        </p>
       </div>
 
       <p className="text-xs opacity-55 leading-relaxed">
         floor {floor.toFixed(3)} ETH{floorIsLive ? '' : ' (fallback)'}
         {topOffer ? <> · top collection bid {topOffer.toFixed(3)} ETH</> : null}
         {' · '}floor × minted supply {eth(marketCap.floorTimesSupply, 0)} ETH
-      </p>
-      <p className="text-xs opacity-45 mt-3 leading-relaxed">
-        Every parcel is priced by the estimator&apos;s model and the estimates are summed. The range runs from
-        liquidation (the bid side — what selling would realise) to listed price (the ask side), the same
-        band each parcel page shows. Unminted parcels are valued at what they should be worth once minted.
-        A handful of rare specials (Plague, seeds, Godmode and the like) are priced from hand-set tables
-        rather than fitted sales — see <a href="/methodology" className="opacity-80">[methodology]</a>.
       </p>
     </section>
   );

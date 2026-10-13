@@ -37,12 +37,13 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
   const primaryNav = [
     { label: '[listings]', href: '/listings' },
     { label: '[sales]', href: '/sales' },
-    { label: '[stats]', href: '/stats' },
   ];
   const menuNav = [
+    { label: '[stats]', href: '/stats' },
     { label: '[collectors]', href: '/collectors' },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits & sets]', href: '/traits' },
+    { label: '[health]', href: '/health' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
     { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },

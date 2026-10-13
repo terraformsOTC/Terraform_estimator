@@ -1,7 +1,7 @@
-// Unlisted: noindex + nofollow, absent from the sitemap, disallowed in robots.txt
-// and not linked from the menu. It is an operator view of how stale the pricing
-// model is, not a page for visitors — and a search result for "terraforms
-// estimator health" reading STALE would be worse than useless.
+// Kept out of search: noindex + nofollow, absent from the sitemap, disallowed in
+// robots.txt. It is an operator view of how stale the pricing model is, and a
+// search result for "terraforms estimator health" reading STALE would be worse
+// than useless. Linked from the [more] menu since 2026-10-13 at James's request.
 export const metadata = {
   title: 'Health',
   robots: { index: false, follow: false, nocache: true },
