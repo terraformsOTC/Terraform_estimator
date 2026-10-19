@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { abbreviateGlyphs, customGlyphs, latentBlade } from '@/lib/parcelGlyphs';
+import { ORIGIN_COUNT, ORIGIN_SET_COUNTS, abbreviateGlyphs, customGlyphs, latentBlade } from '@/lib/parcelGlyphs';
 
 // The artwork's native viewBox.
 const ART_RATIO = 388 / 560;
@@ -72,13 +72,15 @@ function CustomGlyphsRow({ custom }) {
   // paints them in the system font, and so does this row.
   const marksOnly = /^\p{M}+$/u.test(custom.glyphs);
   // A Y-seed animates 1 of 3 possible sets (uni 0-2, reversed); an origin
-  // parcel 1 of 28.
+  // parcel 1 of 28, shown with the share of the 167 origins that animate it.
   const isYSeed = custom.kind === 'y-seed';
-  const setLabel = isYSeed ? `Y-Seed, set ${custom.set + 1} of 3` : `set ${custom.set}`;
+  const count = ORIGIN_SET_COUNTS[custom.set];
+  const share = `${((count / ORIGIN_COUNT) * 100).toFixed(1)}%`;
+  const setLabel = isYSeed ? `Y-Seed, set ${custom.set + 1} of 3` : `set ${custom.set} · ${share}`;
   return (
     <GlyphRow
       label="glyphs"
-      title={isYSeed ? setLabel : `set ${custom.set} of 28`}
+      title={isYSeed ? setLabel : `set ${custom.set} of 28 · ${count} of ${ORIGIN_COUNT} origins (${share})`}
       value={
         <>
           {marksOnly ? <span className="opacity-60">near-invisible marks</span> : custom.glyphs}

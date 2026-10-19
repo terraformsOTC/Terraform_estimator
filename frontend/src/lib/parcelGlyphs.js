@@ -42,7 +42,18 @@ export const ORIGIN_UNI = [
   143762, 143790, 143810,
 ];
 
-export const isOriginMode = (mode) => mode === 'Origin Daydream' || mode === 'Origin Terraform';
+// How many of the 167 origin parcels animate each uni set, indexed like
+// ORIGIN_UNI: SEED % 28 over the 153 origins with seed <= 9000. The other 14
+// are X-seeds (#7, 24, 39, 41, 71, 83, 91, 102, 114, 124, 131, 1162, 1955,
+// 3028). Read from every origin's tokenHTML on 2026-10-19; re-read it if the
+// origin count in minted-traits.json ever moves off 167.
+export const ORIGIN_COUNT = 167;
+export const ORIGIN_SET_COUNTS = [
+  8, 10, 8, 6, 8, 6, 5, 4, 2, 3, 7, 6, 8, 10,
+  4, 2, 5, 3, 4, 5, 6, 1, 5, 2, 7, 5, 5, 8,
+];
+
+export const isOriginMode =(mode) => mode === 'Origin Daydream' || mode === 'Origin Terraform';
 
 export function bladeFor(biome, seed) {
   const b = Number(biome);
