@@ -91,7 +91,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
     <header ref={containerRef} className="z-10 px-6 py-4 md:py-6 md:mb-6 mb-3 sticky top-0 md:relative bg-primary">
       <nav className="flex flex-row justify-between items-center gap-3" style={{ minHeight: '36px' }}>
         <div className="flex items-center whitespace-nowrap">
-          <a className="md:my-0 no-underline" href="/">[terraform estimator]</a>
+          <a className="md:my-0 no-underline max-[359px]:text-sm" href="/">[terraform estimator]</a>
         </div>
         <div className="flex items-center gap-4">
           {primaryNav.map((item) => renderNavItem(item, desktopClasses(item), false))}
@@ -129,17 +129,20 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
           >
             {`[${menuOpen ? 'close' : 'menu'}]`}
           </button>
+          {/* Desktop only. On a phone the title, [menu] and a wallet button don't
+              fit on one line (the button was cut off at the right edge), so the
+              wallet lives at the bottom of the mobile menu instead. */}
           {walletAddress ? (
             <button
-              className="btn-primary btn-sm whitespace-nowrap"
+              className="btn-primary btn-sm whitespace-nowrap hidden md:inline-block"
               onClick={onDisconnect}
               title="Click to disconnect"
             >
               {short}
             </button>
           ) : (
-            <button className="btn-primary btn-sm whitespace-nowrap" onClick={onConnect}>
-              connect<span className="hidden md:inline"> wallet</span>
+            <button className="btn-primary btn-sm whitespace-nowrap hidden md:inline-block" onClick={onConnect}>
+              connect wallet
             </button>
           )}
         </div>
@@ -150,6 +153,23 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
           style={{ borderColor: 'rgba(232, 232, 232, 0.12)' }}
         >
           {[...primaryNav, ...menuNav].map((item) => renderNavItem(item, mobileClasses, true))}
+          <div
+            className="flex flex-wrap items-center gap-3 mt-2 pt-4 border-t text-sm"
+            style={{ borderColor: 'rgba(232, 232, 232, 0.12)' }}
+          >
+            {walletAddress ? (
+              <>
+                <span className="opacity-80">connected: {short}</span>
+                <button className="btn-primary btn-sm whitespace-nowrap" onClick={() => { closeMenu(); onDisconnect?.(); }}>
+                  disconnect
+                </button>
+              </>
+            ) : (
+              <button className="btn-primary btn-sm whitespace-nowrap" onClick={() => { closeMenu(); onConnect?.(); }}>
+                connect wallet
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>

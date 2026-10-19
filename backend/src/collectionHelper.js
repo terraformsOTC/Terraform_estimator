@@ -21,10 +21,11 @@ const ALL_ZONES = Object.keys(ZONE_MULTIPLES);
 const ALL_BIOMES = Object.keys(BIOME_MULTIPLES).map(Number).sort((a, b) => a - b);
 const LEVELS = Array.from({ length: 20 }, (_, i) => i + 1);
 // The /traits catalogue minus its two mode entries (the mode preset has those),
-// plus Synchro, a special type with no /traits page (2 parcels).
+// plus Synchro, a special type with no /traits page (2 parcels). `group` is the
+// catalogue's (special / visual / level), for the page's trait picker.
 const SPECIAL_TRAITS = [
-  ...TRAIT_TYPES.filter(t => t.group !== 'mode').map(t => ({ id: t.type, label: t.label })),
-  { id: 'synchro', label: 'Synchro' },
+  ...TRAIT_TYPES.filter(t => t.group !== 'mode').map(t => ({ id: t.type, label: t.label, group: t.group })),
+  { id: 'synchro', label: 'Synchro', group: 'special' },
 ];
 const SPECIAL_LABEL = Object.fromEntries(SPECIAL_TRAITS.map(s => [s.id, s.label]));
 
@@ -149,15 +150,40 @@ function customGroup(spec) {
   };
 }
 
-/** Preset ids + custom specs → groups. Throws RubricError on anything malformed. */
+/**
+ * Preset ids + custom specs → groups. Throws RubricError on anything malformed.
+ *
+ * `specials` is every special trait; `trait:<id>` picks them one at a time, and
+ * the picks share one "Special traits" group (id `specials` either way), so a
+ * collector who wants three of them doesn't get three one-line groups.
+ */
 function buildRubric({ presets = [], custom = [] } = {}) {
   if (!Array.isArray(presets) || !Array.isArray(custom)) throw new RubricError('malformed rubric');
   if (custom.length > MAX_CUSTOM_SPECS) throw new RubricError(`at most ${MAX_CUSTOM_SPECS} custom goals`);
   const groups = [];
   const seen = new Set();
+  let picked = null; // the Special traits group, while built from single picks
   for (const id of presets) {
-    const p = PRESET_BY_ID.get(String(id));
-    if (!p) throw new RubricError(`unknown goal "${String(id).slice(0, 40)}"`);
+    const sid = String(id);
+    if (sid.startsWith('trait:')) {
+      const traitId = sid.slice(6);
+      if (!SPECIAL_LABEL[traitId]) throw new RubricError(`unknown special trait "${traitId.slice(0, 40)}"`);
+      if (seen.has('specials') && !picked) continue; // every one is already in
+      if (!picked) {
+        picked = { id: 'specials', label: 'Special traits', category: 'traits', description: 'One parcel with each chosen special trait', targets: [] };
+        seen.add('specials');
+        groups.push(picked);
+      }
+      if (!picked.targets.some(t => t.id === sid)) picked.targets.push(target.trait(traitId));
+      continue;
+    }
+    const p = PRESET_BY_ID.get(sid);
+    if (!p) throw new RubricError(`unknown goal "${sid.slice(0, 40)}"`);
+    if (p.id === 'specials' && picked) {
+      Object.assign(picked, p.build()); // all of them after all
+      picked = null;
+      continue;
+    }
     if (seen.has(p.id)) continue;
     seen.add(p.id);
     groups.push(p.build());

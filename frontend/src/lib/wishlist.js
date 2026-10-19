@@ -1,20 +1,21 @@
-// The collection helper's wishlist: goals a collector saved on /helper, so the
-// listings page can mark every listing that fills one of their gaps.
+// The collection helper's saved setup, and the wishlist built on it.
 //
-// It is kept in this browser's localStorage and nowhere else. The listings page
-// sends the saved wallets and goals to /collection (view=wishlist), as the
-// helper itself does, and the server stores nothing.
+// /helper saves a collector's setup (wallets, goals, shopping-list limits) in
+// this browser as they edit it. A /helper link carrying someone else's view
+// opens as a "shared view" that is never saved unless they choose to keep it,
+// so opening a link can't change their setup (see HelperView).
 //
-// It is a snapshot taken when the collector presses save, not the helper's live
-// state: opening someone else's shared /helper link rewrites the live state, and
-// that must not quietly change what the listings page marks. It shows only while
-// a wallet in the saved group is connected, so a shared computer doesn't show
-// one collector's wishlist to the next person.
+// The wishlist is that same setup with `wishlist: true`. It is turned on from
+// the helper with a wallet in the group connected, and edits there update it.
+// The listings page then marks every listing that fills one of its gaps, asking
+// /collection (view=wishlist) as the helper itself does — the server stores
+// nothing — and only while a wallet in the group is connected, so a shared
+// computer doesn't show one collector's wishlist to the next person.
 
 import { useState, useEffect, useCallback } from 'react';
 import { API_URL } from '@/components/shared';
 
-const KEY = 'helper:wishlist:v1';
+const KEY = 'helper:v1';
 
 // Pink: not a colour the listings page already uses for a trait, a tier or the
 // price-vs-model badge.
@@ -22,38 +23,37 @@ export const WISHLIST_COLOR = '#f472b6';
 export const WISHLIST_TINT = 'rgba(244,114,182,0.08)';
 
 // ─── storage ─────────────────────────────────────────────────────────────────
-export function readWishlist() {
+export function readHelper() {
   try {
-    const w = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (w && Array.isArray(w.wallets) && w.wallets.length && Array.isArray(w.goals) && Array.isArray(w.custom)) return w;
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && Array.isArray(s.wallets) && Array.isArray(s.goals) && Array.isArray(s.custom)) return s;
   } catch { /* storage unavailable, or not ours */ }
   return null;
 }
 
-/** Save resolved wallet addresses + goals. Returns what was saved, or null if storage is unavailable. */
-export function saveWishlist({ wallets, goals, custom }) {
-  const w = { v: 1, wallets, goals, custom, savedAt: Date.now() };
+export function writeHelper(s) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(w));
-    return w;
+    localStorage.setItem(KEY, JSON.stringify(s));
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
-export function clearWishlist() {
-  try { localStorage.removeItem(KEY); } catch { /* nothing to clear */ }
+/** The saved setup when its wishlist is on, else null. */
+export function readWishlist() {
+  const s = readHelper();
+  return s && s.wishlist && s.wallets.length ? s : null;
 }
 
-const norm = w => JSON.stringify([
-  [...w.wallets].map(a => a.toLowerCase()).sort(),
-  [...w.goals].sort(),
-  w.custom,
-]);
-export const sameWishlist = (a, b) => !!a && !!b && norm(a) === norm(b);
+const isAddress = v => /^0x[0-9a-fA-F]{40}$/.test(v);
 
-export const inWishlist = (w, address) =>
-  !!w && !!address && w.wallets.some(a => a.toLowerCase() === address.toLowerCase());
+/** Whether `address` is one of the setup's wallets — entered as an address, or resolved from a name. */
+export function inGroup(s, address) {
+  if (!s || !address) return false;
+  const a = address.toLowerCase();
+  return [...(s.addresses || []), ...s.wallets.filter(isAddress)].some(x => x.toLowerCase() === a);
+}
 
 // ─── encoding (the /collection API's for custom goals) ───────────────────────
 export function toB64url(value) {
@@ -102,11 +102,11 @@ export function useWishlistMarks() {
   const [reload, setReload] = useState(0);
   const [checked, setChecked] = useState(false); // the silent wallet check has answered
 
-  const member = inWishlist(saved, connected);
+  const member = inGroup(saved, connected);
 
   const pick = useCallback((w, accounts) => {
     const list = accounts || [];
-    setConnected(list.find(a => inWishlist(w, a)) || list[0] || null);
+    setConnected(list.find(a => inGroup(w, a)) || list[0] || null);
   }, []);
 
   useEffect(() => {

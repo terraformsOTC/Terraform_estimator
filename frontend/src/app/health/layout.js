@@ -3,7 +3,7 @@
 // search result for "terraforms estimator health" reading STALE would be worse
 // than useless. Linked from the [more] menu since 2026-10-13 at James's request.
 export const metadata = {
-  title: 'Health',
+  title: 'Site health',
   robots: { index: false, follow: false, nocache: true },
 };
 

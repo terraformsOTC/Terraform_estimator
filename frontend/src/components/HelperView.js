@@ -7,12 +7,14 @@
 // missing, what is listed that fills it, and a shopping list: the cheapest
 // current listings that fill the most missing goals within a budget.
 //
-// State lives in the URL (so a view can be shared) and in localStorage (so it is
-// there next visit). The backend does all the work in one call; see
-// backend/src/collectionHelper.js for how goals, coverage and the list work.
+// The setup is mirrored into the URL (so a view can be shared) and saved in this
+// browser as it is edited (lib/wishlist.js). A link carrying a different view
+// opens as a shared view, which is never saved unless the collector keeps it —
+// so opening someone's link can't change their own setup or wishlist. The
+// backend does all the work in one call; see backend/src/collectionHelper.js.
 //
-// With a wallet in the group connected, the goals can be saved as a wishlist,
-// and the listings page then marks every listing that fills one (lib/wishlist.js).
+// With a wallet in the group connected, the setup can be turned into a wishlist:
+// the listings page then marks every listing that fills one of its gaps.
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
@@ -20,10 +22,9 @@ import { API_URL, Footer, shortAddr, vsModelColor, parcelImage } from '@/compone
 import { SET_COLORS } from '@/lib/setsGlossary';
 import {
   toB64url, fromB64url, authorizedAccounts,
-  readWishlist, saveWishlist, clearWishlist, sameWishlist, WISHLIST_COLOR,
+  readHelper, writeHelper, WISHLIST_COLOR,
 } from '@/lib/wishlist';
 
-const STORAGE_KEY = 'collect:v1'; // from when the page was /collect; kept so saved state survives
 const DEFAULT_GOALS = ['set:full-zone', 'set:full-biome', 'chroma', 'mode', 'specials'];
 const MAX_WALLETS = 10;
 const TF = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -42,25 +43,41 @@ const PREMIUMS = [
 const FIELD_LABELS = { zone: 'zone', biome: 'biome', level: 'level', chroma: 'chroma', mode: 'mode', trait: 'special trait' };
 
 // ─── state ───────────────────────────────────────────────────────────────────
-function readInitialState() {
-  const q = new URLSearchParams(window.location.search);
-  if (q.get('w') || q.get('g') || q.get('c')) {
-    let custom = [];
-    try { custom = q.get('c') ? fromB64url(q.get('c')) : []; } catch { custom = []; }
-    return {
-      wallets: (q.get('w') || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, MAX_WALLETS),
-      goals: q.get('g') ? q.get('g').split(',').filter(Boolean) : DEFAULT_GOALS,
-      custom: Array.isArray(custom) ? custom : [],
-      budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '',
-    };
-  }
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (saved && Array.isArray(saved.wallets)) return { ...emptyState(), ...saved };
-  } catch { /* storage unavailable */ }
-  return emptyState();
-}
 const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, custom: [], budget: '', max: '', prem: '' });
+const viewOf = s => {
+  const e = emptyState();
+  return { wallets: s.wallets ?? e.wallets, goals: s.goals ?? e.goals, custom: s.custom ?? e.custom, budget: s.budget ?? '', max: s.max ?? '', prem: s.prem ?? '' };
+};
+
+// The view a /helper?w=…&g=… link carries, or null for a bare /helper.
+function viewFromUrl() {
+  const q = new URLSearchParams(window.location.search);
+  if (!(q.get('w') || q.get('g') || q.get('c'))) return null;
+  let custom = [];
+  try { custom = q.get('c') ? fromB64url(q.get('c')) : []; } catch { custom = []; }
+  return {
+    wallets: (q.get('w') || '').split(',').map(w => w.trim()).filter(Boolean).slice(0, MAX_WALLETS),
+    goals: q.get('g') ? q.get('g').split(',').filter(Boolean) : DEFAULT_GOALS,
+    custom: Array.isArray(custom) ? custom : [],
+    budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '',
+  };
+}
+
+// Same wallets and goals in any order, same custom goals and limits — a reload
+// of your own /helper URL, say.
+const viewKey = v => JSON.stringify([v.wallets.map(w => w.toLowerCase()).sort(), [...v.goals].sort(), v.custom, v.budget, v.max, v.prem]);
+const sameView = (a, b) => viewKey(viewOf(a)) === viewKey(viewOf(b));
+
+// The resolved addresses of `wallets`, if `result` is the answer for them (and
+// not for the view before an edit), else null. The listings page uses these to
+// tell whether the connected wallet is in the group.
+function addressesFor(result, wallets) {
+  if (!result) return null;
+  const want = wallets.map(w => w.toLowerCase());
+  const got = new Set(result.wallets.flatMap(w => [w.input.toLowerCase(), w.address.toLowerCase()]));
+  if (!want.every(w => got.has(w)) || !result.wallets.every(w => want.includes(w.input.toLowerCase()))) return null;
+  return result.wallets.map(w => w.address);
+}
 
 function stateQuery(s, { forApi = false } = {}) {
   const q = new URLSearchParams();
@@ -97,12 +114,22 @@ export default function HelperView() {
   const [linked, setLinked] = useState({});       // lowercased wallet input -> suggestions
   const [dismissed, setDismissed] = useState([]); // lowercased addresses
   const [connected, setConnected] = useState(null);
-  const [wishlist, setWishlist] = useState(null);  // the saved snapshot (lib/wishlist.js)
+  const [saved, setSaved] = useState(null);    // the collector's own setup, as stored (lib/wishlist.js)
+  const [shared, setShared] = useState(false); // looking at a link's view rather than their own
   const abortRef = useRef(null);
 
   useEffect(() => {
-    setState(readInitialState());
-    setWishlist(readWishlist());
+    const mine = readHelper();
+    const link = viewFromUrl();
+    setSaved(mine);
+    // A link with a view other than the saved one opens as a shared view. With
+    // no saved wallets there is nothing to protect, so the link's view is theirs.
+    if (link && mine?.wallets.length && !sameView(link, mine)) {
+      setShared(true);
+      setState(link);
+    } else {
+      setState(link || (mine ? viewOf(mine) : emptyState()));
+    }
   }, []);
 
   // A wallet the site can already read (connected here before) shows as
@@ -127,13 +154,25 @@ export default function HelperView() {
 
   const update = useCallback(patch => setState(s => ({ ...s, ...patch })), []);
 
-  // Persist and mirror into the URL.
+  // Mirror the view into the URL, so the address bar is always a shareable link.
   useEffect(() => {
     if (!state) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* private mode */ }
     const qs = stateQuery(state);
     window.history.replaceState(null, '', qs ? `/helper?${qs}` : '/helper');
   }, [state]);
+
+  // The collector's own setup saves as they edit it, keeping the wishlist switch
+  // and the group's resolved addresses with it. A shared view never does.
+  useEffect(() => {
+    if (!state || shared) return;
+    setSaved(prev => ({
+      ...viewOf(state),
+      wishlist: !!prev?.wishlist,
+      addresses: state.wallets.length === 0 ? [] : (addressesFor(result, state.wallets) ?? prev?.addresses ?? []),
+    }));
+  }, [state, shared, result]);
+
+  useEffect(() => { if (saved) writeHelper(saved); }, [saved]);
 
   // Evaluate, debounced, cancelling any request still in flight.
   useEffect(() => {
@@ -239,6 +278,13 @@ export default function HelperView() {
         </div>
 
         <div className="px-6 flex flex-col gap-8">
+          {shared && (
+            <SharedViewBanner
+              saved={saved}
+              onKeep={() => setShared(false)}
+              onBack={() => { setState(viewOf(saved)); setShared(false); }}
+            />
+          )}
           <WalletsPanel
             state={state} result={result} suggestions={suggestions}
             onAdd={addWallets} onConnect={connect}
@@ -255,16 +301,13 @@ export default function HelperView() {
           {loading && !result && <p className="text-sm opacity-60">[working out your collection…]</p>}
           {result && (
             <Results result={result} loading={loading}>
-              <WishlistPanel
-                state={state} result={result} loading={loading} connected={connected} saved={wishlist}
-                onConnect={connect} onAdd={addWallets}
-                onSave={() => {
-                  const w = saveWishlist({ wallets: result.wallets.map(x => x.address), goals: state.goals, custom: state.custom });
-                  if (w) setWishlist(w);
-                  else setError('This browser is not letting the site save anything, so the wishlist could not be saved.');
-                }}
-                onClear={() => { clearWishlist(); setWishlist(null); }}
-              />
+              {!shared && (
+                <WishlistPanel
+                  result={result} connected={connected} on={!!saved?.wishlist}
+                  onConnect={connect} onAdd={addWallets}
+                  onSwitch={on => setSaved(s => ({ ...s, wishlist: on }))}
+                />
+              )}
             </Results>
           )}
         </div>
@@ -351,7 +394,9 @@ function GoalsPanel({ state, catalog, update }) {
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs opacity-50 uppercase tracking-wider mb-1 mt-3 md:mt-0">traits</span>
-          {traits.map(p => <Check key={p.id} p={p} />)}
+          {traits.map(p => (p.id === 'specials'
+            ? <SpecialsPicker key={p.id} preset={p} traits={catalog.fields.trait} state={state} update={update} />
+            : <Check key={p.id} p={p} />))}
           <span className="text-xs opacity-50 uppercase tracking-wider mb-1 mt-4">your own goals</span>
           {state.custom.map((spec, i) => (
             <span key={i} className="text-sm flex items-baseline gap-2">
@@ -365,6 +410,66 @@ function GoalsPanel({ state, catalog, update }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// Special traits: every one (`specials`) or picked one at a time (`trait:<id>`),
+// one goal group either way (buildRubric in backend/src/collectionHelper.js).
+const TRAIT_GROUPS = ['special', 'visual', 'level'];
+
+function SpecialsPicker({ preset, traits, state, update }) {
+  const all = traits.map(t => t.id);
+  const chosen = state.goals.includes('specials')
+    ? new Set(all)
+    : new Set(state.goals.filter(g => g.startsWith('trait:')).map(g => g.slice(6)));
+  const some = chosen.size > 0 && chosen.size < all.length;
+  const [open, setOpen] = useState(some);
+  const choose = ids => {
+    const rest = state.goals.filter(g => g !== 'specials' && !g.startsWith('trait:'));
+    const picks = all.filter(id => ids.has(id));
+    update({ goals: picks.length === all.length ? [...rest, 'specials'] : [...rest, ...picks.map(id => `trait:${id}`)] });
+  };
+  const toggle = id => {
+    const next = new Set(chosen);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    choose(next);
+  };
+  return (
+    <div className="text-sm">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <label className="flex items-baseline gap-2 cursor-pointer" title={preset.description}>
+          <input
+            type="checkbox"
+            checked={chosen.size === all.length}
+            ref={el => { if (el) el.indeterminate = some; }}
+            onChange={() => choose(chosen.size === all.length ? new Set() : new Set(all))}
+            style={{ accentColor: '#e8e8e8' }}
+          />
+          <span>{preset.label}</span>
+        </label>
+        <span className="text-xs opacity-45">{some ? `${chosen.size} of ${all.length}` : all.length}</span>
+        <button type="button" className="text-xs opacity-60 hover:opacity-100" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+          {open ? '[hide ▴]' : '[choose ▾]'}
+        </button>
+      </div>
+      {open && (
+        <div className="mt-1 mb-2 ml-6 flex flex-col gap-2">
+          {TRAIT_GROUPS.map(group => (
+            <div key={group}>
+              <span className="text-xs opacity-45 uppercase tracking-wider">{group}</span>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-0.5">
+                {traits.filter(t => t.group === group).map(t => (
+                  <label key={t.id} className="flex items-baseline gap-1.5 cursor-pointer whitespace-nowrap">
+                    <input type="checkbox" checked={chosen.has(t.id)} onChange={() => toggle(t.id)} style={{ accentColor: '#e8e8e8' }} />
+                    <span>{t.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -498,54 +603,79 @@ function SetsCompleted({ names }) {
   );
 }
 
-// Save the goals as a wishlist: the listings page then marks every listing that
-// fills one, while a wallet in this group is connected. Saving needs that
-// wallet connected here too, so a wishlist is only ever made by its collector.
-function WishlistPanel({ state, result, loading, connected, saved, onConnect, onAdd, onSave, onClear }) {
-  const wallets = result.wallets.map(w => w.address);
-  const current = { wallets, goals: state.goals, custom: state.custom };
-  const same = sameWishlist(saved, current);
-  const member = !!connected && wallets.some(a => a.toLowerCase() === connected.toLowerCase());
+// A link's view, not the collector's own setup: nothing here is saved unless
+// they keep it.
+function SharedViewBanner({ saved, onKeep, onBack }) {
   const btn = 'btn-primary btn-xs ml-2';
-  const remove = <button type="button" className="opacity-50 hover:opacity-100 text-xs ml-2" onClick={onClear}>[remove]</button>;
+  return (
+    <section className="text-sm px-3 py-2" style={BOX}>
+      You&apos;re looking at a view from a link. Changes here aren&apos;t saved, and your own setup
+      {saved?.wishlist ? ' and wishlist stay' : ' stays'} as {saved?.wishlist ? 'they are' : 'it is'}.
+      <span className="inline-flex flex-wrap gap-y-1">
+        <button type="button" className={btn} onClick={onKeep}>[keep this view as mine]</button>
+        <button type="button" className={btn} onClick={onBack}>[back to my setup]</button>
+      </span>
+    </section>
+  );
+}
 
+// The wishlist switch. Turning it on needs a wallet in the group connected, so a
+// wishlist is only ever made by its collector; after that it follows their
+// edits here, and the listings page marks every listing that fills one of
+// these gaps while a wallet in the group is connected.
+function WishlistPanel({ result, connected, on, onConnect, onAdd, onSwitch }) {
+  const member = !!connected && result.wallets.some(w => w.address.toLowerCase() === connected.toLowerCase());
+  const btn = 'btn-primary btn-xs ml-2';
   let body;
-  if (same) {
+  let note = null;
+  if (on) {
     body = (
       <>
-        <span style={{ color: WISHLIST_COLOR }}>★ saved as your wishlist</span> — every listing that fills one of
-        these gaps is marked on the <a href="/listings">listings page</a> while a wallet in this group is connected.
-        {remove}
+        <span style={{ color: WISHLIST_COLOR }}>★ wishlist on</span> — every listing that fills one of these gaps is
+        marked on the <a href="/listings">listings page</a> while a wallet in this group is connected. Changes you make
+        here update it.
+        <button type="button" className="opacity-50 hover:opacity-100 text-xs ml-2" onClick={() => onSwitch(false)}>[turn off]</button>
       </>
     );
+    // On, but nothing will be marked: the group has changed under it (a wallet
+    // removed, someone else's view kept), or no wallet is connected here.
+    if (!connected) {
+      note = (
+        <>
+          Connect a wallet in this group to see the marks.
+          <button type="button" className={btn} onClick={onConnect}>[connect wallet]</button>
+        </>
+      );
+    } else if (!member) {
+      note = (
+        <>
+          The connected wallet ({shortAddr(connected)}) isn&apos;t in this group, so the listings page won&apos;t mark
+          anything until it is.
+          <button type="button" className={btn} onClick={() => onAdd([connected])}>[+ add it]</button>
+        </>
+      );
+    }
   } else if (!connected) {
     body = (
       <>
-        {saved ? 'Your saved wishlist has different wallets or goals. ' : ''}
-        Connect your wallet to save these goals as your wishlist, and every listing that fills one of these gaps is
-        marked on the listings page.
+        Connect your wallet to turn on the wishlist: every listing that fills one of these gaps then gets marked on
+        the listings page.
         <button type="button" className={btn} onClick={onConnect}>[connect wallet]</button>
-        {saved && remove}
       </>
     );
   } else if (!member) {
     body = (
       <>
-        The connected wallet ({shortAddr(connected)}) isn&apos;t in this group. Add it to save these goals as your wishlist.
+        The connected wallet ({shortAddr(connected)}) isn&apos;t in this group. Add it to turn on the wishlist.
         <button type="button" className={btn} onClick={() => onAdd([connected])}>[+ add it]</button>
-        {saved && remove}
       </>
     );
   } else {
     body = (
       <>
-        {saved
-          ? 'Your saved wishlist has different wallets or goals from these.'
-          : 'Save these goals as your wishlist: every listing that fills one of these gaps gets marked on the listings page while a wallet in this group is connected. It is kept in this browser only.'}
-        <button type="button" className={btn} onClick={onSave} disabled={loading}>
-          {saved ? '[save these instead]' : '[save wishlist]'}
-        </button>
-        {saved && remove}
+        Turn on the wishlist and every listing that fills one of these gaps gets marked on the listings page while
+        a wallet in this group is connected. It follows your changes here, and is kept in this browser only.
+        <button type="button" className={btn} onClick={() => onSwitch(true)}>[turn on wishlist]</button>
       </>
     );
   }
@@ -553,6 +683,7 @@ function WishlistPanel({ state, result, loading, connected, saved, onConnect, on
     <section>
       <h2 className="text-lg mb-1 opacity-80">[wishlist]</h2>
       <p className="text-sm opacity-80">{body}</p>
+      {note && <p className="text-sm mt-2" style={{ color: '#e8b86c' }}>{note}</p>}
     </section>
   );
 }

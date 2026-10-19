@@ -143,6 +143,21 @@ test('the wishlist marks every listing that fills an unmet goal, at any price, w
   assert.equal(res.shoppingList.picks.length, 0); // the list keeps its price limits
 });
 
+test('special traits can be picked one at a time into one group', () => {
+  const [g] = buildRubric({ presets: ['trait:mesa', 'trait:penthouse', 'trait:mesa'] });
+  assert.equal(g.id, 'specials');
+  assert.deepEqual(g.targets.map(t => t.id), ['trait:mesa', 'trait:penthouse']);
+  const all = buildRubric({ presets: ['trait:mesa', 'specials', 'trait:gm'] });
+  assert.equal(all.length, 1);
+  assert.equal(all[0].targets.length, catalog().fields.trait.length);
+  assert.throws(() => buildRubric({ presets: ['trait:origin-daydream'] }), RubricError); // a mode, not a special
+  assert.throws(() => buildRubric({ presets: ['trait:nope'] }), RubricError);
+  const res = evaluate({ groups: [g], owned: [parcel({ level: 20 })], universe: [parcel({ level: 20 }), parcel({ level: 1 })], listings: [], ownWallets: new Set() });
+  assert.equal(res.groups[0].met, 1);
+  assert.equal(res.groups[0].total, 2);
+  assert.ok(catalog().fields.trait.every(t => ['special', 'visual', 'level'].includes(t.group)));
+});
+
 test('a target shared by two groups is filled once', () => {
   const groups = buildRubric({ presets: ['set:full-zone', 'set:polychrome-set'] });
   const res = evaluate({ groups, owned: [], universe: [parcel({ zone: 'Shahra' })], listings: [listing(1, { zone: 'Shahra' })], ownWallets: new Set() });

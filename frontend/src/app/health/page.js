@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { API_URL, Footer } from '@/components/shared';
+import Header from '@/components/Header';
+import { API_URL, Footer, connectAndRedirect } from '@/components/shared';
 
-// Operator dashboard. Unlisted, noindex, not in the sitemap and not in the menu —
-// reachable only by typing the URL.
+// Operator dashboard, linked from the menu as [site health] and carrying the
+// site header like every other page, but kept out of search (see layout.js).
 //
 // It exists because of 2026-09-23: every estimate ran ~15% high for three weeks
 // and nothing surfaced it. The coefficients were fitted once and their floor
@@ -116,8 +117,15 @@ export default function HealthPage() {
 
   return (
     <div className="content-wrapper">
-      <main className="flex-1 px-6 pt-8 max-w-2xl">
-        <h1 className="text-[1.35rem] md:text-[1.6875rem] m-0 font-normal mb-8">estimator health</h1>
+      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
+      <main className="flex-1 px-6 max-w-2xl">
+        <div className="mb-8">
+          <span className="text-[1.35rem] md:text-[1.6875rem]">
+            <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
+            <span> / </span>
+            <span>[site health]</span>
+          </span>
+        </div>
 
         {error && (
           <div className="mb-8 text-sm" style={{ color: BAD }}>
