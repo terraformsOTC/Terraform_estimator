@@ -2423,7 +2423,7 @@ app.get('/collection/catalog', (_req, res) => {
 });
 
 // GET /collection?wallets=a,b&goals=set:full-zone,chroma&custom=<base64url JSON>
-//   &budget=2&max=0.5&prem=10
+//   &budget=2&max=0.5&prem=10[&view=wishlist]
 app.get('/collection', async (req, res) => {
   try {
     const inputs = [...new Set(parseList(req.query.wallets).map(s => s.slice(0, 100)))];
@@ -2482,18 +2482,27 @@ app.get('/collection', async (req, res) => {
       seller: p.owner,
     }));
 
-    const result = collectionHelper.evaluate({
+    const { wishlist, ...result } = collectionHelper.evaluate({
       groups, owned, universe: universe.items, listings,
       ownWallets: new Set(addresses.map(a => a.toLowerCase())),
       supplyCache: universe.supply,
       options,
     });
-    const ensMap = await resolveEnsNames(addresses).catch(() => ({}));
-
     res.set('Cache-Control', 'no-store');
+
+    // view=wishlist: the listings page's call for a collector who saved their
+    // goals on /helper — only which listings fill a gap, nothing else.
+    if (req.query.view === 'wishlist') {
+      return res.json({ wishlist, listingsAvailable: !!feed, listingsAsOf: feed?.fetchedAt || null, ownersAsOf: ownerIndex.loadedAt });
+    }
+
+    const ensMap = await resolveEnsNames(addresses).catch(() => ({}));
     res.json({
       wallets: pairs.map(p => ({ input: p.input, address: p.address, ens: ensMap[p.address.toLowerCase()] || null, parcels: ownerIndex.countOf(p.address) })),
       parcels: owned.length,
+      // Every set the group completes between them, whichever goals are picked —
+      // the same rules (detectSets) as the wallet page's set chips.
+      setsCompleted: detectSets(owned.map(o => o.traits)).filter(s => s.completed).map(s => s.name),
       ...result,
       listingsAvailable: !!feed,
       listingsAsOf: feed?.fetchedAt || null,

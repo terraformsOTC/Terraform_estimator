@@ -294,7 +294,7 @@ export default function WalletView({ data, loading, address }) {
         <div className="mb-10">
           <h2 className="text-lg mb-3 opacity-80">
             [sets]{' '}
-            <a href={`/collect?w=${encodeURIComponent(data.aggregate ? data.wallets.map(w => w.address).join(',') : (data.address || address))}`} className="text-xs opacity-60 hover:opacity-100">
+            <a href={`/helper?w=${encodeURIComponent(data.aggregate ? data.wallets.map(w => w.address).join(',') : (data.address || address))}`} className="text-xs opacity-60 hover:opacity-100">
               [what's missing? →]
             </a>
           </h2>

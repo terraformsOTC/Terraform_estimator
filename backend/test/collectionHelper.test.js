@@ -117,6 +117,32 @@ test('the shopping list respects the budget, max price and premium over model', 
   assert.deepEqual(plan.picks.map(p => p.price).sort(), [0.4, 1.2]);
 });
 
+test('the wishlist marks every listing that fills an unmet goal, at any price, with the goals it fills', () => {
+  const groups = buildRubric({ presets: ['set:full-zone', 'set:polychrome-set'], custom: [{ each: 'biome', where: { chroma: 'Pulse' } }] });
+  const universe = [parcel({ zone: 'Shahra', biome: 3, chroma: 'Pulse' }), parcel({ zone: 'Alto', biome: 4 })];
+  const res = evaluate({
+    groups,
+    owned: [parcel({ zone: 'Alto' })],
+    universe,
+    listings: [
+      listing(50, { tokenId: 9001, zone: 'Shahra', biome: 3, chroma: 'Pulse' }, { model: 1 }), // far over model: still marked
+      listing(1, { tokenId: 9002, zone: 'Alto', biome: 4 }),                                    // Alto is already held
+      listing(2, { tokenId: 9003, zone: 'Shahra' }, { seller: '0xMINE' }),                    // their own listing
+    ],
+    ownWallets: new Set(['0xmine']),
+    options: { maxPrice: 1 },
+  });
+  assert.equal(res.wishlist.length, 1);
+  const [w] = res.wishlist;
+  assert.equal(w.tokenId, 9001);
+  assert.equal(w.price, 50);
+  const shahra = w.fills.find(f => f.id === 'zone:Shahra');
+  assert.deepEqual(shahra.groups, ['Full zone', 'Polychrome set']);
+  const pulse = w.fills.find(f => f.label === 'Biome 3');
+  assert.deepEqual(pulse.groups, ['Every biome · Pulse']);
+  assert.equal(res.shoppingList.picks.length, 0); // the list keeps its price limits
+});
+
 test('a target shared by two groups is filled once', () => {
   const groups = buildRubric({ presets: ['set:full-zone', 'set:polychrome-set'] });
   const res = evaluate({ groups, owned: [], universe: [parcel({ zone: 'Shahra' })], listings: [listing(1, { zone: 'Shahra' })], ownWallets: new Set() });

@@ -1,6 +1,6 @@
 'use client';
 
-// /collect — the collection helper.
+// /helper — the collection helper.
 //
 // A collector adds their wallets (or connects one; linked vaults and Safes are
 // suggested), picks goals, and sees for each goal what they hold, what is
@@ -10,12 +10,20 @@
 // State lives in the URL (so a view can be shared) and in localStorage (so it is
 // there next visit). The backend does all the work in one call; see
 // backend/src/collectionHelper.js for how goals, coverage and the list work.
+//
+// With a wallet in the group connected, the goals can be saved as a wishlist,
+// and the listings page then marks every listing that fills one (lib/wishlist.js).
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
 import { API_URL, Footer, shortAddr, vsModelColor, parcelImage } from '@/components/shared';
+import { SET_COLORS } from '@/lib/setsGlossary';
+import {
+  toB64url, fromB64url, authorizedAccounts,
+  readWishlist, saveWishlist, clearWishlist, sameWishlist, WISHLIST_COLOR,
+} from '@/lib/wishlist';
 
-const STORAGE_KEY = 'collect:v1';
+const STORAGE_KEY = 'collect:v1'; // from when the page was /collect; kept so saved state survives
 const DEFAULT_GOALS = ['set:full-zone', 'set:full-biome', 'chroma', 'mode', 'specials'];
 const MAX_WALLETS = 10;
 const TF = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
@@ -33,18 +41,7 @@ const PREMIUMS = [
 ];
 const FIELD_LABELS = { zone: 'zone', biome: 'biome', level: 'level', chroma: 'chroma', mode: 'mode', trait: 'special trait' };
 
-// ─── encoding ────────────────────────────────────────────────────────────────
-function toB64url(value) {
-  const bytes = new TextEncoder().encode(JSON.stringify(value));
-  let bin = '';
-  bytes.forEach(b => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function fromB64url(s) {
-  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
-  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-}
-
+// ─── state ───────────────────────────────────────────────────────────────────
 function readInitialState() {
   const q = new URLSearchParams(window.location.search);
   if (q.get('w') || q.get('g') || q.get('c')) {
@@ -91,7 +88,7 @@ function customLabel(spec) {
 const opensea = id => `https://opensea.io/assets/ethereum/${TF}/${id}`;
 
 // ─── view ────────────────────────────────────────────────────────────────────
-export default function CollectView() {
+export default function HelperView() {
   const [state, setState] = useState(null);
   const [catalog, setCatalog] = useState(null);
   const [result, setResult] = useState(null);
@@ -100,9 +97,26 @@ export default function CollectView() {
   const [linked, setLinked] = useState({});       // lowercased wallet input -> suggestions
   const [dismissed, setDismissed] = useState([]); // lowercased addresses
   const [connected, setConnected] = useState(null);
+  const [wishlist, setWishlist] = useState(null);  // the saved snapshot (lib/wishlist.js)
   const abortRef = useRef(null);
 
-  useEffect(() => { setState(readInitialState()); }, []);
+  useEffect(() => {
+    setState(readInitialState());
+    setWishlist(readWishlist());
+  }, []);
+
+  // A wallet the site can already read (connected here before) shows as
+  // connected without a prompt. It is not added to the group unasked.
+  useEffect(() => {
+    let live = true;
+    authorizedAccounts().then(accounts => { if (live && accounts[0]) setConnected(accounts[0]); });
+    const onChange = accounts => setConnected(accounts?.[0] || null);
+    window.ethereum?.on?.('accountsChanged', onChange);
+    return () => {
+      live = false;
+      window.ethereum?.removeListener?.('accountsChanged', onChange);
+    };
+  }, []);
 
   useEffect(() => {
     fetch(`${API_URL}/collection/catalog`)
@@ -118,7 +132,7 @@ export default function CollectView() {
     if (!state) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* private mode */ }
     const qs = stateQuery(state);
-    window.history.replaceState(null, '', qs ? `/collect?${qs}` : '/collect');
+    window.history.replaceState(null, '', qs ? `/helper?${qs}` : '/helper');
   }, [state]);
 
   // Evaluate, debounced, cancelling any request still in flight.
@@ -216,7 +230,7 @@ export default function CollectView() {
           <span className="text-[1.35rem] md:text-[1.6875rem]">
             <a href="/" className="no-underline opacity-60 hover:opacity-100">Estimate</a>
             <span> / </span>
-            <span>[collect]</span>
+            <span>[helper]</span>
           </span>
           <p className="text-sm opacity-70 mt-2 max-w-2xl">
             What your collection is missing across all your wallets, what is listed that fills each gap, and the
@@ -239,7 +253,20 @@ export default function CollectView() {
             <p className="text-sm opacity-60">Add a wallet to see what your collection is missing.</p>
           )}
           {loading && !result && <p className="text-sm opacity-60">[working out your collection…]</p>}
-          {result && <Results result={result} loading={loading} />}
+          {result && (
+            <Results result={result} loading={loading}>
+              <WishlistPanel
+                state={state} result={result} loading={loading} connected={connected} saved={wishlist}
+                onConnect={connect} onAdd={addWallets}
+                onSave={() => {
+                  const w = saveWishlist({ wallets: result.wallets.map(x => x.address), goals: state.goals, custom: state.custom });
+                  if (w) setWishlist(w);
+                  else setError('This browser is not letting the site save anything, so the wishlist could not be saved.');
+                }}
+                onClear={() => { clearWishlist(); setWishlist(null); }}
+              />
+            </Results>
+          )}
         </div>
       </main>
       <Footer />
@@ -408,11 +435,11 @@ function OptionsPanel({ state, update }) {
       <h2 className="text-lg mb-2 opacity-80">[shopping list]</h2>
       <div className="flex flex-wrap gap-x-6 gap-y-2 items-center text-sm">
         <label className="flex items-center gap-2">
-          budget Ξ
+          budget (ETH)
           <input type="number" min="0" step="0.1" value={state.budget} onChange={e => update({ budget: e.target.value })} placeholder="any" className="w-24" aria-label="Budget in ETH" />
         </label>
         <label className="flex items-center gap-2">
-          max per parcel Ξ
+          max per parcel (ETH)
           <input type="number" min="0" step="0.05" value={state.max} onChange={e => update({ max: e.target.value })} placeholder="any" className="w-24" aria-label="Maximum price per parcel in ETH" />
         </label>
         <select style={SELECT} value={state.prem} onChange={e => update({ prem: e.target.value })} aria-label="Price compared with the model">
@@ -424,8 +451,8 @@ function OptionsPanel({ state, update }) {
 }
 
 // ─── results ─────────────────────────────────────────────────────────────────
-function Results({ result, loading }) {
-  const { summary, groups, shoppingList, parcels, wallets } = result;
+function Results({ result, loading, children }) {
+  const { summary, groups, shoppingList, parcels, wallets, setsCompleted } = result;
   const [copied, setCopied] = useState(false);
   const share = () => {
     navigator.clipboard?.writeText(window.location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
@@ -443,12 +470,90 @@ function Results({ result, loading }) {
           <button type="button" className="underline" onClick={share}>{copied ? 'link copied' : 'copy a link to this view'}</button>
           {' '}(it includes your wallet addresses)
         </p>
+        <SetsCompleted names={setsCompleted} />
       </section>
+
+      {children}
 
       <ShoppingList plan={shoppingList} />
 
       {groups.map(g => <GoalGroup key={g.id} group={g} />)}
     </div>
+  );
+}
+
+// Every set the group completes between them, whichever goals are picked —
+// detectSets' rules, coloured as the wallet page's set chips are.
+function SetsCompleted({ names }) {
+  if (!names) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+      <span className="opacity-60">{names.length ? 'sets completed:' : 'no sets completed yet'}</span>
+      {names.map(n => (
+        <span key={n} className="px-1 py-0.5" style={{ color: SET_COLORS[n], border: `1px solid ${SET_COLORS[n]}`, opacity: 0.85 }}>
+          {n}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Save the goals as a wishlist: the listings page then marks every listing that
+// fills one, while a wallet in this group is connected. Saving needs that
+// wallet connected here too, so a wishlist is only ever made by its collector.
+function WishlistPanel({ state, result, loading, connected, saved, onConnect, onAdd, onSave, onClear }) {
+  const wallets = result.wallets.map(w => w.address);
+  const current = { wallets, goals: state.goals, custom: state.custom };
+  const same = sameWishlist(saved, current);
+  const member = !!connected && wallets.some(a => a.toLowerCase() === connected.toLowerCase());
+  const btn = 'btn-primary btn-xs ml-2';
+  const remove = <button type="button" className="opacity-50 hover:opacity-100 text-xs ml-2" onClick={onClear}>[remove]</button>;
+
+  let body;
+  if (same) {
+    body = (
+      <>
+        <span style={{ color: WISHLIST_COLOR }}>★ saved as your wishlist</span> — every listing that fills one of
+        these gaps is marked on the <a href="/listings">listings page</a> while a wallet in this group is connected.
+        {remove}
+      </>
+    );
+  } else if (!connected) {
+    body = (
+      <>
+        {saved ? 'Your saved wishlist has different wallets or goals. ' : ''}
+        Connect your wallet to save these goals as your wishlist, and every listing that fills one of these gaps is
+        marked on the listings page.
+        <button type="button" className={btn} onClick={onConnect}>[connect wallet]</button>
+        {saved && remove}
+      </>
+    );
+  } else if (!member) {
+    body = (
+      <>
+        The connected wallet ({shortAddr(connected)}) isn&apos;t in this group. Add it to save these goals as your wishlist.
+        <button type="button" className={btn} onClick={() => onAdd([connected])}>[+ add it]</button>
+        {saved && remove}
+      </>
+    );
+  } else {
+    body = (
+      <>
+        {saved
+          ? 'Your saved wishlist has different wallets or goals from these.'
+          : 'Save these goals as your wishlist: every listing that fills one of these gaps gets marked on the listings page while a wallet in this group is connected. It is kept in this browser only.'}
+        <button type="button" className={btn} onClick={onSave} disabled={loading}>
+          {saved ? '[save these instead]' : '[save wishlist]'}
+        </button>
+        {saved && remove}
+      </>
+    );
+  }
+  return (
+    <section>
+      <h2 className="text-lg mb-1 opacity-80">[wishlist]</h2>
+      <p className="text-sm opacity-80">{body}</p>
+    </section>
   );
 }
 
@@ -466,7 +571,7 @@ function ShoppingList({ plan }) {
         <>
           <p className="text-sm opacity-70 mb-3">
             {plan.picks.length} {plan.picks.length === 1 ? 'parcel fills' : 'parcels fill'} {plan.filled} missing{' '}
-            {plan.filled === 1 ? 'goal' : 'goals'} for Ξ{fmtEth(plan.total)}.
+            {plan.filled === 1 ? 'goal' : 'goals'} for {fmtEth(plan.total)} ETH.
             {plan.unfilledOverBudget > 0 && ` ${plan.unfilledOverBudget} more ${plan.unfilledOverBudget === 1 ? 'is' : 'are'} listed above your limits;`}
             {plan.unfilledNoListing > 0 && ` ${plan.unfilledNoListing} ${plan.unfilledNoListing === 1 ? 'has' : 'have'} nothing listed.`}
           </p>
@@ -481,7 +586,7 @@ function ShoppingList({ plan }) {
                   <div className="flex flex-col min-w-0">
                     <span className="flex flex-wrap gap-x-3 items-baseline">
                       <a href={`/?token=${p.tokenId}`}>#{p.tokenId}</a>
-                      <span>Ξ{fmtEth(p.price)}</span>
+                      <span>{fmtEth(p.price)} ETH</span>
                       {vm && <span className="text-xs" style={{ color: vm.color }}>{vm.text}</span>}
                       <a href={opensea(p.tokenId)} target="_blank" rel="noopener noreferrer" className="text-xs opacity-60">[opensea ↗]</a>
                     </span>
@@ -528,7 +633,7 @@ function GoalGroup({ group }) {
                   <span>{t.label}</span>
                   <span className="opacity-60">·</span>
                   <a href={`/?token=${c.tokenId}`}>#{c.tokenId}</a>
-                  <span>Ξ{fmtEth(c.price)}</span>
+                  <span>{fmtEth(c.price)} ETH</span>
                   {vm && <span className="text-xs" style={{ color: vm.color }}>{vm.text}</span>}
                   <span className="text-xs opacity-45">{t.listed} listed of {t.supply}</span>
                 </span>

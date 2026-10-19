@@ -41,10 +41,10 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
   const menuNav = [
     { label: '[stats]', href: '/stats' },
     { label: '[collectors]', href: '/collectors' },
-    { label: '[collect]', href: '/collect' },
+    { label: '[helper]', href: '/helper' },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits & sets]', href: '/traits' },
-    { label: '[health]', href: '/health' },
+    { label: '[site health]', href: '/health' },
     { label: '[explorer ↗]', href: 'https://terraformexplorer.xyz', external: true },
     { label: '[lore ↗]', href: 'https://www.terraformlore.xyz', external: true },
     { label: '[mandala tool ↗]', href: 'https://terraformmandala.xyz', external: true },

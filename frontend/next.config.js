@@ -46,6 +46,10 @@ const nextConfig = {
       { source: '/traits/little-grass', destination: '/traits#sets', permanent: true },
       // Sets merged into the traits page on 2026-10-12.
       { source: '/sets', destination: '/traits#sets', permanent: true },
+      // The collection helper shipped as /collect on 2026-10-19 and was renamed
+      // the same day (too close to [collectors] in the menu). The query string —
+      // a shared view's wallets and goals — carries over.
+      { source: '/collect', destination: '/helper', permanent: true },
     ];
   },
   async headers() {

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { EthIcon, SPECIAL_TYPE_BADGES, SpecialBadge, headlineBadges, AutoBadgeStack, MysteryBadge, CATEGORY_COLORS, parcelImage, getLevelCategory, PropertyStack, WalletLink, vsModelColor } from './shared';
 import { matchesFilters, hasActiveFilters } from './ParcelFilters';
+import { WISHLIST_COLOR, WISHLIST_TINT, fillText } from '@/lib/wishlist';
 
 const OPENSEA_BASE = 'https://opensea.io/assets/ethereum/0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 
@@ -16,9 +17,13 @@ function timeAgo(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function ListingsView({ data, loading, error, viewMode = 'list', filters = null }) {
+export default function ListingsView({ data, loading, error, viewMode = 'list', filters = null, wishlist = null }) {
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
+  const [wishOnly, setWishOnly] = useState(false);
+  // tokenId -> the wishlist gaps it fills (lib/wishlist.js); null unless a saved
+  // wishlist's wallet is connected.
+  const marks = wishlist?.status === 'on' ? wishlist.marks : null;
 
   // `discount` is computed server-side against the model's LISTED-PRICE side, so a
   // live ask is compared with a modelled ask. Scoring listings against the
@@ -31,7 +36,8 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
   }, [data, filters, filtered]);
 
   const sorted = useMemo(() => {
-    const list = bargainsOnly ? matched.filter(p => p.discount > 0) : matched;
+    let list = bargainsOnly ? matched.filter(p => p.discount > 0) : matched;
+    if (wishOnly && marks) list = list.filter(p => marks.has(p.tokenId));
     if (sort === 'price') return [...list].sort((a, b) => a.listedPrice - b.listedPrice);
     if (sort === 'discount') return [...list].sort((a, b) => b.discount - a.discount);
     return [...list].sort((a, b) => {
@@ -40,7 +46,7 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
       if (!b.listedAt) return -1;
       return b.listedAt - a.listedAt;
     });
-  }, [matched, sort, bargainsOnly]);
+  }, [matched, sort, bargainsOnly, wishOnly, marks]);
 
   if (loading) {
     return (
@@ -68,6 +74,7 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
     ? Math.min(...data.parcels.map(p => p.listedPrice))
     : null;
   const hiddenBelow = floor != null && cheapestShown != null && floor < cheapestShown - 0.0005;
+  const wishCount = marks ? data.parcels.filter(p => marks.has(p.tokenId)).length : 0;
 
   return (
     <div>
@@ -82,6 +89,8 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
           parcels listed on Blur are not included.
         </div>
       )}
+
+      <WishlistLine wishlist={wishlist} count={wishCount} />
 
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1 text-xs">
@@ -111,17 +120,26 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
         >
           {bargainsOnly ? '[bargains only]' : '[show bargains only]'}
         </button>
+        {marks && wishCount > 0 && (
+          <button
+            onClick={() => setWishOnly(v => !v)}
+            className={`btn-primary btn-sm text-xs${wishOnly ? '' : ' opacity-40'}`}
+          >
+            {wishOnly ? '[★ wishlist only]' : '[show ★ wishlist only]'}
+          </button>
+        )}
       </div>
 
       {sorted.length === 0 ? (
         <p className="text-sm opacity-75">
           {filtered && matched.length === 0 ? 'no listings match these filters.'
+            : wishOnly && marks ? 'no listings here fill your wishlist.'
             : bargainsOnly ? 'no bargains currently listed.' : 'no listings found.'}
         </p>
       ) : viewMode === 'cards' ? (
         <div className="grid w-full gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {sorted.map(p => (
-            <ListingCard key={p.tokenId} parcel={p} />
+            <ListingCard key={p.tokenId} parcel={p} fills={marks?.get(p.tokenId)} />
           ))}
         </div>
       ) : (
@@ -145,7 +163,7 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
             </thead>
             <tbody>
               {sorted.map(p => (
-                <ListingRow key={p.tokenId} parcel={p} />
+                <ListingRow key={p.tokenId} parcel={p} fills={marks?.get(p.tokenId)} />
               ))}
             </tbody>
           </table>
@@ -155,7 +173,37 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
   );
 }
 
-function ListingRow({ parcel }) {
+// What the collector's wishlist says about the page: nothing at all unless one
+// is saved in this browser (status 'off').
+function WishlistLine({ wishlist, count }) {
+  const status = wishlist?.status || 'off';
+  if (status === 'off') return null;
+  const star = <span style={{ color: WISHLIST_COLOR }}>★</span>;
+  const edit = <a href="/helper" className="opacity-70 hover:opacity-100">[edit wishlist]</a>;
+  let body;
+  if (status === 'loading') {
+    body = <>{star} checking your wishlist…</>;
+  } else if (status === 'disconnected') {
+    body = (
+      <>
+        {star} your helper wishlist is saved in this browser —{' '}
+        <button type="button" className="underline" onClick={wishlist.connect}>connect your wallet</button>{' '}
+        to mark the listings that fill it.
+      </>
+    );
+  } else if (status === 'other-wallet') {
+    body = <>{star} the connected wallet isn&apos;t in your saved wishlist group. Connect one that is, or {edit}.</>;
+  } else if (status === 'error') {
+    body = <>{star} couldn&apos;t check your wishlist: {wishlist.error}</>;
+  } else {
+    body = count > 0
+      ? <>{star} <span style={{ color: WISHLIST_COLOR }}>{count} {count === 1 ? 'listing fills' : 'listings fill'} a gap on your wishlist</span> · {edit}</>
+      : <>{star} nothing listed right now fills a gap on your wishlist · {edit}</>;
+  }
+  return <div className="mb-4 text-xs opacity-80">{body}</div>;
+}
+
+function ListingRow({ parcel, fills }) {
   const { tokenId, traits, pricing, pricingV2, listedPrice, listedAt, discount, owner, ownerEns } = parcel;
   const { estimatedValue } = pricing;
 
@@ -165,7 +213,7 @@ function ListingRow({ parcel }) {
   const vsModelPct = (Math.abs(discount) * 100).toFixed(1);
 
   return (
-    <tr className="border-b" style={{ borderColor: 'rgba(232,232,232,0.08)' }}>
+    <tr className="border-b" style={{ borderColor: 'rgba(232,232,232,0.08)', background: fills ? WISHLIST_TINT : undefined }}>
       <td className="py-3 pr-4">
         <a href={`/?token=${tokenId}`} className="no-underline opacity-90">
           #{tokenId}
@@ -198,6 +246,11 @@ function ListingRow({ parcel }) {
       </td>
       <td className="py-3 pr-4">
         <PropertyStack traits={traits} pricing={pricing} showMystery />
+        {fills && (
+          <p className="text-xs mt-1" style={{ color: WISHLIST_COLOR }}>
+            ★ fills {fills.map(fillText).join(' · ')}
+          </p>
+        )}
       </td>
       <td className="py-3 pr-4 hidden lg:table-cell text-xs">
         <div className="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -235,7 +288,7 @@ function ListingRow({ parcel }) {
   );
 }
 
-function ListingCard({ parcel }) {
+function ListingCard({ parcel, fills }) {
   const { tokenId, traits, pricing, pricingV2, listedPrice, discount } = parcel;
   const { zone, biome, level, chroma, mode, specialType, mysteryOutlier, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
@@ -258,7 +311,11 @@ function ListingCard({ parcel }) {
 
   return (
     <div className="relative">
-      <a href={`/?token=${tokenId}`} className="block relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
+      <a
+        href={`/?token=${tokenId}`}
+        className="block relative w-full overflow-hidden"
+        style={{ aspectRatio: '277 / 400', ...(fills ? { outline: `2px solid ${WISHLIST_COLOR}`, outlineOffset: '2px' } : {}) }}
+      >
         <span className="absolute inset-0 bg-placeholder animate-pulse" />
         <img
           src={parcelImage(tokenId)}
@@ -283,6 +340,11 @@ function ListingCard({ parcel }) {
             {listedPrice.toFixed(3)}
           </a>
         </div>
+        {fills && (
+          <p className="text-xs mt-0.5 truncate" style={{ color: WISHLIST_COLOR }} title={`fills ${fills.map(fillText).join(' · ')}`}>
+            ★ {fills.map(f => f.label).join(', ')}
+          </p>
+        )}
         <p className="hidden lg:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
         <div className="hidden lg:flex items-center gap-1 flex-wrap mt-1">
           {showCategoryBadge && (

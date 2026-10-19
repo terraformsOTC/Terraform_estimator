@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
 import ListingsView from '@/components/ListingsView';
 import { connectAndRedirect, Footer } from '@/components/shared';
+import { useWishlistMarks } from '@/lib/wishlist';
 import {
   ParcelFilterPanel,
   ActiveFilterChips,
@@ -26,6 +27,9 @@ export default function ListingsPage() {
   // same rules and same URL encoding as the sales page, without a round trip.
   const [filters, setFilters] = useState(null);   // null until read from the URL
   const [showFilters, setShowFilters] = useState(false);
+  // Listings that fill a gap on the collector's helper wishlist — only once one
+  // is saved in this browser and a wallet in its group is connected.
+  const wishlist = useWishlistMarks();
 
   // force → ?refresh=1, which tells the backend to bypass its 30-minute listings
   // cache. Without it the button re-fetches the cached payload. The backend still
@@ -41,6 +45,8 @@ export default function ListingsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setData(json);
+      // A forced refresh can bring new listings; ask again what fills a gap.
+      if (force) wishlist.refresh();
     } catch (err) {
       setError(err.message || 'Failed to load listings.');
     } finally {
@@ -67,7 +73,13 @@ export default function ListingsPage() {
 
   return (
     <div className="content-wrapper">
-      <Header onConnect={connectAndRedirect} onDisconnect={() => {}} />
+      {/* With a wishlist saved here, connecting stays on this page to mark it;
+          otherwise [connect] goes to the wallet view as on every other page. */}
+      <Header
+        walletAddress={wishlist.connected}
+        onConnect={wishlist.saved ? wishlist.connect : connectAndRedirect}
+        onDisconnect={wishlist.disconnect}
+      />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">
@@ -110,7 +122,7 @@ export default function ListingsPage() {
               <ActiveFilterChips filters={filters} onToggle={toggle} onReset={reset} />
             </>
           )}
-          <ListingsView data={data} loading={loading} error={error} viewMode={viewMode} filters={filters} />
+          <ListingsView data={data} loading={loading} error={error} viewMode={viewMode} filters={filters} wishlist={wishlist} />
         </div>
       </main>
       <Footer />

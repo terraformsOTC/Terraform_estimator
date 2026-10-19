@@ -250,6 +250,30 @@ function evaluate({ groups, owned, universe, listings, ownWallets, supplyCache =
   const label = new Map([...byId.values()].map(t => [t.id, t.label]));
   plan.picks.forEach(p => { p.fillsLabels = p.fills.map(id => label.get(id)); });
 
+  // The groups each target sits in, so a listing can say what it fills in
+  // context: "Biome 12" alone could be Full biome's or "Every biome · Pulse"'s.
+  const groupsOf = new Map();
+  for (const g of groups) {
+    for (const t of g.targets) {
+      const names = groupsOf.get(t.id) || [];
+      if (!names.includes(g.label)) names.push(g.label);
+      groupsOf.set(t.id, names);
+    }
+  }
+  // Every listing that fills at least one unmet goal, whatever its price — the
+  // listings page marks these for a collector who saved the goals as a wishlist.
+  const wishlist = [];
+  for (const l of market) {
+    const fills = unmet.filter(t => t.match(l.traits));
+    if (fills.length) {
+      wishlist.push({
+        tokenId: l.tokenId,
+        price: l.price,
+        fills: fills.map(t => ({ id: t.id, label: t.label, groups: groupsOf.get(t.id) || [] })),
+      });
+    }
+  }
+
   const allReal = [...byId.values()].filter(t => t.exists);
   return {
     summary: {
@@ -259,6 +283,7 @@ function evaluate({ groups, owned, universe, listings, ownWallets, supplyCache =
     },
     groups: outGroups,
     shoppingList: plan,
+    wishlist,
   };
 }
 
