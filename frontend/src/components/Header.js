@@ -41,6 +41,7 @@ export default function Header({ walletAddress, onConnect, onDisconnect }) {
   const menuNav = [
     { label: '[stats]', href: '/stats' },
     { label: '[collectors]', href: '/collectors' },
+    { label: '[collect]', href: '/collect' },
     { label: '[glossary]', href: '/glossary' },
     { label: '[traits & sets]', href: '/traits' },
     { label: '[health]', href: '/health' },

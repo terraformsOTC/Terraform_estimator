@@ -1745,54 +1745,7 @@ app.get('/unminted/font/:idx', (req, res) => {
 // every Mesa parcel, every Lith0-like, every Penthouse. Index is built on
 // first request and cached for the process lifetime — underlying data
 // (snapshot + curated id sets) is static.
-const TRAIT_TYPES = [
-  { type: 'godmode',          label: 'Godmode',          group: 'special' },
-  { type: 'origin-daydream',  label: 'Origin Daydream',  group: 'mode' },
-  { type: 'origin-terraform', label: 'Origin Terraform', group: 'mode' },
-  { type: 'plague',           label: 'Plague',           group: 'special' },
-  { type: 'x-seed',           label: 'X-Seed',           group: 'special' },
-  { type: 'y-seed',           label: 'Y-Seed',           group: 'special' },
-  { type: 'lith0',            label: 'Lith0',            group: 'special' },
-  { type: 'spine',            label: 'Spine',            group: 'special' },
-  { type: '1of1',             label: '1 of 1',           group: 'special' },
-  { type: 's0',               label: 'S0',               group: 'special' },
-  { type: 'biome0',           label: 'Biome 0',          group: 'visual' },
-  { type: 'lith0like',        label: 'Lith0-like',       group: 'visual' },
-  { type: 'mesa',             label: 'Mesa',             group: 'visual' },
-  { type: 'matrix',           label: 'Matrix',           group: 'visual' },
-  { type: 'heartbeat',        label: 'Heartbeat',        group: 'visual' },
-  { type: 'gm',               label: 'gm',               group: 'visual' },
-  { type: 'basement',         label: 'Basement',         group: 'level' },
-  { type: 'penthouse',        label: 'Penthouse',        group: 'level' },
-];
-
-// Mirrors AutoBadgeStack / hasBadges logic in frontend/src/components/shared.js.
-// Keep in sync — drift between the two is what causes badge-vs-search disagreements.
-function matchesTrait(traits, type) {
-  const { zone, biome, level, chroma, mode, specialType, isOneOfOne, isGodmode, isS0, isLith0like, isGm, mysteryValue } = traits;
-  const isTerrain = mode === 'Terrain';
-  switch (type) {
-    case 'godmode':          return !!isGodmode;
-    case 'origin-daydream':  return mode === 'Origin Daydream';
-    case 'origin-terraform': return mode === 'Origin Terraform';
-    case 'plague':           return specialType === 'Plague';
-    case 'x-seed':           return specialType === 'X-Seed';
-    case 'y-seed':           return specialType === 'Y-Seed';
-    case 'lith0':            return specialType === 'Lith0';
-    case 'spine':            return specialType === 'Spine';
-    case '1of1':             return !!isOneOfOne;
-    case 's0':               return !!isS0;
-    case 'biome0':           return biome === 0 && specialType !== 'Lith0';
-    case 'lith0like':        return !!isLith0like;
-    case 'mesa':             return isTerrain && biome === 39 && mysteryValue != null && mysteryValue < 30000;
-    case 'matrix':           return isTerrain && biome === 58 && zone === 'Intro Forest';
-    case 'heartbeat':        return isTerrain && zone === '[BLOOD]' && chroma === 'Pulse';
-    case 'gm':               return !!isGm;
-    case 'basement':         return level === 1;
-    case 'penthouse':        return level === 20;
-    default: return false;
-  }
-}
+const { TRAIT_TYPES, matchesTrait } = require('./traitTypes');
 
 // Unminted parcels store specialType directly (1of1, Spine, Lith0, etc.) but
 // no isOneOfOne/isGm flags — derive them so matchesTrait can use one shape.
@@ -2355,6 +2308,241 @@ app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
 // CORS origin check — falls through to Express's default handler and surfaces as
 // a bare 500 with an HTML body. A disallowed origin is a client error, not a
 // server fault, so it gets a clean 403 and the JSON shape every other error uses.
+// ─── COLLECTION HELPER ────────────────────────────────────────────────────────
+// /collect on the site: for a group of wallets, which goals (sets, chroma, mode,
+// special traits, custom) they have met, what is missing, what is listed that
+// fills each gap, and a shopping list. See collectionHelper.js. Everything is
+// answered from memory — ownership from the owner index, traits from the
+// snapshot overlaid with the parcel store, listings from the cached feed — so a
+// request makes no RPC or OpenSea call of its own.
+const { OwnerIndex } = require('./ownerIndex');
+const collectionHelper = require('./collectionHelper');
+const { RubricError } = collectionHelper;
+const { discoverLinkedWallets } = require('./linkedWallets');
+
+const ownerIndex = new OwnerIndex();
+let ownerIndexLoading = null;
+
+// One Alchemy call (fetchContractOwners, shared with /collectors); the event
+// poller moves parcels between refreshes.
+function refreshOwnerIndex() {
+  if (ownerIndexLoading) return ownerIndexLoading;
+  const requestedAt = Date.now();
+  ownerIndexLoading = fetchContractOwners()
+    .then(owners => {
+      ownerIndex.load(owners, requestedAt);
+      console.log(`[owners] index: ${ownerIndex.byToken.size} parcels across ${ownerIndex.byOwner.size} holders`);
+    })
+    .catch(err => console.warn(`[owners] refresh failed: ${err.message}`))
+    .finally(() => { ownerIndexLoading = null; });
+  return ownerIndexLoading;
+}
+
+// A parcel's traits as they are now: the nightly snapshot, overlaid with what
+// the parcel store last read from chain (mode, chroma and level change when a
+// parcel is dreamed or terraformed) and any antenna change the poller saw.
+function currentTraitsOf(tokenId) {
+  const id = Number(tokenId);
+  const rec = MINTED_TRAITS_SNAPSHOT?.get(id);
+  if (!rec) return null;
+  const doc = parcelStore.docs.get(id);
+  const live = antennaOverrides.get(id);
+  if (!doc && !live) return snapshotTraits(rec);
+  const attr = name => doc?.attributes.find(a => a.trait_type === name)?.value;
+  const level = parseInt(attr('Level'), 10);
+  const mystery = attr('???');
+  return snapshotTraits({
+    ...rec,
+    mode: attr('Mode') || rec.mode,
+    chroma: attr('Chroma') || rec.chroma,
+    level: Number.isFinite(level) ? level : rec.level,
+    mysteryValue: mystery != null ? Number(mystery) : rec.mysteryValue,
+    ...(live ? { antennaOn: live.antennaOn, antennaFirstTs: live.antennaFirstTs } : {}),
+  });
+}
+
+// Every minted parcel with current traits, for supply counts. Rebuilt every 10
+// minutes; the per-target supply counts live with it and reset when it does.
+const UNIVERSE_TTL_MS = 10 * 60 * 1000;
+let universeCache = { at: 0, items: [], supply: new Map() };
+function collectionUniverse() {
+  const now = Date.now();
+  if (universeCache.items.length && now - universeCache.at < UNIVERSE_TTL_MS) return universeCache;
+  const items = [];
+  for (const id of MINTED_TRAITS_SNAPSHOT?.keys() || []) {
+    const traits = currentTraitsOf(id);
+    if (traits) items.push({ tokenId: id, traits });
+  }
+  universeCache = { at: now, items, supply: new Map() };
+  return universeCache;
+}
+
+const collectionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait a moment.' },
+});
+app.use('/collection', collectionLimiter);
+app.use('/linked-wallets', collectionLimiter);
+
+const MAX_HELPER_WALLETS = 10;
+const parseList = v => String(v || '').split(',').map(s => s.trim()).filter(Boolean);
+
+function parseCustomGoals(v) {
+  if (!v) return [];
+  if (String(v).length > 4000) throw new RubricError('custom goals are too long');
+  let json;
+  try {
+    json = JSON.parse(Buffer.from(String(v), 'base64url').toString('utf8'));
+  } catch {
+    throw new RubricError('custom goals could not be read');
+  }
+  if (!Array.isArray(json)) throw new RubricError('custom goals must be a list');
+  return json;
+}
+
+function parseAmount(v, name) {
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || n > 100000) throw new RubricError(`invalid ${name}`);
+  return n;
+}
+
+function parsePremium(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < -90 || n > 1000) throw new RubricError('invalid premium over model');
+  return n / 100;
+}
+
+// GET /collection/catalog — the presets and every value a custom goal can use.
+app.get('/collection/catalog', (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.json(collectionHelper.catalog());
+});
+
+// GET /collection?wallets=a,b&goals=set:full-zone,chroma&custom=<base64url JSON>
+//   &budget=2&max=0.5&prem=10
+app.get('/collection', async (req, res) => {
+  try {
+    const inputs = [...new Set(parseList(req.query.wallets).map(s => s.slice(0, 100)))];
+    if (inputs.length === 0) return res.status(400).json({ error: 'Enter at least one address or ENS name.' });
+    if (inputs.length > MAX_HELPER_WALLETS) {
+      return res.status(400).json({ error: `Up to ${MAX_HELPER_WALLETS} wallets at a time.` });
+    }
+
+    let groups, options;
+    try {
+      groups = collectionHelper.buildRubric({ presets: parseList(req.query.goals), custom: parseCustomGoals(req.query.custom) });
+      options = {
+        budget: parseAmount(req.query.budget, 'budget'),
+        maxPrice: parseAmount(req.query.max, 'max price'),
+        // prem: max % over the model's ask-side value (0 = at or below model).
+        maxPremium: req.query.prem == null || req.query.prem === '' ? null : parsePremium(req.query.prem),
+      };
+    } catch (err) {
+      if (err instanceof RubricError) return res.status(400).json({ error: err.message });
+      throw err;
+    }
+    if (groups.length === 0) return res.status(400).json({ error: 'Pick at least one goal.' });
+
+    let pairs;
+    try {
+      const resolved = await Promise.all(inputs.map(resolveWalletInput));
+      // Two inputs can be one wallet (a name and its address); keep the first.
+      pairs = [...new Map(resolved.map((address, i) => [address.toLowerCase(), { input: inputs[i], address }])).values()];
+    } catch (err) {
+      if (err.status === 400) return res.status(400).json({ error: err.message });
+      throw err;
+    }
+    const addresses = pairs.map(p => p.address);
+
+    if (!ownerIndex.ready()) {
+      await Promise.race([refreshOwnerIndex(), new Promise(r => setTimeout(r, 10_000))]);
+      if (!ownerIndex.ready()) {
+        return res.status(503).json({ error: 'Ownership data is still loading. Try again in a minute.' });
+      }
+    }
+
+    const universe = collectionUniverse();
+    const owned = ownerIndex.tokensOf(addresses)
+      .map(id => ({ tokenId: id, traits: currentTraitsOf(id) }))
+      .filter(o => o.traits);
+
+    // Listings are what fills the gaps, but the goals still evaluate without them.
+    let feed = null;
+    try { feed = await listingsResource.get(); } catch { /* reported as listingsAvailable: false */ }
+    const listings = (feed?.parcels || []).map(p => ({
+      tokenId: p.tokenId,
+      traits: currentTraitsOf(p.tokenId) || p.traits,
+      price: p.listedPrice,
+      model: p.pricingV2?.on ?? null,
+      discount: p.discount,
+      seller: p.owner,
+    }));
+
+    const result = collectionHelper.evaluate({
+      groups, owned, universe: universe.items, listings,
+      ownWallets: new Set(addresses.map(a => a.toLowerCase())),
+      supplyCache: universe.supply,
+      options,
+    });
+    const ensMap = await resolveEnsNames(addresses).catch(() => ({}));
+
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      wallets: pairs.map(p => ({ input: p.input, address: p.address, ens: ensMap[p.address.toLowerCase()] || null, parcels: ownerIndex.countOf(p.address) })),
+      parcels: owned.length,
+      ...result,
+      listingsAvailable: !!feed,
+      listingsAsOf: feed?.fetchedAt || null,
+      ownersAsOf: ownerIndex.loadedAt,
+    });
+  } catch (err) {
+    console.error('[collection]', err.message);
+    res.status(500).json({ error: 'Could not build the collection view.' });
+  }
+});
+
+// GET /linked-wallets/:address — suggestions for the wallet group: delegate.xyz
+// links and Safes (linkedWallets.js), keeping only wallets that hold parcels.
+const LINKED_TTL_MS = 10 * 60 * 1000;
+const linkedCache = new Map(); // lowercased address -> { at, found }
+
+app.get('/linked-wallets/:address', async (req, res) => {
+  try {
+    let address;
+    try {
+      address = await resolveWalletInput(String(req.params.address).slice(0, 100));
+    } catch (err) {
+      if (err.status === 400) return res.status(400).json({ error: err.message });
+      throw err;
+    }
+    const key = address.toLowerCase();
+    let hit = linkedCache.get(key);
+    if (!hit || Date.now() - hit.at > LINKED_TTL_MS) {
+      const found = await discoverLinkedWallets(address, { provider: getProvider().provider, terraformsAddress: TERRAFORMS_ADDRESS });
+      hit = { at: Date.now(), found };
+      linkedCache.set(key, hit);
+      if (linkedCache.size > 5000) {
+        for (const k of linkedCache.keys()) { linkedCache.delete(k); if (linkedCache.size <= 4000) break; }
+      }
+    }
+    const ready = ownerIndex.ready();
+    const suggestions = hit.found
+      .map(f => ({ ...f, parcels: ready ? ownerIndex.countOf(f.address) : null }))
+      .filter(f => !ready || f.parcels > 0)
+      .sort((a, b) => (b.parcels || 0) - (a.parcels || 0));
+    const ens = await resolveEnsNames(suggestions.map(s => s.address)).catch(() => ({}));
+    res.set('Cache-Control', 'no-store');
+    res.json({ address, suggestions: suggestions.map(s => ({ ...s, ens: ens[s.address.toLowerCase()] || null })) });
+  } catch (err) {
+    console.error('[linked-wallets]', err.message);
+    res.status(500).json({ error: 'Could not look up linked wallets.' });
+  }
+});
+
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   if (err && typeof err.message === 'string' && err.message.startsWith('CORS:')) {
@@ -2394,11 +2582,15 @@ app.listen(PORT, async () => {
   // re-read a parcel within a minute of an event that changes it, drop a
   // parcel's cached owner when it transfers, and re-read everything daily.
   parcelStore.warm({ concurrency: 4, delayMs: 400 });
+  // Who holds what, for the collection helper: one Alchemy call now and every 30
+  // minutes; transfers in between come from the event poller below.
+  refreshOwnerIndex();
+  setInterval(refreshOwnerIndex, 30 * 60 * 1000).unref();
   setInterval(() => parcelStore.warm({ concurrency: 2, delayMs: 400, force: true }), 24 * 60 * 60 * 1000).unref();
   startParcelEventPoller({
     provider: getProvider().provider,
     addresses: [TERRAFORMS_ADDRESS, ANTENNA_ADDRESS],
-    onLogs: ({ changed, antenna, transferred }) => {
+    onLogs: ({ changed, antenna, transferred, transfers }) => {
       if (changed.size) {
         console.log(`[parcels] on-chain change: ${[...changed].map(id => `#${id}`).join(' ')} — re-reading`);
         parcelStore.refresh(changed);
@@ -2407,6 +2599,7 @@ app.listen(PORT, async () => {
         readAntennaLive(id).then(s => antennaOverrides.set(id, s)).catch(() => {});
       }
       for (const id of transferred) ownerCache.delete(id);
+      for (const t of transfers) ownerIndex.applyTransfer(t.tokenId, t.to);
     },
     onGap: () => parcelStore.warm({ concurrency: 2, delayMs: 400, force: true }),
   });

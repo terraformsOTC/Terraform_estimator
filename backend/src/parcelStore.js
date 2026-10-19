@@ -157,14 +157,21 @@ function wordAsTokenId(hex) {
   return n >= 1n && n <= BigInt(TOTAL_SUPPLY) ? Number(n) : null;
 }
 
-/** Which parcels a batch of logs touched: changed (re-read tokenURI), antenna, transferred. */
+/**
+ * Which parcels a batch of logs touched: changed (re-read tokenURI), antenna,
+ * transferred, and `transfers` in log order with the new owner of each.
+ */
 function parcelIdsFromLogs(logs) {
   const changed = new Set(), antenna = new Set(), transferred = new Set();
+  const transfers = [];
   for (const log of logs || []) {
     const t0 = log.topics?.[0];
     if (t0 === TOPIC.transfer && log.topics.length === 4) {
       const id = wordAsTokenId(log.topics[3]);
-      if (id) transferred.add(id);
+      if (id) {
+        transferred.add(id);
+        transfers.push({ tokenId: id, from: ethers.getAddress('0x' + log.topics[1].slice(26)), to: ethers.getAddress('0x' + log.topics[2].slice(26)) });
+      }
     } else if (t0 === TOPIC.daydreaming || t0 === TOPIC.terraformed) {
       const id = wordAsTokenId(log.data);
       if (id) changed.add(id);
@@ -176,7 +183,7 @@ function parcelIdsFromLogs(logs) {
       if (id) { changed.add(id); antenna.add(id); }
     }
   }
-  return { changed, antenna, transferred };
+  return { changed, antenna, transferred, transfers };
 }
 
 /**

@@ -30,6 +30,12 @@ Backend: `:3001` | Frontend: `:3000`
 - `server.js` — Express API. Reads Terraforms contract via Ethereum RPC (15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `ALLOWED_ORIGINS` env var.
 - `parcelStore.js` — every minted parcel's tokenURI document (name, attributes, gzipped SVG; ~65MB retained, ~95MB RSS, measured) in memory, so `/image`, `/estimate`, `/wallet` and the feeds make no per-request RPC call (the old 500-entry LRU let a walk over the collection turn every request into a publicnode read). Warmed at boot (~17 min) and daily; an event poller re-reads a parcel within a minute of `Daydreaming`/`Terraformed`/antenna events and drops its cached owner on `Transfer`. **tokenURI is not immutable** — those events redraw the image — so `/image` and `/img` cache for an hour with stale-while-revalidate, never `immutable`.
 - `parcel-constants.json` — `{id: [seed, x, y]}` for all 9911, fixed at mint. Baked by `scripts/bake-parcel-constants.js` (resumable); spares `/estimate` a tokenHTML read and a tokenSupplementalData call.
+- **Collection helper** (`/collect` on the site; `GET /collection`, `/collection/catalog`, `/linked-wallets/:address`) — for a group of up to 10 wallets: which goals are met, what's missing, what's listed that fills each gap, and a shopping list (greedy set cover: cheapest listing per newly filled goal, with budget / max price / max % over model). Answered from memory, no per-request RPC:
+  - `collectionHelper.js` — pure: goals (the 10 `SETS` with `detectSets`' exact rules, every chroma/mode, the `/traits` specials, custom `{each, where}` goals), coverage, shopping list. Tested against `detectSets` in `test/collectionHelper.test.js`.
+  - `ownerIndex.js` — who holds every parcel: one Alchemy `getOwnersForContract` (same call as `/collectors`) at boot and every 30 min, moved on each Transfer by the parcel event poller.
+  - `linkedWallets.js` — wallet suggestions: delegate.xyz **v1 and v2** (most Terraforms holders who delegate use v1) and Safes (owners via `getOwners`; Safes an owner co-owns via `api.safe.global/tx-service`, no key). Suggestions only — anyone can delegate to anyone.
+  - `traitTypes.js` — the `/traits` catalogue and `matchesTrait`, shared by `/traits` and the helper.
+  - Phase 2 (alerts: Telegram + email when a wanted parcel lists) is not built; hosting is undecided (not the Mac mini, which stays off the public web).
 - `hedonicModel.js` — **the pricing model**: fitted multiples from `pricing-v2-coeffs.json` (built by `sales database/fit_hedonic.py`, refit daily by `ops/daily-refit.sh`) × live floor × `floor_calibration`. Returns a bid–ask range. Tier-2 specials (Godmode, Plague, seeds, Lith0) fall back to v1.
 - `pricingModel.js` — v1 hand-tuned model. Only served on `/legacy`, used for Tier-2 prices and as the fit's priors (`build_priors.js`). Also holds `SETS` / `detectSets`.
 - `snapshotTraits.js` — lookup-derived traits (special tokens, 1of1, Godmode, gm, Lith0-like, S0 window, ??? thresholds). Shared by the API and the offline pricing scripts — change them here only.
@@ -45,6 +51,7 @@ Backend: `:3001` | Frontend: `:3000`
 
 ### Frontend (`frontend/src/`)
 - `app/page.js` — Main UI, client component, handles token IDs 1–11104.
+- `components/CollectView.js` — the `/collect` page: wallets (+ linked-wallet suggestions), goal picker with a custom-goal builder, shopping-list limits, results per goal. State lives in the URL (shareable) and localStorage.
 - `components/ParcelResult.js` — Minted parcel display (1–9911).
 - `components/UnmintedResult.js` — Unminted parcel display (9912–11104).
 - `components/TerraformAnimation.js` — On-chain SVG animation renderer. Unminted animations replicate terrafans.xyz: per-parcel WOFF2 fonts, per-parcel CSS (fontSize 9–27px), DIRECTION hardcoded to 0, `String.fromCharCode` (not `fromCodePoint`).

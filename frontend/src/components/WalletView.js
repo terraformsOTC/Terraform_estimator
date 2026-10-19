@@ -292,7 +292,12 @@ export default function WalletView({ data, loading, address }) {
       {/* Sets — compact name chips, all on one row */}
       {sets?.length > 0 && (
         <div className="mb-10">
-          <h2 className="text-lg mb-3 opacity-80">[sets]</h2>
+          <h2 className="text-lg mb-3 opacity-80">
+            [sets]{' '}
+            <a href={`/collect?w=${encodeURIComponent(data.aggregate ? data.wallets.map(w => w.address).join(',') : (data.address || address))}`} className="text-xs opacity-60 hover:opacity-100">
+              [what's missing? →]
+            </a>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {sets.map(set => (
               <SetChip key={set.name} set={set} />
