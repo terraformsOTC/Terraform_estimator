@@ -40,12 +40,6 @@ export function writeHelper(s) {
   }
 }
 
-/** The saved setup when its wishlist is on, else null. */
-export function readWishlist() {
-  const s = readHelper();
-  return s && s.wishlist && s.wallets.length ? s : null;
-}
-
 const isAddress = v => /^0x[0-9a-fA-F]{40}$/.test(v);
 
 /** Whether `address` is one of the setup's wallets — entered as an address, or resolved from a name. */
@@ -86,40 +80,47 @@ export function fillText(f) {
 }
 
 /**
- * The listings page's side. Nothing happens unless a wishlist is saved here;
- * then it checks, without prompting, whether a wallet in the saved group is
- * connected, and if so asks /collection which listings fill a gap.
+ * The listings page's side. Connecting here always stays on the page, and a
+ * wallet the site can already read counts as connected without a prompt.
  *
- * status: 'off' (none saved) | 'disconnected' | 'other-wallet' | 'loading' | 'on' | 'error'
- * marks:  Map tokenId -> [{ id, label, groups }] while 'on'
+ * status:
+ *   'off'          no wallet connected and no wishlist on — the page as it always was
+ *   'setup'        connected, no helper setup in this browser yet
+ *   'not-in-setup' connected, but the saved setup's wallets don't include this one
+ *   'available'    connected, the setup includes this wallet, wishlist switched off
+ *   'disconnected' wishlist on, no wallet connected
+ *   'other-wallet' wishlist on, the connected wallet isn't in its group
+ *   'loading' | 'on' | 'error'
+ * marks: Map tokenId -> [{ id, label, groups }] while 'on'
  */
 export function useWishlistMarks() {
-  const [saved, setSaved] = useState(null);
+  const [setup, setSetup] = useState(null);         // the saved helper setup, wishlist on or off
   const [connected, setConnected] = useState(null);
+  const [checked, setChecked] = useState(false);    // the silent wallet check has answered
   const [status, setStatus] = useState('off');
   const [marks, setMarks] = useState(null);
   const [error, setError] = useState(null);
   const [reload, setReload] = useState(0);
-  const [checked, setChecked] = useState(false); // the silent wallet check has answered
 
-  const member = inGroup(saved, connected);
+  const on = !!setup?.wishlist && setup.wallets.length > 0;
+  const member = inGroup(setup, connected);
 
-  const pick = useCallback((w, accounts) => {
+  // Of several accounts, prefer one in the saved group.
+  const pick = useCallback(accounts => {
     const list = accounts || [];
-    setConnected(list.find(a => inGroup(w, a)) || list[0] || null);
+    const s = readHelper();
+    setConnected(list.find(a => inGroup(s, a)) || list[0] || null);
   }, []);
 
   useEffect(() => {
-    const w = readWishlist();
-    setSaved(w);
-    if (!w) return undefined;
+    setSetup(readHelper());
     let live = true;
     authorizedAccounts().then(accounts => {
       if (!live) return;
-      pick(w, accounts);
+      pick(accounts);
       setChecked(true);
     });
-    const onChange = accounts => pick(w, accounts);
+    const onChange = accounts => pick(accounts);
     window.ethereum?.on?.('accountsChanged', onChange);
     return () => {
       live = false;
@@ -128,18 +129,21 @@ export function useWishlistMarks() {
   }, [pick]);
 
   useEffect(() => {
-    if (!saved) { setStatus('off'); return undefined; }
-    if (!checked) { setStatus('loading'); return undefined; }
-    if (!member) {
+    if (!checked) { setStatus(on ? 'loading' : 'off'); return undefined; }
+    if (!connected || !on || !member) {
       setMarks(null);
-      setStatus(connected ? 'other-wallet' : 'disconnected');
+      if (!connected) setStatus(on ? 'disconnected' : 'off');
+      else if (on) setStatus('other-wallet');
+      else if (member) setStatus('available');
+      else setStatus(setup?.wallets.length ? 'not-in-setup' : 'setup');
       return undefined;
     }
     const ctrl = new AbortController();
     setStatus('loading');
-    const q = new URLSearchParams({ wallets: saved.wallets.join(','), view: 'wishlist' });
-    if (saved.goals.length) q.set('goals', saved.goals.join(','));
-    if (saved.custom.length) q.set('custom', toB64url(saved.custom));
+    setError(null);
+    const q = new URLSearchParams({ wallets: setup.wallets.join(','), view: 'wishlist' });
+    if (setup.goals.length) q.set('goals', setup.goals.join(','));
+    if (setup.custom.length) q.set('custom', toB64url(setup.custom));
     fetch(`${API_URL}/collection?${q}`, { signal: ctrl.signal, cache: 'no-store' })
       .then(async r => {
         const j = await r.json().catch(() => ({}));
@@ -152,29 +156,49 @@ export function useWishlistMarks() {
       })
       .catch(err => {
         if (err.name === 'AbortError') return;
-        setError(err.message);
+        setError(`couldn't check your wishlist: ${err.message}`);
         setStatus('error');
       });
     return () => ctrl.abort();
-  }, [saved, checked, member, connected, reload]);
+  }, [checked, connected, on, member, setup, reload]);
 
   const connect = useCallback(async () => {
     if (!window.ethereum?.request) {
-      setError('No browser wallet found.');
-      setStatus('error');
+      setError('No browser wallet found — install MetaMask or another wallet to connect.');
       return;
     }
     try {
-      pick(saved, await window.ethereum.request({ method: 'eth_requestAccounts' }));
+      pick(await window.ethereum.request({ method: 'eth_requestAccounts' }));
+      setChecked(true);
+      setError(null);
     } catch (err) {
-      if (err?.code !== 4001) { setError('The wallet did not connect.'); setStatus('error'); }
+      if (err?.code !== 4001) setError('The wallet did not connect.');
     }
-  }, [saved, pick]);
+  }, [pick]);
 
   // Local only, like the rest of the site's [disconnect]: the marks go until the
   // next visit, when the wallet extension still reports the site as connected.
   const disconnect = useCallback(() => setConnected(null), []);
   const refresh = useCallback(() => setReload(n => n + 1), []);
 
-  return { saved, connected, status, marks, error, connect, disconnect, refresh };
+  // Switch the wishlist on from here, adding the connected wallet to the saved
+  // setup first if it isn't in it (connecting it is proof enough it's theirs).
+  // With no setup at all there are no goals to use, so that case goes to the
+  // helper instead, where linked vaults and Safes are found and goals picked.
+  const turnOn = useCallback(() => {
+    const s = readHelper();
+    if (!s?.wallets.length || !connected) return;
+    const has = inGroup(s, connected);
+    if (!has && s.wallets.length >= 10) {
+      setError('Your helper group already has 10 wallets — make room in the helper first.');
+      return;
+    }
+    const next = has
+      ? { ...s, wishlist: true }
+      : { ...s, wishlist: true, wallets: [...s.wallets, connected], addresses: [...(s.addresses || []), connected] };
+    if (writeHelper(next)) setSetup(next);
+    else setError('This browser is not letting the site save anything.');
+  }, [connected]);
+
+  return { setup, connected, status, marks, error, connect, disconnect, refresh, turnOn };
 }

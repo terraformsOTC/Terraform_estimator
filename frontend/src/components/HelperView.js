@@ -632,8 +632,10 @@ function WishlistPanel({ result, connected, on, onConnect, onAdd, onSwitch }) {
     body = (
       <>
         <span style={{ color: WISHLIST_COLOR }}>★ wishlist on</span> — every listing that fills one of these gaps is
-        marked on the <a href="/listings">listings page</a> while a wallet in this group is connected. Changes you make
-        here update it.
+        marked on the listings page while a wallet in this group is connected. Changes you make here update it.
+        <a href="/listings" className="btn-primary btn-xs ml-2 no-underline" style={{ color: WISHLIST_COLOR, borderColor: WISHLIST_COLOR }}>
+          [see marked listings →]
+        </a>
         <button type="button" className="opacity-50 hover:opacity-100 text-xs ml-2" onClick={() => onSwitch(false)}>[turn off]</button>
       </>
     );

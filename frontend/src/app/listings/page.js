@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
 import ListingsView from '@/components/ListingsView';
-import { connectAndRedirect, Footer } from '@/components/shared';
+import { Footer } from '@/components/shared';
 import { useWishlistMarks } from '@/lib/wishlist';
 import {
   ParcelFilterPanel,
@@ -27,8 +27,8 @@ export default function ListingsPage() {
   // same rules and same URL encoding as the sales page, without a round trip.
   const [filters, setFilters] = useState(null);   // null until read from the URL
   const [showFilters, setShowFilters] = useState(false);
-  // Listings that fill a gap on the collector's helper wishlist — only once one
-  // is saved in this browser and a wallet in its group is connected.
+  // The connected wallet, and the listings that fill a gap on its helper
+  // wishlist when one is on (lib/wishlist.js).
   const wishlist = useWishlistMarks();
 
   // force → ?refresh=1, which tells the backend to bypass its 30-minute listings
@@ -73,13 +73,9 @@ export default function ListingsPage() {
 
   return (
     <div className="content-wrapper">
-      {/* With a wishlist saved here, connecting stays on this page to mark it;
-          otherwise [connect] goes to the wallet view as on every other page. */}
-      <Header
-        walletAddress={wishlist.connected}
-        onConnect={wishlist.saved ? wishlist.connect : connectAndRedirect}
-        onDisconnect={wishlist.disconnect}
-      />
+      {/* Connecting stays on this page (other pages go to the wallet view):
+          here it is what turns on the wishlist marks. */}
+      <Header walletAddress={wishlist.connected} onConnect={wishlist.connect} onDisconnect={wishlist.disconnect} />
       <main className="flex-1">
         <div className="px-6 mb-6">
           <span className="text-[1.35rem] md:text-[1.6875rem]">

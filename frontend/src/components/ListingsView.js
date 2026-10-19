@@ -173,16 +173,42 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
   );
 }
 
-// What the collector's wishlist says about the page: nothing at all unless one
-// is saved in this browser (status 'off').
+// What the collector's wishlist says about the page: nothing at all with no
+// wallet connected and no wishlist on (status 'off'); with a wallet connected,
+// the way to switch the marks on.
 function WishlistLine({ wishlist, count }) {
   const status = wishlist?.status || 'off';
-  if (status === 'off') return null;
   const star = <span style={{ color: WISHLIST_COLOR }}>★</span>;
+  if (wishlist?.error && status !== 'on') {
+    return <div className="mb-4 text-xs" style={{ color: '#e8b86c' }}>{star} {wishlist.error}</div>;
+  }
+  if (status === 'off') return null;
   const edit = <a href="/helper" className="opacity-70 hover:opacity-100">[edit wishlist]</a>;
+  const turnOn = (
+    <button type="button" className="btn-primary btn-xs" style={{ color: WISHLIST_COLOR, borderColor: WISHLIST_COLOR }} onClick={wishlist.turnOn}>
+      [turn on wishlist]
+    </button>
+  );
   let body;
   if (status === 'loading') {
     body = <>{star} checking your wishlist…</>;
+  } else if (status === 'setup') {
+    body = (
+      <>
+        {star} Mark the listings that fill gaps in your collection:{' '}
+        <a href={`/helper?w=${wishlist.connected}`} style={{ color: WISHLIST_COLOR }}>[set up your wishlist →]</a>{' '}
+        <span className="opacity-60">— pick your goals, and add any vault or other wallet you collect with so its parcels count.</span>
+      </>
+    );
+  } else if (status === 'available') {
+    body = <>{star} Mark the listings that fill gaps in your helper goals: {turnOn} <a href="/helper" className="opacity-70 hover:opacity-100">[edit goals]</a></>;
+  } else if (status === 'not-in-setup') {
+    body = (
+      <>
+        {star} This wallet isn&apos;t in your helper setup yet. Add it and mark the listings that fill your gaps: {turnOn}{' '}
+        <a href="/helper" className="opacity-70 hover:opacity-100">[edit in the helper]</a>
+      </>
+    );
   } else if (status === 'disconnected') {
     body = (
       <>
@@ -192,9 +218,12 @@ function WishlistLine({ wishlist, count }) {
       </>
     );
   } else if (status === 'other-wallet') {
-    body = <>{star} the connected wallet isn&apos;t in your saved wishlist group. Connect one that is, or {edit}.</>;
-  } else if (status === 'error') {
-    body = <>{star} couldn&apos;t check your wishlist: {wishlist.error}</>;
+    body = (
+      <>
+        {star} the connected wallet isn&apos;t in your wishlist group:{' '}
+        <button type="button" className="underline" onClick={wishlist.turnOn}>add it</button> · {edit}
+      </>
+    );
   } else {
     body = count > 0
       ? <>{star} <span style={{ color: WISHLIST_COLOR }}>{count} {count === 1 ? 'listing fills' : 'listings fill'} a gap on your wishlist</span> · {edit}</>
