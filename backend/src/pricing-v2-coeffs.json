@@ -1,6 +1,6 @@
 {
   "meta": {
-    "built": "2026-10-18T02:20:19Z",
+    "built": "2026-10-19T02:20:19Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
@@ -3821,13 +3821,13 @@
     }
   },
   "floor_calibration": {
-    "value": 0.809,
-    "measured_at": "2026-10-18T02:20:19.175Z",
+    "value": 0.8093,
+    "measured_at": "2026-10-19T02:20:19.536Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
-    "n_sales": 124,
+    "n_sales": 123,
     "iqr": [
-      0.716,
+      0.719,
       0.871
     ],
     "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
