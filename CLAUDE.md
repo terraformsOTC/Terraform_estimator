@@ -27,7 +27,9 @@ Backend: `:3001` | Frontend: `:3000`
 - Unminted IDs `#1–#1193` sorted level ascending (1 = lowest, 1193 = highest)
 
 ### Backend (`backend/src/`)
-- `server.js` — Express API. Reads Terraforms contract via Ethereum RPC. LRU caches tokenURIs (500 entries, 15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `ALLOWED_ORIGINS` env var.
+- `server.js` — Express API. Reads Terraforms contract via Ethereum RPC (15s timeout). Rate limits: 200 req/min standard, 20 req/min wallet. CORS allows hardcoded prod origins + `ALLOWED_ORIGINS` env var.
+- `parcelStore.js` — every minted parcel's tokenURI document (name, attributes, gzipped SVG; ~65MB retained, ~95MB RSS, measured) in memory, so `/image`, `/estimate`, `/wallet` and the feeds make no per-request RPC call (the old 500-entry LRU let a walk over the collection turn every request into a publicnode read). Warmed at boot (~17 min) and daily; an event poller re-reads a parcel within a minute of `Daydreaming`/`Terraformed`/antenna events and drops its cached owner on `Transfer`. **tokenURI is not immutable** — those events redraw the image — so `/image` and `/img` cache for an hour with stale-while-revalidate, never `immutable`.
+- `parcel-constants.json` — `{id: [seed, x, y]}` for all 9911, fixed at mint. Baked by `scripts/bake-parcel-constants.js` (resumable); spares `/estimate` a tokenHTML read and a tokenSupplementalData call.
 - `hedonicModel.js` — **the pricing model**: fitted multiples from `pricing-v2-coeffs.json` (built by `sales database/fit_hedonic.py`, refit daily by `ops/daily-refit.sh`) × live floor × `floor_calibration`. Returns a bid–ask range. Tier-2 specials (Godmode, Plague, seeds, Lith0) fall back to v1.
 - `pricingModel.js` — v1 hand-tuned model. Only served on `/legacy`, used for Tier-2 prices and as the fit's priors (`build_priors.js`). Also holds `SETS` / `detectSets`.
 - `snapshotTraits.js` — lookup-derived traits (special tokens, 1of1, Godmode, gm, Lith0-like, S0 window, ??? thresholds). Shared by the API and the offline pricing scripts — change them here only.
@@ -61,7 +63,7 @@ Applies to both minted and unminted from trait data:
 Manual list only — `special-tokens.json` for minted, `specialType` field in `unminted-parcels.json` for unminted. The `Resource` attribute does **not** contain a Spine value on-chain.
 
 ### Seed Extraction (Minted)
-Uses `tokenHTML(uint256)` contract call (not `tokenURI`) — the SVG has no SEED, the HTML does. Result is LRU-cached.
+The SEED lives in `tokenHTML(uint256)` (not `tokenURI`) — the SVG has no SEED, the HTML does. It never changes after mint, so it is read once by `scripts/bake-parcel-constants.js` into `parcel-constants.json`; a live tokenHTML read is only the fallback for a parcel missing from that file.
 
 ### Floor Price History
 `backend/src/floor-history.json` is an append-only time-series of `{ts, floor}` samples used by `/sales` to anchor each sale's estimate to the floor in effect at sale time, instead of the current floor (which would otherwise make every past sale look retroactively under/overvalued as the floor moves).
@@ -125,8 +127,9 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 
 1. **X/Y coords** — unminted shows `X3/Y4` in subtitle, minted does not — should be consistent.
 2. **1-of-1 unminted** — handle separately, not yet done.
-3. **Thumbnail weight** — parcel SVGs already reach browsers through the edge-cached `/img/:id`
-   proxy (`frontend/src/app/img`). Still not done, in priority order: pre-bake all 9,911 SVGs to
-   static files (tokenURI is immutable; `backend/scripts/bake-minted-traits.js` is the precedent);
-   raster thumbnails — the list view draws a ~30KB 277×400 SVG into a 67×97 box, where a 2× WebP
-   is ~2–4KB; then `srcset`/`sizes` so list rows get the small asset and cards the large one.
+3. **Thumbnail weight** — parcel SVGs reach browsers through the edge-cached `/img/:id` proxy
+   (`frontend/src/app/img`), and the backend serves them gzipped from memory (`parcelStore.js`).
+   Still not done: raster thumbnails — the list view draws a ~30KB 277×400 SVG into a 67×97 box,
+   where a 2× WebP is ~2–4KB; then `srcset`/`sizes` so list rows get the small asset and cards
+   the large one. (Static pre-baked SVGs were dropped as an idea: tokenURI changes on
+   daydream/terraform/antenna, so a bake would go stale.)

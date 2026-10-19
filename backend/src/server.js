@@ -1,4 +1,5 @@
 const express = require('express');
+const zlib = require('zlib');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -133,13 +134,6 @@ function getProvider() {
   return { provider, contract, antennaContract };
 }
 
-// ─── tokenURI / tokenHTML LRU CACHES ─────────────────────────────────────────
-// Terraforms tokenURIs/tokenHTML are immutable on-chain — safe to cache
-// indefinitely. Caching benefits both /image and /estimate (via getParcelTraits).
-// Max 500 entries each (~24MB worst-case); oldest entry evicted when full.
-const TOKEN_URI_CACHE_MAX = 500;
-const TOKEN_HTML_CACHE_MAX = 500;
-
 const RPC_TIMEOUT_MS = 15_000; // 15s timeout for contract calls
 
 function withTimeout(promise, ms = RPC_TIMEOUT_MS) {
@@ -149,36 +143,26 @@ function withTimeout(promise, ms = RPC_TIMEOUT_MS) {
   ]);
 }
 
-// Build an LRU + in-flight-dedup fetcher. `fetchFn(key)` performs the RPC call
-// for a numeric tokenId; results are cached (Map insertion order = LRU order),
-// the oldest entry is evicted past `max`, and concurrent cold-cache requests for
-// the same key share a single in-flight promise.
-function makeCachedFetcher(fetchFn, max) {
-  const cache = new Map();    // key -> value
-  const inFlight = new Map(); // key -> Promise
-  return function (tokenId) {
-    const key = Number(tokenId);
-    if (cache.has(key)) {
-      const value = cache.get(key);
-      cache.delete(key);
-      cache.set(key, value); // bump recency
-      return Promise.resolve(value);
-    }
-    if (inFlight.has(key)) return inFlight.get(key);
-    const p = withTimeout(fetchFn(key))
-      .then(value => {
-        if (cache.size >= max) cache.delete(cache.keys().next().value);
-        cache.set(key, value);
-        return value;
-      })
-      .finally(() => inFlight.delete(key));
-    inFlight.set(key, p);
-    return p;
-  };
-}
+// ─── PARCEL STORE ─────────────────────────────────────────────────────────────
+// Every minted parcel's tokenURI document (name, attributes, gzipped SVG) held
+// in memory, warmed at boot and refreshed by on-chain change events — see
+// parcelStore.js. It replaces the old 500-entry tokenURI/tokenHTML LRUs, which
+// a walk over the collection could thrash into one publicnode read per request.
+const { ParcelStore, startParcelEventPoller } = require('./parcelStore');
+const parcelStore = new ParcelStore({
+  fetchTokenURI: id => withTimeout(getProvider().contract.tokenURI(id)),
+});
 
-const getCachedTokenURI  = makeCachedFetcher(key => getProvider().contract.tokenURI(key), TOKEN_URI_CACHE_MAX);
-const getCachedTokenHTML = makeCachedFetcher(key => getProvider().contract.tokenHTML(key), TOKEN_HTML_CACHE_MAX);
+// Seed and x/y coordinates are fixed at mint, so they are baked once
+// (scripts/bake-parcel-constants.js) instead of costing a tokenHTML read (~50KB)
+// and a tokenSupplementalData call per /estimate. { "<id>": [seed, x, y] }.
+let PARCEL_CONSTANTS = {};
+try {
+  PARCEL_CONSTANTS = require('./parcel-constants.json');
+  console.log(`[snapshot] Loaded seed/x/y for ${Object.keys(PARCEL_CONSTANTS).length} parcels`);
+} catch {
+  console.warn('[snapshot] parcel-constants.json not found — seed and x/y fall back to RPC');
+}
 
 // Detect special type from metadata attributes
 function detectSpecialType(attributes) {
@@ -299,10 +283,40 @@ function currentTopOffer() {
 const LISTING_TTL_MS = 2 * 60 * 1000;
 const listingCache = new Map();   // tokenId -> { value, at }
 
+// Each lookup spends the OpenSea API key that the listings and sales feeds also
+// use, so a walk over every parcel page could rate-limit the key and break the
+// feeds for everyone. Lookups are capped across all visitors; past the cap a
+// parcel's listing is read from the cached listings feed instead (up to its
+// refresh interval old), and not cached here, so the next lookup goes direct.
+const LISTING_LOOKUPS_PER_MIN = 60;
+let listingLookups = { windowStart: 0, count: 0 };
+
+function listingLookupAllowed() {
+  const now = Date.now();
+  if (now - listingLookups.windowStart >= 60_000) listingLookups = { windowStart: now, count: 0 };
+  if (listingLookups.count >= LISTING_LOOKUPS_PER_MIN) return false;
+  listingLookups.count += 1;
+  return true;
+}
+
+function listingFromFeed(tokenId) {
+  const feed = listingsResource.peek();
+  const p = feed?.parcels?.find(x => x.tokenId === tokenId);
+  if (!p) return null;
+  return {
+    price: p.listedPrice,
+    currency: 'ETH',
+    seller: p.owner,
+    expiresAt: null,
+    url: `https://opensea.io/assets/ethereum/${TERRAFORMS_ADDRESS}/${tokenId}`,
+  };
+}
+
 async function getBestListing(tokenId) {
   if (!OPENSEA_API_KEY) return null;
   const hit = listingCache.get(tokenId);
   if (hit && Date.now() - hit.at < LISTING_TTL_MS) return hit.value;
+  if (!listingLookupAllowed()) return listingFromFeed(tokenId);
 
   let value = null;
   try {
@@ -333,9 +347,9 @@ async function getBestListing(tokenId) {
     return null;
   }
   listingCache.set(tokenId, { value, at: Date.now() });
-  // Bound the cache the same way the tokenURI caches are bounded.
-  if (listingCache.size > 5000) {
-    for (const k of listingCache.keys()) { listingCache.delete(k); if (listingCache.size <= 4000) break; }
+  // Bounded, but large enough for the whole collection.
+  if (listingCache.size > 12000) {
+    for (const k of listingCache.keys()) { listingCache.delete(k); if (listingCache.size <= 10000) break; }
   }
   return value;
 }
@@ -570,7 +584,11 @@ function createCachedResource({ compute, ttlMs, backoffMs = 60_000, swr = false,
     }
     return inFlight || start();
   }
-  return { get, stats };
+  // The held data, however old, without ever starting a compute (null when cold).
+  function peek() {
+    return cache.data;
+  }
+  return { get, stats, peek };
 }
 
 // Resolve traits for items that each carry a numeric `tokenId`: snapshot first
@@ -609,6 +627,7 @@ async function resolveListingTraits(items, logTag = '[traits]') {
 const ensNameCache = new Map(); // lc address → { name: string|null, ts }
 const ENS_NAME_TTL_MS = 6 * 60 * 60 * 1000;
 const ENS_LOOKUP_CONCURRENCY = 6;
+const ENS_CACHE_MAX = 20_000;
 
 async function resolveEnsNames(addresses) {
   const now = Date.now();
@@ -640,6 +659,14 @@ async function resolveEnsNames(addresses) {
       ensNameCache.set(addr, { name, ts: now });
       out[addr] = name;
     });
+  }
+  // /wallet accepts any address, so the cache is bounded: holders and traders
+  // number a few thousand; past 20k entries the oldest go first.
+  if (ensNameCache.size > ENS_CACHE_MAX) {
+    for (const k of ensNameCache.keys()) {
+      ensNameCache.delete(k);
+      if (ensNameCache.size <= ENS_CACHE_MAX * 0.9) break;
+    }
   }
   return out;
 }
@@ -1092,59 +1119,97 @@ app.get('/stats', async (_req, res) => {
   }
 });
 
+// Seed from tokenHTML (`const SEED=X;` — the SVG has none). Only for a parcel
+// missing from parcel-constants.json; normally the baked value is used.
+async function readSeedLive(tokenId) {
+  try {
+    const html = await withTimeout(getProvider().contract.tokenHTML(tokenId));
+    const m = html.match(/\bSEED\s*=\s*(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  } catch (err) {
+    console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
+    return null;
+  }
+}
+
+// X/Y coordinates from tokenSupplementalData via raw call (fallback, as above).
+// The function returns a struct memory, which ABI-encodes as:
+//   [0x20 outer pointer (32 bytes) | slot0 (32) | level (32) | xCoordinate (32) | yCoordinate (32) | ...]
+// xCoordinate is at byte offset 96, yCoordinate at byte offset 128.
+async function readCoordsLive(tokenId) {
+  try {
+    const { provider } = getProvider();
+    const selector = ethers.id('tokenSupplementalData(uint256)').slice(0, 10);
+    const arg = ethers.zeroPadValue(ethers.toBeHex(tokenId), 32);
+    const raw = await withTimeout(provider.call({ to: TERRAFORMS_ADDRESS, data: selector + arg.slice(2) }));
+    if (raw && raw.length >= 322) {
+      return [Number(BigInt('0x' + raw.slice(194, 258))), Number(BigInt('0x' + raw.slice(258, 322)))];
+    }
+  } catch (err) {
+    console.warn(`[traits] Token ${tokenId}: tokenSupplementalData failed (${err.message}) — x/y will be null`);
+  }
+  return [null, null];
+}
+
+// Antenna state on the Antenna contract: on/off is getAntennaStatus, not the
+// tokenURI's Antenna attribute, which a v1-rendered parcel omits even with its
+// antenna on — same rule as scripts/trait-record.js.
+async function readAntennaLive(tokenId, attrs = []) {
+  const { antennaContract: ac } = getProvider();
+  let antennaOn;
+  try {
+    antennaOn = Number(await withTimeout(ac.getAntennaStatus(tokenId))) === 1;
+  } catch (err) {
+    antennaOn = attrs.find(a => a.trait_type === 'Antenna')?.value === 'On';
+  }
+  let antennaFirstTs = 0;
+  if (antennaOn) {
+    try {
+      const rec = await withTimeout(ac.getFirstAntennaModification(tokenId));
+      antennaFirstTs = Number(rec[2]);
+    } catch (err) {
+      // Reverts with "No antenna modifications" if never modified — leave at 0.
+    }
+  }
+  return { antennaOn, antennaFirstTs };
+}
+
+// Antenna state for a parcel page: the nightly minted-traits snapshot, replaced
+// by a live read when the event poller sees that parcel's antenna change. Only a
+// parcel missing from both is read live here, so a page view costs no RPC.
+const antennaOverrides = new Map(); // tokenId -> { antennaOn, antennaFirstTs }
+async function antennaState(tokenId, attrs) {
+  const live = antennaOverrides.get(tokenId);
+  if (live) return live;
+  const snap = MINTED_TRAITS_SNAPSHOT?.get(tokenId);
+  if (snap && typeof snap.antennaOn === 'boolean') {
+    return { antennaOn: snap.antennaOn, antennaFirstTs: snap.antennaFirstTs || 0 };
+  }
+  return readAntennaLive(tokenId, attrs);
+}
+
 // Parse all traits from tokenURI metadata
 // Zone and Level are read from tokenURI attributes (trait_type "Zone" / "Level").
 // tokenSupplementalData has a struct ABI mismatch and is not used.
 //
-// `seed` and `x`/`y` each cost an extra RPC round trip (tokenHTML and a raw
-// tokenSupplementalData call) on top of tokenURI. Callers that don't display
-// them — the wallet grid, for one — pass includeSeed/includeCoords false and
-// cut per-parcel RPC traffic by roughly two thirds, which is the difference
-// between enumerating a 100+ parcel wallet inside the time budget and
-// truncating it.
+// Everything here is served without a per-request RPC call: the tokenURI
+// document from parcelStore, seed and x/y from parcel-constants.json, antenna
+// from antennaState. includeSeed/includeCoords still let callers that never show
+// those fields (the wallet grid, the feeds) skip them.
 async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = true } = {}) {
   try {
-    const uri = await getCachedTokenURI(tokenId);
+    const { attributes } = await parcelStore.get(tokenId);
 
     let zone = null, level = null, biome = null, chroma = null, mode = null,
         specialType = null, isOneOfOne = false, isGodmode = false, isS0 = false,
         isLith0like = false, isGm = false, mysteryValue = null, seed = null,
         x = null, y = null;
 
-    if (uri.startsWith('data:application/json;base64,')) {
-      const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
-      const attrs = json.attributes || [];
-
-      // Extract seed from tokenHTML (on-chain HTML animation contains `const SEED=X;`)
-      // The SVG from tokenURI is static and has no SEED — tokenHTML is the correct source.
-      if (includeSeed) {
-        try {
-          const html = await getCachedTokenHTML(tokenId);
-          const m = html.match(/\bSEED\s*=\s*(\d+)/);
-          if (m) seed = parseInt(m[1], 10);
-        } catch (err) {
-          console.warn(`[traits] Token ${tokenId}: tokenHTML failed (${err.message}) — seed will be null`);
-        }
-      }
-
-      // Extract X/Y coordinates from tokenSupplementalData via raw call.
-      // The function returns a struct memory, which ABI-encodes as:
-      //   [0x20 outer pointer (32 bytes) | slot0 (32) | level (32) | xCoordinate (32) | yCoordinate (32) | ...]
-      // xCoordinate is at byte offset 96, yCoordinate at byte offset 128.
-      if (includeCoords) {
-        try {
-          const { provider } = getProvider();
-          const selector = ethers.id('tokenSupplementalData(uint256)').slice(0, 10);
-          const arg = ethers.zeroPadValue(ethers.toBeHex(tokenId), 32);
-          const raw = await withTimeout(provider.call({ to: TERRAFORMS_ADDRESS, data: selector + arg.slice(2) }));
-          if (raw && raw.length >= 322) {
-            x = Number(BigInt('0x' + raw.slice(194, 258)));
-            y = Number(BigInt('0x' + raw.slice(258, 322)));
-          }
-        } catch (err) {
-          console.warn(`[traits] Token ${tokenId}: tokenSupplementalData failed (${err.message}) — x/y will be null`);
-        }
-      }
+    {
+      const attrs = attributes;
+      const constants = PARCEL_CONSTANTS[Number(tokenId)];
+      if (includeSeed) seed = constants ? constants[0] : await readSeedLive(tokenId);
+      if (includeCoords) [x, y] = constants ? [constants[1], constants[2]] : await readCoordsLive(tokenId);
 
       zone = attrs.find(a => a.trait_type === 'Zone')?.value || null;
       level = parseInt(attrs.find(a => a.trait_type === 'Level')?.value ?? -1, 10);
@@ -1160,26 +1225,8 @@ async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = tr
       isGm        = GM_IDS.has(Number(tokenId));
       // S0 (Season 0) — parcels whose antenna was first turned on during the
       // V2 launch window (2023-12-24 → 2024-01-13 UTC). Antenna state and
-      // activation timestamps live on a separate contract. On/off is the
-      // contract's getAntennaStatus, not the tokenURI's Antenna attribute, which
-      // a v1-rendered parcel omits even with its antenna on — same rule as
-      // scripts/trait-record.js, so a parcel page and the snapshot agree.
-      const { antennaContract: ac } = getProvider();
-      let antennaOn;
-      try {
-        antennaOn = Number(await withTimeout(ac.getAntennaStatus(tokenId))) === 1;
-      } catch (err) {
-        antennaOn = attrs.find(a => a.trait_type === 'Antenna')?.value === 'On';
-      }
-      let antennaFirstTs = 0;
-      if (antennaOn) {
-        try {
-          const rec = await withTimeout(ac.getFirstAntennaModification(tokenId));
-          antennaFirstTs = Number(rec[2]);
-        } catch (err) {
-          // Reverts with "No antenna modifications" if never modified — leave at 0.
-        }
-      }
+      // activation timestamps live on a separate contract; see antennaState.
+      const { antennaOn, antennaFirstTs } = await antennaState(Number(tokenId), attrs);
       isS0 = computeIsS0(antennaOn, antennaFirstTs);
       // '???' trait — the watermark level, controlling how much of the parcel surface is flooded by
       // the liquid animation. Derived from Perlin Noise; locked on-chain but delegatable to an external
@@ -1214,9 +1261,7 @@ async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = tr
   }
 }
 
-// GET /estimate/:tokenId
-// GET /image/:tokenId — serves the on-chain SVG directly from tokenURI
-// The SVG is base64-encoded inside the JSON image field.
+// GET /image/:tokenId — serves the on-chain SVG from the parcel store.
 // Note: parcels can change mode (terraform/daydream), so no long-term caching.
 // Locks an SVG response down so any inline scripts in on-chain markup can't
 // execute if the URL is opened directly in a browser tab. Inline styles are
@@ -1235,32 +1280,21 @@ app.get('/image/:tokenId', async (req, res) => {
       return res.status(400).send('Invalid token ID');
     }
 
-    const uri = await getCachedTokenURI(tokenId);
+    const { svgGz } = await parcelStore.get(tokenId);
+    if (!svgGz) return res.status(500).send('Unrecognised image format in tokenURI');
 
-    if (!uri.startsWith('data:application/json;base64,')) {
-      return res.status(500).send('Unexpected tokenURI format');
+    setSvgResponseHeaders(res);
+    // A parcel's image changes when it is dreamed, terraformed or its antenna
+    // is switched, so it is not immutable: an hour fresh, then served stale while
+    // the browser revalidates (a 304 via the ETag when nothing changed).
+    res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    res.setHeader('Vary', 'Accept-Encoding');
+    // The store holds the SVG gzipped; send those bytes as-is to anyone who takes gzip.
+    if (req.acceptsEncodings('gzip')) {
+      res.setHeader('Content-Encoding', 'gzip');
+      return res.send(svgGz);
     }
-
-    const json = JSON.parse(Buffer.from(uri.slice(29), 'base64').toString());
-    const image = json.image || '';
-
-    if (image.startsWith('data:image/svg+xml;base64,')) {
-      const svg = Buffer.from(image.slice(26), 'base64');
-      setSvgResponseHeaders(res);
-      // tokenURI is immutable on-chain, so this can never go stale — `immutable`
-      // stops the browser revalidating it at all (matches /unminted/font below).
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      return res.send(svg);
-    }
-
-    if (image.startsWith('data:image/svg+xml,')) {
-      const svg = decodeURIComponent(image.slice(19));
-      setSvgResponseHeaders(res);
-      res.setHeader('Cache-Control', 'public, max-age=300');
-      return res.send(svg);
-    }
-
-    res.status(500).send('Unrecognised image format in tokenURI');
+    return res.send(zlib.gunzipSync(svgGz));
   } catch (err) {
     console.error(`[image] ${req.params.tokenId}:`, err.message);
     const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 277 400" width="277" height="400"><rect width="277" height="400" fill="#1a1918"/><text x="138" y="185" font-size="80" text-anchor="middle" dominant-baseline="middle">⛱</text><text x="138" y="260" font-family="monospace" font-size="11" fill="#ffffff" opacity="0.4" text-anchor="middle">parcel did not load</text></svg>`;
@@ -1272,10 +1306,13 @@ app.get('/image/:tokenId', async (req, res) => {
 
 // ─── PARCEL OWNER ─────────────────────────────────────────────────────────────
 // Who holds a parcel right now, for the owner row on the parcel page. ownerOf is
-// one RPC call; a minute of cache spares repeat views without letting a sale
-// show the old owner for long. A parcel in a loan escrow reports the escrow
+// one RPC call. The event poller drops a parcel's entry as soon as it sees a
+// Transfer (startup, below), so a sale shows its new owner within about a
+// minute however long the TTL; the TTL only backstops a missed event. Sized for
+// the whole collection so a walk over every parcel page can't evict its way
+// back to one ownerOf per request. A parcel in a loan escrow reports the escrow
 // contract, which is the truth on chain.
-const OWNER_TTL_MS = 60 * 1000;
+const OWNER_TTL_MS = 30 * 60 * 1000;
 const ownerCache = new Map();   // tokenId -> { address, at }
 
 async function getOwner(tokenId) {
@@ -1284,8 +1321,8 @@ async function getOwner(tokenId) {
   try {
     const address = await withTimeout(getProvider().contract.ownerOf(tokenId), 8_000);
     ownerCache.set(tokenId, { address, at: Date.now() });
-    if (ownerCache.size > 5000) {
-      for (const k of ownerCache.keys()) { ownerCache.delete(k); if (ownerCache.size <= 4000) break; }
+    if (ownerCache.size > 12000) {
+      for (const k of ownerCache.keys()) { ownerCache.delete(k); if (ownerCache.size <= 10000) break; }
     }
     return address;
   } catch (err) {
@@ -1425,7 +1462,7 @@ app.get('/wallet/:address', async (req, res) => {
     // Batched enumeration — fan-out is capped per batch so public RPCs (which
     // silently rate-limit beyond ~20–50 concurrent requests) don't drop calls
     // and corrupt the token list. Each call still gets the standard RPC timeout
-    // via withTimeout inside getCachedTokenURI; the outer 30s budget here just
+    // via withTimeout; the outer 30s budget here just
     // bounds the total enumeration walltime, across every wallet in the request.
     const ENUM_BATCH_SIZE = 20;
     const tokenIds = [];
@@ -2042,8 +2079,10 @@ app.get('/health', async (_req, res) => {
       listings: listingsResource.stats(),
       sales: salesResource.stats(),
     },
+    parcels: parcelStore.stats(),
     data: {
       mintedTraitsSnapshot: MINTED_TRAITS_SNAPSHOT ? MINTED_TRAITS_SNAPSHOT.size : 0,
+      parcelConstants: Object.keys(PARCEL_CONSTANTS).length,
       unmintedParcels: UNMINTED_PARCELS.length,
       floorHistorySamples: FLOOR_HISTORY.length,
       salesHistory: salesHistory.size(),
@@ -2350,6 +2389,27 @@ app.listen(PORT, async () => {
       }
     }
   })();
+  // Fill the parcel store (~10 RPC reads/s, ~17 min for the collection; requests
+  // for parcels not yet held are read on demand meanwhile), then keep it current:
+  // re-read a parcel within a minute of an event that changes it, drop a
+  // parcel's cached owner when it transfers, and re-read everything daily.
+  parcelStore.warm({ concurrency: 4, delayMs: 400 });
+  setInterval(() => parcelStore.warm({ concurrency: 2, delayMs: 400, force: true }), 24 * 60 * 60 * 1000).unref();
+  startParcelEventPoller({
+    provider: getProvider().provider,
+    addresses: [TERRAFORMS_ADDRESS, ANTENNA_ADDRESS],
+    onLogs: ({ changed, antenna, transferred }) => {
+      if (changed.size) {
+        console.log(`[parcels] on-chain change: ${[...changed].map(id => `#${id}`).join(' ')} — re-reading`);
+        parcelStore.refresh(changed);
+      }
+      for (const id of antenna) {
+        readAntennaLive(id).then(s => antennaOverrides.set(id, s)).catch(() => {});
+      }
+      for (const id of transferred) ownerCache.delete(id);
+    },
+    onGap: () => parcelStore.warm({ concurrency: 2, delayMs: 400, force: true }),
+  });
   if (!process.env.ALCHEMY_API_KEY) console.warn('[startup] ALCHEMY_API_KEY not set — floor price will use hardcoded fallback');
   if (!process.env.OPENSEA_API_KEY) console.warn('[startup] OPENSEA_API_KEY not set — listings and sales feeds disabled');
   try {

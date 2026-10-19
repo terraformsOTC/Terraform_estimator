@@ -7,19 +7,23 @@ import { API_URL } from '@/components/shared';
 // cf-cache-status: DYNAMIC for them). That is 145 round-trips to a single
 // origin at 0.2–0.8s each, and it is the whole reason the page feels slow.
 //
-// tokenURI is immutable on-chain, so the bytes for a parcel never change.
 // Serving them through here puts them on Vercel's edge network: the first
 // request for a parcel goes to Render, every one after that — for every
 // visitor, from the nearest PoP — is a cache hit. Same-origin also means the
 // browser reuses the page's existing connection instead of opening a second
 // one to Render.
 //
+// A parcel's image is NOT immutable: dreaming, terraforming and antenna changes
+// redraw it. So the edge and the browser hold it for an hour and then serve it
+// stale while revalidating in the background — a changed parcel shows its new
+// image within about an hour, and Render (which answers from memory) sees at
+// most one revalidation per parcel per PoP per hour.
+//
 // The upstream error path returns a placeholder SVG with `no-store`; that is
-// honoured below so a transient RPC failure never gets pinned at the edge for
-// a year.
+// honoured below so a transient RPC failure never gets pinned at the edge.
 
 const MAX_TOKEN_ID = 9911;
-const IMMUTABLE = 'public, max-age=31536000, s-maxage=31536000, immutable';
+const CACHE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400';
 
 export async function GET(request, { params }) {
   const { tokenId } = await params;
@@ -59,7 +63,7 @@ export async function GET(request, { params }) {
     status: 200,
     headers: {
       'Content-Type': upstream.headers.get('content-type') || 'image/svg+xml',
-      'Cache-Control': cacheable ? IMMUTABLE : 'no-store',
+      'Cache-Control': cacheable ? CACHE : 'no-store',
     },
   });
 }
