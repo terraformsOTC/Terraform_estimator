@@ -2422,10 +2422,15 @@ function parsePremium(v) {
   return n / 100;
 }
 
-// GET /collection/catalog — the presets and every value a custom goal can use.
+// GET /collection/catalog — the presets, every value a custom goal can use and
+// which of them occur together on minted parcels (`combos`), rebuilt with the
+// universe.
+let catalogCache = { at: -1, body: null };
 app.get('/collection/catalog', (_req, res) => {
-  res.set('Cache-Control', 'public, max-age=3600');
-  res.json(collectionHelper.catalog());
+  const universe = collectionUniverse();
+  if (catalogCache.at !== universe.at) catalogCache = { at: universe.at, body: collectionHelper.catalog(universe.items) };
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json(catalogCache.body);
 });
 
 // GET /collection?wallets=a,b&goals=set:full-zone,chroma&custom=<base64url JSON>

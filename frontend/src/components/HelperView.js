@@ -41,6 +41,7 @@ const PREMIUMS = [
   { value: '50', label: 'up to 50% over model' },
 ];
 const FIELD_LABELS = { zone: 'zone', biome: 'biome', level: 'level', chroma: 'chroma', mode: 'mode', trait: 'special trait' };
+const FIELD_NAMES = Object.keys(FIELD_LABELS);
 
 // ─── state ───────────────────────────────────────────────────────────────────
 const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, custom: [], budget: '', max: '', prem: '' });
@@ -405,7 +406,7 @@ function GoalsPanel({ state, catalog, update }) {
             </span>
           ))}
           {state.custom.length < catalog.limits.customGoals && (
-            <CustomGoalBuilder fields={catalog.fields} onAdd={spec => update({ custom: [...state.custom, spec] })} />
+            <CustomGoalBuilder catalog={catalog} onAdd={spec => update({ custom: [...state.custom, spec] })} />
           )}
         </div>
       </div>
@@ -478,56 +479,114 @@ function valuesFor(fields, field) {
   return (fields[field] || []).map(v => ({ value: v, label: field === 'biome' ? `biome ${v}` : field === 'level' ? `level ${v}` : String(v) }));
 }
 
-function CustomGoalBuilder({ fields, onAdd }) {
-  const [kind, setKind] = useState('each');          // 'each' | 'one'
-  const [each, setEach] = useState('biome');
-  const [conds, setConds] = useState([{ field: 'chroma', value: 'Pulse' }]);
-  const fieldNames = Object.keys(FIELD_LABELS);
-  const setCond = (i, patch) => setConds(cs => cs.map((c, j) => (j === i ? { ...c, ...patch } : c)));
-  const usable = conds.filter(c => c.field && c.value !== '' && c.value != null && !(kind === 'each' && c.field === each));
+// What a condition can offer: only values some minted parcel has alongside the
+// conditions above it, so a combination no parcel has (Shahra in Plague) can't
+// be built. catalog.combos holds one row per combination that exists, each
+// field an index into catalog.fields and the trait a bit mask over
+// fields.trait (combinations in backend/src/collectionHelper.js). A catalog
+// without it, cached from before, offers every value as it used to.
+function makeFacets({ fields, combos }) {
+  const col = Object.fromEntries((combos?.fields || []).map((f, i) => [f, i]));
+  const rows = combos?.rows?.length && FIELD_NAMES.every(f => f in col) ? combos.rows : null;
+  const index = Object.fromEntries(FIELD_NAMES.map(f => [f, new Map(valuesFor(fields, f).map((o, i) => [o.value, i]))]));
+  const has = (row, field, i) => (field === 'trait' ? (row[col.trait] & (1 << i)) !== 0 : row[col[field]] === i);
+  return {
+    values(field, where = []) {
+      const all = valuesFor(fields, field);
+      if (!rows) return all;
+      const keys = where.map(c => [c.field, index[c.field].get(c.value)]);
+      const seen = new Set();
+      for (const row of rows) {
+        if (!keys.every(([f, i]) => i != null && has(row, f, i))) continue;
+        if (field === 'trait') all.forEach((_, i) => { if (has(row, 'trait', i)) seen.add(i); });
+        else seen.add(row[col[field]]);
+      }
+      return all.filter((_, i) => seen.has(i));
+    },
+  };
+}
+
+// Keeps a draft goal one that some parcel meets, after every edit: a condition
+// on the "every" field goes (every zone already spans the zones), and a value
+// no parcel has alongside the conditions above it gives way to the first that
+// one does. A trait condition left with no value at all goes too.
+function settle(draft, facets) {
+  const used = new Set(draft.kind === 'each' ? [draft.each] : []);
+  const conds = [];
+  for (const c of draft.conds) {
+    if (used.has(c.field)) continue;
+    const opts = facets.values(c.field, conds);
+    if (!opts.length) continue;
+    conds.push({ field: c.field, value: opts.some(o => o.value === c.value) ? c.value : opts[0].value });
+    used.add(c.field);
+  }
+  return { ...draft, conds };
+}
+
+function CustomGoalBuilder({ catalog, onAdd }) {
+  const facets = useMemo(() => makeFacets(catalog), [catalog]);
+  // kind: 'each' (one of every <each>) | 'one' (a parcel with)
+  const [draft, setDraft] = useState(() => settle({ kind: 'each', each: 'biome', conds: [{ field: 'chroma', value: 'Pulse' }] }, facets));
+  const { kind, each, conds } = draft;
+  const edit = fn => setDraft(d => settle(fn(d), facets));
+  const setCond = (i, patch) => edit(d => ({ ...d, conds: d.conds.map((c, j) => (j === i ? { ...c, ...patch } : c)) }));
+  // Per condition, the fields it can switch to (none another condition or the
+  // "every" field has, and only ones the rows above leave a value for) and its
+  // values; and what [+ condition] adds: the first such field, its first value.
+  const { options, next } = useMemo(() => {
+    const open = (above, skip) => {
+      const taken = new Set([...(kind === 'each' ? [each] : []), ...conds.filter((_, j) => j !== skip).map(c => c.field)]);
+      return FIELD_NAMES.filter(f => !taken.has(f) && facets.values(f, above).length > 0);
+    };
+    const nextField = open(conds, -1)[0];
+    return {
+      options: conds.map((c, i) => ({ fields: open(conds.slice(0, i), i), values: facets.values(c.field, conds.slice(0, i)) })),
+      next: nextField ? { field: nextField, value: facets.values(nextField, conds)[0].value } : null,
+    };
+  }, [kind, each, conds, facets]);
   const add = () => {
-    const where = Object.fromEntries(usable.map(c => [c.field, c.value]));
-    if (kind === 'one' && usable.length === 0) return;
-    onAdd(kind === 'each' ? (usable.length ? { each, where } : { each }) : { where });
+    const where = Object.fromEntries(conds.map(c => [c.field, c.value]));
+    if (kind === 'one' && conds.length === 0) return;
+    onAdd(kind === 'each' ? (conds.length ? { each, where } : { each }) : { where });
   };
   return (
     <div className="flex flex-col gap-2 text-sm mt-1 p-2" style={BOX}>
       <div className="flex flex-wrap items-center gap-2">
-        <select style={SELECT} value={kind} onChange={e => setKind(e.target.value)} aria-label="Goal type">
+        <select style={SELECT} value={kind} onChange={e => edit(d => ({ ...d, kind: e.target.value }))} aria-label="Goal type">
           <option value="each">one of every</option>
           <option value="one">a parcel with</option>
         </select>
         {kind === 'each' && (
-          <select style={SELECT} value={each} onChange={e => setEach(e.target.value)} aria-label="Collect one of every">
-            {fieldNames.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
+          <select style={SELECT} value={each} onChange={e => edit(d => ({ ...d, each: e.target.value }))} aria-label="Collect one of every">
+            {FIELD_NAMES.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
           </select>
         )}
       </div>
       {conds.map((c, i) => (
         <div key={i} className="flex flex-wrap items-center gap-2">
           <span className="opacity-60">{kind === 'each' ? (i === 0 ? 'where' : 'and') : (i === 0 ? '' : 'and')}</span>
-          <select style={SELECT} value={c.field} onChange={e => setCond(i, { field: e.target.value, value: valuesFor(fields, e.target.value)[0]?.value ?? '' })} aria-label="Condition field">
-            {fieldNames.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
+          <select style={SELECT} value={c.field} onChange={e => setCond(i, { field: e.target.value, value: null })} aria-label="Condition field">
+            {options[i].fields.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
           </select>
           <select
             style={SELECT}
             value={String(c.value)}
             onChange={e => {
-              const opt = valuesFor(fields, c.field).find(o => String(o.value) === e.target.value);
-              setCond(i, { value: opt ? opt.value : e.target.value });
+              const opt = options[i].values.find(o => String(o.value) === e.target.value);
+              if (opt) setCond(i, { value: opt.value });
             }}
             aria-label="Condition value"
           >
-            {valuesFor(fields, c.field).map(o => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
+            {options[i].values.map(o => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
           </select>
-          <button type="button" className="opacity-50 hover:opacity-100 text-xs" onClick={() => setConds(cs => cs.filter((_, j) => j !== i))}>[×]</button>
+          <button type="button" className="opacity-50 hover:opacity-100 text-xs" onClick={() => edit(d => ({ ...d, conds: d.conds.filter((_, j) => j !== i) }))}>[×]</button>
         </div>
       ))}
       <div className="flex flex-wrap gap-2">
-        {conds.length < 3 && (
-          <button type="button" className="btn-primary btn-xs" onClick={() => setConds(cs => [...cs, { field: 'zone', value: fields.zone[0] }])}>[+ condition]</button>
+        {conds.length < 3 && next && (
+          <button type="button" className="btn-primary btn-xs" onClick={() => edit(d => ({ ...d, conds: [...d.conds, next] }))}>[+ condition]</button>
         )}
-        <button type="button" className="btn-primary btn-xs" onClick={add} disabled={kind === 'one' && usable.length === 0}>[add goal]</button>
+        <button type="button" className="btn-primary btn-xs" onClick={add} disabled={kind === 'one' && conds.length === 0}>[add goal]</button>
       </div>
     </div>
   );

@@ -185,3 +185,20 @@ test('a target shared by two groups is filled once', () => {
   assert.equal(res.shoppingList.picks.length, 1);
   assert.deepEqual(res.shoppingList.picks[0].fills, ['zone:Shahra']);
 });
+
+test('catalog combos hold only the combinations some parcel has', () => {
+  const universe = [
+    parcel({ zone: 'Holo', biome: 3, chroma: 'Plague' }),
+    parcel({ zone: 'Holo', biome: 3, chroma: 'Plague' }),                  // the same combination: one row
+    parcel({ zone: 'Shahra', biome: 7, level: 20, specialType: 'Spine' }),
+    { tokenId: 9200, traits: null },                                       // traits not loaded yet
+  ];
+  const { fields, combos } = catalog(universe);
+  const read = row => Object.fromEntries(combos.fields.map((f, i) => [f,
+    f === 'trait' ? fields.trait.filter((_, b) => row[i] & (1 << b)).map(t => t.id) : fields[f][row[i]]]));
+  assert.deepEqual(combos.rows.map(read), [
+    { zone: 'Holo', biome: 3, level: 5, chroma: 'Plague', mode: 'Terrain', trait: [] },
+    { zone: 'Shahra', biome: 7, level: 20, chroma: 'Flow', mode: 'Terrain', trait: ['spine', 'penthouse'] },
+  ]);
+  assert.equal(catalog().combos, undefined); // no parcels given, so no claim about what exists
+});

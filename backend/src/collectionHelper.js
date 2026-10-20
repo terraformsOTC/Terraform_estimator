@@ -197,8 +197,42 @@ function buildRubric({ presets = [], custom = [] } = {}) {
   return groups;
 }
 
-/** What the page needs to offer: the presets and every value a custom goal can use. */
-function catalog() {
+// The fields of a combination row, in order (see combinations).
+const COMBO_FIELDS = ['zone', 'biome', 'level', 'chroma', 'mode', 'trait'];
+
+/**
+ * Which custom-goal values occur together on real parcels, so the page offers
+ * only conditions some parcel meets (no Shahra once Plague is picked). One row
+ * per distinct combination: each field as the index of its value in
+ * catalog().fields, and `trait` as a bit mask over fields.trait, since a
+ * parcel can carry several.
+ */
+function combinations(items) {
+  const single = COMBO_FIELDS.filter(f => f !== 'trait');
+  const index = Object.fromEntries(single.map(f => [f, new Map(FIELDS[f].values.map((v, i) => [v, i]))]));
+  const seen = new Set();
+  const rows = [];
+  for (const { traits: t } of items) {
+    if (!t) continue;
+    const row = single.map(f => index[f].get(FIELDS[f].get(t)));
+    if (row.some(i => i == null)) continue;
+    let mask = 0;
+    SPECIAL_TRAITS.forEach((s, i) => { if (hasTrait(t, s.id)) mask |= 1 << i; });
+    row.push(mask);
+    const key = row.join(',');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * What the page needs to offer: the presets, every value a custom goal can use
+ * and, given every minted parcel ([{ tokenId, traits }]), which of those values
+ * occur together.
+ */
+function catalog(items = null) {
   return {
     presets: PRESETS.map(p => {
       const g = p.build();
@@ -208,6 +242,7 @@ function catalog() {
       zone: ALL_ZONES, biome: ALL_BIOMES, level: LEVELS, chroma: CHROMAS, mode: MODES,
       trait: SPECIAL_TRAITS,
     },
+    ...(items ? { combos: { fields: COMBO_FIELDS, rows: combinations(items) } } : {}),
     limits: { customGoals: MAX_CUSTOM_SPECS },
   };
 }
@@ -379,4 +414,4 @@ function shoppingList(unmet, market, { budget = null, maxPrice = null, maxPremiu
   };
 }
 
-module.exports = { buildRubric, evaluate, shoppingList, catalog, RubricError, CHROMAS, MODES, PRESETS };
+module.exports = { buildRubric, evaluate, shoppingList, catalog, combinations, RubricError, CHROMAS, MODES, PRESETS };
