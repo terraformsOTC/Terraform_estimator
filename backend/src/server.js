@@ -374,7 +374,9 @@ function safeHedonic(traits, floor, opts) {
 // push to main). Used by /sales to anchor each sale's estimate to the floor
 // in effect at the time of sale, rather than the current floor.
 //
-// Format: [{ ts: <unix seconds>, floor: <ETH> }] sorted ascending by ts.
+// Format: [{ ts: <unix seconds>, floor: <ETH>, bid?: <ETH> }] sorted ascending
+// by ts. `bid` is the standing collection-wide offer, recorded since 2026-09-23;
+// the sales feeds grade each sale with the bid standing then (bidAt in sales.js).
 let FLOOR_HISTORY = [];
 try {
   FLOOR_HISTORY = require('./floor-history.json');
@@ -398,7 +400,10 @@ function recordFloorSample(nowMs, floor) {
   const ts = Math.floor(nowMs / 1000);
   const last = FLOOR_HISTORY[FLOOR_HISTORY.length - 1];
   if (last && ts - last.ts < FLOOR_SAMPLE_MIN_GAP_S) return;
-  FLOOR_HISTORY.push({ ts, floor });
+  // The bid too, as the hourly sampler records it, or a sale since the last
+  // push would be graded without the offer floor the site was showing.
+  const bid = topOfferCache.value;
+  FLOOR_HISTORY.push(bid > 0 ? { ts, floor, bid } : { ts, floor });
   if (FLOOR_HISTORY.length > FLOOR_HISTORY_MAX) FLOOR_HISTORY.shift();
 }
 
@@ -909,7 +914,7 @@ app.get('/listings', async (req, res) => {
 // Live "sales vs. estimate" feed. Mirrors the caching + in-flight guard pattern
 // cold-path fans out to RPC for traits on every
 // scanned sale, so without the guard a burst of requests would multiply load.
-const { computeRecentSales } = require('./sales');
+const { computeRecentSales, bidAt } = require('./sales');
 const SALES_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes, matches /listings
 const SALES_BACKOFF_MS = 60_000;
 // Floor on the [refresh sales] button: a forced recompute no more than once a
@@ -924,6 +929,7 @@ const salesResource = createCachedResource({
     getParcelTraits,
     getFloorPrice,
     floorAt,
+    offerAt: (ts) => bidAt(FLOOR_HISTORY, ts),
     resolveEns: resolveEnsNames,
     topOffer: currentTopOffer,
     limit: 50,

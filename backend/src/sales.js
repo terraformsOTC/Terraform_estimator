@@ -65,9 +65,14 @@ const PREMIUM_OVER_FLOOR = 0.05;
 // the model side-matched, because "was the model right" is a different question
 // from "what did this parcel go for against its worth".
 //
-// modelOn rather than on: applyOfferFloor lifts the estimate toward the standing
-// collection-wide WETH bid, which is bid-side information. `on` already equals
-// modelOn wherever that floor did not fire.
+// Precisely, it is the ask side as the site showed it when the parcel sold: `on`
+// after applyOfferFloor, with the collection-wide bid standing at that moment
+// (bidAt below). It used to be modelOn, the ask before the offer floor, on the
+// grounds that the floor is bid-side information — and then a listing and its
+// own sale disagreed. #850 sat in "best terrain parcels listed" at 0.2809, -10.2%
+// against the 0.313 the site displayed (0.27 bid x the ask premium); it sold at
+// that price and the feed read +4.8%, against 0.268, the ask before the offer
+// floor. James, 2026-10-20: the displayed figure is the yardstick.
 function decideBasis({ salePrice, saleFloor, estimate }) {
   const isPremium = saleFloor > 0 && estimate > 0
     ? estimate > saleFloor * (1 + PREMIUM_OVER_FLOOR)
@@ -89,6 +94,30 @@ function decideBasis({ salePrice, saleFloor, estimate }) {
   }
   if (reference > 0) vsReference = (salePrice - reference) / reference;
   return { basis, reference, vsReference, isPremium };
+}
+
+// How far back a recorded bid may stand in for the one at the time of sale:
+// the same window salesHistory allows a live floor reading.
+const BID_MAX_AGE_S = 72 * 3600;
+
+/**
+ * The collection-wide bid standing when a sale happened, from the samples in
+ * floor-history.json (the hourly sampler has recorded `bid` beside `floor` since
+ * 2026-09-23): the nearest earlier sample that carries one, up to 72h back.
+ * Null before bids were recorded or across a longer gap, and then no offer
+ * floor applies — there is no record of what the site showed.
+ */
+function bidAt(history, unix, maxAgeS = BID_MAX_AGE_S) {
+  if (!Array.isArray(history) || !Number.isFinite(unix)) return null;
+  let lo = 0, hi = history.length - 1, found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (history[mid].ts <= unix) { found = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  for (let i = found; i >= 0 && unix - history[i].ts <= maxAgeS; i--) {
+    if (history[i].bid > 0) return history[i].bid;
+  }
+  return null;
 }
 
 const OPENSEA_SALES_URL = 'https://api.opensea.io/api/v2/events/collection/terraforms';
@@ -209,6 +238,7 @@ async function computeRecentSales({
   getParcelTraits,
   getFloorPrice,
   floorAt,
+  offerAt,
   resolveEns,
   topOffer,
   limit = 50,
@@ -265,13 +295,12 @@ async function computeRecentSales({
         // settled for — #2427 sold at 0.180 into a 0.177 offer and read as
         // +9.1% over a 0.165 estimate, when it barely cleared the bid.
         //
-        // Approximation, and a deliberate one: this is the offer standing NOW,
-        // not at the time of sale, which we do not record. The feed covers ~2
-        // weeks and the floor moves slowly over that span, so the error is small
-        // and always in the direction of scoring a bid-side sale less
-        // generously. If the feed ever lengthens, this wants an offer history
-        // alongside floor-history.json.
-        pricingV2 = applyOfferFloor(estimateHedonic(traits, saleFloor), offer);
+        // The offer standing when the sale happened (offerAt reads the bids
+        // recorded in floor-history.json), so the estimate is the one the site
+        // was showing then. The offer standing now stands in only where no bid
+        // was recorded within 72h of the sale.
+        const saleOffer = (offerAt ? offerAt(sale.closingDate) : null) ?? offer;
+        pricingV2 = applyOfferFloor(estimateHedonic(traits, saleFloor), saleOffer);
         // BETH sits with WETH, not with ETH: Blur Pool is the bidding currency,
         // so a fill denominated in it is an accepted offer, not a taken listing.
         sideV2 = (sale.currency === 'WETH' || sale.currency === 'BETH') ? 'off' : 'on';
@@ -284,12 +313,11 @@ async function computeRecentSales({
       const { basis, reference, vsReference, isPremium } = decideBasis({
         salePrice: sale.salePrice,
         saleFloor,
-        // What a parcel is worth is the price it would clear at if listed. See
-        // the note on decideBasis for why the bid side is never used here.
-        // modelOn is the ask estimate before applyOfferFloor; `on` already is
-        // that when the offer floor did not fire.
+        // What a parcel is worth is the price it would clear at if listed: the
+        // ask side as the site displayed it, the same number a listing of this
+        // parcel was scored against. See the note on decideBasis.
         estimate: pricingV2
-          ? (pricingV2.modelOn ?? pricingV2.on)
+          ? pricingV2.on
           : (pricing.estimatedValue > 0 ? pricing.estimatedValue : null),
       });
 
@@ -335,5 +363,5 @@ async function computeRecentSales({
 }
 
 module.exports = {
-  decideBasis,
+  decideBasis, bidAt,
   PREMIUM_OVER_FLOOR, fetchOpenSeaSales, computeRecentSales };

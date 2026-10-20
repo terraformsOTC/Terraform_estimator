@@ -11,8 +11,9 @@ const near = (got, want) => assert.ok(
 
 // One estimate does both jobs: it decides premium AND is what the percentage is
 // measured against. Passing two different numbers is what produced #884. The
-// caller always supplies the ASK-side estimate (modelOn) — never the bid side,
-// which carries the distortion of sellers dumping into WETH bids.
+// caller always supplies the ASK-side estimate as the site displayed it (`on`,
+// offer floor included) — never the bid side, which carries the distortion of
+// sellers dumping into WETH bids.
 const c = (salePrice, saleFloor, estimate) =>
   decideBasis({ salePrice, saleFloor, estimate });
 
@@ -134,4 +135,72 @@ test('INVARIANT — a valuable parcel dumped into a bid shows its full discount'
   near(asAsk.vsReference, -0.4469);
   assert.ok(asAsk.vsReference < asBid.vsReference,
     'the ask anchor must report the deeper discount, not flatter it');
+});
+
+// ─── the estimate itself: what the site displayed when the parcel sold ────────
+const { bidAt, computeRecentSales } = require('../src/sales');
+const { estimateHedonic, applyOfferFloor } = require('../src/hedonicModel');
+
+test('bidAt — the bid standing then: nearest earlier sample that has one, 72h back', () => {
+  const h = [
+    { ts: 1000, floor: 0.30 },                 // before bids were recorded
+    { ts: 2000, floor: 0.30, bid: 0.25 },
+    { ts: 3000, floor: 0.31 },                 // a sample without a bid is skipped
+    { ts: 4000, floor: 0.31, bid: 0.27 },
+  ];
+  assert.strictEqual(bidAt(h, 500), null, 'before any sample');
+  assert.strictEqual(bidAt(h, 1500), null, 'before bids were recorded');
+  assert.strictEqual(bidAt(h, 2000), 0.25);
+  assert.strictEqual(bidAt(h, 3500), 0.25);
+  assert.strictEqual(bidAt(h, 4100), 0.27);
+  assert.strictEqual(bidAt(h, 4000 + 72 * 3600 + 1), null, 'nothing recorded within 72h');
+  assert.strictEqual(bidAt([], 4000), null);
+});
+
+// #850, 2026-10-20: in "best terrain parcels listed" at 0.2809354, -10.2% against
+// the displayed 0.313 (a 0.27 bid lifting the estimate). It sold at that price and
+// the feed read +4.8%, measured against the ask before the offer floor.
+const T850 = {
+  tokenId: 850, zone: '[MENU]', level: 11, biome: 30, chroma: 'Flow', mode: 'Terrain',
+  specialType: null, isOneOfOne: false, isGodmode: false, isS0: false, isLith0like: false,
+  isGm: false, mysteryValue: 37082, mysteryOutlier: null,
+};
+const SALE_850 = { floor: 0.28085, bid: 0.27, price: 0.2809354, ts: 1792505531 };
+
+function feedFor({ offerAt, topOffer }) {
+  const { floor, ts } = SALE_850;
+  const event = {
+    event_type: 'sale', nft: { identifier: '850' }, closing_date: ts,
+    payment: { quantity: '280935400000000000', decimals: 18, symbol: 'ETH' },
+    transaction: '0x434d', seller: '0xb65a', winner_account: { address: '0x2ee8' },
+  };
+  return computeRecentSales({
+    apiKey: 'k',
+    fetchWithRetry: async () => ({ ok: true, json: async () => ({ asset_events: [event] }) }),
+    getParcelTraits: async () => T850,
+    getFloorPrice: async () => ({ price: floor, isLive: true }),
+    floorAt: () => floor,
+    offerAt,
+    topOffer,
+  });
+}
+
+test('#850 — a sale reads the same figure its listing did', async () => {
+  const { floor, bid, price, ts } = SALE_850;
+  // Scored as computeAllListings scores a listing: against the displayed ask.
+  const shown = applyOfferFloor(estimateHedonic(T850, floor), bid).on;
+  const listingDiscount = (shown - price) / shown;
+  assert.ok(shown > estimateHedonic(T850, floor).on, 'the case needs the offer floor to bind');
+
+  // The offer standing now differs; the one standing at the sale is what counts.
+  const { sales: [sale] } = await feedFor({ offerAt: (t) => (t === ts ? bid : null), topOffer: 0.29 });
+  assert.strictEqual(sale.reference, shown);
+  near(sale.vsReference, -listingDiscount);
+  assert.ok(sale.vsReference < 0, 'sold at the discount it was listed at');
+});
+
+test('no bid recorded within 72h of a sale — the offer standing now stands in', async () => {
+  const { floor, bid } = SALE_850;
+  const { sales: [sale] } = await feedFor({ offerAt: () => null, topOffer: bid });
+  assert.strictEqual(sale.reference, applyOfferFloor(estimateHedonic(T850, floor), bid).on);
 });

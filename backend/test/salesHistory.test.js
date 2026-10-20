@@ -2,6 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { createSalesHistory, parseFilters } = require('../src/salesHistory');
+const { estimateHedonic, applyOfferFloor } = require('../src/hedonicModel');
 
 const T = {
   1: { tokenId: 1, zone: 'Alto', biome: 42, level: 10, chroma: 'Flow', mode: 'Terrain' },
@@ -98,4 +99,32 @@ test('volumes: trailing windows and calendar years, bundle totals counted once',
   const later = make().volumes(null, 1000 + 86_400 + 500);
   const w2 = Object.fromEntries(later.windows.map(({ key, ...x }) => [key, x]));
   assert.deepStrictEqual(w2['24h'], { count: 3, volume: 1.2 });
+});
+
+// #850 through the history path, once the nightly export holds it: the floor and
+// the standing bid both come from the floor-history sample before the sale, so it
+// is graded against the estimate the site was showing — as the live feed does.
+const T850 = {
+  tokenId: 850, zone: '[MENU]', level: 11, biome: 30, chroma: 'Flow', mode: 'Terrain',
+  specialType: null, isOneOfOne: false, isGodmode: false, isS0: false,
+};
+const history850 = (samples) => createSalesHistory({
+  history: { ...history, rows: [[1792505531, 850, 0.2809354, 0, 1, 0, 0, 1, '0x434d']] },
+  floorIndex: { days: {} },
+  getSnapshotTraits: (id) => (id === 850 ? T850 : null),
+  floorHistory: () => samples,
+});
+
+test('a sale is graded against the estimate shown then, offer floor included', () => {
+  const [sale] = history850([{ ts: 1792500000, floor: 0.28085, bid: 0.27 }]).query({}).sales;
+  const shown = applyOfferFloor(estimateHedonic(T850, 0.28085, { floorBasis: 'live' }), 0.27).on;
+  assert.ok(shown > estimateHedonic(T850, 0.28085, { floorBasis: 'live' }).on);
+  assert.strictEqual(sale.estimate, shown);
+  assert.strictEqual(sale.reference, shown);
+  assert.ok(sale.vsReference < 0);
+});
+
+test('a sale from before bids were recorded keeps the unfloored estimate', () => {
+  const [sale] = history850([{ ts: 1792500000, floor: 0.28085 }]).query({}).sales;
+  assert.strictEqual(sale.estimate, estimateHedonic(T850, 0.28085, { floorBasis: 'live' }).on);
 });

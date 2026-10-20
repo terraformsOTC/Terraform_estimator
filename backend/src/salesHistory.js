@@ -10,7 +10,9 @@
 //   - the live listing floor from floor-history.json when a reading exists within
 //     72h before the sale (calibrated, exactly as a live estimate is);
 //   - otherwise the model's own floor index for that day, which is what the fit
-//     was trained against, so no calibration is applied.
+//     was trained against, so no calibration is applied;
+//   - the collection-wide bid standing then (bidAt, recorded since 2026-09-23)
+//     as the offer floor, so the estimate is the one the site was showing.
 // The reference and the over/under figure come from decideBasis, the same rule
 // the live feed uses: ask side only, or the floor for a plain parcel under it.
 //
@@ -19,8 +21,8 @@
 // parcel is now.
 
 const { estimatePrice } = require('./pricingModel');
-const { estimateHedonic } = require('./hedonicModel');
-const { decideBasis } = require('./sales');
+const { estimateHedonic, applyOfferFloor } = require('./hedonicModel');
+const { decideBasis, bidAt } = require('./sales');
 
 const MAX_LIVE_FLOOR_AGE_S = 72 * 3600;
 const DEFAULT_LIMIT = 50;
@@ -182,7 +184,9 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
     sale.floorAtSaleSource = live != null ? 'history' : (floor != null ? 'index' : null);
     if (!(floor > 0)) return sale;
     try {
-      const est = estimateHedonic(traits, floor, { floorBasis: live != null ? 'live' : 'index' });
+      const est = applyOfferFloor(
+        estimateHedonic(traits, floor, { floorBasis: live != null ? 'live' : 'index' }),
+        bidAt(floorHistory ? floorHistory() : [], sale.closingDate));
       sale.estimate = est.on;
       if (sale.kind !== 'bundle') {
         const { basis, reference, vsReference } = decideBasis({
@@ -242,7 +246,7 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
       kind: 'single',
       traits: s.traits,
       pricing: s.pricing ? { zoneCategory: s.pricing.zoneCategory ?? null, biomeCategory: s.pricing.biomeCategory ?? null } : null,
-      estimate: v2 ? (v2.modelOn ?? v2.on) : null,
+      estimate: v2 ? v2.on : null,
       basis: s.basis, reference: s.reference, vsReference: s.vsReference,
       floorAtSale: s.floorAtSale, floorAtSaleSource: s.floorAtSaleSource,
       source: 'live',
