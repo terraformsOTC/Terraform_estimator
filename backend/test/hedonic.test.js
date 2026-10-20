@@ -3,7 +3,8 @@
 // committed, not against fixed numbers.
 const test = require('node:test');
 const assert = require('node:assert');
-const { estimateHedonic, ASK_PREMIUM } = require('../src/hedonicModel');
+const { estimateHedonic, ASK_PREMIUM, FLOOR_CALIBRATION } = require('../src/hedonicModel');
+const { estimatePrice } = require('../src/pricingModel');
 const { snapshotTraits } = require('../src/snapshotTraits');
 const coeffs = require('../src/pricing-v2-coeffs.json');
 const snapshot = require('../src/minted-traits.json');
@@ -50,10 +51,45 @@ test('a Daydream parcel does not carry its full biome premium', () => {
   assert.strictEqual(table['46'], 1, 'the reference biome carries no discount');
 });
 
-test('Tier-2 parcels collapse to one v1 price', () => {
+test('Tier-2 types price at the floor multiple their own sales show', () => {
+  const multiples = coeffs.special_multiples || {};
   for (const t of all.filter((x) => x.isGodmode || ['X-Seed', 'Y-Seed', 'Lith0', 'Plague'].includes(x.specialType))) {
     const e = estimateHedonic(t, FLOOR);
     assert.strictEqual(e.tier, 'tier2');
-    assert.strictEqual(e.off, e.on);
+    const sp = multiples[t.isGodmode ? 'Godmode' : t.specialType];
+    if (!sp) {
+      assert.strictEqual(e.off, e.on); // v1's price, collapsed to a point
+      if (t.specialType === 'Y-Seed' && !t.isGodmode) {
+        const asX = estimatePrice({ ...t, specialType: 'X-Seed' }, FLOOR).estimatedValue;
+        assert.strictEqual(e.on, asX, `Y-Seed #${t.tokenId} priced ${e.on}, as an X-Seed ${asX}`);
+      }
+      continue;
+    }
+    const want = FLOOR * FLOOR_CALIBRATION * sp.multiple;
+    assert.ok(Math.abs(e.off / want - 1) < 0.005, `#${t.tokenId}: bid ${e.off}, want ${want.toFixed(3)}`);
+    assert.ok(Math.abs(e.on / e.off - ASK_PREMIUM) < 0.005, `#${t.tokenId}: ask/bid ${e.on / e.off}`);
   }
+});
+
+test('Spine adds nothing on a level-20 (penthouse) parcel', () => {
+  const penthouse = all.find((t) => t.level === 20 && !t.specialType && !t.isOneOfOne && !t.isS0);
+  assert.ok(penthouse, 'a plain level-20 parcel exists');
+  assert.strictEqual(estimateHedonic({ ...penthouse, specialType: 'Spine' }, FLOOR).on, estimateHedonic(penthouse, FLOOR).on);
+});
+
+test('a premium set outright is served exactly (Mesa)', () => {
+  const fixed = coeffs.meta.fixed_premiums?.['badge mesa'];
+  if (fixed == null) return; // coefficients from before 2.3
+  const mesa = { tokenId: 0, zone: 'Holo', biome: 39, level: 10, chroma: 'Flow', mode: 'Terrain', specialType: null,
+    isOneOfOne: false, isS0: false, isGodmode: false, isLith0like: false, isGm: false, mysteryValue: 20000 };
+  const ratio = estimateHedonic(mesa, FLOOR).on / estimateHedonic({ ...mesa, mysteryValue: 40000 }, FLOOR).on;
+  assert.ok(Math.abs(ratio - fixed) < 0.005, `Mesa over plain biome 39: x${ratio.toFixed(4)}, set x${fixed}`);
+});
+
+test('exactly the approved traits lean on their own sales', () => {
+  const audit = coeffs.money_sword_on.prior_audit || [];
+  const approved = coeffs.meta.sales_anchored;
+  if (!approved) return; // coefficients from before 2.3
+  const onSales = audit.filter((a) => a.prior_source === 'sales').map((a) => `${a.kind} ${a.name}`).sort();
+  assert.deepStrictEqual(onSales, [...approved].sort());
 });

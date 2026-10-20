@@ -1,8 +1,9 @@
 // Terraforms Hedonic Pricing Model (v2, fitted)
 //
 // The multipliers here are FITTED to actual settlements rather than hand-tuned:
-// weighted Ridge on ln(price / floor_at_sale) over ~20k eligible sales, shrunk
-// toward the v1 model's multipliers for traits with too little data to estimate.
+// weighted Ridge on ln(price / floor_at_sale) over ~20k eligible sales, a trait
+// with too little data for that leaning on its own recency-weighted sales instead
+// (v1's hand-set multipliers only where a trait has none).
 // See "sales database/MODELING.md" for the fit, the parameter sweep, and the
 // honest A/B against v1.
 //
@@ -49,12 +50,21 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // than v1 premiums stacked on the fit, Daydream/Terraform parcels get a fitted
 // discount on their biome premium, and the fit runs at half-life 180d / alpha 3.
 // Chosen by a rolling-origin backtest — see HALF_LIFE_D in fit_hedonic.py.
-const HEDONIC_MODEL_VERSION = '2.2.0';
+// 2.3.0 (2026-10-20, James): level 20, Dread and biome 39 lean on their own
+// recent sales rather than v1's hand-set numbers (SALES_ANCHORED in
+// fit_hedonic.py), Lith0 and Plague are priced from their own sales, Y-Seeds are
+// valued as X-Seeds, and Spine adds nothing on a level-20 (penthouse) parcel.
+const HEDONIC_MODEL_VERSION = '2.3.0';
 
-// Tier-2: too few sales to fit, so the whole price is v1's prior and both
-// sub-models return the same number. Spine and 1of1 are NOT here — they are
+// Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
+// other traits don't stack on it. Lith0 and Plague are one floor multiple each,
+// read off their own sales (special_multiples, from fit_hedonic.py); the others
+// keep v1's price, collapsed to a point. Spine and 1of1 are NOT here — they are
 // premiums layered onto the standard formula.
 const TIER2_SPECIALS = new Set(['X-Seed', 'Y-Seed', 'Lith0', 'Plague']);
+const SPECIAL_MULTIPLES = coeffs.special_multiples || {};
+// Y-Seeds are valued as X-Seeds (James, 2026-10-20); v1 put them 17% above.
+const V1_PRICED_AS = { 'Y-Seed': 'X-Seed' };
 
 const MODE_GROUP = {
   'Terrain': 'Terrain',
@@ -176,7 +186,9 @@ function subModelMultiple(modelKey, traits) {
     const v = fitted[key] ?? V1_FLAG_PREMIUMS[key];
     mult *= v; push(`${label}${fitted[key] == null ? ' (v1 prior)' : ''}`, v);
   };
-  if (traits.specialType === 'Spine') flag('spine', 'spine');
+  // Penthouse outranks Spine (James, 2026-10-20): on level 20 the Spine flag adds
+  // nothing, as the fit treats it (fit_hedonic.py load_records).
+  if (traits.specialType === 'Spine' && Number(traits.level) !== 20) flag('spine', 'spine');
   if (traits.isOneOfOne) flag('one_of_one', '1of1');
   if (traits.isS0) flag('s0', 'S0');
 
@@ -196,18 +208,44 @@ function isTier2(traits) {
  *                                  FLOOR_CALIBRATION is applied.
  *                         'index' the endogenous floor index the model trained on.
  *                                  No calibration — it is already the right basis.
- * @returns { off, on, ... } where off <= on always, by construction; Tier-2
- *          collapses both to the v1 price.
+ * @returns { off, on, ... } where off <= on always, by construction. Tier-2 is
+ *          its type's floor multiple from sales (Lith0, Plague), else v1's price
+ *          collapsed to a point.
  */
 function estimateHedonic(traits, floor, opts = {}) {
   const basis = opts.floorBasis ?? 'live';
   const calibration = basis === 'live' ? FLOOR_CALIBRATION : 1;
   const effectiveFloor = floor * calibration;
 
+  const round = (x) => Math.round(x * 1000) / 1000;
+
   if (isTier2(traits)) {
-    // No bid/ask data to split these on, so the range collapses to a point and
-    // the number is v1's — deliberately identical to what the v1 model returns.
-    const v1Value = estimatePrice(traits, floor).estimatedValue;
+    const type = traits.isGodmode ? 'Godmode' : traits.specialType;
+    const sp = SPECIAL_MULTIPLES[type];
+    if (sp?.multiple > 0) {
+      const label = `${type} (${sp.n} ${sp.n === 1 ? 'sale' : 'sales'}, last ${sp.last_sale})`;
+      return {
+        off: round(effectiveFloor * sp.multiple),
+        on: round(effectiveFloor * sp.multiple * ASK_PREMIUM),
+        offMultiple: Math.round(sp.multiple * 100) / 100,
+        onMultiple: Math.round(sp.multiple * ASK_PREMIUM * 100) / 100,
+        tier: 'tier2',
+        tierReason: type,
+        special: { type, multiple: sp.multiple, sales: sp.n, lastSale: sp.last_sale },
+        floor,
+        effectiveFloor: Math.round(effectiveFloor * 100000) / 100000,
+        floorCalibration: calibration,
+        breakdown: {
+          off: [{ label, multiple: sp.multiple }],
+          on: [{ label, multiple: sp.multiple }, { label: 'taken listing', multiple: ASK_PREMIUM }],
+        },
+        modelVersion: HEDONIC_MODEL_VERSION,
+      };
+    }
+    // No sales multiple for this type: the range collapses to a point and the
+    // number is v1's (a Y-Seed's as if it were an X-Seed).
+    const v1Traits = V1_PRICED_AS[type] ? { ...traits, specialType: V1_PRICED_AS[type] } : traits;
+    const v1Value = estimatePrice(v1Traits, floor).estimatedValue;
     return {
       off: v1Value,
       on: v1Value,
@@ -222,7 +260,6 @@ function estimateHedonic(traits, floor, opts = {}) {
 
   const offR = subModelMultiple('money_sword_off', traits);
   const onR = subModelMultiple('money_sword_on', traits);
-  const round = (x) => Math.round(x * 1000) / 1000;
 
   return {
     off: round(effectiveFloor * offR.multiple),

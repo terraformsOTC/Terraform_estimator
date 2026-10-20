@@ -359,9 +359,9 @@ async function getBestListing(tokenId) {
 function safeHedonic(traits, floor, opts) {
   try {
     const estimate = estimateHedonic(traits, floor, opts);
-    // Tier-2 parcels fall back to the v1 price and are far above any collection
-    // bid, but the floor is applied uniformly rather than special-cased — max()
-    // leaves anything already above it untouched.
+    // Tier-2 parcels price at their type's sales multiple and sit far above any
+    // collection bid, but the floor is applied uniformly rather than
+    // special-cased — max() leaves anything already above it untouched.
     return applyOfferFloor(estimate, currentTopOffer());
   } catch (err) {
     console.warn(`[hedonic] estimate failed for ${traits?.tokenId}: ${err.message}`);

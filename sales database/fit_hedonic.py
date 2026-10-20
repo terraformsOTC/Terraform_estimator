@@ -13,14 +13,17 @@ Sub-models:
 Features: zone, biome, chroma(Flow base), mode-group(Terrain base), level,
           named look-badges, the 1of1 / S0 / Spine flags, and one interaction:
           Daydream/Terraform x ln(v1 biome prior). Override specials
-          (Godmode/Plague/seeds/Lith0) excluded -> Tier-2, handled separately
-          with v1 priors.
+          (Godmode/Plague/seeds/Lith0) excluded -> Tier-2, each type one floor
+          multiple from its own sales (special_multiples).
+Shrinkage: thin traits shrink toward v1's multipliers, except those James has
+           approved for pricing from their own recency-weighted sales
+           (SALES_ANCHORED, via sales_anchors).
 
 Outputs:  pricing-v2-coeffs.json  (+ a readable console report)
 Deps:     numpy, scikit-learn, stdlib sqlite3/json  (no pandas needed)
 """
-import os, sys, json, math, sqlite3, time
-from collections import Counter
+import os, sys, json, math, sqlite3, time, copy
+from collections import Counter, defaultdict
 import numpy as np
 from sklearn.linear_model import Ridge
 
@@ -115,6 +118,24 @@ ALPHA = os.environ.get('ALPHA', '3')
 # averages mythical 1-of-1 zones together with floor zones. Set >0 to re-enable.
 MIN_ZONE_N = int(os.environ.get('MIN_ZONE_N', 0))
 OVERRIDE_SPECIALS = {'Godmode', 'Plague', 'X-Seed', 'Y-Seed', 'Lith0'}
+# Godmode is not in special-tokens.json: snapshotTraits.js lists it. MUST match.
+GODMODE_IDS = {83, 124, 1955}
+# Traits whose prior is their own recency-weighted sales (sales_anchors) rather
+# than v1's hand-set multiplier. James reviewed the fully sales-anchored model on
+# 2026-10-20 and approved these; every other trait stays on its v1 prior until
+# he has looked at it. ANCHOR_SALES=0 reproduces the all-v1 fit.
+SALES_ANCHORED = {('level', '20'), ('zone', 'Dread'), ('biome', '39')}
+ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
+ANCHOR_ROUNDS = 4
+# Tier-2 types priced at the floor multiple their own sales show (special_
+# multiples). X-Seed and Godmode keep v1's price, and hedonicModel.js values
+# Y-Seeds as X-Seeds (James, 2026-10-20).
+SALES_PRICED_SPECIALS = {'Lith0', 'Plague'}
+# Premiums James has set outright, overriding both the fit and any prior. Mesa:
+# its sales never supported v1's +25% over biome 39 (the last, #2518 at 0.9 ETH in
+# Aug 2025, cleared ~1.9x the floor, level with other biome-39 parcels), so +5%
+# for now, to come down further if the sales keep saying so (2026-10-20).
+FIXED_PREMIUMS = {('badge', 'mesa'): 1.05}
 MODE_GROUP = {'Terrain': 'Terrain', 'Daydream': 'DDTF', 'Terraform': 'DDTF',
               'Origin Daydream': 'ORIG', 'Origin Terraform': 'ORIG'}
 # Plan §4.5: level premium lives ONLY at the extremes (basement L1–3, penthouse
@@ -148,6 +169,7 @@ def load_aux():
     flags = {
         'one_of_one': set(json.load(open(ONE_OF_ONE))),
         'spine': {int(k) for k, v in special.items() if v == 'Spine'},
+        'special': {int(k): v for k, v in special.items()},
     }
     return mt, override_ids, flags
 
@@ -155,7 +177,18 @@ def is_s0(m):
     ts = m.get('antennaFirstTs') or 0
     return bool(m.get('antennaOn')) and S0_MIN <= ts <= S0_MAX
 
+def tier2_type(tid, m, flags):
+    """The Tier-2 type the site prices a parcel under (hedonicModel.js isTier2,
+    snapshotTraits.js specialType): Godmode, else a special-tokens type, else
+    Plague chroma — or None for a parcel the fit prices."""
+    if tid in GODMODE_IDS:
+        return 'Godmode'
+    st = flags['special'].get(tid) or ('Plague' if m['chroma'] == 'Plague' else None)
+    return st if st in OVERRIDE_SPECIALS else None
+
 def load_records(mt, override_ids, flags):
+    """Eligible sales for the fit, and the Tier-2 sales kept aside for
+    special_multiples."""
     con = sqlite3.connect(DB)
     rows = con.execute("""
         SELECT token_id, event_unix, price_native, floor_at_sale, side,
@@ -164,32 +197,43 @@ def load_records(mt, override_ids, flags):
         WHERE model_eligible=1 AND floor_at_sale > 0 AND price_native > 0
     """).fetchall()
     con.close()
-    recs, dropped = [], Counter()
+    recs, tier2, dropped = [], [], Counter()
     for tid, u, price, floor, side, zone, biome, level, mode in rows:
-        if tid in override_ids:
-            dropped['override_special'] += 1; continue
         m = mt.get(tid)
         if m is None:
             dropped['not_in_snapshot'] += 1; continue
-        if m['chroma'] == 'Plague':           # Plague = Tier-2 override
-            dropped['plague_chroma'] += 1; continue
         mult = price / floor
-        if not (MULT_LO <= mult <= MULT_HI):
-            dropped['extreme_multiple'] += 1; continue
-        recs.append({
+        lvl = int(level) if (level not in (None, '')) else int(m['level'])
+        rec = {
             'tid': tid, 'u': int(u), 'y': math.log(mult), 'mult': mult,
             'side': side,
             'zone': zone or m['zone'],
             'biome': str(biome if biome is not None else m['biome']),
-            'level': int(level) if (level not in (None, '')) else int(m['level']),
+            'level': lvl,
             'mode_group': MODE_GROUP.get(mode or m['mode'], 'Terrain'),
-            'chroma': m['chroma'],                 # Flow / Pulse / Hyper
+            'chroma': m['chroma'],                 # Flow / Pulse / Hyper (Plague: Tier-2)
             'mystery': m['mysteryValue'],
             'one_of_one': tid in flags['one_of_one'],
             's0': is_s0(m),
-            'spine': tid in flags['spine'],
-        })
-    return recs, dropped
+            # Penthouse outranks Spine (James, 2026-10-20): on a level-20 parcel the
+            # Spine flag adds nothing, and the sale counts toward the penthouse.
+            'spine': tid in flags['spine'] and lvl != 20,
+        }
+        special = tier2_type(tid, m, flags)
+        if special is not None:
+            # Out of the fit; priced from its own sales. Only the lower band
+            # applies: a Plague parcel at 70x the floor is a real sale.
+            if mult >= MULT_LO:
+                tier2.append({**rec, 'special': special})
+            dropped['override_special'] += 1; continue
+        if tid in override_ids:
+            dropped['override_special'] += 1; continue
+        if m['chroma'] == 'Plague':           # Plague = Tier-2 override
+            dropped['plague_chroma'] += 1; continue
+        if not (MULT_LO <= mult <= MULT_HI):
+            dropped['extreme_multiple'] += 1; continue
+        recs.append(rec)
+    return recs, tier2, dropped
 
 def badges(r):
     b, mode_t = {}, (r['mode_group'] == 'Terrain')
@@ -387,8 +431,13 @@ def trait_counts(recs):
             if bv: c['badge'][bn] += 1
     return c
 
-def shrink_to_priors(mult, counts, priors, K):
-    """Blend each fitted coefficient toward its v1 prior with weight n/(n+K).
+def shrink_to_priors(mult, counts, priors, K, anchors=None):
+    """Blend each fitted coefficient toward its prior with weight n/(n+K).
+
+    The prior is the trait's own sales (`anchors`, from sales_anchors, already in
+    coefficient space) wherever it has any, and its v1 multiplier otherwise. A
+    thin trait therefore lands near what its own recent sales say rather than near
+    v1's hand-set number, while a well-traded one stays with the fit.
 
     In LOG space: these are multipliers, so the neutral midpoint between 0.5x and
     2.0x is 1.0x, not 1.25x. A linear blend would bias every coefficient upward.
@@ -409,18 +458,123 @@ def shrink_to_priors(mult, counts, priors, K):
         for name, fitted in list(mult[kind].items()):
             # A zone v1 has never heard of (custom 1-of-1 zones) gets v1's own
             # default for an unknown zone: no premium.
-            prior = pri.get(str(name), 1.0)
-            if prior <= 0: prior = 1.0
-            if kind != 'badge': prior = prior / base
+            v1 = pri.get(str(name), 1.0)
+            if v1 <= 0: v1 = 1.0
+            if kind != 'badge': v1 = v1 / base
+            anchor = (anchors or {}).get((kind, str(name)))
+            prior = anchor if anchor is not None else v1
             n = counts[kind].get(name, 0)
             w = n / (n + K)
             blended = math.exp(w * math.log(fitted) + (1 - w) * math.log(prior))
             mult[kind][name] = round(blended, 4)
             audit.append({'kind': kind, 'name': str(name), 'n': n, 'w': round(w, 3),
-                          'fitted': fitted, 'prior': prior, 'blended': round(blended, 4)})
+                          'fitted': fitted, 'prior': round(prior, 4),
+                          'prior_source': 'sales' if anchor is not None else 'v1',
+                          'v1_prior': round(v1, 4), 'blended': round(blended, 4)})
     return audit
 
-def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
+def predict_log(r, mult, premium):
+    """ln(floor multiple) the model gives a record's parcel on its sale's side —
+    the product hedonicModel.js forms in subModelMultiple, so this sees what the
+    site serves."""
+    lg = math.log(mult['baseline_multiple'])
+    lg += math.log(mult['zone'].get(r['zone'], 1.0))
+    lg += math.log(mult['biome'].get(r['biome'], 1.0))
+    lg += math.log(mult['level'].get(str(r['level']), 1.0))
+    if r['chroma'] in ('Pulse', 'Hyper'):
+        lg += math.log(mult['chroma'].get(r['chroma'], 1.0))
+    g = r['mode_group']
+    if g != 'Terrain':
+        lg += math.log(mult['mode'].get(g, 1.0))
+    mb = mult.get('mode_biome', {}).get(g, {}).get(r['biome'])
+    if mb is not None:
+        lg += math.log(mb)
+    for bn, bv in badges(r).items():
+        if bv: lg += math.log(mult['badge'].get(bn, 1.0))
+    for e in EXTRA_FLAGS:
+        if r[e]: lg += math.log(mult['extra'].get(e, 1.0))
+    if r['side'] == 'ASK':
+        lg += math.log(premium)
+    return lg
+
+def trait_keys(r):
+    """The shrunk coefficients a record carries (the reference zone and biome
+    are fixed at 1.0 and carry none)."""
+    keys = []
+    if r['zone'] != REF_ZONE: keys.append(('zone', r['zone']))
+    if r['biome'] != REF_BIOME: keys.append(('biome', r['biome']))
+    if r['level'] in EXTREME_LEVELS: keys.append(('level', str(r['level'])))
+    keys += [('badge', bn) for bn, bv in badges(r).items() if bv]
+    return keys
+
+def recency(us):
+    """Half-life weights, relative to the newest of `us`: only the ratios
+    matter, so a trait whose sales are all old still speaks for itself, its
+    latest sales loudest."""
+    ref = max(us)
+    return [0.5 ** (((ref - u) / 86400.0) / HALF_LIFE_D) for u in us]
+
+def wmedian(xs, ws):
+    """Weighted median, interpolated between neighbours (midpoint rule). Robust
+    to the odd valuable parcel dumped into a floor bid or flipped in launch week,
+    which a mean over a handful of sales is not; two equal-weight sales give
+    their midpoint."""
+    pts = sorted(zip(xs, ws))
+    total = sum(w for _, w in pts)
+    acc, mids = 0.0, []
+    for _, w in pts:
+        mids.append((acc + w / 2) / total)
+        acc += w
+    if mids[0] >= 0.5: return pts[0][0]
+    if mids[-1] <= 0.5: return pts[-1][0]
+    for i in range(1, len(pts)):
+        if mids[i] >= 0.5:
+            t = (0.5 - mids[i - 1]) / (mids[i] - mids[i - 1])
+            return pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0])
+
+def sales_anchors(recs, mult, premium):
+    """Each zone, biome, extreme level and badge's premium as its own sales put
+    it: the recency-weighted median, over its sales, of price / the model's price
+    for the same parcel without that premium.
+
+    These replace v1's hand-set multipliers as the priors (shrink_to_priors), so a
+    trait with too few sales for the fit to trust lands on its own recent sales
+    (James, 2026-10-20: trust the objective sales data, however scarce). The fit
+    itself can't do this: ridge pulls a premium resting on a few sales toward
+    none, and the recency weights make old sales of a rare trait nearly
+    weightless — so before this, level 20's two May 2026 sales at ~27x the floor
+    moved its premium from v1's 11.1x to 11.2x."""
+    by = defaultdict(lambda: ([], []))
+    for r, wi in zip(recs, recency([r['u'] for r in recs])):
+        lg = predict_log(r, mult, premium)
+        for kind, name in trait_keys(r):
+            own = math.log(mult[kind].get(name, 1.0))
+            xs, ws = by[(kind, name)]
+            xs.append(r['y'] - (lg - own))
+            ws.append(wi)
+    return {k: math.exp(wmedian(xs, ws)) for k, (xs, ws) in by.items()}
+
+def special_multiples(tier2, premium):
+    """Tier-2 types (Godmode, Plague, the seeds, Lith0) are too few to fit. As in
+    v1, the type sets the value and the parcel's other traits don't stack on it
+    (an origin X-Seed is an X-Seed, not an origin x an X-Seed). So each type gets
+    one floor multiple, read off its own sales: the recency-weighted median of
+    price / floor index, bid side (a taken listing counted as bid x the ask
+    premium). hedonicModel.js prices the type at that multiple, in place of v1's
+    hand-set one; a type with no sale keeps v1's price."""
+    by = defaultdict(list)
+    for r in tier2:
+        by[r['special']].append(r)
+    out = {}
+    for typ, rs in sorted(by.items()):
+        rs.sort(key=lambda r: r['u'])
+        xs = [r['y'] - (math.log(premium) if r['side'] == 'ASK' else 0.0) for r in rs]
+        out[typ] = {'multiple': round(math.exp(wmedian(xs, recency([r['u'] for r in rs]))), 3),
+                    'n': len(rs), 'n_ask': sum(r['side'] == 'ASK' for r in rs),
+                    'last_sale': time.strftime('%Y-%m-%d', time.gmtime(rs[-1]['u']))}
+    return out
+
+def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tier2=()):
     """Single fit, side as a feature. Emits the same two-sub-model schema the
     backend already reads, so hedonicModel.js needs no change: identical trait
     multipliers on both sides, baselines differing by exactly the fitted premium.
@@ -449,10 +603,31 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
     r2 = float(1 - np.sum(w * (y - pred) ** 2) / np.sum(w * (y - ybar) ** 2))
 
     premium = ask_premium(mdl, cols)
-    base = coeffs_to_multipliers(mdl, cols, all_priors)
-    audit = shrink_to_priors(base, counts, priors, PRIOR_K)
-    base['zone'][REF_ZONE] = 1.0
-    base['biome'][REF_BIOME] = 1.0
+    fitted = coeffs_to_multipliers(mdl, cols, all_priors)
+
+    def shrink(anchors=None):
+        m = copy.deepcopy(fitted)
+        a = shrink_to_priors(m, counts, priors, PRIOR_K, anchors)
+        m['zone'][REF_ZONE] = 1.0
+        m['biome'][REF_BIOME] = 1.0
+        # Set inside the loop, so the sales anchors read the other traits against
+        # the premium the site will actually serve.
+        for (kind, name), v in FIXED_PREMIUMS.items():
+            m[kind][name] = v
+            for entry in a:
+                if (entry['kind'], entry['name']) == (kind, name):
+                    entry.update(prior=v, prior_source='fixed', blended=v)
+        return m, a
+
+    base, audit = shrink()
+    if ANCHOR_SALES and PRIOR_K > 0:
+        # A few rounds, because rare traits co-occur (Mesa sits inside biome 39, a
+        # Shahra parcel on biome 74): each pass prices the others at their current
+        # values before reading a trait's own sales.
+        for _ in range(ANCHOR_ROUNDS):
+            anchors = sales_anchors(recs, base, premium)
+            base, audit = shrink({k: v for k, v in anchors.items() if k in SALES_ANCHORED})
+    specials = {k: v for k, v in special_multiples(tier2, premium).items() if k in SALES_PRICED_SPECIALS}
 
     # Per-side held-out error, so the report stays comparable with the two-fit run.
     n = len(y); k = int(n * 0.8); te = order[k:]
@@ -468,6 +643,15 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
     print(f"  baseline floor-multiple: bid {base['baseline_multiple']:.2f}x  "
           f"ask {base['baseline_multiple'] * premium:.2f}x")
     print(f"  fitted flags: " + ", ".join(f"{k} {v:.3f}x" for k, v in base['extra'].items()))
+    moved = sorted((a for a in audit if a.get('prior_source') == 'sales'),
+                   key=lambda a: -abs(math.log(a['prior'] / a['v1_prior'])))[:10]
+    if moved:
+        print(f"  largest moves off v1 (n = sales, w = weight left on the fit):")
+        for a in moved:
+            print(f"    {a['kind']:<6} {a['name']:<14} n={a['n']:<5} w={a['w']:<5} "
+                  f"v1 {a['v1_prior']:>7.2f}x -> sales {a['prior']:>7.2f}x => {a['blended']:>7.2f}x")
+    for typ, sp in specials.items():
+        print(f"  Tier-2 {typ:<8} {sp['multiple']:6.2f}x the floor index, bid  ({sp['n']} sales, last {sp['last_sale']})")
     if 'ddtf_biome_beta' in base:
         print(f"  DDTF x ln(biome prior) beta {base['ddtf_biome_beta']:+.3f} "
               f"(biome 0 in Daydream/Terraform x{base['mode_biome']['DDTF'].get('0', 1):.3f})")
@@ -477,6 +661,8 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
     result['ask_premium'] = {'value': round(premium, 6),
                              'note': 'ask = bid x this. One fit, is-ask indicator; '
                                      'guarantees ask >= bid for every parcel.'}
+    if specials:
+        result['special_multiples'] = specials
     shared = dict(alpha=alpha, holdout_median_pct_err=holdout_err,
                   weighted_r2=r2, n=len(y), prior_audit=audit)
     for label, bid_share, mult_base in (
@@ -491,7 +677,7 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors):
 
 def main():
     mt, override_ids, flags = load_aux()
-    recs, dropped = load_records(mt, override_ids, flags)
+    recs, tier2, dropped = load_records(mt, override_ids, flags)
     # The interaction needs the v1 biome priors whatever PRIOR_K is.
     priors = json.load(open(PRIORS))
     # A/B mode: train on the oldest (1-frac); hold out the newest frac for ab_vs_v1.js.
@@ -531,7 +717,11 @@ def main():
         'reference_parcel': {'zone': REF_ZONE, 'biome': REF_BIOME, 'level': 'interior L4-17',
                              'chroma': 'Flow', 'mode': 'Terrain'},
         'prior_k': PRIOR_K,
-        'priors': 'v1-priors.json (build_priors.js)' if PRIOR_K > 0 else 'none (pure data fit)',
+        'priors': 'v1-priors.json (build_priors.js), except sales_anchored' if PRIOR_K > 0 else 'none (pure data fit)',
+        'sales_anchored': sorted(f'{k} {n}' for k, n in SALES_ANCHORED) if ANCHOR_SALES else [],
+        'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
+        'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
+        'penthouse_spine': 'Spine adds nothing on level 20',
         'excluded': 'override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades',
         'fitted_flags': EXTRA_FLAGS,
         'interactions': ['DDTF x ln(v1 biome prior)'] if DDTF_BIOME_INTERACTION else [],
@@ -544,7 +734,7 @@ def main():
         priors_for_shrink = priors
 
     if SIDE_MODEL == 'dummy':
-        emit_side_dummy(result, recs, X, y, u, cols, counts, priors_for_shrink, priors)
+        emit_side_dummy(result, recs, X, y, u, cols, counts, priors_for_shrink, priors, tier2)
         json.dump(result, open(out_path, 'w'), indent=1)
         print(f"\nWrote {out_path}")
         return
