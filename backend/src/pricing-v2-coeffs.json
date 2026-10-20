@@ -1,6 +1,6 @@
 {
   "meta": {
-    "built": "2026-10-20T21:12:00Z",
+    "built": "2026-10-20T21:20:51Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
@@ -18,9 +18,14 @@
     "prior_k": 120,
     "priors": "v1-priors.json (build_priors.js), except sales_anchored",
     "sales_anchored": [
+      "badge biome0_flow",
+      "badge matrix",
+      "biome 17",
       "biome 39",
       "level 20",
-      "zone Dread"
+      "zone Avidana",
+      "zone Dread",
+      "zone First Earth"
     ],
     "specials_from_sales": [
       "Lith0",
@@ -137,7 +142,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9928,
         "blended": 1.0407,
-        "sales_implied": 0.9766
+        "sales_implied": 0.9732
       },
       {
         "kind": "zone",
@@ -193,11 +198,11 @@
         "n": 56,
         "w": 0.318,
         "fitted": 2.3168,
-        "prior": 1.7925,
-        "prior_source": "v1",
+        "prior": 2.8781,
+        "prior_source": "sales",
         "v1_prior": 1.7925,
-        "blended": 1.945,
-        "sales_implied": 3.2481
+        "blended": 2.6861,
+        "sales_implied": 2.8781
       },
       {
         "kind": "zone",
@@ -269,7 +274,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3742,
         "blended": 1.3981,
-        "sales_implied": 1.4483
+        "sales_implied": 1.4597
       },
       {
         "kind": "zone",
@@ -337,10 +342,10 @@
         "n": 113,
         "w": 0.485,
         "fitted": 2.1855,
-        "prior": 1.7236,
-        "prior_source": "v1",
+        "prior": 2.1958,
+        "prior_source": "sales",
         "v1_prior": 1.7236,
-        "blended": 1.9339,
+        "blended": 2.1908,
         "sales_implied": 2.1958
       },
       {
@@ -437,7 +442,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9928,
         "blended": 1.0131,
-        "sales_implied": 0.9892
+        "sales_implied": 0.9885
       },
       {
         "kind": "zone",
@@ -497,7 +502,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9168,
-        "sales_implied": 0.9434
+        "sales_implied": 0.9388
       },
       {
         "kind": "zone",
@@ -965,7 +970,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9836,
-        "sales_implied": 0.9714
+        "sales_implied": 0.9711
       },
       {
         "kind": "zone",
@@ -1001,7 +1006,7 @@
         "prior_source": "v1",
         "v1_prior": 3.4016,
         "blended": 2.5863,
-        "sales_implied": 2.4893
+        "sales_implied": 2.3458
       },
       {
         "kind": "biome",
@@ -1145,7 +1150,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3788,
         "blended": 1.2463,
-        "sales_implied": 0.9378
+        "sales_implied": 0.9417
       },
       {
         "kind": "biome",
@@ -1201,10 +1206,10 @@
         "n": 40,
         "w": 0.25,
         "fitted": 2.5362,
-        "prior": 2.1142,
-        "prior_source": "v1",
+        "prior": 3.0613,
+        "prior_source": "sales",
         "v1_prior": 2.1142,
-        "blended": 2.2126,
+        "blended": 2.9206,
         "sales_implied": 3.0613
       },
       {
@@ -1301,7 +1306,7 @@
         "prior_source": "v1",
         "v1_prior": 1.0433,
         "blended": 1.1641,
-        "sales_implied": 1.1895
+        "sales_implied": 1.1889
       },
       {
         "kind": "biome",
@@ -1529,7 +1534,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9676,
-        "sales_implied": 0.9619
+        "sales_implied": 0.96
       },
       {
         "kind": "biome",
@@ -1625,7 +1630,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9861,
-        "sales_implied": 0.9648
+        "sales_implied": 0.9646
       },
       {
         "kind": "biome",
@@ -1685,7 +1690,7 @@
         "prior_source": "v1",
         "v1_prior": 1.0433,
         "blended": 1.0187,
-        "sales_implied": 0.9766
+        "sales_implied": 0.9765
       },
       {
         "kind": "biome",
@@ -1745,7 +1750,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9292,
-        "sales_implied": 0.9304
+        "sales_implied": 0.9299
       },
       {
         "kind": "biome",
@@ -1949,7 +1954,7 @@
         "prior_source": "v1",
         "v1_prior": 1.5627,
         "blended": 1.1995,
-        "sales_implied": 1.0071
+        "sales_implied": 1.0024
       },
       {
         "kind": "biome",
@@ -2173,10 +2178,10 @@
         "n": 1,
         "w": 0.008,
         "fitted": 1.1086,
-        "prior": 1.5,
-        "prior_source": "v1",
+        "prior": 2.1796,
+        "prior_source": "sales",
         "v1_prior": 1.5,
-        "blended": 1.4963,
+        "blended": 2.1675,
         "sales_implied": 2.1796
       },
       {
@@ -2209,10 +2214,10 @@
         "n": 98,
         "w": 0.45,
         "fitted": 2.4488,
-        "prior": 1.5598,
-        "prior_source": "v1",
+        "prior": 2.0283,
+        "prior_source": "sales",
         "v1_prior": 1.5598,
-        "blended": 1.9104,
+        "blended": 2.2076,
         "sales_implied": 2.0283
       }
     ],
@@ -2226,7 +2231,7 @@
         "Antenna": 8.4987,
         "Arc": 0.9708,
         "Aria": 1.7284,
-        "Avidana": 1.945,
+        "Avidana": 2.6861,
         "Blossom": 1.2457,
         "Blushing": 1.0681,
         "Bubble": 1.2851,
@@ -2238,7 +2243,7 @@
         "Ender": 1.0641,
         "Everglades": 1.0574,
         "Exduo": 0.9387,
-        "First Earth": 1.9339,
+        "First Earth": 2.1908,
         "Gemina": 4.8579,
         "Greysunn": 1.3885,
         "Grove": 0.978,
@@ -2313,7 +2318,7 @@
         "14": 1.5066,
         "15": 1.3652,
         "16": 1.5386,
-        "17": 2.2126,
+        "17": 2.9206,
         "18": 1.4022,
         "19": 1.3872,
         "20": 1.4864,
@@ -2407,10 +2412,10 @@
       },
       "badge": {
         "mesa": 1.05,
-        "matrix": 1.4963,
+        "matrix": 2.1675,
         "heartbeat": 1.2253,
         "gm": 1.0706,
-        "biome0_flow": 1.9104
+        "biome0_flow": 2.2076
       },
       "extra": {
         "one_of_one": 1.0046,
@@ -2558,7 +2563,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9928,
         "blended": 1.0407,
-        "sales_implied": 0.9766
+        "sales_implied": 0.9732
       },
       {
         "kind": "zone",
@@ -2614,11 +2619,11 @@
         "n": 56,
         "w": 0.318,
         "fitted": 2.3168,
-        "prior": 1.7925,
-        "prior_source": "v1",
+        "prior": 2.8781,
+        "prior_source": "sales",
         "v1_prior": 1.7925,
-        "blended": 1.945,
-        "sales_implied": 3.2481
+        "blended": 2.6861,
+        "sales_implied": 2.8781
       },
       {
         "kind": "zone",
@@ -2690,7 +2695,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3742,
         "blended": 1.3981,
-        "sales_implied": 1.4483
+        "sales_implied": 1.4597
       },
       {
         "kind": "zone",
@@ -2758,10 +2763,10 @@
         "n": 113,
         "w": 0.485,
         "fitted": 2.1855,
-        "prior": 1.7236,
-        "prior_source": "v1",
+        "prior": 2.1958,
+        "prior_source": "sales",
         "v1_prior": 1.7236,
-        "blended": 1.9339,
+        "blended": 2.1908,
         "sales_implied": 2.1958
       },
       {
@@ -2858,7 +2863,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9928,
         "blended": 1.0131,
-        "sales_implied": 0.9892
+        "sales_implied": 0.9885
       },
       {
         "kind": "zone",
@@ -2918,7 +2923,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9168,
-        "sales_implied": 0.9434
+        "sales_implied": 0.9388
       },
       {
         "kind": "zone",
@@ -3386,7 +3391,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9836,
-        "sales_implied": 0.9714
+        "sales_implied": 0.9711
       },
       {
         "kind": "zone",
@@ -3422,7 +3427,7 @@
         "prior_source": "v1",
         "v1_prior": 3.4016,
         "blended": 2.5863,
-        "sales_implied": 2.4893
+        "sales_implied": 2.3458
       },
       {
         "kind": "biome",
@@ -3566,7 +3571,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3788,
         "blended": 1.2463,
-        "sales_implied": 0.9378
+        "sales_implied": 0.9417
       },
       {
         "kind": "biome",
@@ -3622,10 +3627,10 @@
         "n": 40,
         "w": 0.25,
         "fitted": 2.5362,
-        "prior": 2.1142,
-        "prior_source": "v1",
+        "prior": 3.0613,
+        "prior_source": "sales",
         "v1_prior": 2.1142,
-        "blended": 2.2126,
+        "blended": 2.9206,
         "sales_implied": 3.0613
       },
       {
@@ -3722,7 +3727,7 @@
         "prior_source": "v1",
         "v1_prior": 1.0433,
         "blended": 1.1641,
-        "sales_implied": 1.1895
+        "sales_implied": 1.1889
       },
       {
         "kind": "biome",
@@ -3950,7 +3955,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9676,
-        "sales_implied": 0.9619
+        "sales_implied": 0.96
       },
       {
         "kind": "biome",
@@ -4046,7 +4051,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9861,
-        "sales_implied": 0.9648
+        "sales_implied": 0.9646
       },
       {
         "kind": "biome",
@@ -4106,7 +4111,7 @@
         "prior_source": "v1",
         "v1_prior": 1.0433,
         "blended": 1.0187,
-        "sales_implied": 0.9766
+        "sales_implied": 0.9765
       },
       {
         "kind": "biome",
@@ -4166,7 +4171,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9192,
         "blended": 0.9292,
-        "sales_implied": 0.9304
+        "sales_implied": 0.9299
       },
       {
         "kind": "biome",
@@ -4370,7 +4375,7 @@
         "prior_source": "v1",
         "v1_prior": 1.5627,
         "blended": 1.1995,
-        "sales_implied": 1.0071
+        "sales_implied": 1.0024
       },
       {
         "kind": "biome",
@@ -4594,10 +4599,10 @@
         "n": 1,
         "w": 0.008,
         "fitted": 1.1086,
-        "prior": 1.5,
-        "prior_source": "v1",
+        "prior": 2.1796,
+        "prior_source": "sales",
         "v1_prior": 1.5,
-        "blended": 1.4963,
+        "blended": 2.1675,
         "sales_implied": 2.1796
       },
       {
@@ -4630,10 +4635,10 @@
         "n": 98,
         "w": 0.45,
         "fitted": 2.4488,
-        "prior": 1.5598,
-        "prior_source": "v1",
+        "prior": 2.0283,
+        "prior_source": "sales",
         "v1_prior": 1.5598,
-        "blended": 1.9104,
+        "blended": 2.2076,
         "sales_implied": 2.0283
       }
     ],
@@ -4647,7 +4652,7 @@
         "Antenna": 8.4987,
         "Arc": 0.9708,
         "Aria": 1.7284,
-        "Avidana": 1.945,
+        "Avidana": 2.6861,
         "Blossom": 1.2457,
         "Blushing": 1.0681,
         "Bubble": 1.2851,
@@ -4659,7 +4664,7 @@
         "Ender": 1.0641,
         "Everglades": 1.0574,
         "Exduo": 0.9387,
-        "First Earth": 1.9339,
+        "First Earth": 2.1908,
         "Gemina": 4.8579,
         "Greysunn": 1.3885,
         "Grove": 0.978,
@@ -4734,7 +4739,7 @@
         "14": 1.5066,
         "15": 1.3652,
         "16": 1.5386,
-        "17": 2.2126,
+        "17": 2.9206,
         "18": 1.4022,
         "19": 1.3872,
         "20": 1.4864,
@@ -4828,10 +4833,10 @@
       },
       "badge": {
         "mesa": 1.05,
-        "matrix": 1.4963,
+        "matrix": 2.1675,
         "heartbeat": 1.2253,
         "gm": 1.0706,
-        "biome0_flow": 1.9104
+        "biome0_flow": 2.2076
       },
       "extra": {
         "one_of_one": 1.0046,
@@ -4938,14 +4943,14 @@
     }
   },
   "floor_calibration": {
-    "value": 0.8007,
-    "measured_at": "2026-10-20T21:12:59.788Z",
+    "value": 0.7999,
+    "measured_at": "2026-10-20T21:20:52.357Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
     "n_sales": 128,
     "iqr": [
       0.71,
-      0.858
+      0.857
     ],
     "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
   }

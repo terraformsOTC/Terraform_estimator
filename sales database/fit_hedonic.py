@@ -121,10 +121,17 @@ OVERRIDE_SPECIALS = {'Godmode', 'Plague', 'X-Seed', 'Y-Seed', 'Lith0'}
 # Godmode is not in special-tokens.json: snapshotTraits.js lists it. MUST match.
 GODMODE_IDS = {83, 124, 1955}
 # Traits whose prior is their own recency-weighted sales (sales_anchors) rather
-# than v1's hand-set multiplier. James reviewed the fully sales-anchored model on
-# 2026-10-20 and approved these; every other trait stays on its v1 prior until
-# he has looked at it. ANCHOR_SALES=0 reproduces the all-v1 fit.
-SALES_ANCHORED = {('level', '20'), ('zone', 'Dread'), ('biome', '39')}
+# than v1's hand-set multiplier. James reviews them trait by trait (the audit's
+# sales_implied against v1_prior) and approves; every other trait stays on its v1
+# prior until he has. ANCHOR_SALES=0 reproduces the all-v1 fit.
+#   2026-10-20  level 20, Dread, biome 39
+#   2026-10-20  the five whose sales sat above v1: First Earth, Avidana, biome
+#               17, and the Biome 0 Flow and Matrix badges
+SALES_ANCHORED = {
+    ('level', '20'), ('zone', 'Dread'), ('biome', '39'),
+    ('zone', 'First Earth'), ('zone', 'Avidana'), ('biome', '17'),
+    ('badge', 'biome0_flow'), ('badge', 'matrix'),
+}
 ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
 ANCHOR_ROUNDS = 4
 # Tier-2 types priced at the floor multiple their own sales show (special_

@@ -52,10 +52,12 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // Chosen by a rolling-origin backtest — see HALF_LIFE_D in fit_hedonic.py.
 // 2.3.0 (2026-10-20, James): level 20, Dread and biome 39 lean on their own
 // recent sales rather than v1's hand-set numbers (SALES_ANCHORED in
-// fit_hedonic.py), Lith0 and Plague are priced from their own sales, Y-Seeds are
+// fit_hedonic.py, which lists every trait approved since), Lith0 and Plague are priced from their own sales, Y-Seeds are
 // valued as X-Seeds, Spine adds nothing on a level-20 (penthouse) parcel, and the
 // fit takes sweep legs at their own price (9k more sales).
-const HEDONIC_MODEL_VERSION = '2.3.0';
+// 2.3.1 (2026-10-20, James): First Earth, Avidana, biome 17 and the Biome 0 Flow
+// and Matrix badges move to their own sales too — the five whose sales sat above v1.
+const HEDONIC_MODEL_VERSION = '2.3.1';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
 // other traits don't stack on it. Lith0 and Plague are one floor multiple each,
