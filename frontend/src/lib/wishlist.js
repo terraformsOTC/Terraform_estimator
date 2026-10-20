@@ -80,8 +80,13 @@ export function fillText(f) {
 }
 
 /**
- * The listings page's side. Connecting here always stays on the page, and a
- * wallet the site can already read counts as connected without a prompt.
+ * The wishlist's marks on a page. Connecting here always stays on the page, and
+ * a wallet the site can already read counts as connected without a prompt.
+ *
+ * On the listings page (no `holders`) it marks listings that fill a gap. On a
+ * wallet page, `holders` is the wallets on view, and it marks their parcels
+ * that fill one, listed or not — unless they're the collector's own (in the
+ * group, or the connected wallet), where there is nothing to mark: 'mine'.
  *
  * status:
  *   'off'          no wallet connected and no wishlist on — the page as it always was
@@ -90,10 +95,11 @@ export function fillText(f) {
  *   'available'    connected, the setup includes this wallet, wishlist switched off
  *   'disconnected' wishlist on, no wallet connected
  *   'other-wallet' wishlist on, the connected wallet isn't in its group
+ *   'mine'         wallet page, wishlist on, every wallet on view is the collector's own
  *   'loading' | 'on' | 'error'
  * marks: Map tokenId -> [{ id, label, groups }] while 'on'
  */
-export function useWishlistMarks() {
+export function useWishlistMarks({ holders } = {}) {
   const [setup, setSetup] = useState(null);         // the saved helper setup, wishlist on or off
   const [connected, setConnected] = useState(null);
   const [checked, setChecked] = useState(false);    // the silent wallet check has answered
@@ -104,6 +110,8 @@ export function useWishlistMarks() {
 
   const on = !!setup?.wishlist && setup.wallets.length > 0;
   const member = inGroup(setup, connected);
+  // A fresh array each render on the wallet page, so the effect keys on this.
+  const holdersKey = holders ? holders.map(a => String(a).toLowerCase()).sort().join(',') : null;
 
   // Of several accounts, prefer one in the saved group.
   const pick = useCallback(accounts => {
@@ -130,6 +138,17 @@ export function useWishlistMarks() {
 
   useEffect(() => {
     if (!checked) { setStatus(on ? 'loading' : 'off'); return undefined; }
+    let others = null;
+    if (holdersKey !== null) {
+      const viewed = holdersKey ? holdersKey.split(',') : [];
+      const own = a => inGroup(setup, a) || a === connected?.toLowerCase();
+      others = viewed.filter(a => !own(a));
+      if (!others.length) {
+        setMarks(null);
+        setStatus(viewed.length && on ? 'mine' : 'off');
+        return undefined;
+      }
+    }
     if (!connected || !on || !member) {
       setMarks(null);
       if (!connected) setStatus(on ? 'disconnected' : 'off');
@@ -144,6 +163,7 @@ export function useWishlistMarks() {
     const q = new URLSearchParams({ wallets: setup.wallets.join(','), view: 'wishlist' });
     if (setup.goals.length) q.set('goals', setup.goals.join(','));
     if (setup.custom.length) q.set('custom', toB64url(setup.custom));
+    if (others) q.set('holders', others.join(','));
     fetch(`${API_URL}/collection?${q}`, { signal: ctrl.signal, cache: 'no-store' })
       .then(async r => {
         const j = await r.json().catch(() => ({}));
@@ -151,7 +171,7 @@ export function useWishlistMarks() {
         return j;
       })
       .then(j => {
-        setMarks(new Map((j.wishlist || []).map(x => [x.tokenId, x.fills])));
+        setMarks(new Map(((others ? j.held : j.wishlist) || []).map(x => [x.tokenId, x.fills])));
         setStatus('on');
       })
       .catch(err => {
@@ -160,7 +180,7 @@ export function useWishlistMarks() {
         setStatus('error');
       });
     return () => ctrl.abort();
-  }, [checked, connected, on, member, setup, reload]);
+  }, [checked, connected, on, member, setup, reload, holdersKey]);
 
   const connect = useCallback(async () => {
     if (!window.ethereum?.request) {
@@ -180,6 +200,12 @@ export function useWishlistMarks() {
   // next visit, when the wallet extension still reports the site as connected.
   const disconnect = useCallback(() => setConnected(null), []);
   const refresh = useCallback(() => setReload(n => n + 1), []);
+  // Something else on the page connected the wallet (the home page's own
+  // [connect wallet]): read the accounts again rather than rely on an
+  // accountsChanged event.
+  const recheck = useCallback(() => {
+    authorizedAccounts().then(accounts => { pick(accounts); setChecked(true); });
+  }, [pick]);
 
   // Switch the wishlist on from here, adding the connected wallet to the saved
   // setup first if it isn't in it (connecting it is proof enough it's theirs).
@@ -200,5 +226,5 @@ export function useWishlistMarks() {
     else setError('This browser is not letting the site save anything.');
   }, [connected]);
 
-  return { setup, connected, status, marks, error, connect, disconnect, refresh, turnOn };
+  return { setup, connected, status, marks, error, connect, disconnect, refresh, recheck, turnOn };
 }

@@ -143,6 +143,27 @@ test('the wishlist marks every listing that fills an unmet goal, at any price, w
   assert.equal(res.shoppingList.picks.length, 0); // the list keeps its price limits
 });
 
+test("another collector's parcels are marked the same way, listed or not", () => {
+  const groups = buildRubric({ presets: ['set:full-zone'] });
+  const universe = [parcel({ zone: 'Shahra' }), parcel({ zone: 'Alto' })];
+  const res = evaluate({
+    groups,
+    owned: [parcel({ tokenId: 9100, zone: 'Alto' })],
+    universe,
+    listings: [],
+    ownWallets: new Set(),
+    held: [
+      parcel({ tokenId: 9101, zone: 'Shahra' }), // a gap
+      parcel({ tokenId: 9102, zone: 'Alto' }),   // already held by the group
+      { tokenId: 9100, traits: parcel({ zone: 'Shahra' }).traits }, // the group's own parcel
+      { tokenId: 9103, traits: null },           // traits not loaded yet
+    ],
+  });
+  assert.deepEqual(res.held.map(h => h.tokenId), [9101]);
+  assert.deepEqual(res.held[0].fills.map(f => [f.id, f.groups]), [['zone:Shahra', ['Full zone']]]);
+  assert.deepEqual(evaluate({ groups, owned: [], universe, listings: [], ownWallets: new Set() }).held, []);
+});
+
 test('special traits can be picked one at a time into one group', () => {
   const [g] = buildRubric({ presets: ['trait:mesa', 'trait:penthouse', 'trait:mesa'] });
   assert.equal(g.id, 'specials');

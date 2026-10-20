@@ -221,10 +221,12 @@ function catalog() {
  * @param {Array} p.universe    [{ tokenId, traits }] — every minted parcel (for supply)
  * @param {Array} p.listings    [{ tokenId, traits, price, model, discount, seller }]
  * @param {Set}   p.ownWallets  lowercased addresses in the group (their listings are skipped)
+ * @param {Array} [p.held]      [{ tokenId, traits }] — parcels other collectors hold, listed or
+ *                              not, for their wallet page; returned as `held` with what each fills
  * @param {Map}   [p.supplyCache] target id -> supply, reused while the universe is unchanged
  * @param {object} [p.options]  { budget, maxPrice, maxPremium } — see shoppingList
  */
-function evaluate({ groups, owned, universe, listings, ownWallets, supplyCache = new Map(), options = {} }) {
+function evaluate({ groups, owned, universe, listings, ownWallets, held = [], supplyCache = new Map(), options = {} }) {
   const ownedIds = new Set(owned.map(o => o.tokenId));
   const market = listings
     .filter(l => l.traits && !ownedIds.has(l.tokenId) && !ownWallets.has(String(l.seller || '').toLowerCase()))
@@ -286,18 +288,22 @@ function evaluate({ groups, owned, universe, listings, ownWallets, supplyCache =
       groupsOf.set(t.id, names);
     }
   }
+  const fillsOf = traits => unmet.filter(t => t.match(traits))
+    .map(t => ({ id: t.id, label: t.label, groups: groupsOf.get(t.id) || [] }));
   // Every listing that fills at least one unmet goal, whatever its price — the
   // listings page marks these for a collector who saved the goals as a wishlist.
   const wishlist = [];
   for (const l of market) {
-    const fills = unmet.filter(t => t.match(l.traits));
-    if (fills.length) {
-      wishlist.push({
-        tokenId: l.tokenId,
-        price: l.price,
-        fills: fills.map(t => ({ id: t.id, label: t.label, groups: groupsOf.get(t.id) || [] })),
-      });
-    }
+    const fills = fillsOf(l.traits);
+    if (fills.length) wishlist.push({ tokenId: l.tokenId, price: l.price, fills });
+  }
+  // The same test over another collector's parcels, listed or not — their
+  // wallet page marks the ones worth asking them about.
+  const heldFills = [];
+  for (const h of held) {
+    if (!h.traits || ownedIds.has(h.tokenId)) continue;
+    const fills = fillsOf(h.traits);
+    if (fills.length) heldFills.push({ tokenId: h.tokenId, fills });
   }
 
   const allReal = [...byId.values()].filter(t => t.exists);
@@ -310,6 +316,7 @@ function evaluate({ groups, owned, universe, listings, ownWallets, supplyCache =
     groups: outGroups,
     shoppingList: plan,
     wishlist,
+    held: heldFills,
   };
 }
 

@@ -2423,13 +2423,18 @@ app.get('/collection/catalog', (_req, res) => {
 });
 
 // GET /collection?wallets=a,b&goals=set:full-zone,chroma&custom=<base64url JSON>
-//   &budget=2&max=0.5&prem=10[&view=wishlist]
+//   &budget=2&max=0.5&prem=10[&view=wishlist[&holders=c,d]]
 app.get('/collection', async (req, res) => {
   try {
     const inputs = [...new Set(parseList(req.query.wallets).map(s => s.slice(0, 100)))];
     if (inputs.length === 0) return res.status(400).json({ error: 'Enter at least one address or ENS name.' });
     if (inputs.length > MAX_HELPER_WALLETS) {
       return res.status(400).json({ error: `Up to ${MAX_HELPER_WALLETS} wallets at a time.` });
+    }
+    // Other collectors' wallets, for the wallet page's marks (view=wishlist).
+    const holderInputs = [...new Set(parseList(req.query.holders).map(s => s.slice(0, 100)))];
+    if (holderInputs.length > MAX_HELPER_WALLETS) {
+      return res.status(400).json({ error: `Up to ${MAX_HELPER_WALLETS} holders at a time.` });
     }
 
     let groups, options;
@@ -2447,16 +2452,18 @@ app.get('/collection', async (req, res) => {
     }
     if (groups.length === 0) return res.status(400).json({ error: 'Pick at least one goal.' });
 
-    let pairs;
+    let pairs, holders;
     try {
       const resolved = await Promise.all(inputs.map(resolveWalletInput));
       // Two inputs can be one wallet (a name and its address); keep the first.
       pairs = [...new Map(resolved.map((address, i) => [address.toLowerCase(), { input: inputs[i], address }])).values()];
+      holders = await Promise.all(holderInputs.map(resolveWalletInput));
     } catch (err) {
       if (err.status === 400) return res.status(400).json({ error: err.message });
       throw err;
     }
     const addresses = pairs.map(p => p.address);
+    const ownWallets = new Set(addresses.map(a => a.toLowerCase()));
 
     if (!ownerIndex.ready()) {
       await Promise.race([refreshOwnerIndex(), new Promise(r => setTimeout(r, 10_000))]);
@@ -2482,18 +2489,23 @@ app.get('/collection', async (req, res) => {
       seller: p.owner,
     }));
 
-    const { wishlist, ...result } = collectionHelper.evaluate({
-      groups, owned, universe: universe.items, listings,
-      ownWallets: new Set(addresses.map(a => a.toLowerCase())),
+    // A holder in the group is the collector's own wallet: nothing to mark there.
+    const held = ownerIndex.tokensOf(holders.filter(a => !ownWallets.has(a.toLowerCase())))
+      .map(id => ({ tokenId: id, traits: currentTraitsOf(id) }));
+
+    const { wishlist, held: heldFills, ...result } = collectionHelper.evaluate({
+      groups, owned, universe: universe.items, listings, ownWallets, held,
       supplyCache: universe.supply,
       options,
     });
     res.set('Cache-Control', 'no-store');
 
     // view=wishlist: the listings page's call for a collector who saved their
-    // goals on /helper — only which listings fill a gap, nothing else.
+    // goals on /helper — only which listings fill a gap, nothing else — and the
+    // wallet page's, which adds `holders` and gets `held`: the parcels those
+    // wallets hold that fill one.
     if (req.query.view === 'wishlist') {
-      return res.json({ wishlist, listingsAvailable: !!feed, listingsAsOf: feed?.fetchedAt || null, ownersAsOf: ownerIndex.loadedAt });
+      return res.json({ wishlist, held: heldFills, listingsAvailable: !!feed, listingsAsOf: feed?.fetchedAt || null, ownersAsOf: ownerIndex.loadedAt });
     }
 
     const ensMap = await resolveEnsNames(addresses).catch(() => ({}));

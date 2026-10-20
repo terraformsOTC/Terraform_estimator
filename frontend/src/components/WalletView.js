@@ -4,6 +4,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { EthIcon, CATEGORY_COLORS, SPECIAL_TYPE_BADGES, SpecialBadge, AutoBadgeStack, MysteryBadge, parcelImage, getLevelCategory, WalletLink } from './shared';
 import { getWalletGridTemplate } from '@/lib/walletGrid.mjs';
 import { SET_COLORS } from '@/lib/setsGlossary';
+import { WISHLIST_COLOR, fillText } from '@/lib/wishlist';
+import WishlistLine from './WishlistLine';
 import {
   EMPTY_FILTERS,
   ParcelFilterPanel,
@@ -148,7 +150,7 @@ function loadingLabel(address) {
   return address.startsWith('0x') ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
 }
 
-export default function WalletView({ data, loading, address }) {
+export default function WalletView({ data, loading, address, wishlist = null }) {
   const [sortBy, setSortBy] = useState('id');
   const [highlightFilter, setHighlightFilter] = useState(new Set());
   const [attrFilters, setAttrFilters] = useState(EMPTY_FILTERS);
@@ -156,6 +158,10 @@ export default function WalletView({ data, loading, address }) {
   // Token id whose animation is open over the grid, or null. Lives here rather
   // than in ParcelCard so only one can be open at a time.
   const [zoomed, setZoomed] = useState(null);
+  const [wishOnly, setWishOnly] = useState(false);
+  // tokenId -> the wishlist gaps it fills (lib/wishlist.js): set only on another
+  // collector's wallet, with the viewer's wishlist on and their wallet connected.
+  const marks = wishlist?.status === 'on' ? wishlist.marks : null;
 
   const sortedParcels = useMemo(() => {
     const arr = data?.parcels ? [...data.parcels] : [];
@@ -172,15 +178,22 @@ export default function WalletView({ data, loading, address }) {
 
   const filterOptions = useMemo(() => buildFilterOptions(sortedParcels), [sortedParcels]);
 
-  // Highlight chips and attribute filters compose with AND: a parcel must carry
-  // one of the selected badges *and* match every attribute selection.
+  // Highlight chips, attribute filters and [show only these] compose with AND:
+  // a parcel must carry one of the selected badges *and* match every attribute
+  // selection *and*, with the toggle on, fill a gap on the viewer's wishlist.
   const displayParcels = useMemo(() => {
-    const byBadge = highlightFilter.size === 0
+    let list = highlightFilter.size === 0
       ? sortedParcels
       : sortedParcels.filter(p => [...highlightFilter].some(key => parcelHasBadge(p, key)));
-    if (!hasActiveFilters(attrFilters)) return byBadge;
-    return byBadge.filter(p => matchesFilters(p, attrFilters));
-  }, [sortedParcels, highlightFilter, attrFilters]);
+    if (hasActiveFilters(attrFilters)) list = list.filter(p => matchesFilters(p, attrFilters));
+    if (wishOnly && marks) list = list.filter(p => marks.has(p.tokenId));
+    return list;
+  }, [sortedParcels, highlightFilter, attrFilters, wishOnly, marks]);
+
+  const wishCount = useMemo(
+    () => (marks ? sortedParcels.filter(p => marks.has(p.tokenId)).length : 0),
+    [sortedParcels, marks],
+  );
 
   const toggleAttrFilter = (key, value) => setAttrFilters(prev => toggleFilterValue(prev, key, value));
   const resetAttrFilters = () => setAttrFilters(EMPTY_FILTERS);
@@ -216,6 +229,16 @@ export default function WalletView({ data, loading, address }) {
           ))}
         </div>
       )}
+      <WishlistLine
+        wishlist={wishlist}
+        count={wishCount}
+        page="wallet"
+        extra={(
+          <button type="button" className="underline" onClick={() => setWishOnly(v => !v)}>
+            {wishOnly ? 'show all' : 'show only these'}
+          </button>
+        )}
+      />
       {/* Attribute filters — zone / biome / mode / chroma, collapsed by default */}
       {sortedParcels.length > 0 && (
         <div className="mb-6">
@@ -335,7 +358,7 @@ export default function WalletView({ data, loading, address }) {
             <p className="opacity-75 text-sm">
               no parcels match the selected filters.{' '}
               <button
-                onClick={() => { resetAttrFilters(); setHighlightFilter(new Set()); }}
+                onClick={() => { resetAttrFilters(); setHighlightFilter(new Set()); setWishOnly(false); }}
                 style={{ textDecoration: 'underline' }}
               >
                 reset
@@ -347,7 +370,7 @@ export default function WalletView({ data, loading, address }) {
               style={{ gridTemplateColumns: gridTemplate }}
             >
               {displayParcels.map(parcel => (
-                <ParcelCard key={parcel.tokenId} parcel={parcel} onZoom={setZoomed} />
+                <ParcelCard key={parcel.tokenId} parcel={parcel} onZoom={setZoomed} fills={marks?.get(parcel.tokenId)} />
               ))}
             </div>
           )}
@@ -478,7 +501,7 @@ function ParcelZoom({ tokenId, onClose }) {
   );
 }
 
-function ParcelCard({ parcel, onZoom }) {
+function ParcelCard({ parcel, onZoom, fills }) {
   const { tokenId, traits, pricing, pricingV2 } = parcel;
   const { zone, biome, level, chroma, mysteryOutlier, mode, specialType, isOneOfOne, isS0 } = traits;
   const { estimatedValue, zoneCategory, biomeCategory } = pricing;
@@ -501,7 +524,10 @@ function ParcelCard({ parcel, onZoom }) {
 
   return (
     <div className="relative">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '277 / 400' }}>
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ aspectRatio: '277 / 400', ...(fills ? { outline: `2px solid ${WISHLIST_COLOR}`, outlineOffset: '2px' } : {}) }}
+      >
         <span className="absolute inset-0 bg-placeholder animate-pulse" />
         <img
           src={parcelImage(tokenId)}
@@ -521,6 +547,11 @@ function ParcelCard({ parcel, onZoom }) {
             {displayValue.toFixed(3)}
           </span>
         </div>
+        {fills && (
+          <p className="text-xs mt-0.5 truncate" style={{ color: WISHLIST_COLOR }} title={`fills ${fills.map(fillText).join(' · ')}`}>
+            ★ {fills.map(f => f.label).join(', ')}
+          </p>
+        )}
         <p className="hidden lg:block text-xs opacity-75 mt-0.5">{zone}/B{biome}/{chroma || 'Flow'}/L{level}/{(mode || 'Terrain').replace('Origin ', '')}</p>
         <div className="hidden lg:flex items-center gap-1 flex-wrap mt-1">
           {showCategoryBadge && (

@@ -10,6 +10,7 @@ import ParcelResult from '@/components/ParcelResult';
 import UnmintedResult from '@/components/UnmintedResult';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { EthIcon, API_URL, Footer, shortAddr } from '@/components/shared';
+import { useWishlistMarks } from '@/lib/wishlist';
 
 function PortfolioStats({ data }) {
   // Totals come from the backend already summed on both sides: totalEstimatedValue
@@ -123,6 +124,16 @@ export default function Home() {
   const walletFetchId = useRef(0);
   const walletAddressRef = useRef(walletAddress);
   useEffect(() => { walletAddressRef.current = walletAddress; }, [walletAddress]);
+
+  // The wishlist's marks for the wallet on view (lib/wishlist.js): another
+  // collector's parcels that fill a gap in yours. Your own wallets — in your
+  // helper group, or the one connected — are recognised and left unmarked.
+  const viewedHolders = view === 'whale' && whaleData
+    ? (whaleData.aggregate ? whaleData.wallets.map(w => w.address) : [whaleData.address])
+    : view === 'wallet' && walletData ? [walletData.address] : [];
+  const wishlist = useWishlistMarks({ holders: viewedHolders });
+  const { recheck } = wishlist;
+  useEffect(() => { if (walletAddress) recheck(); }, [walletAddress, recheck]);
 
   useEffect(() => {
     fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot')
@@ -410,6 +421,7 @@ export default function Home() {
               data={walletData}
               loading={loading}
               address={walletAddress}
+              wishlist={wishlist}
             />
           )}
 
@@ -418,6 +430,7 @@ export default function Home() {
               data={whaleData}
               loading={loading}
               address={whaleIdentifier}
+              wishlist={wishlist}
             />
           )}
 
