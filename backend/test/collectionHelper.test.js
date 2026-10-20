@@ -4,7 +4,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildRubric, evaluate, shoppingList, catalog, RubricError } = require('../src/collectionHelper');
+const { buildRubric, evaluate, shoppingList, catalog, bladeOf, glyphSetOf, RubricError } = require('../src/collectionHelper');
 const { detectSets, ZONE_MULTIPLES, BIOME_MULTIPLES } = require('../src/pricingModel');
 
 let nextId = 1;
@@ -201,4 +201,80 @@ test('catalog combos hold only the combinations some parcel has', () => {
     { zone: 'Shahra', biome: 7, level: 20, chroma: 'Flow', mode: 'Terrain', trait: ['spine', 'penthouse'] },
   ]);
   assert.equal(catalog().combos, undefined); // no parcels given, so no claim about what exists
+});
+
+test('blades and origin glyph sets follow the renderer', () => {
+  // Blade (biome + seed) % 27 on non-origin parcels up to seed 9950.
+  assert.equal(bladeOf(parcel({ biome: 3, seed: 30 }).traits), 6);
+  assert.equal(bladeOf(parcel({ biome: 3, seed: 9951 }).traits), null);               // Y-seed: glyphs instead
+  assert.equal(bladeOf(parcel({ biome: 3, seed: 30, mode: 'Origin Daydream' }).traits), null);
+  assert.equal(bladeOf(parcel({ biome: 3 }).traits), null);                           // no seed known
+  // Glyph set seed % 28 on origins up to seed 9000; above, an X-seed (all 28).
+  assert.equal(glyphSetOf(parcel({ seed: 61, mode: 'Origin Terraform' }).traits), 5);
+  assert.equal(glyphSetOf(parcel({ seed: 9001, mode: 'Origin Daydream' }).traits), null);
+  assert.equal(glyphSetOf(parcel({ seed: 61, mode: 'Daydream' }).traits), null);
+});
+
+test('picked zones, biomes, levels, blades and glyph sets each make one group', () => {
+  const groups = buildRubric({ presets: ['zone:Holo', 'biome:30', 'zone:Shiro', 'level:20', 'blade:6', 'glyph:5', 'zone:Holo'] });
+  assert.deepEqual(groups.map(g => [g.id, g.targets.map(t => t.id)]), [
+    ['zones', ['zone:Holo', 'zone:Shiro']],
+    ['biomes', ['biome:30']],
+    ['levels', ['level:20']],
+    ['blades', ['blade:6']],
+    ['glyphs', ['glyph:5']],
+  ]);
+  // The "all" preset makes a picked group whole, before or after the picks.
+  assert.equal(buildRubric({ presets: ['blade:6', 'blades'] })[0].targets.length, 27);
+  assert.equal(buildRubric({ presets: ['glyphs', 'glyph:5'] })[0].targets.length, 28);
+  for (const bad of ['zone:Atlantis', 'biome:92', 'level:21', 'blade:27', 'glyph:-1', 'glyph:', 'biome:1.5']) {
+    assert.throws(() => buildRubric({ presets: [bad] }), RubricError, bad);
+  }
+  // A picked zone is the same target as Full zone's: one listing fills both.
+  const res = evaluate({
+    groups: buildRubric({ presets: ['zone:Holo', 'set:full-zone'] }),
+    owned: [], universe: [parcel({ zone: 'Holo' })], listings: [listing(1, { zone: 'Holo' })], ownWallets: new Set(),
+  });
+  assert.deepEqual(res.wishlist[0].fills.map(f => [f.id, f.groups]), [['zone:Holo', ['Zones', 'Full zone']]]);
+});
+
+test('a mode scope counts only parcels in those modes', () => {
+  const groups = buildRubric({ presets: ['zone:Holo', 'mode'] });
+  const universe = [parcel({ zone: 'Holo', mode: 'Terrain' }), parcel({ zone: 'Holo', mode: 'Daydream' })];
+  const owned = [parcel({ zone: 'Holo', mode: 'Daydream' })];
+  const listings = [listing(0.5, { zone: 'Holo', mode: 'Daydream' }), listing(0.9, { zone: 'Holo', mode: 'Terrain' })];
+  const any = evaluate({ groups, owned, universe, listings, ownWallets: new Set() });
+  assert.equal(any.groups[0].met, 1); // the Daydream Holo counts
+  const terrain = evaluate({ groups, owned, universe, listings, ownWallets: new Set(), modes: ['Terrain'] });
+  assert.deepEqual([terrain.groups[0].met, terrain.groups[0].total], [0, 1]); // it doesn't now
+  assert.deepEqual(terrain.wishlist.map(w => w.price), [0.9]);                // only the Terrain listing
+  // "Every mode" keeps only the modes in scope; the rest are left out, not unmet.
+  assert.deepEqual([terrain.groups[1].total, terrain.groups[1].nonexistent], [1, 4]);
+});
+
+test('the wishlist marks only listings within its price against the model', () => {
+  const groups = buildRubric({ presets: ['zone:Holo', 'zone:Shiro', 'zone:Cradle'] });
+  const listings = [
+    listing(0.9, { zone: 'Holo' }, { model: 1 }),    // 10% under
+    listing(1.1, { zone: 'Shiro' }, { model: 1 }),   // 10% over
+    { ...listing(1, { zone: 'Cradle' }), model: null }, // the model can't price it
+  ];
+  const marked = wprem => evaluate({ groups, owned: [], universe: [], listings, ownWallets: new Set(), options: { wishlistPremium: wprem } });
+  assert.deepEqual(marked(null).wishlist.map(w => w.price), [0.9, 1, 1.1]);
+  assert.deepEqual(marked(0.25).wishlist.map(w => w.price), [0.9, 1.1]);
+  assert.deepEqual(marked(0).wishlist.map(w => w.price), [0.9]);
+  assert.deepEqual(marked(-0.1).wishlist.map(w => w.price), [0.9]);
+  assert.equal(marked(-0.2).wishlistCount, 0);
+});
+
+test('catalog supply counts each value by mode', () => {
+  const { supply } = catalog([
+    parcel({ zone: 'Holo', biome: 3, level: 2, seed: 30 }),
+    parcel({ zone: 'Holo', biome: 3, level: 2, seed: 61, mode: 'Origin Daydream' }),
+  ]);
+  assert.deepEqual(supply.modes, ['Terrain', 'Daydream', 'Terraform', 'Origin Daydream', 'Origin Terraform']);
+  assert.deepEqual(supply.zone.Holo, [1, 0, 0, 1, 0]);
+  assert.deepEqual(supply.blade[6], [1, 0, 0, 0, 0]);
+  assert.deepEqual(supply.glyph[5], [0, 0, 0, 1, 0]);
+  assert.equal(supply.blade.length + supply.glyph.length, 27 + 28);
 });

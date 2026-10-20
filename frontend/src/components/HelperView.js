@@ -20,6 +20,8 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
 import { API_URL, Footer, shortAddr, vsModelColor, parcelImage } from '@/components/shared';
 import { SET_COLORS } from '@/lib/setsGlossary';
+import { FilterChip } from '@/components/ParcelFilters';
+import { BLADES, ORIGIN_SET_COUNTS, abbreviateGlyphs, originGlyphSet } from '@/lib/parcelGlyphs';
 import {
   toB64url, fromB64url, authorizedAccounts,
   readHelper, writeHelper, WISHLIST_COLOR,
@@ -33,21 +35,27 @@ const SELECT = {
   background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid rgba(232,232,232,0.3)',
   fontFamily: "'Courier New', Courier, monospace", fontSize: '14px', padding: '3px 6px',
 };
-const PREMIUMS = [
-  { value: '', label: 'any price vs model' },
-  { value: '0', label: 'at or below model' },
-  { value: '10', label: 'up to 10% over model' },
-  { value: '25', label: 'up to 25% over model' },
-  { value: '50', label: 'up to 50% over model' },
-];
+// Price against the model's value, as % over it (negative: at least that far
+// under). The shopping list and the wishlist each take one.
+const PRICE_STEPS = [-30, -20, -10, 0, 10, 25, 50, 100].map(n => ({
+  value: String(n),
+  label: n < 0 ? `at least ${-n}% under model` : n === 0 ? 'at or below model' : `up to ${n}% over model`,
+}));
+const PREMIUMS = [{ value: '', label: 'any price vs model' }, ...PRICE_STEPS];
+const WISH_PRICES = [{ value: '', label: 'any price' }, ...PRICE_STEPS];
 const FIELD_LABELS = { zone: 'zone', biome: 'biome', level: 'level', chroma: 'chroma', mode: 'mode', trait: 'special trait' };
 const FIELD_NAMES = Object.keys(FIELD_LABELS);
 
 // ─── state ───────────────────────────────────────────────────────────────────
-const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, custom: [], budget: '', max: '', prem: '' });
+// modes: the modes that count ([] = any). wprem: the wishlist's price against
+// the model, as prem is the shopping list's.
+const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, custom: [], modes: [], budget: '', max: '', prem: '', wprem: '' });
 const viewOf = s => {
   const e = emptyState();
-  return { wallets: s.wallets ?? e.wallets, goals: s.goals ?? e.goals, custom: s.custom ?? e.custom, budget: s.budget ?? '', max: s.max ?? '', prem: s.prem ?? '' };
+  return {
+    wallets: s.wallets ?? e.wallets, goals: s.goals ?? e.goals, custom: s.custom ?? e.custom, modes: s.modes ?? e.modes,
+    budget: s.budget ?? '', max: s.max ?? '', prem: s.prem ?? '', wprem: s.wprem ?? '',
+  };
 };
 
 // The view a /helper?w=…&g=… link carries, or null for a bare /helper.
@@ -60,13 +68,14 @@ function viewFromUrl() {
     wallets: (q.get('w') || '').split(',').map(w => w.trim()).filter(Boolean).slice(0, MAX_WALLETS),
     goals: q.get('g') ? q.get('g').split(',').filter(Boolean) : DEFAULT_GOALS,
     custom: Array.isArray(custom) ? custom : [],
-    budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '',
+    modes: q.get('md') ? q.get('md').split(',').filter(Boolean) : [],
+    budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '', wprem: q.get('wp') || '',
   };
 }
 
 // Same wallets and goals in any order, same custom goals and limits — a reload
 // of your own /helper URL, say.
-const viewKey = v => JSON.stringify([v.wallets.map(w => w.toLowerCase()).sort(), [...v.goals].sort(), v.custom, v.budget, v.max, v.prem]);
+const viewKey = v => JSON.stringify([v.wallets.map(w => w.toLowerCase()).sort(), [...v.goals].sort(), v.custom, [...v.modes].sort(), v.budget, v.max, v.prem, v.wprem]);
 const sameView = (a, b) => viewKey(viewOf(a)) === viewKey(viewOf(b));
 
 // The resolved addresses of `wallets`, if `result` is the answer for them (and
@@ -85,9 +94,11 @@ function stateQuery(s, { forApi = false } = {}) {
   if (s.wallets.length) q.set(forApi ? 'wallets' : 'w', s.wallets.join(','));
   if (s.goals.length) q.set(forApi ? 'goals' : 'g', s.goals.join(','));
   if (s.custom.length) q.set(forApi ? 'custom' : 'c', toB64url(s.custom));
+  if (s.modes.length) q.set(forApi ? 'modes' : 'md', s.modes.join(','));
   if (s.budget !== '') q.set(forApi ? 'budget' : 'b', s.budget);
   if (s.max !== '') q.set(forApi ? 'max' : 'm', s.max);
   if (s.prem !== '') q.set(forApi ? 'prem' : 'p', s.prem);
+  if (s.wprem !== '') q.set(forApi ? 'wprem' : 'wp', s.wprem);
   return q.toString();
 }
 
@@ -301,12 +312,13 @@ export default function HelperView() {
           )}
           {loading && !result && <p className="text-sm opacity-60">[working out your collection…]</p>}
           {result && (
-            <Results result={result} loading={loading}>
+            <Results result={result} loading={loading} modes={state.modes}>
               {!shared && (
                 <WishlistPanel
                   result={result} connected={connected} on={!!saved?.wishlist}
                   onConnect={connect} onAdd={addWallets}
                   onSwitch={on => setSaved(s => ({ ...s, wishlist: on }))}
+                  price={state.wprem} onPrice={wprem => update({ wprem })}
                 />
               )}
             </Results>
@@ -374,10 +386,28 @@ function WalletsPanel({ state, result, suggestions, onAdd, onConnect, onRemove, 
 }
 
 // ─── goals ───────────────────────────────────────────────────────────────────
+const LABEL = 'text-xs opacity-50 uppercase tracking-wider';
+// The on-chain font that draws blade glyphs, as on the parcel page (ParcelGlyphRows).
+const BLADE_FONT = "'MathcastlesRemix-Regular', monospace";
+
+// How many parcels in the chosen modes ([] = every mode) have a value, from the
+// catalog's supply (counts by mode); null when the catalog has none.
+function supplyCounter(supply, modes) {
+  if (!supply) return () => null;
+  const idx = modes.length ? modes.map(m => supply.modes.indexOf(m)).filter(i => i >= 0) : supply.modes.map((_, i) => i);
+  return (kind, value) => {
+    const row = supply[kind]?.[value];
+    return row ? idx.reduce((n, i) => n + row[i], 0) : null;
+  };
+}
+
 function GoalsPanel({ state, catalog, update }) {
   const toggle = id => update({ goals: state.goals.includes(id) ? state.goals.filter(g => g !== id) : [...state.goals, id] });
+  const countOf = useMemo(() => supplyCounter(catalog.supply, state.modes), [catalog, state.modes]);
   const sets = catalog.presets.filter(p => p.category === 'sets');
   const traits = catalog.presets.filter(p => p.category !== 'sets');
+  const zones = useMemo(() => [...catalog.fields.zone].sort((a, b) => a.localeCompare(b)), [catalog]);
+  const menuValues = { zone: zones, biome: catalog.fields.biome, level: catalog.fields.level };
   const Check = ({ p }) => (
     <label className="flex items-baseline gap-2 cursor-pointer text-sm" title={p.description}>
       <input type="checkbox" checked={state.goals.includes(p.id)} onChange={() => toggle(p.id)} style={{ accentColor: '#e8e8e8' }} />
@@ -385,20 +415,44 @@ function GoalsPanel({ state, catalog, update }) {
       <span className="text-xs opacity-45">{p.targets}{p.attainability ? ` · ${p.attainability.toLowerCase()}` : ''}</span>
     </label>
   );
+  // The presets that can also be picked value by value.
+  const pickers = {
+    specials: {
+      prefix: 'trait:', sections: ['special', 'visual', 'level'], columns: 'flex flex-wrap gap-x-4 gap-y-1 mt-0.5',
+      items: catalog.fields.trait.map(t => ({ id: t.id, section: t.group, label: <span className="whitespace-nowrap">{t.label}</span> })),
+    },
+    blades: {
+      prefix: 'blade:', columns: 'flex flex-col gap-1 mt-0.5',
+      items: BLADES.map((blade, i) => ({ id: String(i), title: blade, label: <BladeLabel n={i + 1} blade={blade} count={countOf('blade', i)} /> })),
+    },
+    glyphs: {
+      prefix: 'glyph:', columns: 'grid sm:grid-cols-2 gap-x-6 gap-y-1 mt-0.5',
+      items: ORIGIN_SET_COUNTS.map((_, i) => ({ id: String(i), label: <GlyphSetLabel set={i} count={countOf('glyph', i)} /> })),
+    },
+  };
   return (
     <section>
       <h2 className="text-lg mb-2 opacity-80">[goals]</h2>
+      <div className="flex flex-col gap-3 mb-6">
+        <ModeScope modes={state.modes} all={catalog.fields.mode} onChange={modes => update({ modes })} />
+        {PICK_MENUS.map(menu => (
+          <PickMenu
+            key={menu.kind} menu={menu} values={menuValues[menu.kind]} state={state} update={update}
+            countOf={countOf} scoped={state.modes.length > 0}
+          />
+        ))}
+      </div>
       <div className="grid gap-x-8 gap-y-1 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <span className="text-xs opacity-50 uppercase tracking-wider mb-1">sets</span>
+          <span className={`${LABEL} mb-1`}>sets</span>
           {sets.map(p => <Check key={p.id} p={p} />)}
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-xs opacity-50 uppercase tracking-wider mb-1 mt-3 md:mt-0">traits</span>
-          {traits.map(p => (p.id === 'specials'
-            ? <SpecialsPicker key={p.id} preset={p} traits={catalog.fields.trait} state={state} update={update} />
+          <span className={`${LABEL} mb-1 mt-3 md:mt-0`}>traits</span>
+          {traits.map(p => (pickers[p.id]
+            ? <MultiPicker key={p.id} preset={p} {...pickers[p.id]} state={state} update={update} />
             : <Check key={p.id} p={p} />))}
-          <span className="text-xs opacity-50 uppercase tracking-wider mb-1 mt-4">your own goals</span>
+          <span className={`${LABEL} mb-1 mt-4`}>your own goals</span>
           {state.custom.map((spec, i) => (
             <span key={i} className="text-sm flex items-baseline gap-2">
               <span>{customLabel(spec)}</span>
@@ -406,7 +460,7 @@ function GoalsPanel({ state, catalog, update }) {
             </span>
           ))}
           {state.custom.length < catalog.limits.customGoals && (
-            <CustomGoalBuilder catalog={catalog} onAdd={spec => update({ custom: [...state.custom, spec] })} />
+            <CustomGoalBuilder catalog={catalog} modes={state.modes} onAdd={spec => update({ custom: [...state.custom, spec] })} />
           )}
         </div>
       </div>
@@ -414,27 +468,119 @@ function GoalsPanel({ state, catalog, update }) {
   );
 }
 
-// Special traits: every one (`specials`) or picked one at a time (`trait:<id>`),
-// one goal group either way (buildRubric in backend/src/collectionHelper.js).
-const TRAIT_GROUPS = ['special', 'visual', 'level'];
+// Which modes count. None picked: every mode. Pick Terrain and the whole setup
+// is Terrain only: the parcels held, the listings that fill a gap and the
+// supply (evaluate's `modes` in backend/src/collectionHelper.js).
+function ModeScope({ modes, all, onChange }) {
+  const toggle = m => onChange(modes.includes(m) ? modes.filter(x => x !== m) : all.filter(x => x === m || modes.includes(x)));
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-2 mb-1 text-xs">
+        <span className={LABEL}>mode</span>
+        <span className="opacity-45">
+          {modes.length ? `only ${modes.join(', ')} parcels count, for every goal below` : 'every mode counts; pick some to keep to them'}
+        </span>
+        {modes.length > 0 && <button type="button" className="opacity-60 hover:opacity-100" onClick={() => onChange([])}>[any mode]</button>}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1">
+        {all.map(m => (
+          <FilterChip key={m} label={m} active={modes.includes(m)} owned title={`${m} parcels`} onClick={() => toggle(m)} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-function SpecialsPicker({ preset, traits, state, update }) {
-  const all = traits.map(t => t.id);
-  const chosen = state.goals.includes('specials')
+// Zones, biomes and levels picked by the handful, as chips like the wallet
+// filter's. Each pick is a goal (`zone:Holo`, …) and a kind's picks make one
+// group: one parcel in each. A value no parcel in the chosen modes has is
+// greyed out; one already picked stays removable.
+const PICK_MENUS = [
+  { kind: 'zone', label: 'zones', format: v => v, layout: 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6' },
+  { kind: 'biome', label: 'biomes', format: v => `B${v}`, layout: 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10' },
+  { kind: 'level', label: 'levels', format: v => `L${v}`, layout: 'grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10' },
+];
+const PICKS_SHOWN = 8; // picked values listed beside a closed menu
+
+function PickMenu({ menu, values, state, update, countOf, scoped }) {
+  const [open, setOpen] = useState(false);
+  const prefix = `${menu.kind}:`;
+  const picked = values.filter(v => state.goals.includes(`${prefix}${v}`));
+  const toggle = v => {
+    const id = `${prefix}${v}`;
+    update({ goals: state.goals.includes(id) ? state.goals.filter(g => g !== id) : [...state.goals, id] });
+  };
+  const more = picked.length - PICKS_SHOWN;
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-2 text-xs">
+        <button type="button" className="flex items-baseline gap-2" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+          <span className={LABEL}>{menu.label}</span>
+          <span className="opacity-50">{open ? '[−]' : '[+]'}</span>
+        </button>
+        {picked.length > 0 ? (
+          <>
+            <span className="opacity-75">
+              {picked.length} picked{!open && `: ${picked.slice(0, PICKS_SHOWN).map(menu.format).join(' · ')}${more > 0 ? ` +${more}` : ''}`}
+            </span>
+            <button type="button" className="opacity-50 hover:opacity-100" onClick={() => update({ goals: state.goals.filter(g => !g.startsWith(prefix)) })}>
+              [clear]
+            </button>
+          </>
+        ) : (
+          <span className="opacity-40">pick any: one parcel in each</span>
+        )}
+      </div>
+      {open && (
+        <div className={`${menu.layout} gap-1 mt-1`}>
+          {values.map(v => {
+            const count = countOf(menu.kind, v);
+            const on = picked.includes(v);
+            const what = `${menu.kind} ${menu.format(v)}`;
+            return (
+              <FilterChip
+                key={String(v)} label={menu.format(v)} count={count ?? 0} active={on} owned={on || count == null || count > 0}
+                title={count == null ? what : `${what}: ${count} ${count === 1 ? 'parcel' : 'parcels'}${scoped ? ' in these modes' : ''}`}
+                onClick={() => toggle(v)}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A preset that can also be picked value by value: every one (the preset's id)
+// or picks written `<prefix><id>`, one goal group either way (buildRubric in
+// backend/src/collectionHelper.js). Special traits, blades and glyph sets.
+function MultiPicker({ preset, prefix, items, sections = null, columns, state, update }) {
+  const all = items.map(t => t.id);
+  const chosen = state.goals.includes(preset.id)
     ? new Set(all)
-    : new Set(state.goals.filter(g => g.startsWith('trait:')).map(g => g.slice(6)));
+    : new Set(state.goals.filter(g => g.startsWith(prefix)).map(g => g.slice(prefix.length)));
   const some = chosen.size > 0 && chosen.size < all.length;
   const [open, setOpen] = useState(some);
   const choose = ids => {
-    const rest = state.goals.filter(g => g !== 'specials' && !g.startsWith('trait:'));
+    const rest = state.goals.filter(g => g !== preset.id && !g.startsWith(prefix));
     const picks = all.filter(id => ids.has(id));
-    update({ goals: picks.length === all.length ? [...rest, 'specials'] : [...rest, ...picks.map(id => `trait:${id}`)] });
+    update({ goals: picks.length === all.length ? [...rest, preset.id] : [...rest, ...picks.map(id => `${prefix}${id}`)] });
   };
   const toggle = id => {
     const next = new Set(chosen);
     if (next.has(id)) next.delete(id); else next.add(id);
     choose(next);
   };
+  const list = section => (
+    <div className={columns}>
+      {items.filter(t => section == null || t.section === section).map(t => (
+        <label key={t.id} className="flex items-baseline gap-1.5 cursor-pointer min-w-0" title={t.title}>
+          <input type="checkbox" checked={chosen.has(t.id)} onChange={() => toggle(t.id)} style={{ accentColor: '#e8e8e8' }} />
+          {t.label}
+        </label>
+      ))}
+    </div>
+  );
   return (
     <div className="text-sm">
       <div className="flex flex-wrap items-baseline gap-x-2">
@@ -454,23 +600,53 @@ function SpecialsPicker({ preset, traits, state, update }) {
         </button>
       </div>
       {open && (
-        <div className="mt-1 mb-2 ml-6 flex flex-col gap-2">
-          {TRAIT_GROUPS.map(group => (
-            <div key={group}>
-              <span className="text-xs opacity-45 uppercase tracking-wider">{group}</span>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-0.5">
-                {traits.filter(t => t.group === group).map(t => (
-                  <label key={t.id} className="flex items-baseline gap-1.5 cursor-pointer whitespace-nowrap">
-                    <input type="checkbox" checked={chosen.has(t.id)} onChange={() => toggle(t.id)} style={{ accentColor: '#e8e8e8' }} />
-                    <span>{t.label}</span>
-                  </label>
-                ))}
-              </div>
+        <div className="mt-1 mb-2 ml-6 flex flex-col gap-2 min-w-0">
+          {sections ? sections.map(s => (
+            <div key={s}>
+              <span className="text-xs opacity-45 uppercase tracking-wider">{s}</span>
+              {list(s)}
             </div>
-          ))}
+          )) : list(null)}
         </div>
       )}
     </div>
+  );
+}
+
+// A blade as the parcel page draws it: its opening and closing runs in the
+// on-chain font, with how many parcels (in the chosen modes) carry it.
+function BladeLabel({ n, blade, count }) {
+  const [head, tail] = abbreviateGlyphs(blade);
+  return (
+    <span className="flex items-baseline gap-2 min-w-0">
+      <span className="text-xs opacity-60 w-5 shrink-0 text-right">{n}</span>
+      <span className="whitespace-pre overflow-hidden text-ellipsis min-w-0" style={{ fontFamily: BLADE_FONT }}>
+        {head}
+        {tail != null && (
+          <>
+            <span className="opacity-50" style={{ fontFamily: "'Courier New', Courier, monospace" }}>{' … '}</span>
+            {tail}
+          </>
+        )}
+      </span>
+      {count != null && <span className="text-xs opacity-45 shrink-0">{count}</span>}
+    </span>
+  );
+}
+
+// An origin glyph set: its ten glyphs (in the system font, as the animation
+// paints them) and how many origins (in the chosen modes) animate it.
+function GlyphSetLabel({ set, count }) {
+  const glyphs = originGlyphSet(set);
+  const marksOnly = /^\p{M}+$/u.test(glyphs);
+  return (
+    <span className="flex items-baseline gap-2 min-w-0">
+      <span className="text-xs opacity-60 w-12 shrink-0">set {set}</span>
+      <span className="whitespace-pre overflow-hidden min-w-0">
+        {marksOnly ? <span className="text-xs opacity-60">near-invisible marks</span> : glyphs}
+      </span>
+      {count != null && <span className="text-xs opacity-45 shrink-0">{count}</span>}
+    </span>
   );
 }
 
@@ -483,20 +659,23 @@ function valuesFor(fields, field) {
 // conditions above it, so a combination no parcel has (Shahra in Plague) can't
 // be built. catalog.combos holds one row per combination that exists, each
 // field an index into catalog.fields and the trait a bit mask over
-// fields.trait (combinations in backend/src/collectionHelper.js). A catalog
-// without it, cached from before, offers every value as it used to.
+// fields.trait (combinations in backend/src/collectionHelper.js). With modes
+// picked, only parcels in those modes count. A catalog without combos, cached
+// from before, offers every value as it used to.
 function makeFacets({ fields, combos }) {
   const col = Object.fromEntries((combos?.fields || []).map((f, i) => [f, i]));
   const rows = combos?.rows?.length && FIELD_NAMES.every(f => f in col) ? combos.rows : null;
   const index = Object.fromEntries(FIELD_NAMES.map(f => [f, new Map(valuesFor(fields, f).map((o, i) => [o.value, i]))]));
   const has = (row, field, i) => (field === 'trait' ? (row[col.trait] & (1 << i)) !== 0 : row[col[field]] === i);
   return {
-    values(field, where = []) {
+    values(field, where = [], modes = []) {
       const all = valuesFor(fields, field);
       if (!rows) return all;
       const keys = where.map(c => [c.field, index[c.field].get(c.value)]);
+      const inModes = modes.length ? new Set(modes.map(m => index.mode.get(m))) : null;
       const seen = new Set();
       for (const row of rows) {
+        if (inModes && !inModes.has(row[col.mode])) continue;
         if (!keys.every(([f, i]) => i != null && has(row, f, i))) continue;
         if (field === 'trait') all.forEach((_, i) => { if (has(row, 'trait', i)) seen.add(i); });
         else seen.add(row[col[field]]);
@@ -509,13 +688,14 @@ function makeFacets({ fields, combos }) {
 // Keeps a draft goal one that some parcel meets, after every edit: a condition
 // on the "every" field goes (every zone already spans the zones), and a value
 // no parcel has alongside the conditions above it gives way to the first that
-// one does. A trait condition left with no value at all goes too.
-function settle(draft, facets) {
+// one does. A trait condition left with no value at all goes too. `modes`:
+// the modes that count, from the goals' mode picks.
+function settle(draft, facets, modes) {
   const used = new Set(draft.kind === 'each' ? [draft.each] : []);
   const conds = [];
   for (const c of draft.conds) {
     if (used.has(c.field)) continue;
-    const opts = facets.values(c.field, conds);
+    const opts = facets.values(c.field, conds, modes);
     if (!opts.length) continue;
     conds.push({ field: c.field, value: opts.some(o => o.value === c.value) ? c.value : opts[0].value });
     used.add(c.field);
@@ -523,12 +703,14 @@ function settle(draft, facets) {
   return { ...draft, conds };
 }
 
-function CustomGoalBuilder({ catalog, onAdd }) {
+function CustomGoalBuilder({ catalog, modes, onAdd }) {
   const facets = useMemo(() => makeFacets(catalog), [catalog]);
   // kind: 'each' (one of every <each>) | 'one' (a parcel with)
-  const [draft, setDraft] = useState(() => settle({ kind: 'each', each: 'biome', conds: [{ field: 'chroma', value: 'Pulse' }] }, facets));
+  const [draft, setDraft] = useState(() => settle({ kind: 'each', each: 'biome', conds: [{ field: 'chroma', value: 'Pulse' }] }, facets, modes));
   const { kind, each, conds } = draft;
-  const edit = fn => setDraft(d => settle(fn(d), facets));
+  const edit = fn => setDraft(d => settle(fn(d), facets, modes));
+  // Picking modes can leave a condition's value with no parcel: settle again.
+  useEffect(() => { setDraft(d => settle(d, facets, modes)); }, [facets, modes]);
   const setCond = (i, patch) => edit(d => ({ ...d, conds: d.conds.map((c, j) => (j === i ? { ...c, ...patch } : c)) }));
   // Per condition, the fields it can switch to (none another condition or the
   // "every" field has, and only ones the rows above leave a value for) and its
@@ -536,14 +718,14 @@ function CustomGoalBuilder({ catalog, onAdd }) {
   const { options, next } = useMemo(() => {
     const open = (above, skip) => {
       const taken = new Set([...(kind === 'each' ? [each] : []), ...conds.filter((_, j) => j !== skip).map(c => c.field)]);
-      return FIELD_NAMES.filter(f => !taken.has(f) && facets.values(f, above).length > 0);
+      return FIELD_NAMES.filter(f => !taken.has(f) && facets.values(f, above, modes).length > 0);
     };
     const nextField = open(conds, -1)[0];
     return {
-      options: conds.map((c, i) => ({ fields: open(conds.slice(0, i), i), values: facets.values(c.field, conds.slice(0, i)) })),
-      next: nextField ? { field: nextField, value: facets.values(nextField, conds)[0].value } : null,
+      options: conds.map((c, i) => ({ fields: open(conds.slice(0, i), i), values: facets.values(c.field, conds.slice(0, i), modes) })),
+      next: nextField ? { field: nextField, value: facets.values(nextField, conds, modes)[0].value } : null,
     };
-  }, [kind, each, conds, facets]);
+  }, [kind, each, conds, facets, modes]);
   const add = () => {
     const where = Object.fromEntries(conds.map(c => [c.field, c.value]));
     if (kind === 'one' && conds.length === 0) return;
@@ -615,7 +797,7 @@ function OptionsPanel({ state, update }) {
 }
 
 // ─── results ─────────────────────────────────────────────────────────────────
-function Results({ result, loading, children }) {
+function Results({ result, loading, modes, children }) {
   const { summary, groups, shoppingList, parcels, wallets, setsCompleted } = result;
   const [copied, setCopied] = useState(false);
   const share = () => {
@@ -628,6 +810,7 @@ function Results({ result, loading, children }) {
           {parcels} {parcels === 1 ? 'parcel' : 'parcels'} in {wallets.length} {wallets.length === 1 ? 'wallet' : 'wallets'} ·{' '}
           <strong>{summary.met} of {summary.targets}</strong> goals met · {summary.listedNow} missing{' '}
           {summary.listedNow === 1 ? 'goal is' : 'goals are'} listed right now
+          {modes.length > 0 && <span className="opacity-60"> · counting {modes.join(', ')} parcels only</span>}
         </p>
         <p className="text-xs opacity-45 mt-1">
           {!result.listingsAvailable && 'Listings are unavailable right now, so nothing shows as for sale. '}
@@ -641,7 +824,7 @@ function Results({ result, loading, children }) {
 
       <ShoppingList plan={shoppingList} />
 
-      {groups.map(g => <GoalGroup key={g.id} group={g} />)}
+      {groups.map(g => <GoalGroup key={g.id} group={g} scoped={modes.length > 0} />)}
     </div>
   );
 }
@@ -682,7 +865,7 @@ function SharedViewBanner({ saved, onKeep, onBack }) {
 // wishlist is only ever made by its collector; after that it follows their
 // edits here, and the listings page marks every listing that fills one of
 // these gaps while a wallet in the group is connected.
-function WishlistPanel({ result, connected, on, onConnect, onAdd, onSwitch }) {
+function WishlistPanel({ result, connected, on, onConnect, onAdd, onSwitch, price, onPrice }) {
   const member = !!connected && result.wallets.some(w => w.address.toLowerCase() === connected.toLowerCase());
   const btn = 'btn-primary btn-xs ml-2';
   let body;
@@ -745,6 +928,19 @@ function WishlistPanel({ result, connected, on, onConnect, onAdd, onSwitch }) {
       <h2 className="text-lg mb-1 opacity-80">[wishlist]</h2>
       <p className="text-sm opacity-80">{body}</p>
       {note && <p className="text-sm mt-2" style={{ color: '#e8b86c' }}>{note}</p>}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm">
+        <label className="flex items-center gap-2">
+          <span className="opacity-80">mark listings priced</span>
+          <select style={SELECT} value={price} onChange={e => onPrice(e.target.value)} aria-label="Wishlist price against the model">
+            {WISH_PRICES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+          </select>
+        </label>
+        {result.wishlistCount != null && (
+          <span className="text-xs opacity-60">
+            {result.wishlistCount} {result.wishlistCount === 1 ? 'listing fills' : 'listings fill'} a gap at that price right now
+          </span>
+        )}
+      </div>
     </section>
   );
 }
@@ -794,7 +990,7 @@ function ShoppingList({ plan }) {
   );
 }
 
-function GoalGroup({ group }) {
+function GoalGroup({ group, scoped }) {
   const [showMet, setShowMet] = useState(false);
   const missing = group.targets.filter(t => !t.met);
   const listed = missing.filter(t => t.listed > 0).sort((a, b) => a.cheapest[0].price - b.cheapest[0].price);
@@ -872,7 +1068,9 @@ function GoalGroup({ group }) {
         </div>
       )}
       {group.nonexistent > 0 && (
-        <p className="text-xs opacity-40 mt-1">{group.nonexistent} combinations don't exist on any parcel and are left out.</p>
+        <p className="text-xs opacity-40 mt-1">
+          {group.nonexistent} left out: no parcel{scoped ? ' in the chosen modes' : ''} has {group.nonexistent === 1 ? 'it' : 'them'}.
+        </p>
       )}
     </section>
   );

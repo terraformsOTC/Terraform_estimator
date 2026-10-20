@@ -2347,30 +2347,38 @@ function refreshOwnerIndex() {
 // A parcel's traits as they are now: the nightly snapshot, overlaid with what
 // the parcel store last read from chain (mode, chroma and level change when a
 // parcel is dreamed or terraformed) and any antenna change the poller saw.
+// Plus its seed (fixed at mint), which picks its blade or origin glyph set.
 function currentTraitsOf(tokenId) {
   const id = Number(tokenId);
   const rec = MINTED_TRAITS_SNAPSHOT?.get(id);
   if (!rec) return null;
+  const seed = PARCEL_CONSTANTS[id]?.[0] ?? null;
   const doc = parcelStore.docs.get(id);
   const live = antennaOverrides.get(id);
-  if (!doc && !live) return snapshotTraits(rec);
+  if (!doc && !live) return { ...snapshotTraits(rec), seed };
   const attr = name => doc?.attributes.find(a => a.trait_type === name)?.value;
   const level = parseInt(attr('Level'), 10);
   const mystery = attr('???');
-  return snapshotTraits({
+  return { ...snapshotTraits({
     ...rec,
     mode: attr('Mode') || rec.mode,
     chroma: attr('Chroma') || rec.chroma,
     level: Number.isFinite(level) ? level : rec.level,
     mysteryValue: mystery != null ? Number(mystery) : rec.mysteryValue,
     ...(live ? { antennaOn: live.antennaOn, antennaFirstTs: live.antennaFirstTs } : {}),
-  });
+  }), seed };
 }
 
 // Every minted parcel with current traits, for supply counts. Rebuilt every 10
-// minutes; the per-target supply counts live with it and reset when it does.
+// minutes; the per-target supply counts live with it and reset when it does,
+// one set per mode scope ('' for none).
 const UNIVERSE_TTL_MS = 10 * 60 * 1000;
 let universeCache = { at: 0, items: [], supply: new Map() };
+function supplyCacheFor(universe, modes) {
+  const key = [...modes].sort().join('|');
+  if (!universe.supply.has(key)) universe.supply.set(key, new Map());
+  return universe.supply.get(key);
+}
 function collectionUniverse() {
   const now = Date.now();
   if (universeCache.items.length && now - universeCache.at < UNIVERSE_TTL_MS) return universeCache;
@@ -2383,9 +2391,12 @@ function collectionUniverse() {
   return universeCache;
 }
 
+// 60 a minute: the helper asks again after each edit (debounced 450ms), and
+// picking zones or biomes chip by chip is a run of edits. A request is a few
+// milliseconds of in-memory work.
 const collectionLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests — please wait a moment.' },
@@ -2433,8 +2444,8 @@ app.get('/collection/catalog', (_req, res) => {
   res.json(catalogCache.body);
 });
 
-// GET /collection?wallets=a,b&goals=set:full-zone,chroma&custom=<base64url JSON>
-//   &budget=2&max=0.5&prem=10[&view=wishlist[&holders=c,d]]
+// GET /collection?wallets=a,b&goals=set:full-zone,chroma,zone:Holo&custom=<base64url JSON>
+//   &modes=Terrain&budget=2&max=0.5&prem=10&wprem=0[&view=wishlist[&holders=c,d]]
 app.get('/collection', async (req, res) => {
   try {
     const inputs = [...new Set(parseList(req.query.wallets).map(s => s.slice(0, 100)))];
@@ -2448,15 +2459,20 @@ app.get('/collection', async (req, res) => {
       return res.status(400).json({ error: `Up to ${MAX_HELPER_WALLETS} holders at a time.` });
     }
 
-    let groups, options;
+    let groups, options, modes;
     try {
       groups = collectionHelper.buildRubric({ presets: parseList(req.query.goals), custom: parseCustomGoals(req.query.custom) });
       options = {
         budget: parseAmount(req.query.budget, 'budget'),
         maxPrice: parseAmount(req.query.max, 'max price'),
-        // prem: max % over the model's ask-side value (0 = at or below model).
+        // prem: max % over the model's ask-side value (0 = at or below model;
+        // negative = at least that far under). wprem: the same for the wishlist.
         maxPremium: req.query.prem == null || req.query.prem === '' ? null : parsePremium(req.query.prem),
+        wishlistPremium: req.query.wprem == null || req.query.wprem === '' ? null : parsePremium(req.query.wprem),
       };
+      modes = parseList(req.query.modes);
+      const unknown = modes.find(m => !collectionHelper.MODES.includes(m));
+      if (unknown) throw new RubricError(`unknown mode "${unknown.slice(0, 40)}"`);
     } catch (err) {
       if (err instanceof RubricError) return res.status(400).json({ error: err.message });
       throw err;
@@ -2505,8 +2521,8 @@ app.get('/collection', async (req, res) => {
       .map(id => ({ tokenId: id, traits: currentTraitsOf(id) }));
 
     const { wishlist, held: heldFills, ...result } = collectionHelper.evaluate({
-      groups, owned, universe: universe.items, listings, ownWallets, held,
-      supplyCache: universe.supply,
+      groups, owned, universe: universe.items, listings, ownWallets, held, modes,
+      supplyCache: supplyCacheFor(universe, modes),
       options,
     });
     res.set('Cache-Control', 'no-store');

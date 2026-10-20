@@ -1,6 +1,6 @@
 // The collection helper's saved setup, and the wishlist built on it.
 //
-// /helper saves a collector's setup (wallets, goals, shopping-list limits) in
+// /helper saves a collector's setup (wallets, goals, modes, price limits) in
 // this browser as they edit it. A /helper link carrying someone else's view
 // opens as a "shared view" that is never saved unless they choose to keep it,
 // so opening a link can't change their setup (see HelperView).
@@ -163,6 +163,8 @@ export function useWishlistMarks({ holders } = {}) {
     const q = new URLSearchParams({ wallets: setup.wallets.join(','), view: 'wishlist' });
     if (setup.goals.length) q.set('goals', setup.goals.join(','));
     if (setup.custom.length) q.set('custom', toB64url(setup.custom));
+    if (setup.modes?.length) q.set('modes', setup.modes.join(','));
+    if (setup.wprem) q.set('wprem', setup.wprem);
     if (others) q.set('holders', others.join(','));
     fetch(`${API_URL}/collection?${q}`, { signal: ctrl.signal, cache: 'no-store' })
       .then(async r => {

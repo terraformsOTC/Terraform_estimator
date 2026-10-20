@@ -205,7 +205,7 @@ export function toggleFilterValue(filters, key, value) {
 
 // Label left, owned count right — keeps the count visually distinct from
 // numeric labels like B46 / L14, which would otherwise run together.
-function FilterChip({ label, count, active, owned, title, onClick }) {
+export function FilterChip({ label, count, active, owned, title, onClick }) {
   return (
     <button
       onClick={owned ? onClick : undefined}

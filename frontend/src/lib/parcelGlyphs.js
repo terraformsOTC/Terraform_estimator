@@ -108,6 +108,13 @@ export function customGlyphs(mode, seed) {
   return null;
 }
 
+// Uni set `set`'s glyphs as an origin animating it shows them, combining marks
+// dropped as in customGlyphs (set 13 is all marks, so it keeps the raw run).
+export function originGlyphSet(set) {
+  const raw = makeSet(ORIGIN_UNI[set]);
+  return raw.replace(/\p{M}/gu, '') || raw;
+}
+
 // Long blades (up to 133 glyphs) read as their opening and closing runs:
 // returns [head, tail], or [text, null] when the whole thing fits.
 export function abbreviateGlyphs(text, head = 8, tail = 8) {

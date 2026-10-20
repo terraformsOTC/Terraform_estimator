@@ -17,6 +17,19 @@ const WORDS = {
   },
 };
 
+// What narrows the marks, as the helper sets it: "Terrain only · at or below
+// model". The price applies to listings only; a parcel on a wallet page may not
+// be listed at all.
+function narrowedBy(setup, page) {
+  const parts = [];
+  if (setup?.modes?.length) parts.push(`${setup.modes.join(', ')} only`);
+  const p = setup?.wprem === '' || setup?.wprem == null ? NaN : Number(setup.wprem);
+  if (page === 'listings' && Number.isFinite(p)) {
+    parts.push(p < 0 ? `at least ${-p}% under model` : p === 0 ? 'at or below model' : `up to ${p}% over model`);
+  }
+  return parts.join(' · ');
+}
+
 // What the collector's wishlist says about the page (lib/wishlist.js): nothing
 // at all with no wallet connected and no wishlist on (status 'off'); with a
 // wallet connected, the way to switch the marks on. `extra` sits after the
@@ -73,9 +86,11 @@ export default function WishlistLine({ wishlist, count, page = 'listings', extra
       </>
     );
   } else {
+    const narrow = narrowedBy(wishlist.setup, page);
+    const qualifier = narrow && <span className="opacity-70"> ({narrow})</span>;
     body = count > 0
-      ? <>{star} <span style={{ color: WISHLIST_COLOR }}>{words.count(count)}</span>{extra && <> · {extra}</>} · {edit}</>
-      : <>{star} {words.none} · {edit}</>;
+      ? <>{star} <span style={{ color: WISHLIST_COLOR }}>{words.count(count)}</span>{qualifier}{extra && <> · {extra}</>} · {edit}</>
+      : <>{star} {words.none}{qualifier} · {edit}</>;
   }
   return <div className="mb-4 text-xs opacity-80">{body}</div>;
 }
