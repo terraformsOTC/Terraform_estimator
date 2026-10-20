@@ -136,6 +136,17 @@ SALES_PRICED_SPECIALS = {'Lith0', 'Plague'}
 # Aug 2025, cleared ~1.9x the floor, level with other biome-39 parcels), so +5%
 # for now, to come down further if the sales keep saying so (2026-10-20).
 FIXED_PREMIUMS = {('badge', 'mesa'): 1.05}
+# Sweep legs: several parcels settled in one transaction, each its own order at its
+# own price. The view (v_model_sales) drops every multi-parcel transaction as a
+# possible bundle, but only one order spanning several parcels repeats its total
+# on every leg. A leg is its own price when no other leg of the transaction
+# shares that price, when several sellers share it (separate listings), or when
+# it is under 1.5x the day's floor (a floor sweep from one seller; a bundle
+# order's total would be far above that) — the same test export_sales_history.js
+# uses to tell sweeps from bundles on the /sales page. James, 2026-10-20: these
+# are clear data points and belong in the model. INCLUDE_SWEEPS=0 drops them.
+INCLUDE_SWEEPS = os.environ.get('INCLUDE_SWEEPS', '1') != '0'
+BUNDLE_MIN_FLOOR_MULTIPLE = 1.5
 MODE_GROUP = {'Terrain': 'Terrain', 'Daydream': 'DDTF', 'Terraform': 'DDTF',
               'Origin Daydream': 'ORIG', 'Origin Terraform': 'ORIG'}
 # Plan §4.5: level premium lives ONLY at the extremes (basement L1–3, penthouse
@@ -188,17 +199,35 @@ def tier2_type(tid, m, flags):
 
 def load_records(mt, override_ids, flags):
     """Eligible sales for the fit, and the Tier-2 sales kept aside for
-    special_multiples."""
+    special_multiples. Eligible = the view's model_eligible, plus sweep legs that
+    carry their own price (INCLUDE_SWEEPS)."""
     con = sqlite3.connect(DB)
     rows = con.execute("""
         SELECT token_id, event_unix, price_native, floor_at_sale, side,
-               zone, biome, level, mode
+               zone, biome, level, mode, model_eligible, is_bundle, tx_hash, lower(seller)
         FROM v_model_sales
-        WHERE model_eligible=1 AND floor_at_sale > 0 AND price_native > 0
+        WHERE floor_at_sale > 0 AND price_native > 0
+          AND is_wash = 0 AND lower(buyer) <> lower(seller)
+          AND payment_symbol IN ('ETH', 'WETH')
     """).fetchall()
     con.close()
+    # Legs of one transaction at one price, and how many sellers they come from.
+    groups = defaultdict(lambda: [0, set()])
+    for r in rows:
+        if r[10]:
+            g = groups[(r[11], r[2])]
+            g[0] += 1
+            g[1].add(r[12])
+    def own_price(tx, price, floor):
+        n, sellers = groups[(tx, price)]
+        return n == 1 or len(sellers) > 1 or price < BUNDLE_MIN_FLOOR_MULTIPLE * floor
     recs, tier2, dropped = [], [], Counter()
-    for tid, u, price, floor, side, zone, biome, level, mode in rows:
+    for tid, u, price, floor, side, zone, biome, level, mode, eligible, bundle, tx, seller in rows:
+        if bundle:
+            if not (INCLUDE_SWEEPS and own_price(tx, price, floor)):
+                dropped['bundle_order'] += 1; continue
+        elif not eligible:
+            dropped['ineligible'] += 1; continue
         m = mt.get(tid)
         if m is None:
             dropped['not_in_snapshot'] += 1; continue
@@ -218,6 +247,7 @@ def load_records(mt, override_ids, flags):
             # Penthouse outranks Spine (James, 2026-10-20): on a level-20 parcel the
             # Spine flag adds nothing, and the sale counts toward the penthouse.
             'spine': tid in flags['spine'] and lvl != 20,
+            'sweep': bool(bundle),
         }
         special = tier2_type(tid, m, flags)
         if special is not None:
@@ -627,7 +657,15 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tie
         for _ in range(ANCHOR_ROUNDS):
             anchors = sales_anchors(recs, base, premium)
             base, audit = shrink({k: v for k, v in anchors.items() if k in SALES_ANCHORED})
-    specials = {k: v for k, v in special_multiples(tier2, premium).items() if k in SALES_PRICED_SPECIALS}
+        # What each trait's own sales say against the final model, applied or not,
+        # so the traits still on v1 can be reviewed against their sales.
+        implied = sales_anchors(recs, base, premium)
+        for entry in audit:
+            v = implied.get((entry['kind'], entry['name']))
+            if v is not None:
+                entry['sales_implied'] = round(v, 4)
+    all_specials = special_multiples(tier2, premium)
+    specials = {k: v for k, v in all_specials.items() if k in SALES_PRICED_SPECIALS}
 
     # Per-side held-out error, so the report stays comparable with the two-fit run.
     n = len(y); k = int(n * 0.8); te = order[k:]
@@ -663,6 +701,8 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tie
                                      'guarantees ask >= bid for every parcel.'}
     if specials:
         result['special_multiples'] = specials
+    # Every Tier-2 type's sales, applied or not, for review.
+    result['special_sales'] = all_specials
     shared = dict(alpha=alpha, holdout_median_pct_err=holdout_err,
                   weighted_r2=r2, n=len(y), prior_audit=audit)
     for label, bid_share, mult_base in (
@@ -696,7 +736,8 @@ def main():
     y = np.array([r['y'] for r in recs])
     u = [r['u'] for r in recs]
     print(f"Records: {len(recs)} eligible structural sales "
-          f"({sum(r['side']=='BID' for r in recs)} BID / {sum(r['side']=='ASK' for r in recs)} ASK)")
+          f"({sum(r['side']=='BID' for r in recs)} BID / {sum(r['side']=='ASK' for r in recs)} ASK; "
+          f"{sum(r['sweep'] for r in recs)} of them sweep legs at their own price)")
     print(f"Dropped: {dict(dropped)}")
     print(f"Features: {len(cols)}  |  half-life {HALF_LIFE_D:.0f}d\n")
 
@@ -721,6 +762,9 @@ def main():
         'sales_anchored': sorted(f'{k} {n}' for k, n in SALES_ANCHORED) if ANCHOR_SALES else [],
         'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
         'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
+        'sweeps': ('multi-parcel legs at their own price included; one seller repeating one price '
+                   f'at >= {BUNDLE_MIN_FLOOR_MULTIPLE}x floor = a bundle order, excluded') if INCLUDE_SWEEPS else 'excluded',
+        'n_sweep_legs': sum(r['sweep'] for r in recs),
         'penthouse_spine': 'Spine adds nothing on level 20',
         'excluded': 'override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades',
         'fitted_flags': EXTRA_FLAGS,

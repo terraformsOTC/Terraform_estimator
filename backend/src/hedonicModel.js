@@ -53,7 +53,8 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // 2.3.0 (2026-10-20, James): level 20, Dread and biome 39 lean on their own
 // recent sales rather than v1's hand-set numbers (SALES_ANCHORED in
 // fit_hedonic.py), Lith0 and Plague are priced from their own sales, Y-Seeds are
-// valued as X-Seeds, and Spine adds nothing on a level-20 (penthouse) parcel.
+// valued as X-Seeds, Spine adds nothing on a level-20 (penthouse) parcel, and the
+// fit takes sweep legs at their own price (9k more sales).
 const HEDONIC_MODEL_VERSION = '2.3.0';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
