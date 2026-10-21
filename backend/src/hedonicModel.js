@@ -57,7 +57,10 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // fit takes sweep legs at their own price (9k more sales).
 // 2.3.1 (2026-10-20, James): First Earth, Avidana, biome 17 and the Biome 0 Flow
 // and Matrix badges move to their own sales too — the five whose sales sat above v1.
-const HEDONIC_MODEL_VERSION = '2.3.1';
+// 2.3.2 (2026-10-21, James): level 20 is priced by its own recent sales alone (the
+// two May 2026 sales; SALES_ONLY in fit_hedonic.py), and its sales above 40x the
+// floor count.
+const HEDONIC_MODEL_VERSION = '2.3.2';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
 // other traits don't stack on it. Lith0 and Plague are one floor multiple each,

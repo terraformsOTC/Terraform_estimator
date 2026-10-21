@@ -149,6 +149,13 @@ SALES_ANCHORED = {
     ('badge', 'biome0_flow'), ('badge', 'matrix'),
 }
 ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
+# Anchored traits priced by their own sales alone: the anchor with no share left on
+# the ridge fit, read with its own half-life (days). Level 20 (James, 2026-10-21):
+# the two May 2026 sales (#7508 at 7.7 ETH, #6339 at 8.5) are the penthouse
+# market. Their anchor sat at 23.4x, and n/(n+K) still left 9% on the ridge's
+# 15.7x, a read of the same dozen sales shrunk toward no premium. A 90-day
+# half-life leaves 2021-24 sales counting only until there's nothing newer.
+SALES_ONLY = {('level', '20'): 90.0}
 ANCHOR_ROUNDS = 4
 # Tier-2 types priced at the floor multiple their own sales show (special_
 # multiples). X-Seed and Godmode keep v1's price, and hedonicModel.js values
@@ -203,7 +210,10 @@ S0_MIN, S0_MAX = 1703376000, 1705190399     # MUST match snapshotTraits.js
 # over their sale prices (#4363, a biome-0 Daydream, quoted ~1.1 ETH, sold 0.65).
 DDTF_BIOME_INTERACTION = os.environ.get('DDTF_BIOME', '1') != '0'
 # Plausible floor-multiple band; outside = data error / uncaught wash -> drop.
+# Level 20 has no upper bound (James, 2026-10-21): penthouses at 52x and 62x the
+# floor (#6698 at 15 ETH, #5825 at 17.99) were real sales.
 MULT_LO, MULT_HI = 0.25, 40.0
+UNCAPPED_LEVELS = {20}
 
 def load_aux():
     mt = {e['tokenId']: e for e in json.load(open(MINTED))}
@@ -298,7 +308,7 @@ def load_records(mt, override_ids, flags):
             dropped['override_special'] += 1; continue
         if m['chroma'] == 'Plague':           # Plague = Tier-2 override
             dropped['plague_chroma'] += 1; continue
-        if not (MULT_LO <= mult <= MULT_HI):
+        if not (MULT_LO <= mult and (mult <= MULT_HI or lvl in UNCAPPED_LEVELS)):
             dropped['extreme_multiple'] += 1; continue
         recs.append(rec)
     return recs, tier2, dropped
@@ -526,6 +536,8 @@ def shrink_to_priors(mult, counts, priors, K, anchors=None):
     space first, or the blend silently inflates every shrunk trait by the baseline
     (~8%). Badge priors are already interaction premiums, not totals, so they are
     used as-is.
+
+    A trait in SALES_ONLY that has sales takes its anchor outright.
     """
     if K <= 0:
         return []
@@ -542,7 +554,7 @@ def shrink_to_priors(mult, counts, priors, K, anchors=None):
             anchor = (anchors or {}).get((kind, str(name)))
             prior = anchor if anchor is not None else v1
             n = counts[kind].get(name, 0)
-            w = n / (n + K)
+            w = 0.0 if anchor is not None and (kind, str(name)) in SALES_ONLY else n / (n + K)
             blended = math.exp(w * math.log(fitted) + (1 - w) * math.log(prior))
             mult[kind][name] = round(blended, 4)
             audit.append({'kind': kind, 'name': str(name), 'n': n, 'w': round(w, 3),
@@ -625,14 +637,17 @@ def sales_anchors(recs, mult, premium, half_life=None):
     none, and the recency weights make old sales of a rare trait nearly
     weightless — so before this, level 20's two May 2026 sales at ~27x the floor
     moved its premium from v1's 11.1x to 11.2x."""
+    us = [r['u'] for r in recs]
+    wts = recency(us, half_life)
+    own_wts = {key: recency(us, h) for key, h in SALES_ONLY.items()}
     by = defaultdict(lambda: ([], []))
-    for r, wi in zip(recs, recency([r['u'] for r in recs], half_life)):
+    for i, r in enumerate(recs):
         lg = predict_log(r, mult, premium)
         for kind, name in trait_keys(r):
             own = math.log(mult[kind].get(name, 1.0))
             xs, ws = by[(kind, name)]
             xs.append(r['y'] - (lg - own))
-            ws.append(wi)
+            ws.append(own_wts.get((kind, name), wts)[i])
     return {k: math.exp(wmedian(xs, ws)) for k, (xs, ws) in by.items()}
 
 def special_multiples(tier2, premium):
@@ -830,6 +845,7 @@ def main():
         'prior_k': PRIOR_K,
         'priors': 'v1-priors.json (build_priors.js), except sales_anchored' if PRIOR_K > 0 else 'none (pure data fit)',
         'sales_anchored': sorted(f'{k} {n}' for k, n in SALES_ANCHORED) if ANCHOR_SALES else [],
+        'sales_only': {f'{k} {n}': f'{h:g}d half-life' for (k, n), h in SALES_ONLY.items()} if ANCHOR_SALES else {},
         'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
         'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
         'sweeps': (f'{SWEEP_MODEL}: multi-parcel legs at their own price (one seller repeating one price '
