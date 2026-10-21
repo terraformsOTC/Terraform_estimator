@@ -541,10 +541,13 @@ function PickMenu({ menu, values, state, update, countOf, scoped }) {
 const BLADE_INFO = 'Blades are drawn by the v2 renderer in a parcel\u2019s Daydream and Terraform animations: one of 27 character sets, fixed by its biome and seed. Not visible on Terrain parcels until they are dreamed. Origins and Y-Seeds have none.';
 const GLYPH_INFO = 'Origin glyph sets are what an origin parcel (Origin Daydream or Origin Terraform) animates in the v2 renderer: one of 28 sets, fixed by its seed. X-Seed origins animate all 28 at once, so they count as none.';
 
-// A small (i) that shows a short explanation on hover, or on focus/tap.
+// A small (i) that shows a short explanation on hover, or on focus/tap. The note
+// is out of the layout until shown (display, not visibility: a hidden box still
+// widens the page) and spans its picker's column, so it never runs off a phone.
+// The nearest positioned ancestor (MultiPicker's outer div) places it.
 function InfoTip({ label, children }) {
   return (
-    <span className="relative inline-flex group self-center">
+    <span className="inline-flex group self-center">
       <button
         type="button"
         aria-label={label}
@@ -555,7 +558,7 @@ function InfoTip({ label, children }) {
       </button>
       <span
         role="tooltip"
-        className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-opacity absolute z-30 left-0 top-full mt-1.5 w-64 max-w-[calc(100vw-3rem)] p-2 text-xs leading-snug normal-case tracking-normal"
+        className="hidden group-hover:block group-focus-within:block absolute z-30 left-0 right-0 top-6 max-w-sm p-2 text-xs leading-snug normal-case tracking-normal"
         style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid rgba(232,232,232,0.3)' }}
       >
         {children}
@@ -592,7 +595,7 @@ function MultiPicker({ preset, prefix, items, sections = null, columns, info = n
     </div>
   );
   return (
-    <div className="text-sm">
+    <div className="text-sm relative">
       <div className="flex flex-wrap items-baseline gap-x-2">
         <label className="flex items-baseline gap-2 cursor-pointer" title={preset.description}>
           <input
