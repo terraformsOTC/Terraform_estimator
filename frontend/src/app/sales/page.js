@@ -7,6 +7,7 @@ import { API_URL, connectAndRedirect, Footer } from '@/components/shared';
 import {
   ParcelFilterPanel,
   ActiveFilterChips,
+  FilterChip,
   EMPTY_FILTERS,
   toggleFilterValue,
   countActiveFilters,
@@ -19,8 +20,71 @@ import {
 const PAGE_SIZE = 50;
 const SALES_VOCAB = { title: 'filter sales', have: 'with sales', none: 'no sales', one: 'sale', many: 'sales' };
 
+// Sale size in ETH, as ?min=1&max=5 on the page and the API alike. A bundle
+// order's legs carry the order's total, as the table shows them.
+const NO_SIZE = { min: '', max: '' };
+const SIZE_STEPS = ['0.1', '0.25', '0.5', '1', '2', '5', '10'];
+const cleanAmount = v => {
+  const n = Number(v);
+  return String(v).trim() !== '' && Number.isFinite(n) && n >= 0 ? String(n) : '';
+};
+function sizeFromLocation() {
+  if (typeof window === 'undefined') return NO_SIZE;
+  const qs = new URLSearchParams(window.location.search);
+  return { min: cleanAmount(qs.get('min') ?? ''), max: cleanAmount(qs.get('max') ?? '') };
+}
+function writeSizeToLocation(size) {
+  const url = new URL(window.location.href);
+  for (const k of ['min', 'max']) {
+    if (size[k]) url.searchParams.set(k, size[k]); else url.searchParams.delete(k);
+  }
+  window.history.replaceState(null, '', url.search ? `${url.pathname}${url.search}` : url.pathname);
+}
+
+// Quick minimums, and exact bounds typed in (applied after a short pause).
+function SaleSizeFilter({ size, onChange }) {
+  const [draft, setDraft] = useState(size);
+  useEffect(() => { setDraft(size); }, [size.min, size.max]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const next = { min: cleanAmount(draft.min), max: cleanAmount(draft.max) };
+    if (next.min === size.min && next.max === size.max) return undefined;
+    const t = setTimeout(() => onChange(next), 500);
+    return () => clearTimeout(t);
+  }, [draft]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="mb-3">
+      <p className="text-xs uppercase tracking-widest mb-1" style={{ opacity: 0.4 }}>sale size</p>
+      <div className="grid grid-cols-4 sm:grid-cols-7 gap-1 mb-2">
+        {SIZE_STEPS.map(v => (
+          <FilterChip
+            key={v}
+            label={`≥ ${v} ETH`}
+            owned
+            active={size.min === v}
+            title={`sales of at least ${v} ETH`}
+            onClick={() => onChange({ ...size, min: size.min === v ? '' : v })}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+        <label className="flex items-center gap-2">
+          at least
+          <input type="number" min="0" step="0.05" value={draft.min} onChange={e => setDraft(d => ({ ...d, min: e.target.value }))} placeholder="any" className="w-20" aria-label="Smallest sale in ETH" />
+          ETH
+        </label>
+        <label className="flex items-center gap-2">
+          at most
+          <input type="number" min="0" step="0.05" value={draft.max} onChange={e => setDraft(d => ({ ...d, max: e.target.value }))} placeholder="any" className="w-20" aria-label="Largest sale in ETH" />
+          ETH
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export default function SalesPage() {
   const [filters, setFilters] = useState(null);   // null until read from the URL
+  const [size, setSize] = useState(NO_SIZE);      // sale size bounds, ETH
   const [data, setData] = useState(null);         // summary, facets and totals for the filter
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +102,16 @@ export default function SalesPage() {
       .then(d => { const p = parseFloat(d?.data?.amount); if (Number.isFinite(p)) setEthUsd(p); })
       .catch(() => {});
     const initial = filtersFromLocation();
+    const initialSize = sizeFromLocation();
+    setSize(initialSize);
     setFilters(initial);
-    if (countActiveFilters(initial) > 0) setShowFilters(true);
+    if (countActiveFilters(initial) > 0 || initialSize.min || initialSize.max) setShowFilters(true);
   }, []);
 
   async function fetchPage(offset, { force = false } = {}) {
     const qs = filtersToQuery(filters);
+    if (size.min) qs.set('min', size.min);
+    if (size.max) qs.set('max', size.max);
     qs.set('limit', String(PAGE_SIZE));
     if (offset) qs.set('offset', String(offset));
     // force -> ?refresh=1: the backend re-reads the live OpenSea feed (at most
@@ -87,12 +155,17 @@ export default function SalesPage() {
   useEffect(() => {
     if (!filters) return;
     writeFiltersToLocation(filters);
+    writeSizeToLocation(size);
     load();
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters, size]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = (key, value) => setFilters(f => toggleFilterValue(f, key, value));
-  const reset = () => setFilters(EMPTY_FILTERS);
-  const activeCount = filters ? countActiveFilters(filters) : 0;
+  const reset = () => { setFilters(EMPTY_FILTERS); setSize(NO_SIZE); };
+  const activeCount = (filters ? countActiveFilters(filters) : 0) + (size.min ? 1 : 0) + (size.max ? 1 : 0);
+  const sizeChips = [
+    size.min && { key: 'min', label: `sale size: ≥ ${size.min} ETH`, onRemove: () => setSize(s => ({ ...s, min: '' })) },
+    size.max && { key: 'max', label: `sale size: ≤ ${size.max} ETH`, onRemove: () => setSize(s => ({ ...s, max: '' })) },
+  ].filter(Boolean);
 
   return (
     <div className="content-wrapper">
@@ -129,9 +202,11 @@ export default function SalesPage() {
                   onReset={reset}
                   onClose={() => setShowFilters(false)}
                   vocab={SALES_VOCAB}
-                />
+                >
+                  <SaleSizeFilter size={size} onChange={setSize} />
+                </ParcelFilterPanel>
               )}
-              <ActiveFilterChips filters={filters} onToggle={toggle} onReset={reset} />
+              <ActiveFilterChips filters={filters} onToggle={toggle} onReset={reset} extra={sizeChips} />
             </div>
           )}
 

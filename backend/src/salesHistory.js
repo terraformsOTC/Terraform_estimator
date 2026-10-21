@@ -38,8 +38,11 @@ const FILTER_ATTRS = {
   biome:  { get: (t) => (Number.isInteger(t.biome) && t.biome >= 0 ? t.biome : null), parse: Number },
 };
 const ATTR_KEYS = Object.keys(FILTER_ATTRS);
+// Sale size in ETH: ?min=1 keeps sales of at least 1 ETH, ?max=5 at most 5. A
+// bundle order's legs carry the order's total, as the page shows them.
+const SIZE_PARAMS = { min: 'minPrice', max: 'maxPrice' };
 
-/** Parse ?zone=Alto,Holo&biome=0 into { zone: Set, biome: Set, ... }. */
+/** Parse ?zone=Alto,Holo&biome=0&min=1 into { zone: Set, biome: Set, minPrice: 1, ... }. */
 function parseFilters(query = {}) {
   const filters = {};
   for (const key of ATTR_KEYS) {
@@ -51,13 +54,21 @@ function parseFilters(query = {}) {
       .filter((v) => (typeof v === 'number' ? Number.isFinite(v) : true));
     if (values.length) filters[key] = new Set(values);
   }
+  for (const [param, key] of Object.entries(SIZE_PARAMS)) {
+    const raw = query[param];
+    if (raw == null || raw === '') continue;
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0) filters[key] = n;
+  }
   return filters;
 }
 
 /** OR within an attribute, AND across attributes — the wallet panel's rule. */
 function matches(sale, filters, skipKey = null) {
+  if (filters.minPrice != null && !(sale.salePrice >= filters.minPrice)) return false;
+  if (filters.maxPrice != null && !(sale.salePrice <= filters.maxPrice)) return false;
   const t = sale.traits;
-  if (!t) return Object.keys(filters).every((k) => k === skipKey);
+  if (!t) return ATTR_KEYS.every((k) => k === skipKey || !filters[k]);
   for (const key of ATTR_KEYS) {
     if (key === skipKey) continue;
     const selected = filters[key];
@@ -285,7 +296,7 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
       total: filtered.length,
       offset,
       limit,
-      filters: Object.fromEntries(Object.entries(filters).map(([k, v]) => [k, [...v]])),
+      filters: Object.fromEntries(Object.entries(filters).map(([k, v]) => [k, v instanceof Set ? [...v] : v])),
       facets: facets(all, filters),
       summary: summarize(filtered),
       historyExportedAt: history?.exportedAt ?? null,

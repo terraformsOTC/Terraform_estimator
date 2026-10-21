@@ -283,7 +283,8 @@ function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen, 
   );
 }
 
-export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose, vocab = WALLET_VOCAB }) {
+// `children`: a page's own filters (the sales page's sale size), above the traits.
+export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose, vocab = WALLET_VOCAB, children }) {
   // Long sections start collapsed so the panel opens compact.
   const [openSections, setOpenSections] = useState(() => new Set());
   const toggleSection = key =>
@@ -303,6 +304,8 @@ export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose
         </div>
       </div>
 
+      {children}
+
       {FILTER_ATTRS.map(attr => (
         <FilterSection
           key={attr.key}
@@ -320,12 +323,12 @@ export function ParcelFilterPanel({ options, filters, onToggle, onReset, onClose
 }
 
 // Removable summary of what's currently selected, shown whether or not the
-// panel is expanded.
-export function ActiveFilterChips({ filters, onToggle, onReset }) {
+// panel is expanded. `extra`: a page's own filters, as [{ key, label, onRemove }].
+export function ActiveFilterChips({ filters, onToggle, onReset, extra = [] }) {
   const active = FILTER_ATTRS.flatMap(attr =>
     [...(filters[attr.key] ?? [])].map(value => ({ attr, value })),
   );
-  if (active.length === 0) return null;
+  if (active.length === 0 && extra.length === 0) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-1 mb-4 text-xs">
@@ -338,6 +341,17 @@ export function ActiveFilterChips({ filters, onToggle, onReset }) {
           style={{ border: '1px solid rgba(232,232,232,0.3)', opacity: 0.8 }}
         >
           {attr.label}: {attr.format(value)} ×
+        </button>
+      ))}
+      {extra.map(chip => (
+        <button
+          key={chip.key}
+          onClick={chip.onRemove}
+          title="remove filter"
+          className="px-1 py-0.5"
+          style={{ border: '1px solid rgba(232,232,232,0.3)', opacity: 0.8 }}
+        >
+          {chip.label} ×
         </button>
       ))}
       <button onClick={onReset} style={{ opacity: 0.5, textDecoration: 'underline' }}>

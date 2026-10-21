@@ -55,6 +55,19 @@ test('facets count each attribute under the other filters only', () => {
   assert.deepStrictEqual(r.facets.biome, { 42: 2, 65: 1 });
 });
 
+test('sale size: at least min, at most max, in ETH, with facets and totals to match', () => {
+  const h = make();
+  assert.strictEqual(h.query({ min: '0.3' }).total, 3);               // 0.30 and the 0.90 bundle legs
+  assert.strictEqual(h.query({ max: '0.3' }).total, 2);
+  assert.strictEqual(h.query({ min: '0.25', max: '0.5' }).total, 1);
+  const r = h.query({ min: '0.5', zone: 'Alto' });
+  assert.strictEqual(r.total, 2);
+  assert.deepStrictEqual(r.facets.zone, { Alto: 2 });                 // Holo's only sale is 0.30
+  assert.strictEqual(r.summary.volume, 0.9);
+  assert.deepStrictEqual(r.filters, { zone: ['Alto'], minPrice: 0.5 });
+  assert.deepStrictEqual(parseFilters({ min: 'x', max: '-1' }), {});  // nonsense is ignored
+});
+
 test('a bundle order counts once toward volume and never toward over/under', () => {
   const r = make().query({});
   const bundle = r.sales.filter((s) => s.kind === 'bundle');
