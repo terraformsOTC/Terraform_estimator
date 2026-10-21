@@ -50,6 +50,8 @@ sales database/*
 # not run without it at the default PRIOR_K, and keeping it means a clone only needs
 # the sales DB to reproduce a fit rather than the DB plus a rebuild step.
 !sales database/fit_hedonic.py
+!sales database/backtest_hedonic.py
+!sales database/own-price.js
 !sales database/build_floor_index.js
 !sales database/build_priors.js
 !sales database/calibrate-floor.js

@@ -51,7 +51,23 @@ OUT = os.path.join(HERE, 'pricing-v2-coeffs.json')
 # most of the data away to track it. 120-270 is a flat optimum; 30 is worse.
 # The earlier sweep (ab_vs_v1.js) scored one 20% holdout adjacent to training,
 # the same flaw noted on ALPHA below.
+#
+# 2026-10-21: re-checked with backtest_hedonic.py (52 two-week windows, level
+# re-solved daily on the trailing 30 days as production does) once every parcel
+# bought at its listed price was in the fit, sweeps included. Nothing beat 180 /
+# alpha 3 beyond noise (MdAPE on all purchases, year to 2025-10-20 / 2026-10-20):
+#   H=180 a=3 (kept)    9.78% / 8.32%
+#   H=270 a=1           9.82% / 8.08%   -0.11pp both years (95% -0.25..+0.25)
+#   H=180 a=1           9.68% / 8.25%   -0.08pp (95% -0.20..+0.07)
+# Training on two-parcel carts only would have scored 0.3pp better on single
+# sales (H=270, a=1); James chose to keep every purchase (see SWEEP_MODEL).
 HALF_LIFE_D = float(os.environ.get('HALF_LIFE_DAYS', 180))
+# Recency for a trait's OWN sales (sales_anchors, special_multiples), separate from
+# the fit's: the approved rare traits follow their recent sales (James), while the
+# fit's half-life is about the stability of the whole model's shape. At 270 the
+# anchors would lean on older sales and undo the approved moves (Dread 7.2x ->
+# 4.1x, biome 39 3.0x -> 2.0x).
+ANCHOR_HALF_LIFE_D = float(os.environ.get('ANCHOR_HALF_LIFE_DAYS', 180))
 # Grid extends below 1.0 so CV can find the true optimum instead of pinning to the
 # grid floor (the prior fit selected alpha=1 for both sub-models — a boundary hit
 # that means the search never bracketed the minimum).
@@ -154,6 +170,15 @@ FIXED_PREMIUMS = {('badge', 'mesa'): 1.05}
 # are clear data points and belong in the model. INCLUDE_SWEEPS=0 drops them.
 INCLUDE_SWEEPS = os.environ.get('INCLUDE_SWEEPS', '1') != '0'
 BUNDLE_MIN_FLOOR_MULTIPLE = 1.5
+# How sweep legs enter the fit. 'pool' (default): every leg bought at its own
+# listed price, as a single sale. James (2026-10-21): collectors buying listed
+# parcels at their listed price is real data, however the transaction was
+# structured, and belongs in the model even where the backtest scores it a little
+# worse (two-parcel carts only, 'pairs', scored 0.3pp better on single sales;
+# bigger sweeps are 85% floor listings). 'dummy': every leg with its own fitted
+# discount (never served). 'off': none. The calibration reads the same sales
+# (own-price.js).
+SWEEP_MODEL = os.environ.get('SWEEP_MODEL', 'pool')
 MODE_GROUP = {'Terrain': 'Terrain', 'Daydream': 'DDTF', 'Terraform': 'DDTF',
               'Origin Daydream': 'ORIG', 'Origin Terraform': 'ORIG'}
 # Plan §4.5: level premium lives ONLY at the extremes (basement L1–3, penthouse
@@ -218,13 +243,16 @@ def load_records(mt, override_ids, flags):
           AND payment_symbol IN ('ETH', 'WETH')
     """).fetchall()
     con.close()
-    # Legs of one transaction at one price, and how many sellers they come from.
+    # Legs of one transaction at one price, and how many sellers they come from;
+    # and how many parcels each transaction settled.
     groups = defaultdict(lambda: [0, set()])
+    tx_tokens = defaultdict(set)
     for r in rows:
         if r[10]:
             g = groups[(r[11], r[2])]
             g[0] += 1
             g[1].add(r[12])
+            tx_tokens[r[11]].add(r[0])
     def own_price(tx, price, floor):
         n, sellers = groups[(tx, price)]
         return n == 1 or len(sellers) > 1 or price < BUNDLE_MIN_FLOOR_MULTIPLE * floor
@@ -255,7 +283,10 @@ def load_records(mt, override_ids, flags):
             # Spine flag adds nothing, and the sale counts toward the penthouse.
             'spine': tid in flags['spine'] and lvl != 20,
             'sweep': bool(bundle),
+            'tx_legs': len(tx_tokens[tx]) if bundle else 1,
         }
+        if bundle and (SWEEP_MODEL == 'off' or (SWEEP_MODEL == 'pairs' and rec['tx_legs'] != 2)):
+            dropped['sweep_not_pair' if SWEEP_MODEL == 'pairs' else 'sweep'] += 1; continue
         special = tier2_type(tid, m, flags)
         if special is not None:
             # Out of the fit; priced from its own sales. Only the lower band
@@ -303,7 +334,7 @@ def ddtf_biome_x(r, priors):
         return 0.0
     return math.log(max(float(priors['biome'].get(r['biome'], 1.0)), 1e-6))
 
-def build_design(recs, priors):
+def build_design(recs, priors, sweep_model=None):
     # REF_ZONE / REF_BIOME are dropped: they ARE the baseline, so their coefficient
     # is 1.0 by construction and estimating one would make the design collinear.
     zones = sorted({r['zone'] for r in recs} - {REF_ZONE})
@@ -323,6 +354,9 @@ def build_design(recs, priors):
     # all 20,271 sales instead of inferred by differencing two independent fits.
     if SIDE_MODEL == 'dummy':
         cols = cols + ['side=ask']
+    sweep_dummy = (sweep_model or SWEEP_MODEL) == 'dummy' and any(r.get('sweep') for r in recs)
+    if sweep_dummy:
+        cols = cols + ['sweep=1']
     idx = {c: i for i, c in enumerate(cols)}
     X = np.zeros((len(recs), len(cols)), dtype=np.float64)
     for i, r in enumerate(recs):
@@ -338,6 +372,7 @@ def build_design(recs, priors):
         if DDTF_BIOME_INTERACTION:
             X[i, idx['inter=ddtf_biome']] = ddtf_biome_x(r, priors)
         if SIDE_MODEL == 'dummy' and r['side'] == 'ASK': X[i, idx['side=ask']] = 1
+        if sweep_dummy and r.get('sweep'): X[i, idx['sweep=1']] = 1
     return X, cols
 
 def side_weights(recs, w_time, bid_share):
@@ -428,6 +463,12 @@ def coeffs_to_multipliers(mdl, cols, priors):
         # it is returned separately rather than dropped into a multiplier table
         # that consumers apply per parcel.
         if kind == 'side':
+            continue
+        if kind == 'sweep':
+            # What a sweep leg clears at against the same parcel sold alone. Kept
+            # for the record and for reading sweep legs fairly (predict_log); the
+            # site prices a single sale and never applies it.
+            out['sweep_discount'] = round(float(math.exp(b)), 4)
             continue
         if kind == 'inter':
             # Expanded to a per-biome table so the backend needs no v1 priors at
@@ -532,6 +573,8 @@ def predict_log(r, mult, premium):
         if r[e]: lg += math.log(mult['extra'].get(e, 1.0))
     if r['side'] == 'ASK':
         lg += math.log(premium)
+    if r.get('sweep') and 'sweep_discount' in mult:
+        lg += math.log(mult['sweep_discount'])
     return lg
 
 def trait_keys(r):
@@ -544,12 +587,13 @@ def trait_keys(r):
     keys += [('badge', bn) for bn, bv in badges(r).items() if bv]
     return keys
 
-def recency(us):
+def recency(us, half_life=None):
     """Half-life weights, relative to the newest of `us`: only the ratios
     matter, so a trait whose sales are all old still speaks for itself, its
-    latest sales loudest."""
+    latest sales loudest. Defaults to the anchors' half-life."""
+    h = ANCHOR_HALF_LIFE_D if half_life is None else half_life
     ref = max(us)
-    return [0.5 ** (((ref - u) / 86400.0) / HALF_LIFE_D) for u in us]
+    return [0.5 ** (((ref - u) / 86400.0) / h) for u in us]
 
 def wmedian(xs, ws):
     """Weighted median, interpolated between neighbours (midpoint rule). Robust
@@ -569,7 +613,7 @@ def wmedian(xs, ws):
             t = (0.5 - mids[i - 1]) / (mids[i] - mids[i - 1])
             return pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0])
 
-def sales_anchors(recs, mult, premium):
+def sales_anchors(recs, mult, premium, half_life=None):
     """Each zone, biome, extreme level and badge's premium as its own sales put
     it: the recency-weighted median, over its sales, of price / the model's price
     for the same parcel without that premium.
@@ -582,7 +626,7 @@ def sales_anchors(recs, mult, premium):
     weightless — so before this, level 20's two May 2026 sales at ~27x the floor
     moved its premium from v1's 11.1x to 11.2x."""
     by = defaultdict(lambda: ([], []))
-    for r, wi in zip(recs, recency([r['u'] for r in recs])):
+    for r, wi in zip(recs, recency([r['u'] for r in recs], half_life)):
         lg = predict_log(r, mult, premium)
         for kind, name in trait_keys(r):
             own = math.log(mult[kind].get(name, 1.0))
@@ -611,40 +655,30 @@ def special_multiples(tier2, premium):
                     'last_sale': time.strftime('%Y-%m-%d', time.gmtime(rs[-1]['u']))}
     return out
 
-def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tier2=()):
-    """Single fit, side as a feature. Emits the same two-sub-model schema the
-    backend already reads, so hedonicModel.js needs no change: identical trait
-    multipliers on both sides, baselines differing by exactly the fitted premium.
+def recency_weights(u, half_life=None):
+    """The fit's sample weights: half-life decay from the newest sale,
+    normalised to mean 1 so alpha means the same at any data size."""
+    h = HALF_LIFE_D if half_life is None else half_life
+    w = np.power(0.5, ((max(u) - np.asarray(u)) / 86400.0) / h)
+    return w * (len(w) / w.sum())
 
-    The spread is deliberately one number rather than per-trait. Measured raw it
-    is flat — +26.0% / +23.0% / +21.2% across L4-8 / L9-13 / L14-17, and +20.1% /
-    +22.4% / +18.6% / +25.1% across zone-richness quartiles — so a per-trait
-    spread would be fitting noise, and fitting that noise is what produced the
-    inverted bands in the first place.
-    """
-    ref = max(u)
-    w = np.power(0.5, ((ref - np.asarray(u)) / 86400.0) / HALF_LIFE_D)
-    w = w * (len(w) / w.sum())                     # mean(w)=1, so alpha is comparable
-    order = np.argsort(u)
-    if ALPHA == 'cv':
-        scored = [(holdout_eval(X, y, w, a, order), a) for a in ALPHA_GRID]
-        holdout_err, alpha = min(scored, key=lambda t: t[0])
-    else:
-        alpha = float(ALPHA)
-        holdout_err = holdout_eval(X, y, w, alpha, order)
-
+def fit_multipliers(recs, X, y, w, cols, counts, priors, all_priors, alpha,
+                    prior_k=None, anchor_half_life=None, anchored=None):
+    """The fit proper: weighted Ridge, then each trait's prior (v1's multiplier,
+    or its own sales for the anchored ones), then FIXED_PREMIUMS — exactly the
+    multipliers the site serves. Shared with backtest_hedonic.py, so the backtest
+    scores this and nothing else. Returns (ridge model, ask premium, multipliers,
+    prior audit)."""
+    k = PRIOR_K if prior_k is None else prior_k
+    anchored = SALES_ANCHORED if anchored is None else anchored
     mdl = Ridge(alpha=alpha, fit_intercept=True)
     mdl.fit(X, y, sample_weight=w)
-    pred = mdl.predict(X)
-    ybar = np.average(y, weights=w)
-    r2 = float(1 - np.sum(w * (y - pred) ** 2) / np.sum(w * (y - ybar) ** 2))
-
     premium = ask_premium(mdl, cols)
     fitted = coeffs_to_multipliers(mdl, cols, all_priors)
 
     def shrink(anchors=None):
         m = copy.deepcopy(fitted)
-        a = shrink_to_priors(m, counts, priors, PRIOR_K, anchors)
+        a = shrink_to_priors(m, counts, priors, k, anchors)
         m['zone'][REF_ZONE] = 1.0
         m['biome'][REF_BIOME] = 1.0
         # Set inside the loop, so the sales anchors read the other traits against
@@ -657,13 +691,41 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tie
         return m, a
 
     base, audit = shrink()
-    if ANCHOR_SALES and PRIOR_K > 0:
+    if ANCHOR_SALES and k > 0 and anchored:
         # A few rounds, because rare traits co-occur (Mesa sits inside biome 39, a
         # Shahra parcel on biome 74): each pass prices the others at their current
         # values before reading a trait's own sales.
         for _ in range(ANCHOR_ROUNDS):
-            anchors = sales_anchors(recs, base, premium)
-            base, audit = shrink({k: v for k, v in anchors.items() if k in SALES_ANCHORED})
+            anchors = sales_anchors(recs, base, premium, anchor_half_life)
+            base, audit = shrink({key: v for key, v in anchors.items() if key in anchored})
+    return mdl, premium, base, audit
+
+def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tier2=()):
+    """Single fit, side as a feature. Emits the same two-sub-model schema the
+    backend already reads, so hedonicModel.js needs no change: identical trait
+    multipliers on both sides, baselines differing by exactly the fitted premium.
+
+    The spread is deliberately one number rather than per-trait. Measured raw it
+    is flat — +26.0% / +23.0% / +21.2% across L4-8 / L9-13 / L14-17, and +20.1% /
+    +22.4% / +18.6% / +25.1% across zone-richness quartiles — so a per-trait
+    spread would be fitting noise, and fitting that noise is what produced the
+    inverted bands in the first place.
+    """
+    w = recency_weights(u)                         # mean(w)=1, so alpha is comparable
+    order = np.argsort(u)
+    if ALPHA == 'cv':
+        scored = [(holdout_eval(X, y, w, a, order), a) for a in ALPHA_GRID]
+        holdout_err, alpha = min(scored, key=lambda t: t[0])
+    else:
+        alpha = float(ALPHA)
+        holdout_err = holdout_eval(X, y, w, alpha, order)
+
+    mdl, premium, base, audit = fit_multipliers(recs, X, y, w, cols, counts, priors, all_priors, alpha)
+    pred = mdl.predict(X)
+    ybar = np.average(y, weights=w)
+    r2 = float(1 - np.sum(w * (y - pred) ** 2) / np.sum(w * (y - ybar) ** 2))
+
+    if ANCHOR_SALES and PRIOR_K > 0:
         # What each trait's own sales say against the final model, applied or not,
         # so the traits still on v1 can be reviewed against their sales.
         implied = sales_anchors(recs, base, premium)
@@ -741,6 +803,7 @@ def main():
     print(f"Pooled {n_rare_zones} thin zones (<{MIN_ZONE_N} sales, {n_rare_sales} sales) → 'ZONE_rare'")
     X, cols = build_design(recs, priors)
     y = np.array([r['y'] for r in recs])
+    print(f"Sweep legs: {SWEEP_MODEL}")
     u = [r['u'] for r in recs]
     print(f"Records: {len(recs)} eligible structural sales "
           f"({sum(r['side']=='BID' for r in recs)} BID / {sum(r['side']=='ASK' for r in recs)} ASK; "
@@ -769,8 +832,8 @@ def main():
         'sales_anchored': sorted(f'{k} {n}' for k, n in SALES_ANCHORED) if ANCHOR_SALES else [],
         'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
         'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
-        'sweeps': ('multi-parcel legs at their own price included; one seller repeating one price '
-                   f'at >= {BUNDLE_MIN_FLOOR_MULTIPLE}x floor = a bundle order, excluded') if INCLUDE_SWEEPS else 'excluded',
+        'sweeps': (f'{SWEEP_MODEL}: multi-parcel legs at their own price (one seller repeating one price '
+                   f'at >= {BUNDLE_MIN_FLOOR_MULTIPLE}x floor = a bundle order, never)') if INCLUDE_SWEEPS else 'excluded',
         'n_sweep_legs': sum(r['sweep'] for r in recs),
         'penthouse_spine': 'Spine adds nothing on level 20',
         'excluded': 'override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades',

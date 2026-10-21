@@ -139,14 +139,16 @@ function main() {
   const history = loadFloorHistory();
   const db = new Database(DB_PATH, { readonly: true });
   const since = Math.floor(Date.now() / 1000) - WINDOW_D * 86400;
-  // is_bundle = 0: a multi-parcel order repeats the whole order price on every
-  // leg, so a bundle leg's price is not an observed price for that parcel.
-  // Self-trades are excluded for the same reason views.sql excludes them.
-  const sales = db.prepare(
-    'SELECT token_id, price_native, lower(COALESCE(payment_token, \'\')) AS token, event_unix FROM sales '
-    + 'WHERE is_wash = 0 AND is_bundle = 0 AND lower(buyer) <> lower(seller) AND event_unix > ? '
+  // Every parcel bought at its own listed price, sweeps included (own-price.js —
+  // the fit's rule); a bundle order repeats its total on every leg, so those legs
+  // stay out. Self-trades are excluded for the same reason views.sql excludes them.
+  const { ownPriceSales } = require('./own-price');
+  const sales = ownPriceSales(db.prepare(
+    'SELECT token_id, price_native, lower(COALESCE(payment_token, \'\')) AS token, event_unix, '
+    + 'tx_hash, seller, is_bundle FROM sales '
+    + 'WHERE is_wash = 0 AND lower(buyer) <> lower(seller) AND event_unix > ? '
     + 'ORDER BY event_unix'
-  ).all(since);
+  ).all(since), (s) => floorAt(history, s.event_unix)?.floor);
   db.close();
 
   const implied = [];

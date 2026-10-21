@@ -107,10 +107,13 @@ if (fs.existsSync(DB_PATH)) {
 
   const db = new Database(DB_PATH, { readonly: true });
   const since = Math.floor(Date.now() / 1000) - BACKTEST_DAYS * 86400;
-  const sales = db.prepare(
-    "SELECT token_id, price_native, lower(COALESCE(payment_token, '')) AS token, event_unix FROM sales "
-    + 'WHERE is_wash = 0 AND is_bundle = 0 AND lower(buyer) <> lower(seller) AND event_unix > ?'
-  ).all(since);
+  // The calibration's population: every parcel bought at its own listed price.
+  const { ownPriceSales } = require(path.join(REPO, 'sales database', 'own-price.js'));
+  const sales = ownPriceSales(db.prepare(
+    "SELECT token_id, price_native, lower(COALESCE(payment_token, '')) AS token, event_unix, "
+    + 'tx_hash, seller, is_bundle FROM sales '
+    + 'WHERE is_wash = 0 AND lower(buyer) <> lower(seller) AND event_unix > ?'
+  ).all(since), (s) => floorAt(s.event_unix));
   db.close();
 
   const ratios = [];

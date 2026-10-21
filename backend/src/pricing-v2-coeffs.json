@@ -1,6 +1,6 @@
 {
   "meta": {
-    "built": "2026-10-20T21:20:51Z",
+    "built": "2026-10-21T07:37:47Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
@@ -34,7 +34,7 @@
     "fixed_premiums": {
       "badge mesa": 1.05
     },
-    "sweeps": "multi-parcel legs at their own price included; one seller repeating one price at >= 1.5x floor = a bundle order, excluded",
+    "sweeps": "pool: multi-parcel legs at their own price (one seller repeating one price at >= 1.5x floor = a bundle order, never)",
     "n_sweep_legs": 9048,
     "penthouse_spine": "Spine adds nothing on level 20",
     "excluded": "override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades",
@@ -4943,14 +4943,14 @@
     }
   },
   "floor_calibration": {
-    "value": 0.7999,
-    "measured_at": "2026-10-20T21:20:52.357Z",
+    "value": 0.7997,
+    "measured_at": "2026-10-21T07:37:48.330Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
-    "n_sales": 128,
+    "n_sales": 155,
     "iqr": [
-      0.71,
-      0.857
+      0.717,
+      0.868
     ],
     "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
   }
