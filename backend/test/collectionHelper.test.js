@@ -148,18 +148,38 @@ test("another collector's parcels are marked the same way, listed or not", () =>
 });
 
 test('special traits can be picked one at a time into one group', () => {
-  const [g] = buildRubric({ presets: ['trait:mesa', 'trait:penthouse', 'trait:mesa'] });
+  const [g] = buildRubric({ presets: ['trait:mesa', 'trait:synchro', 'trait:mesa'] });
   assert.equal(g.id, 'specials');
-  assert.deepEqual(g.targets.map(t => t.id), ['trait:mesa', 'trait:penthouse']);
+  assert.deepEqual(g.targets.map(t => t.id), ['trait:mesa', 'trait:synchro']);
   const all = buildRubric({ presets: ['trait:mesa', 'specials', 'trait:gm'] });
   assert.equal(all.length, 1);
   assert.equal(all[0].targets.length, catalog().fields.trait.length);
   assert.throws(() => buildRubric({ presets: ['trait:origin-daydream'] }), RubricError); // a mode, not a special
   assert.throws(() => buildRubric({ presets: ['trait:nope'] }), RubricError);
-  const res = evaluate({ groups: [g], owned: [parcel({ level: 20 })], universe: [parcel({ level: 20 }), parcel({ level: 1 })], listings: [], ownWallets: new Set() });
+  const res = evaluate({ groups: [g], owned: [parcel({ specialType: 'Synchro' })], universe: [parcel({ specialType: 'Synchro' })], listings: [], ownWallets: new Set() });
   assert.equal(res.groups[0].met, 1);
   assert.equal(res.groups[0].total, 2);
-  assert.ok(catalog().fields.trait.every(t => ['special', 'visual', 'level'].includes(t.group)));
+  const { trait } = catalog().fields;
+  assert.ok(trait.every(t => ['special', 'visual'].includes(t.group)));
+  assert.ok(!trait.some(t => ['penthouse', 'basement', 'biome0'].includes(t.id)));
+  assert.equal(trait.find(t => t.id === 'synchro').group, 'visual');
+});
+
+test('Penthouse, Basement and Biome 0 picks move to the level and biome menus', () => {
+  const groups = buildRubric({ presets: ['trait:penthouse', 'trait:basement', 'trait:biome0', 'level:20'] });
+  assert.deepEqual(groups.map(g => [g.id, g.targets.map(t => t.id)]), [
+    ['levels', ['level:20', 'level:1']],
+    ['biomes', ['biome:0']],
+  ]);
+});
+
+test('chromas are picked like zones: one group, one parcel in each', () => {
+  const groups = buildRubric({ presets: ['chroma:Pulse', 'chroma:Plague', 'chroma'] });
+  assert.deepEqual(groups.map(g => [g.id, g.targets.map(t => t.id)]), [['chromas', ['chroma:Pulse', 'chroma:Plague']]]);
+  const res = evaluate({ groups, owned: [parcel({ chroma: 'Pulse' })], universe: [parcel({ chroma: 'Plague' })], listings: [listing(9, { chroma: 'Plague' })], ownWallets: new Set() });
+  assert.deepEqual([res.groups[0].met, res.groups[0].total], [1, 2]);
+  assert.throws(() => buildRubric({ presets: ['chroma:Neon'] }), RubricError);
+  assert.deepEqual(catalog().fields.chroma, ['Flow', 'Pulse', 'Hyper', 'Plague']);
 });
 
 test('a target shared by two groups is filled once', () => {
@@ -240,6 +260,7 @@ test('catalog supply counts each value by mode', () => {
   ]);
   assert.deepEqual(supply.modes, ['Terrain', 'Daydream', 'Terraform', 'Origin Daydream', 'Origin Terraform']);
   assert.deepEqual(supply.zone.Holo, [1, 0, 0, 1, 0]);
+  assert.deepEqual(supply.chroma.Flow, [1, 0, 0, 1, 0]);
   assert.deepEqual(supply.blade[6], [1, 0, 0, 0, 0]);
   assert.deepEqual(supply.glyph[5], [0, 0, 0, 1, 0]);
   assert.equal(supply.blade.length + supply.glyph.length, 27 + 28);

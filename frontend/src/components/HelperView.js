@@ -27,6 +27,9 @@ import { authorizedAccounts, readHelper, writeHelper, WISHLIST_COLOR } from '@/l
 const DEFAULT_GOALS = ['set:full-zone', 'set:full-biome', 'specials'];
 // Presets since retired (2026-10-21); a saved setup or an old link may still name them.
 const RETIRED_GOALS = new Set(['chroma', 'mode']);
+// Goals that moved to the level and biome menus (2026-10-21): the same parcels.
+const MOVED_GOALS = { 'trait:penthouse': 'level:20', 'trait:basement': 'level:1', 'trait:biome0': 'biome:0' };
+const cleanGoals = goals => [...new Set(goals.filter(g => g && !RETIRED_GOALS.has(g)).map(g => MOVED_GOALS[g] ?? g))];
 const MAX_WALLETS = 10;
 const TF = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const BOX = { border: '1px solid rgba(232,232,232,0.15)' };
@@ -50,7 +53,7 @@ const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, modes: [], budget
 const viewOf = s => {
   const e = emptyState();
   return {
-    wallets: s.wallets ?? e.wallets, goals: (s.goals ?? e.goals).filter(g => !RETIRED_GOALS.has(g)), modes: s.modes ?? e.modes,
+    wallets: s.wallets ?? e.wallets, goals: cleanGoals(s.goals ?? e.goals), modes: s.modes ?? e.modes,
     budget: s.budget ?? '', max: s.max ?? '', prem: s.prem ?? '', wprem: s.wprem ?? '',
   };
 };
@@ -61,7 +64,7 @@ function viewFromUrl() {
   if (!(q.get('w') || q.get('g'))) return null;
   return {
     wallets: (q.get('w') || '').split(',').map(w => w.trim()).filter(Boolean).slice(0, MAX_WALLETS),
-    goals: q.get('g') ? q.get('g').split(',').filter(g => g && !RETIRED_GOALS.has(g)) : DEFAULT_GOALS,
+    goals: q.get('g') ? cleanGoals(q.get('g').split(',')) : DEFAULT_GOALS,
     modes: q.get('md') ? q.get('md').split(',').filter(Boolean) : [],
     budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '', wprem: q.get('wp') || '',
   };
@@ -396,7 +399,7 @@ function GoalsPanel({ state, catalog, update }) {
   const sets = catalog.presets.filter(p => p.category === 'sets');
   const traits = catalog.presets.filter(p => p.category !== 'sets');
   const zones = useMemo(() => [...catalog.fields.zone].sort((a, b) => a.localeCompare(b)), [catalog]);
-  const menuValues = { zone: zones, biome: catalog.fields.biome, level: catalog.fields.level };
+  const menuValues = { zone: zones, biome: catalog.fields.biome, chroma: catalog.fields.chroma || [], level: catalog.fields.level };
   const Check = ({ p }) => (
     <label className="flex items-baseline gap-2 cursor-pointer text-sm" title={p.description}>
       <input type="checkbox" checked={state.goals.includes(p.id)} onChange={() => toggle(p.id)} style={{ accentColor: '#e8e8e8' }} />
@@ -407,15 +410,15 @@ function GoalsPanel({ state, catalog, update }) {
   // The presets that can also be picked value by value.
   const pickers = {
     specials: {
-      prefix: 'trait:', sections: ['special', 'visual', 'level'], columns: 'flex flex-wrap gap-x-4 gap-y-1 mt-0.5',
+      prefix: 'trait:', sections: ['special', 'visual'], columns: 'flex flex-wrap gap-x-4 gap-y-1 mt-0.5',
       items: catalog.fields.trait.map(t => ({ id: t.id, section: t.group, label: <span className="whitespace-nowrap">{t.label}</span> })),
     },
     blades: {
-      prefix: 'blade:', columns: 'flex flex-col gap-1 mt-0.5',
+      prefix: 'blade:', columns: 'flex flex-col gap-1 mt-0.5', info: BLADE_INFO,
       items: BLADES.map((blade, i) => ({ id: String(i), title: blade, label: <BladeLabel n={i + 1} blade={blade} count={countOf('blade', i)} /> })),
     },
     glyphs: {
-      prefix: 'glyph:', columns: 'grid sm:grid-cols-2 gap-x-6 gap-y-1 mt-0.5',
+      prefix: 'glyph:', columns: 'grid sm:grid-cols-2 gap-x-6 gap-y-1 mt-0.5', info: GLYPH_INFO,
       items: ORIGIN_SET_COUNTS.map((_, i) => ({ id: String(i), label: <GlyphSetLabel set={i} count={countOf('glyph', i)} /> })),
     },
   };
@@ -433,7 +436,7 @@ function GoalsPanel({ state, catalog, update }) {
       </div>
       <div className="grid gap-x-8 gap-y-1 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <span className={`${LABEL} mb-1`}>sets</span>
+          <a href="/traits#sets" className={`${LABEL} mb-1 underline decoration-dotted underline-offset-2 hover:opacity-90 self-start`} title="What each set asks for">sets</a>
           {sets.map(p => <Check key={p.id} p={p} />)}
         </div>
         <div className="flex flex-col gap-1">
@@ -477,6 +480,7 @@ function ModeScope({ modes, all, onChange }) {
 const PICK_MENUS = [
   { kind: 'zone', label: 'zones', format: v => v, layout: 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6' },
   { kind: 'biome', label: 'biomes', format: v => `B${v}`, layout: 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10' },
+  { kind: 'chroma', label: 'chromas', format: v => v, layout: 'grid grid-cols-2 sm:grid-cols-4' },
   { kind: 'level', label: 'levels', format: v => `L${v}`, layout: 'grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10' },
 ];
 const PICKS_SHOWN = 8; // picked values listed beside a closed menu
@@ -533,7 +537,34 @@ function PickMenu({ menu, values, state, update, countOf, scoped }) {
 // A preset that can also be picked value by value: every one (the preset's id)
 // or picks written `<prefix><id>`, one goal group either way (buildRubric in
 // backend/src/collectionHelper.js). Special traits, blades and glyph sets.
-function MultiPicker({ preset, prefix, items, sections = null, columns, state, update }) {
+// What blades and origin glyph sets are, for the info icons beside them.
+const BLADE_INFO = 'Blades are drawn by the v2 renderer in a parcel\u2019s Daydream and Terraform animations: one of 27 character sets, fixed by its biome and seed. Not visible on Terrain parcels until they are dreamed. Origins and Y-Seeds have none.';
+const GLYPH_INFO = 'Origin glyph sets are what an origin parcel (Origin Daydream or Origin Terraform) animates in the v2 renderer: one of 28 sets, fixed by its seed. X-Seed origins animate all 28 at once, so they count as none.';
+
+// A small (i) that shows a short explanation on hover, or on focus/tap.
+function InfoTip({ label, children }) {
+  return (
+    <span className="relative inline-flex group self-center">
+      <button
+        type="button"
+        aria-label={label}
+        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] leading-none opacity-55 hover:opacity-100 focus-visible:opacity-100"
+        style={{ border: '1px solid currentColor', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
+      >
+        i
+      </button>
+      <span
+        role="tooltip"
+        className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-opacity absolute z-30 left-0 top-full mt-1.5 w-64 max-w-[calc(100vw-3rem)] p-2 text-xs leading-snug normal-case tracking-normal"
+        style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid rgba(232,232,232,0.3)' }}
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function MultiPicker({ preset, prefix, items, sections = null, columns, info = null, state, update }) {
   const all = items.map(t => t.id);
   const chosen = state.goals.includes(preset.id)
     ? new Set(all)
@@ -573,6 +604,7 @@ function MultiPicker({ preset, prefix, items, sections = null, columns, state, u
           />
           <span>{preset.label}</span>
         </label>
+        {info && <InfoTip label={`What are ${preset.label.toLowerCase()}?`}>{info}</InfoTip>}
         <span className="text-xs opacity-45">{some ? `${chosen.size} of ${all.length}` : all.length}</span>
         <button type="button" className="text-xs opacity-60 hover:opacity-100" onClick={() => setOpen(o => !o)} aria-expanded={open}>
           {open ? '[hide ▴]' : '[choose ▾]'}

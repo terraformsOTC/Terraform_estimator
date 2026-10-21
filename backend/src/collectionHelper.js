@@ -15,16 +15,19 @@
 const { SETS, ZONE_MULTIPLES, BIOME_MULTIPLES } = require('./pricingModel');
 const { TRAIT_TYPES, matchesTrait } = require('./traitTypes');
 
+const CHROMAS = ['Flow', 'Pulse', 'Hyper', 'Plague'];
 const MODES = ['Terrain', 'Daydream', 'Terraform', 'Origin Daydream', 'Origin Terraform'];
 const ALL_ZONES = Object.keys(ZONE_MULTIPLES);
 const ALL_BIOMES = Object.keys(BIOME_MULTIPLES).map(Number).sort((a, b) => a - b);
 const LEVELS = Array.from({ length: 20 }, (_, i) => i + 1);
-// The /traits catalogue minus its two mode entries (the mode preset has those),
-// plus Synchro, a special type with no /traits page (2 parcels). `group` is the
-// catalogue's (special / visual / level), for the page's trait picker.
+// The /traits catalogue minus its mode entries (the mode row has those), its level
+// entries (Penthouse and Basement are levels 20 and 1 in the level menu) and Biome
+// 0 (in the biome menu), plus Synchro, a visual trait with no /traits page (2
+// parcels). `group` is the catalogue's (special / visual), for the page's picker.
 const SPECIAL_TRAITS = [
-  ...TRAIT_TYPES.filter(t => t.group !== 'mode').map(t => ({ id: t.type, label: t.label, group: t.group })),
-  { id: 'synchro', label: 'Synchro', group: 'special' },
+  ...TRAIT_TYPES.filter(t => t.group !== 'mode' && t.group !== 'level' && t.type !== 'biome0')
+    .map(t => ({ id: t.type, label: t.label, group: t.group })),
+  { id: 'synchro', label: 'Synchro', group: 'visual' },
 ];
 const SPECIAL_LABEL = Object.fromEntries(SPECIAL_TRAITS.map(s => [s.id, s.label]));
 
@@ -64,6 +67,7 @@ const target = {
   zone: z => ({ id: `zone:${z}`, label: z, kind: 'zone', match: t => t.zone === z }),
   biome: b => ({ id: `biome:${b}`, label: `Biome ${b}`, kind: 'biome', match: t => t.biome === b }),
   level: l => ({ id: `level:${l}`, label: `Level ${l}`, kind: 'level', match: t => t.level === l }),
+  chroma: c => ({ id: `chroma:${c}`, label: c, kind: 'chroma', match: t => t.chroma === c }),
   specialType: s => ({ id: `special:${s}`, label: s, kind: 'special', match: t => t.specialType === s }),
   anyMode: ms => ({ id: `mode:${ms.join('|')}`, label: ms.join(' or '), kind: 'mode', match: t => ms.includes(t.mode) }),
   trait: id => ({ id: `trait:${id}`, label: SPECIAL_LABEL[id], kind: 'trait', match: t => hasTrait(t, id) }),
@@ -99,7 +103,7 @@ function setGroup(name, def) {
 
 const PRESETS = [
   ...Object.entries(SETS).map(([name, def]) => ({ id: `set:${slug(name)}`, build: () => setGroup(name, def) })),
-  { id: 'specials', build: () => ({ id: 'specials', label: 'Special traits', category: 'traits', description: 'One parcel with each special, visual and level trait', targets: SPECIAL_TRAITS.map(s => target.trait(s.id)) }) },
+  { id: 'specials', build: () => ({ id: 'specials', label: 'Special traits', category: 'traits', description: 'One parcel with each special and visual trait', targets: SPECIAL_TRAITS.map(s => target.trait(s.id)) }) },
   { id: 'blades', build: () => ({ id: 'blades', label: 'Blades', category: 'traits', description: 'One parcel with each blade (any non-origin parcel; latent on Terrain until dreamed)', targets: BLADES.map(target.blade) }) },
   { id: 'glyphs', build: () => ({ id: 'glyphs', label: 'Origin glyph sets', category: 'traits', description: 'One origin parcel animating each glyph set', targets: GLYPH_SETS.map(target.glyph) }) },
 ];
@@ -109,6 +113,9 @@ class RubricError extends Error {}
 // Retired presets (James, 2026-10-21: "Every chroma" and "Every mode"). Saved
 // setups and old links still name them, so they are skipped, not refused.
 const RETIRED_PRESETS = new Set(['chroma', 'mode']);
+// Goals that moved (2026-10-21): Penthouse, Basement and Biome 0 left the trait
+// picker for the level and biome menus, which pick the same parcels.
+const MOVED_GOALS = { 'trait:penthouse': 'level:20', 'trait:basement': 'level:1', 'trait:biome0': 'biome:0' };
 
 // Goals picked one value at a time, written `<kind>:<value>`. Each kind's
 // picks form one group (`group`), so a collector who picks ten zones gets one
@@ -121,6 +128,7 @@ const inList = (values, parse) => v => {
 const PICKS = {
   zone: { group: 'zones', label: 'Zones', noun: 'zone', description: 'One parcel in each chosen zone', parse: inList(ALL_ZONES, String), target: target.zone },
   biome: { group: 'biomes', label: 'Biomes', noun: 'biome', description: 'One parcel in each chosen biome', parse: inList(ALL_BIOMES, Number), target: target.biome },
+  chroma: { group: 'chromas', label: 'Chromas', noun: 'chroma', description: 'One parcel in each chosen chroma', parse: inList(CHROMAS, String), target: target.chroma },
   level: { group: 'levels', label: 'Levels', noun: 'level', description: 'One parcel at each chosen level', parse: inList(LEVELS, Number), target: target.level },
   trait: { group: 'specials', all: 'specials', label: 'Special traits', noun: 'special trait', description: 'One parcel with each chosen special trait', parse: v => (SPECIAL_LABEL[v] ? v : null), target: target.trait },
   blade: { group: 'blades', all: 'blades', label: 'Blades', noun: 'blade', description: 'One parcel with each chosen blade', parse: inList(BLADES, Number), target: target.blade },
@@ -143,7 +151,7 @@ function buildRubric({ presets = [] } = {}) {
   const seen = new Set();
   const picked = new Map(); // pick kind -> its group, while built from single picks
   for (const id of presets) {
-    const sid = String(id);
+    const sid = MOVED_GOALS[String(id)] ?? String(id);
     const colon = sid.indexOf(':');
     const kind = colon > 0 ? sid.slice(0, colon) : null;
     const pick = kind ? PICKS[kind] : null;
@@ -179,7 +187,7 @@ function buildRubric({ presets = [] } = {}) {
 }
 
 /**
- * How many minted parcels have each zone, biome, level, blade and glyph set,
+ * How many minted parcels have each zone, biome, chroma, level, blade and glyph set,
  * split by mode (counts in MODES order), so the page can show what exists in
  * the modes a collector keeps to.
  */
@@ -189,6 +197,7 @@ function supplyByMode(items) {
     modes: MODES,
     zone: Object.fromEntries(ALL_ZONES.map(z => [z, zeros()])),
     biome: Object.fromEntries(ALL_BIOMES.map(b => [b, zeros()])),
+    chroma: Object.fromEntries(CHROMAS.map(c => [c, zeros()])),
     level: Object.fromEntries(LEVELS.map(l => [l, zeros()])),
     blade: BLADES.map(zeros),
     glyph: GLYPH_SETS.map(zeros),
@@ -198,6 +207,7 @@ function supplyByMode(items) {
     if (m < 0) continue;
     if (out.zone[t.zone]) out.zone[t.zone][m]++;
     if (out.biome[t.biome]) out.biome[t.biome][m]++;
+    if (out.chroma[t.chroma]) out.chroma[t.chroma][m]++;
     if (out.level[t.level]) out.level[t.level][m]++;
     const b = bladeOf(t);
     if (b != null) out.blade[b][m]++;
@@ -219,7 +229,7 @@ function catalog(items = null) {
       return { id: g.id, label: g.label, category: g.category, description: g.description, attainability: g.attainability || null, targets: g.targets.length };
     }),
     fields: {
-      zone: ALL_ZONES, biome: ALL_BIOMES, level: LEVELS, mode: MODES,
+      zone: ALL_ZONES, biome: ALL_BIOMES, chroma: CHROMAS, level: LEVELS, mode: MODES,
       trait: SPECIAL_TRAITS,
     },
     ...(items ? { supply: supplyByMode(items) } : {}),
@@ -415,4 +425,4 @@ function shoppingList(unmet, market, { budget = null, maxPrice = null, maxPremiu
   };
 }
 
-module.exports = { buildRubric, evaluate, shoppingList, catalog, supplyByMode, bladeOf, glyphSetOf, RubricError, MODES, PRESETS };
+module.exports = { buildRubric, evaluate, shoppingList, catalog, supplyByMode, bladeOf, glyphSetOf, RubricError, CHROMAS, MODES, PRESETS };
