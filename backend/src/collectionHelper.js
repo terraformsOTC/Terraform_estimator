@@ -1,8 +1,8 @@
 // collectionHelper.js — "what am I missing, and what's for sale that fills it?"
 //
-// A rubric is a list of goal groups: the estimator's sets, every chroma, every
-// mode, the special traits, or custom ones a collector builds. A group is a list
-// of targets, and a target is met when any parcel in the collector's wallet
+// A rubric is a list of goal groups: the estimator's sets, zones, biomes and
+// levels picked one by one, the special traits, blades and origin glyph sets. A
+// group is a list of targets, and a target is met when any parcel in the collector's wallet
 // group matches it. For every target this reports what they hold, how many
 // exist, what is listed now (never their own listings) and the cheapest; then a
 // shopping list — the cheapest current listings that fill the most unmet
@@ -15,7 +15,6 @@
 const { SETS, ZONE_MULTIPLES, BIOME_MULTIPLES } = require('./pricingModel');
 const { TRAIT_TYPES, matchesTrait } = require('./traitTypes');
 
-const CHROMAS = ['Flow', 'Pulse', 'Hyper', 'Plague'];
 const MODES = ['Terrain', 'Daydream', 'Terraform', 'Origin Daydream', 'Origin Terraform'];
 const ALL_ZONES = Object.keys(ZONE_MULTIPLES);
 const ALL_BIOMES = Object.keys(BIOME_MULTIPLES).map(Number).sort((a, b) => a - b);
@@ -29,7 +28,6 @@ const SPECIAL_TRAITS = [
 ];
 const SPECIAL_LABEL = Object.fromEntries(SPECIAL_TRAITS.map(s => [s.id, s.label]));
 
-const MAX_CUSTOM_SPECS = 12;
 const OWNED_SHOWN = 12;     // owned token ids listed per target; the count is always exact
 const LISTINGS_SHOWN = 3;   // cheapest listings listed per unmet target
 
@@ -66,8 +64,6 @@ const target = {
   zone: z => ({ id: `zone:${z}`, label: z, kind: 'zone', match: t => t.zone === z }),
   biome: b => ({ id: `biome:${b}`, label: `Biome ${b}`, kind: 'biome', match: t => t.biome === b }),
   level: l => ({ id: `level:${l}`, label: `Level ${l}`, kind: 'level', match: t => t.level === l }),
-  chroma: c => ({ id: `chroma:${c}`, label: c, kind: 'chroma', match: t => t.chroma === c }),
-  mode: m => ({ id: `mode:${m}`, label: m, kind: 'mode', match: t => t.mode === m }),
   specialType: s => ({ id: `special:${s}`, label: s, kind: 'special', match: t => t.specialType === s }),
   anyMode: ms => ({ id: `mode:${ms.join('|')}`, label: ms.join(' or '), kind: 'mode', match: t => ms.includes(t.mode) }),
   trait: id => ({ id: `trait:${id}`, label: SPECIAL_LABEL[id], kind: 'trait', match: t => hasTrait(t, id) }),
@@ -103,13 +99,16 @@ function setGroup(name, def) {
 
 const PRESETS = [
   ...Object.entries(SETS).map(([name, def]) => ({ id: `set:${slug(name)}`, build: () => setGroup(name, def) })),
-  { id: 'chroma', build: () => ({ id: 'chroma', label: 'Every chroma', category: 'traits', description: 'One parcel in each chroma', targets: CHROMAS.map(target.chroma) }) },
-  { id: 'mode', build: () => ({ id: 'mode', label: 'Every mode', category: 'traits', description: 'One parcel in each mode', targets: MODES.map(target.mode) }) },
   { id: 'specials', build: () => ({ id: 'specials', label: 'Special traits', category: 'traits', description: 'One parcel with each special, visual and level trait', targets: SPECIAL_TRAITS.map(s => target.trait(s.id)) }) },
   { id: 'blades', build: () => ({ id: 'blades', label: 'Blades', category: 'traits', description: 'One parcel with each blade (any non-origin parcel; latent on Terrain until dreamed)', targets: BLADES.map(target.blade) }) },
   { id: 'glyphs', build: () => ({ id: 'glyphs', label: 'Origin glyph sets', category: 'traits', description: 'One origin parcel animating each glyph set', targets: GLYPH_SETS.map(target.glyph) }) },
 ];
 const PRESET_BY_ID = new Map(PRESETS.map(p => [p.id, p]));
+class RubricError extends Error {}
+
+// Retired presets (James, 2026-10-21: "Every chroma" and "Every mode"). Saved
+// setups and old links still name them, so they are skipped, not refused.
+const RETIRED_PRESETS = new Set(['chroma', 'mode']);
 
 // Goals picked one value at a time, written `<kind>:<value>`. Each kind's
 // picks form one group (`group`), so a collector who picks ten zones gets one
@@ -128,73 +127,8 @@ const PICKS = {
   glyph: { group: 'glyphs', all: 'glyphs', label: 'Origin glyph sets', noun: 'glyph set', description: 'One origin parcel animating each chosen glyph set', parse: inList(GLYPH_SETS, Number), target: target.glyph },
 };
 
-// ─── CUSTOM GOALS ────────────────────────────────────────────────────────────
-// A custom spec is { each?: field, where?: { field: value, ... } }:
-//   { where: { zone: 'Alto', chroma: 'Hyper' } }  → one target, an Alto Hyper parcel
-//   { each: 'biome', where: { chroma: 'Pulse' } } → one target per biome, in Pulse
-const FIELDS = {
-  zone: { values: ALL_ZONES, parse: v => String(v), get: t => t.zone, label: v => v },
-  biome: { values: ALL_BIOMES, parse: v => Number(v), get: t => t.biome, label: v => `Biome ${v}` },
-  level: { values: LEVELS, parse: v => Number(v), get: t => t.level, label: v => `Level ${v}` },
-  chroma: { values: CHROMAS, parse: v => String(v), get: t => t.chroma, label: v => v },
-  mode: { values: MODES, parse: v => String(v), get: t => t.mode, label: v => v },
-  trait: { values: SPECIAL_TRAITS.map(s => s.id), parse: v => String(v), get: null, label: v => SPECIAL_LABEL[v] },
-};
-
-function fieldMatch(field, value) {
-  return field === 'trait' ? (t => hasTrait(t, value)) : (t => FIELDS[field].get(t) === value);
-}
-
-class RubricError extends Error {}
-
-function parseWhere(where) {
-  if (where == null) return [];
-  if (typeof where !== 'object' || Array.isArray(where)) throw new RubricError('where must be an object');
-  const entries = Object.entries(where);
-  if (entries.length > 4) throw new RubricError('at most 4 conditions per goal');
-  return entries.map(([field, raw]) => {
-    const f = FIELDS[field];
-    if (!f) throw new RubricError(`unknown field "${String(field).slice(0, 20)}"`);
-    const value = f.parse(raw);
-    if (!f.values.includes(value)) throw new RubricError(`unknown ${field} "${String(raw).slice(0, 40)}"`);
-    return [field, value];
-  });
-}
-
-function customGroup(spec) {
-  if (!spec || typeof spec !== 'object') throw new RubricError('each custom goal must be an object');
-  const where = parseWhere(spec.where);
-  const each = spec.each == null ? null : String(spec.each);
-  if (each != null && !FIELDS[each]) throw new RubricError(`unknown field "${each.slice(0, 20)}"`);
-  if (each == null && where.length === 0) throw new RubricError('a custom goal needs "each" or "where"');
-  if (each != null && where.some(([f]) => f === each)) throw new RubricError(`"${each}" cannot be both "each" and a condition`);
-  const whereFns = where.map(([f, v]) => fieldMatch(f, v));
-  const whereOk = t => whereFns.every(fn => fn(t));
-  const whereLabel = where.map(([f, v]) => FIELDS[f].label(v)).join(' · ');
-  const whereKey = where.map(([f, v]) => `${f}=${v}`).join('&');
-  if (each == null) {
-    const id = `custom:${whereKey}`;
-    return { id, label: whereLabel, category: 'custom', description: 'Custom goal', targets: [{ id, label: whereLabel, kind: 'custom', match: whereOk }] };
-  }
-  const f = FIELDS[each];
-  const id = `custom:each-${each}${whereKey ? `:${whereKey}` : ''}`;
-  return {
-    id,
-    label: `Every ${each}${whereLabel ? ` · ${whereLabel}` : ''}`,
-    category: 'custom',
-    description: 'Custom goal',
-    // prune: a combination no parcel has (a biome that never occurs in Plague) is
-    // dropped from the goal rather than shown as unreachable. Only custom "each"
-    // goals do this; preset goals keep every target, exactly as detectSets does.
-    targets: f.values.map(v => {
-      const each_ = fieldMatch(each, v);
-      return { id: `${id}:${v}`, label: f.label(v), kind: each, prune: true, match: t => each_(t) && whereOk(t) };
-    }),
-  };
-}
-
 /**
- * Preset ids + custom specs → groups. Throws RubricError on anything malformed.
+ * Preset ids → groups. Throws RubricError on anything malformed.
  *
  * `specials` is every special trait; `trait:<id>` picks them one at a time, and
  * the picks share one "Special traits" group (id `specials` either way), so a
@@ -203,9 +137,8 @@ function customGroup(spec) {
  * the same way; zones, biomes and levels are picks only (`zone:<name>`, …),
  * the whole of each being a set already.
  */
-function buildRubric({ presets = [], custom = [] } = {}) {
-  if (!Array.isArray(presets) || !Array.isArray(custom)) throw new RubricError('malformed rubric');
-  if (custom.length > MAX_CUSTOM_SPECS) throw new RubricError(`at most ${MAX_CUSTOM_SPECS} custom goals`);
+function buildRubric({ presets = [] } = {}) {
+  if (!Array.isArray(presets)) throw new RubricError('malformed rubric');
   const groups = [];
   const seen = new Set();
   const picked = new Map(); // pick kind -> its group, while built from single picks
@@ -229,6 +162,7 @@ function buildRubric({ presets = [], custom = [] } = {}) {
       if (!g.targets.some(x => x.id === t.id)) g.targets.push(t);
       continue;
     }
+    if (RETIRED_PRESETS.has(sid)) continue;
     const p = PRESET_BY_ID.get(sid);
     if (!p) throw new RubricError(`unknown goal "${sid.slice(0, 40)}"`);
     const allOf = Object.keys(PICKS).find(k => PICKS[k].all === p.id);
@@ -241,43 +175,7 @@ function buildRubric({ presets = [], custom = [] } = {}) {
     seen.add(p.id);
     groups.push(p.build());
   }
-  for (const spec of custom) {
-    const g = customGroup(spec);
-    if (seen.has(g.id)) continue;
-    seen.add(g.id);
-    groups.push(g);
-  }
   return groups;
-}
-
-// The fields of a combination row, in order (see combinations).
-const COMBO_FIELDS = ['zone', 'biome', 'level', 'chroma', 'mode', 'trait'];
-
-/**
- * Which custom-goal values occur together on real parcels, so the page offers
- * only conditions some parcel meets (no Shahra once Plague is picked). One row
- * per distinct combination: each field as the index of its value in
- * catalog().fields, and `trait` as a bit mask over fields.trait, since a
- * parcel can carry several.
- */
-function combinations(items) {
-  const single = COMBO_FIELDS.filter(f => f !== 'trait');
-  const index = Object.fromEntries(single.map(f => [f, new Map(FIELDS[f].values.map((v, i) => [v, i]))]));
-  const seen = new Set();
-  const rows = [];
-  for (const { traits: t } of items) {
-    if (!t) continue;
-    const row = single.map(f => index[f].get(FIELDS[f].get(t)));
-    if (row.some(i => i == null)) continue;
-    let mask = 0;
-    SPECIAL_TRAITS.forEach((s, i) => { if (hasTrait(t, s.id)) mask |= 1 << i; });
-    row.push(mask);
-    const key = row.join(',');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    rows.push(row);
-  }
-  return rows;
 }
 
 /**
@@ -310,9 +208,9 @@ function supplyByMode(items) {
 }
 
 /**
- * What the page needs to offer: the presets, every value a custom goal can use
- * and, given every minted parcel ([{ tokenId, traits }]), which of those values
- * occur together and how many parcels have each, by mode.
+ * What the page needs to offer: the presets, the values its menus list and,
+ * given every minted parcel ([{ tokenId, traits }]), how many parcels have each,
+ * by mode.
  */
 function catalog(items = null) {
   return {
@@ -321,11 +219,10 @@ function catalog(items = null) {
       return { id: g.id, label: g.label, category: g.category, description: g.description, attainability: g.attainability || null, targets: g.targets.length };
     }),
     fields: {
-      zone: ALL_ZONES, biome: ALL_BIOMES, level: LEVELS, chroma: CHROMAS, mode: MODES,
+      zone: ALL_ZONES, biome: ALL_BIOMES, level: LEVELS, mode: MODES,
       trait: SPECIAL_TRAITS,
     },
-    ...(items ? { combos: { fields: COMBO_FIELDS, rows: combinations(items) }, supply: supplyByMode(items) } : {}),
-    limits: { customGoals: MAX_CUSTOM_SPECS },
+    ...(items ? { supply: supplyByMode(items) } : {}),
   };
 }
 
@@ -349,7 +246,7 @@ function catalog(items = null) {
 function evaluate({ groups, owned, universe, listings, ownWallets, held = [], modes = null, supplyCache = new Map(), options = {} }) {
   // A mode scope narrows every parcel the goals look at: the collector's, the
   // market's, other collectors' and the supply. A target no parcel in those
-  // modes can meet is left out, as custom combinations that don't exist are.
+  // modes can meet is left out.
   const scoped = Array.isArray(modes) && modes.length > 0;
   if (scoped) {
     const inScope = p => !!p.traits && modes.includes(p.traits.mode);
@@ -377,7 +274,7 @@ function evaluate({ groups, owned, universe, listings, ownWallets, held = [], mo
     const e = {
       id: t.id, label: t.label, kind: t.kind, match: t.match,
       met: mine.length > 0,
-      exists: supply > 0 || (!t.prune && !scoped),
+      exists: supply > 0 || !scoped,
       supply,
       ownedCount: mine.length,
       owned: mine.slice(0, OWNED_SHOWN),
@@ -398,8 +295,8 @@ function evaluate({ groups, owned, universe, listings, ownWallets, held = [], mo
       attainability: g.attainability || null, bottleneck: g.bottleneck || null,
       met: real.filter(t => t.met).length,
       total: real.length,
-      // Custom combinations no parcel has, and under a mode scope any target
-      // no parcel in those modes meets, are left out of the count (see prune).
+      // Under a mode scope, a target no parcel in those modes meets is left
+      // out of the count.
       nonexistent: targets.length - real.length,
       targets: real.map(stripMatch),
     };
@@ -462,7 +359,7 @@ function withinPremium(l, maxPremium) {
   return maxPremium == null || (l.model != null && l.price <= l.model * (1 + maxPremium) + 1e-9);
 }
 
-function stripMatch({ match, exists, prune, ...rest }) {
+function stripMatch({ match, exists, ...rest }) {
   return rest;
 }
 
@@ -518,4 +415,4 @@ function shoppingList(unmet, market, { budget = null, maxPrice = null, maxPremiu
   };
 }
 
-module.exports = { buildRubric, evaluate, shoppingList, catalog, combinations, supplyByMode, bladeOf, glyphSetOf, RubricError, CHROMAS, MODES, PRESETS };
+module.exports = { buildRubric, evaluate, shoppingList, catalog, supplyByMode, bladeOf, glyphSetOf, RubricError, MODES, PRESETS };

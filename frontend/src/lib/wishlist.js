@@ -26,7 +26,7 @@ export const WISHLIST_TINT = 'rgba(244,114,182,0.08)';
 export function readHelper() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && Array.isArray(s.wallets) && Array.isArray(s.goals) && Array.isArray(s.custom)) return s;
+    if (s && Array.isArray(s.wallets) && Array.isArray(s.goals)) return s;
   } catch { /* storage unavailable, or not ours */ }
   return null;
 }
@@ -47,18 +47,6 @@ export function inGroup(s, address) {
   if (!s || !address) return false;
   const a = address.toLowerCase();
   return [...(s.addresses || []), ...s.wallets.filter(isAddress)].some(x => x.toLowerCase() === a);
-}
-
-// ─── encoding (the /collection API's for custom goals) ───────────────────────
-export function toB64url(value) {
-  const bytes = new TextEncoder().encode(JSON.stringify(value));
-  let bin = '';
-  bytes.forEach(b => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-export function fromB64url(s) {
-  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
-  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
 }
 
 // ─── wallet ──────────────────────────────────────────────────────────────────
@@ -162,7 +150,6 @@ export function useWishlistMarks({ holders } = {}) {
     setError(null);
     const q = new URLSearchParams({ wallets: setup.wallets.join(','), view: 'wishlist' });
     if (setup.goals.length) q.set('goals', setup.goals.join(','));
-    if (setup.custom.length) q.set('custom', toB64url(setup.custom));
     if (setup.modes?.length) q.set('modes', setup.modes.join(','));
     if (setup.wprem) q.set('wprem', setup.wprem);
     if (others) q.set('holders', others.join(','));

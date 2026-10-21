@@ -1,6 +1,6 @@
-// Collection helper: set goals agree with detectSets, custom goals validate and
-// expand, coverage skips the collector's own listings, and the shopping list
-// buys the cheapest coverage within a budget.
+// Collection helper: set goals agree with detectSets, goals validate, coverage
+// skips the collector's own listings, and the shopping list buys the cheapest
+// coverage within a budget.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -37,57 +37,40 @@ test('every set goal agrees with detectSets on what completes it', () => {
   }
 });
 
-test('custom goals validate their fields and values', () => {
-  assert.throws(() => buildRubric({ custom: [{ where: { colour: 'red' } }] }), RubricError);
-  assert.throws(() => buildRubric({ custom: [{ where: { chroma: 'Neon' } }] }), RubricError);
-  assert.throws(() => buildRubric({ custom: [{}] }), RubricError);
-  assert.throws(() => buildRubric({ custom: [{ each: 'biome', where: { biome: 3 } }] }), RubricError);
+test('unknown goals are refused; retired ones are skipped', () => {
   assert.throws(() => buildRubric({ presets: ['set:nope'] }), RubricError);
-  assert.throws(() => buildRubric({ custom: Array(13).fill({ where: { chroma: 'Pulse' } }) }), RubricError);
-  const [g] = buildRubric({ custom: [{ each: 'chroma', where: { zone: 'Alto' } }] });
-  assert.equal(g.targets.length, 4);
-  assert.equal(g.label, 'Every chroma · Alto');
-});
-
-test('custom "each" goals leave out combinations no parcel has', () => {
-  const universe = [parcel({ chroma: 'Pulse', biome: 3 }), parcel({ chroma: 'Pulse', biome: 4 }), parcel({ chroma: 'Flow', biome: 5 })];
-  const groups = buildRubric({ custom: [{ each: 'biome', where: { chroma: 'Pulse' } }] });
-  const res = evaluate({ groups, owned: [universe[0]], universe, listings: [], ownWallets: new Set() });
-  const g = res.groups[0];
-  assert.equal(g.total, 2);           // biomes 3 and 4 exist in Pulse
-  assert.equal(g.met, 1);
-  assert.equal(g.nonexistent, 90);    // the other 90 biomes never occur in Pulse here
+  // "Every chroma" and "Every mode" are gone (2026-10-21); setups that name them still load.
+  assert.deepEqual(buildRubric({ presets: ['chroma', 'set:full-zone', 'mode'] }).map(g => g.id), ['set:full-zone']);
+  assert.ok(!catalog().presets.some(p => ['chroma', 'mode'].includes(p.id)));
 });
 
 test('coverage reports supply, skips the collector\'s own listings, and lists the cheapest', () => {
-  const owned = [parcel({ chroma: 'Flow' })];
-  const universe = [...owned, parcel({ chroma: 'Hyper' }), parcel({ chroma: 'Hyper' }), parcel({ chroma: 'Pulse' })];
+  const owned = [parcel({ level: 1 })];
+  const universe = [...owned, parcel({ level: 2 }), parcel({ level: 2 }), parcel({ level: 3 })];
   const listings = [
-    listing(0.9, { chroma: 'Hyper' }),
-    listing(0.5, { chroma: 'Hyper' }, { seller: '0xMINE' }), // their own: never suggested
-    listing(0.7, { chroma: 'Hyper' }),
+    listing(0.9, { level: 2 }),
+    listing(0.5, { level: 2 }, { seller: '0xMINE' }), // their own: never suggested
+    listing(0.7, { level: 2 }),
   ];
-  const res = evaluate({ groups: buildRubric({ presets: ['chroma'] }), owned, universe, listings, ownWallets: new Set(['0xmine']) });
-  const hyper = res.groups[0].targets.find(t => t.id === 'chroma:Hyper');
-  assert.equal(hyper.supply, 2);
-  assert.equal(hyper.listed, 2);
-  assert.deepEqual(hyper.cheapest.map(c => c.price), [0.7, 0.9]);
-  const flow = res.groups[0].targets.find(t => t.id === 'chroma:Flow');
-  assert.equal(flow.met, true);
-  assert.equal(flow.cheapest, null);
-  // A preset keeps every target, even one with no parcel in this universe (Plague).
+  const res = evaluate({ groups: buildRubric({ presets: ['level:1', 'level:2', 'level:3', 'level:4'] }), owned, universe, listings, ownWallets: new Set(['0xmine']) });
+  const l2 = res.groups[0].targets.find(t => t.id === 'level:2');
+  assert.equal(l2.supply, 2);
+  assert.equal(l2.listed, 2);
+  assert.deepEqual(l2.cheapest.map(c => c.price), [0.7, 0.9]);
+  const l1 = res.groups[0].targets.find(t => t.id === 'level:1');
+  assert.equal(l1.met, true);
+  assert.equal(l1.cheapest, null);
+  // A goal keeps every target, even one with no parcel in this universe (level 4).
   assert.equal(res.groups[0].total, 4);
-  assert.equal(res.groups[0].targets.find(t => t.id === 'chroma:Plague').supply, 0);
+  assert.equal(res.groups[0].targets.find(t => t.id === 'level:4').supply, 0);
 });
 
 test('the shopping list prefers one parcel that fills several goals over two singles', () => {
-  const unmet = buildRubric({ presets: ['chroma', 'mode'] })
-    .flatMap(g => g.targets)
-    .filter(t => ['chroma:Hyper', 'mode:Daydream'].includes(t.id));
+  const unmet = buildRubric({ presets: ['zone:Holo', 'biome:30'] }).flatMap(g => g.targets);
   const market = [
-    listing(0.3, { chroma: 'Hyper' }),
-    listing(0.3, { mode: 'Daydream' }),
-    listing(0.5, { chroma: 'Hyper', mode: 'Daydream' }),
+    listing(0.3, { zone: 'Holo' }),
+    listing(0.3, { biome: 30 }),
+    listing(0.5, { zone: 'Holo', biome: 30 }),
   ];
   const plan = shoppingList(unmet, market);
   assert.equal(plan.picks.length, 1);
@@ -96,11 +79,11 @@ test('the shopping list prefers one parcel that fills several goals over two sin
 });
 
 test('the shopping list respects the budget, max price and premium over model', () => {
-  const unmet = buildRubric({ presets: ['chroma'] }).flatMap(g => g.targets).filter(t => t.id !== 'chroma:Flow');
+  const unmet = buildRubric({ presets: ['level:2', 'level:3', 'level:4'] }).flatMap(g => g.targets);
   const market = [
-    listing(0.4, { chroma: 'Pulse' }, { model: 0.5 }),
-    listing(1.2, { chroma: 'Hyper' }, { model: 1.0 }),   // above model
-    listing(3.0, { chroma: 'Plague' }, { model: 4.0 }),
+    listing(0.4, { level: 2 }, { model: 0.5 }),
+    listing(1.2, { level: 3 }, { model: 1.0 }),   // above model
+    listing(3.0, { level: 4 }, { model: 4.0 }),
   ];
   let plan = shoppingList(unmet, market, { budget: 1.0 });
   assert.deepEqual(plan.picks.map(p => p.price), [0.4]);
@@ -118,7 +101,7 @@ test('the shopping list respects the budget, max price and premium over model', 
 });
 
 test('the wishlist marks every listing that fills an unmet goal, at any price, with the goals it fills', () => {
-  const groups = buildRubric({ presets: ['set:full-zone', 'set:polychrome-set'], custom: [{ each: 'biome', where: { chroma: 'Pulse' } }] });
+  const groups = buildRubric({ presets: ['set:full-zone', 'set:polychrome-set', 'biome:3'] });
   const universe = [parcel({ zone: 'Shahra', biome: 3, chroma: 'Pulse' }), parcel({ zone: 'Alto', biome: 4 })];
   const res = evaluate({
     groups,
@@ -138,8 +121,8 @@ test('the wishlist marks every listing that fills an unmet goal, at any price, w
   assert.equal(w.price, 50);
   const shahra = w.fills.find(f => f.id === 'zone:Shahra');
   assert.deepEqual(shahra.groups, ['Full zone', 'Polychrome set']);
-  const pulse = w.fills.find(f => f.label === 'Biome 3');
-  assert.deepEqual(pulse.groups, ['Every biome · Pulse']);
+  const b3 = w.fills.find(f => f.id === 'biome:3');
+  assert.deepEqual(b3.groups, ['Biomes']);
   assert.equal(res.shoppingList.picks.length, 0); // the list keeps its price limits
 });
 
@@ -186,23 +169,6 @@ test('a target shared by two groups is filled once', () => {
   assert.deepEqual(res.shoppingList.picks[0].fills, ['zone:Shahra']);
 });
 
-test('catalog combos hold only the combinations some parcel has', () => {
-  const universe = [
-    parcel({ zone: 'Holo', biome: 3, chroma: 'Plague' }),
-    parcel({ zone: 'Holo', biome: 3, chroma: 'Plague' }),                  // the same combination: one row
-    parcel({ zone: 'Shahra', biome: 7, level: 20, specialType: 'Spine' }),
-    { tokenId: 9200, traits: null },                                       // traits not loaded yet
-  ];
-  const { fields, combos } = catalog(universe);
-  const read = row => Object.fromEntries(combos.fields.map((f, i) => [f,
-    f === 'trait' ? fields.trait.filter((_, b) => row[i] & (1 << b)).map(t => t.id) : fields[f][row[i]]]));
-  assert.deepEqual(combos.rows.map(read), [
-    { zone: 'Holo', biome: 3, level: 5, chroma: 'Plague', mode: 'Terrain', trait: [] },
-    { zone: 'Shahra', biome: 7, level: 20, chroma: 'Flow', mode: 'Terrain', trait: ['spine', 'penthouse'] },
-  ]);
-  assert.equal(catalog().combos, undefined); // no parcels given, so no claim about what exists
-});
-
 test('blades and origin glyph sets follow the renderer', () => {
   // Blade (biome + seed) % 27 on non-origin parcels up to seed 9950.
   assert.equal(bladeOf(parcel({ biome: 3, seed: 30 }).traits), 6);
@@ -239,8 +205,8 @@ test('picked zones, biomes, levels, blades and glyph sets each make one group', 
 });
 
 test('a mode scope counts only parcels in those modes', () => {
-  const groups = buildRubric({ presets: ['zone:Holo', 'mode'] });
-  const universe = [parcel({ zone: 'Holo', mode: 'Terrain' }), parcel({ zone: 'Holo', mode: 'Daydream' })];
+  const groups = buildRubric({ presets: ['zone:Holo', 'level:5', 'level:6'] });
+  const universe = [parcel({ zone: 'Holo', mode: 'Terrain' }), parcel({ zone: 'Holo', mode: 'Daydream' }), parcel({ level: 6, mode: 'Daydream' })];
   const owned = [parcel({ zone: 'Holo', mode: 'Daydream' })];
   const listings = [listing(0.5, { zone: 'Holo', mode: 'Daydream' }), listing(0.9, { zone: 'Holo', mode: 'Terrain' })];
   const any = evaluate({ groups, owned, universe, listings, ownWallets: new Set() });
@@ -248,8 +214,8 @@ test('a mode scope counts only parcels in those modes', () => {
   const terrain = evaluate({ groups, owned, universe, listings, ownWallets: new Set(), modes: ['Terrain'] });
   assert.deepEqual([terrain.groups[0].met, terrain.groups[0].total], [0, 1]); // it doesn't now
   assert.deepEqual(terrain.wishlist.map(w => w.price), [0.9]);                // only the Terrain listing
-  // "Every mode" keeps only the modes in scope; the rest are left out, not unmet.
-  assert.deepEqual([terrain.groups[1].total, terrain.groups[1].nonexistent], [1, 4]);
+  // A level no Terrain parcel has (6) is left out, not unmet.
+  assert.deepEqual([terrain.groups[1].total, terrain.groups[1].nonexistent], [1, 1]);
 });
 
 test('the wishlist marks only listings within its price against the model', () => {

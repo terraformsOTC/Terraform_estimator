@@ -2315,9 +2315,9 @@ app.get('/api/weekly-report-data', standardLimiter, async (req, res) => {
 // a bare 500 with an HTML body. A disallowed origin is a client error, not a
 // server fault, so it gets a clean 403 and the JSON shape every other error uses.
 // ─── COLLECTION HELPER ────────────────────────────────────────────────────────
-// /collect on the site: for a group of wallets, which goals (sets, chroma, mode,
-// special traits, custom) they have met, what is missing, what is listed that
-// fills each gap, and a shopping list. See collectionHelper.js. Everything is
+// /helper on the site: for a group of wallets, which goals (sets, zones, biomes,
+// levels, special traits, blades, glyph sets) they have met, what is missing,
+// what is listed that fills each gap, and a shopping list. See collectionHelper.js. Everything is
 // answered from memory — ownership from the owner index, traits from the
 // snapshot overlaid with the parcel store, listings from the cached feed — so a
 // request makes no RPC or OpenSea call of its own.
@@ -2407,19 +2407,6 @@ app.use('/linked-wallets', collectionLimiter);
 const MAX_HELPER_WALLETS = 10;
 const parseList = v => String(v || '').split(',').map(s => s.trim()).filter(Boolean);
 
-function parseCustomGoals(v) {
-  if (!v) return [];
-  if (String(v).length > 4000) throw new RubricError('custom goals are too long');
-  let json;
-  try {
-    json = JSON.parse(Buffer.from(String(v), 'base64url').toString('utf8'));
-  } catch {
-    throw new RubricError('custom goals could not be read');
-  }
-  if (!Array.isArray(json)) throw new RubricError('custom goals must be a list');
-  return json;
-}
-
 function parseAmount(v, name) {
   if (v == null || v === '') return null;
   const n = Number(v);
@@ -2433,8 +2420,8 @@ function parsePremium(v) {
   return n / 100;
 }
 
-// GET /collection/catalog — the presets, every value a custom goal can use and
-// which of them occur together on minted parcels (`combos`), rebuilt with the
+// GET /collection/catalog — the presets, the values the page's menus list and
+// how many minted parcels have each, by mode (`supply`), rebuilt with the
 // universe.
 let catalogCache = { at: -1, body: null };
 app.get('/collection/catalog', (_req, res) => {
@@ -2444,7 +2431,7 @@ app.get('/collection/catalog', (_req, res) => {
   res.json(catalogCache.body);
 });
 
-// GET /collection?wallets=a,b&goals=set:full-zone,chroma,zone:Holo&custom=<base64url JSON>
+// GET /collection?wallets=a,b&goals=set:full-zone,specials,zone:Holo
 //   &modes=Terrain&budget=2&max=0.5&prem=10&wprem=0[&view=wishlist[&holders=c,d]]
 app.get('/collection', async (req, res) => {
   try {
@@ -2461,7 +2448,7 @@ app.get('/collection', async (req, res) => {
 
     let groups, options, modes;
     try {
-      groups = collectionHelper.buildRubric({ presets: parseList(req.query.goals), custom: parseCustomGoals(req.query.custom) });
+      groups = collectionHelper.buildRubric({ presets: parseList(req.query.goals) });
       options = {
         budget: parseAmount(req.query.budget, 'budget'),
         maxPrice: parseAmount(req.query.max, 'max price'),

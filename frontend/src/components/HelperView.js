@@ -22,12 +22,11 @@ import { API_URL, Footer, shortAddr, vsModelColor, parcelImage } from '@/compone
 import { SET_COLORS } from '@/lib/setsGlossary';
 import { FilterChip } from '@/components/ParcelFilters';
 import { BLADES, ORIGIN_SET_COUNTS, abbreviateGlyphs, originGlyphSet } from '@/lib/parcelGlyphs';
-import {
-  toB64url, fromB64url, authorizedAccounts,
-  readHelper, writeHelper, WISHLIST_COLOR,
-} from '@/lib/wishlist';
+import { authorizedAccounts, readHelper, writeHelper, WISHLIST_COLOR } from '@/lib/wishlist';
 
-const DEFAULT_GOALS = ['set:full-zone', 'set:full-biome', 'chroma', 'mode', 'specials'];
+const DEFAULT_GOALS = ['set:full-zone', 'set:full-biome', 'specials'];
+// Presets since retired (2026-10-21); a saved setup or an old link may still name them.
+const RETIRED_GOALS = new Set(['chroma', 'mode']);
 const MAX_WALLETS = 10;
 const TF = '0x4E1f41613c9084FdB9E34E11fAE9412427480e56';
 const BOX = { border: '1px solid rgba(232,232,232,0.15)' };
@@ -43,17 +42,15 @@ const PRICE_STEPS = [-30, -20, -10, 0, 10, 25, 50, 100].map(n => ({
 }));
 const PREMIUMS = [{ value: '', label: 'any price vs model' }, ...PRICE_STEPS];
 const WISH_PRICES = [{ value: '', label: 'any price' }, ...PRICE_STEPS];
-const FIELD_LABELS = { zone: 'zone', biome: 'biome', level: 'level', chroma: 'chroma', mode: 'mode', trait: 'special trait' };
-const FIELD_NAMES = Object.keys(FIELD_LABELS);
 
 // ─── state ───────────────────────────────────────────────────────────────────
 // modes: the modes that count ([] = any). wprem: the wishlist's price against
 // the model, as prem is the shopping list's.
-const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, custom: [], modes: [], budget: '', max: '', prem: '', wprem: '' });
+const emptyState = () => ({ wallets: [], goals: DEFAULT_GOALS, modes: [], budget: '', max: '', prem: '', wprem: '' });
 const viewOf = s => {
   const e = emptyState();
   return {
-    wallets: s.wallets ?? e.wallets, goals: s.goals ?? e.goals, custom: s.custom ?? e.custom, modes: s.modes ?? e.modes,
+    wallets: s.wallets ?? e.wallets, goals: (s.goals ?? e.goals).filter(g => !RETIRED_GOALS.has(g)), modes: s.modes ?? e.modes,
     budget: s.budget ?? '', max: s.max ?? '', prem: s.prem ?? '', wprem: s.wprem ?? '',
   };
 };
@@ -61,21 +58,18 @@ const viewOf = s => {
 // The view a /helper?w=…&g=… link carries, or null for a bare /helper.
 function viewFromUrl() {
   const q = new URLSearchParams(window.location.search);
-  if (!(q.get('w') || q.get('g') || q.get('c'))) return null;
-  let custom = [];
-  try { custom = q.get('c') ? fromB64url(q.get('c')) : []; } catch { custom = []; }
+  if (!(q.get('w') || q.get('g'))) return null;
   return {
     wallets: (q.get('w') || '').split(',').map(w => w.trim()).filter(Boolean).slice(0, MAX_WALLETS),
-    goals: q.get('g') ? q.get('g').split(',').filter(Boolean) : DEFAULT_GOALS,
-    custom: Array.isArray(custom) ? custom : [],
+    goals: q.get('g') ? q.get('g').split(',').filter(g => g && !RETIRED_GOALS.has(g)) : DEFAULT_GOALS,
     modes: q.get('md') ? q.get('md').split(',').filter(Boolean) : [],
     budget: q.get('b') || '', max: q.get('m') || '', prem: q.get('p') || '', wprem: q.get('wp') || '',
   };
 }
 
-// Same wallets and goals in any order, same custom goals and limits — a reload
-// of your own /helper URL, say.
-const viewKey = v => JSON.stringify([v.wallets.map(w => w.toLowerCase()).sort(), [...v.goals].sort(), v.custom, [...v.modes].sort(), v.budget, v.max, v.prem, v.wprem]);
+// Same wallets and goals in any order, same limits — a reload of your own
+// /helper URL, say.
+const viewKey = v => JSON.stringify([v.wallets.map(w => w.toLowerCase()).sort(), [...v.goals].sort(), [...v.modes].sort(), v.budget, v.max, v.prem, v.wprem]);
 const sameView = (a, b) => viewKey(viewOf(a)) === viewKey(viewOf(b));
 
 // The resolved addresses of `wallets`, if `result` is the answer for them (and
@@ -93,7 +87,6 @@ function stateQuery(s, { forApi = false } = {}) {
   const q = new URLSearchParams();
   if (s.wallets.length) q.set(forApi ? 'wallets' : 'w', s.wallets.join(','));
   if (s.goals.length) q.set(forApi ? 'goals' : 'g', s.goals.join(','));
-  if (s.custom.length) q.set(forApi ? 'custom' : 'c', toB64url(s.custom));
   if (s.modes.length) q.set(forApi ? 'modes' : 'md', s.modes.join(','));
   if (s.budget !== '') q.set(forApi ? 'budget' : 'b', s.budget);
   if (s.max !== '') q.set(forApi ? 'max' : 'm', s.max);
@@ -109,10 +102,6 @@ function vsModel(price, model) {
   const d = (model - price) / model; // the site's convention: positive = under model
   const p = Math.round(-d * 100);
   return { text: `${p > 0 ? '+' : p < 0 ? '−' : '±'}${Math.abs(p)}% vs model`, color: vsModelColor(d) };
-}
-function customLabel(spec) {
-  const where = Object.entries(spec.where || {}).map(([f, v]) => (f === 'biome' ? `biome ${v}` : f === 'level' ? `L${v}` : String(v))).join(' · ');
-  return spec.each ? `every ${FIELD_LABELS[spec.each]}${where ? ` · ${where}` : ''}` : `a parcel: ${where}`;
 }
 const opensea = id => `https://opensea.io/assets/ethereum/${TF}/${id}`;
 
@@ -189,7 +178,7 @@ export default function HelperView() {
   // Evaluate, debounced, cancelling any request still in flight.
   useEffect(() => {
     if (!state) return undefined;
-    if (state.wallets.length === 0 || (state.goals.length === 0 && state.custom.length === 0)) {
+    if (state.wallets.length === 0 || state.goals.length === 0) {
       setResult(null);
       return undefined;
     }
@@ -448,20 +437,10 @@ function GoalsPanel({ state, catalog, update }) {
           {sets.map(p => <Check key={p.id} p={p} />)}
         </div>
         <div className="flex flex-col gap-1">
-          <span className={`${LABEL} mb-1 mt-3 md:mt-0`}>traits</span>
+          <span className={`${LABEL} mb-1 mt-3 md:mt-0`}>other</span>
           {traits.map(p => (pickers[p.id]
             ? <MultiPicker key={p.id} preset={p} {...pickers[p.id]} state={state} update={update} />
             : <Check key={p.id} p={p} />))}
-          <span className={`${LABEL} mb-1 mt-4`}>your own goals</span>
-          {state.custom.map((spec, i) => (
-            <span key={i} className="text-sm flex items-baseline gap-2">
-              <span>{customLabel(spec)}</span>
-              <button type="button" className="opacity-50 hover:opacity-100 text-xs" onClick={() => update({ custom: state.custom.filter((_, j) => j !== i) })}>[remove]</button>
-            </span>
-          ))}
-          {state.custom.length < catalog.limits.customGoals && (
-            <CustomGoalBuilder catalog={catalog} modes={state.modes} onAdd={spec => update({ custom: [...state.custom, spec] })} />
-          )}
         </div>
       </div>
     </section>
@@ -647,130 +626,6 @@ function GlyphSetLabel({ set, count }) {
       </span>
       {count != null && <span className="text-xs opacity-45 shrink-0">{count}</span>}
     </span>
-  );
-}
-
-function valuesFor(fields, field) {
-  if (field === 'trait') return fields.trait.map(t => ({ value: t.id, label: t.label }));
-  return (fields[field] || []).map(v => ({ value: v, label: field === 'biome' ? `biome ${v}` : field === 'level' ? `level ${v}` : String(v) }));
-}
-
-// What a condition can offer: only values some minted parcel has alongside the
-// conditions above it, so a combination no parcel has (Shahra in Plague) can't
-// be built. catalog.combos holds one row per combination that exists, each
-// field an index into catalog.fields and the trait a bit mask over
-// fields.trait (combinations in backend/src/collectionHelper.js). With modes
-// picked, only parcels in those modes count. A catalog without combos, cached
-// from before, offers every value as it used to.
-function makeFacets({ fields, combos }) {
-  const col = Object.fromEntries((combos?.fields || []).map((f, i) => [f, i]));
-  const rows = combos?.rows?.length && FIELD_NAMES.every(f => f in col) ? combos.rows : null;
-  const index = Object.fromEntries(FIELD_NAMES.map(f => [f, new Map(valuesFor(fields, f).map((o, i) => [o.value, i]))]));
-  const has = (row, field, i) => (field === 'trait' ? (row[col.trait] & (1 << i)) !== 0 : row[col[field]] === i);
-  return {
-    values(field, where = [], modes = []) {
-      const all = valuesFor(fields, field);
-      if (!rows) return all;
-      const keys = where.map(c => [c.field, index[c.field].get(c.value)]);
-      const inModes = modes.length ? new Set(modes.map(m => index.mode.get(m))) : null;
-      const seen = new Set();
-      for (const row of rows) {
-        if (inModes && !inModes.has(row[col.mode])) continue;
-        if (!keys.every(([f, i]) => i != null && has(row, f, i))) continue;
-        if (field === 'trait') all.forEach((_, i) => { if (has(row, 'trait', i)) seen.add(i); });
-        else seen.add(row[col[field]]);
-      }
-      return all.filter((_, i) => seen.has(i));
-    },
-  };
-}
-
-// Keeps a draft goal one that some parcel meets, after every edit: a condition
-// on the "every" field goes (every zone already spans the zones), and a value
-// no parcel has alongside the conditions above it gives way to the first that
-// one does. A trait condition left with no value at all goes too. `modes`:
-// the modes that count, from the goals' mode picks.
-function settle(draft, facets, modes) {
-  const used = new Set(draft.kind === 'each' ? [draft.each] : []);
-  const conds = [];
-  for (const c of draft.conds) {
-    if (used.has(c.field)) continue;
-    const opts = facets.values(c.field, conds, modes);
-    if (!opts.length) continue;
-    conds.push({ field: c.field, value: opts.some(o => o.value === c.value) ? c.value : opts[0].value });
-    used.add(c.field);
-  }
-  return { ...draft, conds };
-}
-
-function CustomGoalBuilder({ catalog, modes, onAdd }) {
-  const facets = useMemo(() => makeFacets(catalog), [catalog]);
-  // kind: 'each' (one of every <each>) | 'one' (a parcel with)
-  const [draft, setDraft] = useState(() => settle({ kind: 'each', each: 'biome', conds: [{ field: 'chroma', value: 'Pulse' }] }, facets, modes));
-  const { kind, each, conds } = draft;
-  const edit = fn => setDraft(d => settle(fn(d), facets, modes));
-  // Picking modes can leave a condition's value with no parcel: settle again.
-  useEffect(() => { setDraft(d => settle(d, facets, modes)); }, [facets, modes]);
-  const setCond = (i, patch) => edit(d => ({ ...d, conds: d.conds.map((c, j) => (j === i ? { ...c, ...patch } : c)) }));
-  // Per condition, the fields it can switch to (none another condition or the
-  // "every" field has, and only ones the rows above leave a value for) and its
-  // values; and what [+ condition] adds: the first such field, its first value.
-  const { options, next } = useMemo(() => {
-    const open = (above, skip) => {
-      const taken = new Set([...(kind === 'each' ? [each] : []), ...conds.filter((_, j) => j !== skip).map(c => c.field)]);
-      return FIELD_NAMES.filter(f => !taken.has(f) && facets.values(f, above, modes).length > 0);
-    };
-    const nextField = open(conds, -1)[0];
-    return {
-      options: conds.map((c, i) => ({ fields: open(conds.slice(0, i), i), values: facets.values(c.field, conds.slice(0, i), modes) })),
-      next: nextField ? { field: nextField, value: facets.values(nextField, conds, modes)[0].value } : null,
-    };
-  }, [kind, each, conds, facets, modes]);
-  const add = () => {
-    const where = Object.fromEntries(conds.map(c => [c.field, c.value]));
-    if (kind === 'one' && conds.length === 0) return;
-    onAdd(kind === 'each' ? (conds.length ? { each, where } : { each }) : { where });
-  };
-  return (
-    <div className="flex flex-col gap-2 text-sm mt-1 p-2" style={BOX}>
-      <div className="flex flex-wrap items-center gap-2">
-        <select style={SELECT} value={kind} onChange={e => edit(d => ({ ...d, kind: e.target.value }))} aria-label="Goal type">
-          <option value="each">one of every</option>
-          <option value="one">a parcel with</option>
-        </select>
-        {kind === 'each' && (
-          <select style={SELECT} value={each} onChange={e => edit(d => ({ ...d, each: e.target.value }))} aria-label="Collect one of every">
-            {FIELD_NAMES.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
-          </select>
-        )}
-      </div>
-      {conds.map((c, i) => (
-        <div key={i} className="flex flex-wrap items-center gap-2">
-          <span className="opacity-60">{kind === 'each' ? (i === 0 ? 'where' : 'and') : (i === 0 ? '' : 'and')}</span>
-          <select style={SELECT} value={c.field} onChange={e => setCond(i, { field: e.target.value, value: null })} aria-label="Condition field">
-            {options[i].fields.map(f => <option key={f} value={f}>{FIELD_LABELS[f]}</option>)}
-          </select>
-          <select
-            style={SELECT}
-            value={String(c.value)}
-            onChange={e => {
-              const opt = options[i].values.find(o => String(o.value) === e.target.value);
-              if (opt) setCond(i, { value: opt.value });
-            }}
-            aria-label="Condition value"
-          >
-            {options[i].values.map(o => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
-          </select>
-          <button type="button" className="opacity-50 hover:opacity-100 text-xs" onClick={() => edit(d => ({ ...d, conds: d.conds.filter((_, j) => j !== i) }))}>[×]</button>
-        </div>
-      ))}
-      <div className="flex flex-wrap gap-2">
-        {conds.length < 3 && next && (
-          <button type="button" className="btn-primary btn-xs" onClick={() => edit(d => ({ ...d, conds: [...d.conds, next] }))}>[+ condition]</button>
-        )}
-        <button type="button" className="btn-primary btn-xs" onClick={add} disabled={kind === 'one' && conds.length === 0}>[add goal]</button>
-      </div>
-    </div>
   );
 }
 
