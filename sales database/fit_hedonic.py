@@ -11,8 +11,9 @@ Sub-models:
   money_sword_ON  (retail ask):   weight mass 80% ASK / 20% BID
 
 Features: zone, biome, chroma(Flow base), mode-group(Terrain base), level,
-          named look-badges, the 1of1 / S0 / Spine flags, and one interaction:
-          Daydream/Terraform x ln(v1 biome prior). Override specials
+          the Heartbeat and Biome 0 Flow badges, the 1of1 / S0 / Spine flags,
+          and one interaction: Daydream/Terraform x ln(v1 biome prior). Mesa,
+          gm, Matrix, Synchro and Lith0-like are tags, not features. Override specials
           (Godmode/Plague/seeds/Lith0) excluded -> Tier-2, each type one floor
           multiple from its own sales (special_multiples).
 Shrinkage: thin traits shrink toward v1's multipliers, except those James has
@@ -142,11 +143,12 @@ GODMODE_IDS = {83, 124, 1955}
 # prior until he has. ANCHOR_SALES=0 reproduces the all-v1 fit.
 #   2026-10-20  level 20, Dread, biome 39
 #   2026-10-20  the five whose sales sat above v1: First Earth, Avidana, biome
-#               17, and the Biome 0 Flow and Matrix badges
+#               17, and the Biome 0 Flow and Matrix badges (Matrix left the
+#               model 2026-10-21; see badges)
 SALES_ANCHORED = {
     ('level', '20'), ('zone', 'Dread'), ('biome', '39'),
     ('zone', 'First Earth'), ('zone', 'Avidana'), ('biome', '17'),
-    ('badge', 'biome0_flow'), ('badge', 'matrix'),
+    ('badge', 'biome0_flow'),
 }
 ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
 # Anchored traits priced by their own sales alone: the anchor with no share left on
@@ -157,24 +159,24 @@ ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
 # half-life leaves 2021-24 sales counting only until there's nothing newer.
 SALES_ONLY = {('level', '20'): 90.0}
 ANCHOR_ROUNDS = 4
-# Tier-2 types priced at the floor multiple their own sales show (special_
-# multiples). X-Seed and Godmode keep v1's price, and hedonicModel.js values
-# Y-Seeds as X-Seeds (James, 2026-10-20).
-SALES_PRICED_SPECIALS = {'Lith0', 'Plague'}
-# Premiums James has set outright, overriding both the fit and any prior. Mesa:
-# its sales never supported v1's +25% over biome 39 (the last, #2518 at 0.9 ETH in
-# Aug 2025, cleared ~1.9x the floor, level with other biome-39 parcels), so +5%
-# for now, to come down further if the sales keep saying so (2026-10-20).
+# Tier-2 types priced at a floor multiple from their own sales (special_
+# multiples; Godmode since 2026-10-21). X-Seed keeps v1's price, and
+# hedonicModel.js values Y-Seeds as X-Seeds (James, 2026-10-20).
+SALES_PRICED_SPECIALS = {'Lith0', 'Plague', 'Godmode'}
+# Premiums James has set outright, overriding both the fit and any prior.
 # Rare biomes, set to what their two latest sales say (James, 2026-10-21, from
 # the rare-trait check: each sale against today's model on its day). Biome 74
 # 11.9x (the blend gave 6.65x), 81 5.44x (4.27x), 77 6.38x (5.05x), 78 5.60x
 # (4.54x). Biomes 76 and 79 stay where they are.
-FIXED_PREMIUMS = {('badge', 'mesa'): 1.05,
-                  ('biome', '74'): 11.9, ('biome', '81'): 5.44, ('biome', '77'): 6.38, ('biome', '78'): 5.60}
+FIXED_PREMIUMS = {('biome', '74'): 11.9, ('biome', '81'): 5.44, ('biome', '77'): 6.38, ('biome', '78'): 5.60}
 # Tier-2 floor multiples James has set over what the type's sales give. Plague
 # (2026-10-21): in line with its two latest sales (#1239 at 50 ETH, Dec 2024;
 # #4649 at 135, Dec 2022), 10% under the 81.2x the median of all seven gave.
-FIXED_SPECIAL_MULTIPLES = {'Plague': 72.7}
+# Godmode (2026-10-21): what its two latest sales say, both taken listings:
+# #83 at 14 ETH (Oct 2025) and #1955's June 2026 deal at ~12.1 ETH (11 ETH plus
+# #2451, a Blossom B0 our model valued ~1.1 ETH that day; the DB has the 11).
+# 42.8x the floor index on the ask side, 36.16x on the bid side these hold.
+FIXED_SPECIAL_MULTIPLES = {'Plague': 72.7, 'Godmode': 36.16}
 # Sales James has ruled out of the model, each with his reason
 # (excluded-sales.json; own-price.js reads the same file for the floor index and
 # the calibration): bids accepted so far under a parcel's value as to be
@@ -331,17 +333,12 @@ def load_records(mt, override_ids, flags):
     return recs, tier2, dropped
 
 def badges(r):
+    """The look-badges the model prices. Mesa, gm and Matrix left the model
+    2026-10-21 (James: complexity for no reliable signal); like Lith0-like and
+    Synchro they stay visual tags on the site, valued as plain parcels of their
+    zone and biome."""
     b, mode_t = {}, (r['mode_group'] == 'Terrain')
-    b['mesa'] = 1 if (r['biome'] == '39' and mode_t and r['mystery'] < 30000) else 0
-    # Matrix requires the Intro Forest zone, matching the product's badge (CLAUDE.md
-    # "Matrix — Biome 58 / Intro Forest") and v1's matrixMultiple. The earlier
-    # biome-58-only test fired on 354 sales and fitted to ~1.06x, but it was not
-    # measuring Matrix — it was a near-duplicate of the biome=58 coefficient, which
-    # already carries the generic biome-58 effect. Narrowed, it matches on 1 sale
-    # and is carried almost entirely by the prior, which is the correct outcome.
-    b['matrix'] = 1 if (r['biome'] == '58' and mode_t and r['zone'] == 'Intro Forest') else 0
     b['heartbeat'] = 1 if (r['zone'] == '[BLOOD]' and r['chroma'] == 'Pulse' and mode_t) else 0
-    b['gm'] = 1 if (r['biome'] == '71' and mode_t and r['mystery'] < 30000) else 0
     b['biome0_flow'] = 1 if (r['biome'] == '0' and r['chroma'] == 'Flow') else 0
     return b
 
@@ -370,7 +367,7 @@ def build_design(recs, priors, sweep_model=None):
     levels = sorted(l for l in {r['level'] for r in recs} if l in EXTREME_LEVELS)
     chromas = ['Pulse', 'Hyper']          # Flow = baseline
     modes = ['DDTF', 'ORIG']              # Terrain = baseline
-    badge_names = ['mesa', 'matrix', 'heartbeat', 'gm', 'biome0_flow']
+    badge_names = ['heartbeat', 'biome0_flow']
     cols = ([f'zone={z}' for z in zones] + [f'biome={b}' for b in biomes] +
             [f'level={l}' for l in levels] + [f'chroma={c}' for c in chromas] +
             [f'mode={m}' for m in modes] + [f'badge={b}' for b in badge_names] +

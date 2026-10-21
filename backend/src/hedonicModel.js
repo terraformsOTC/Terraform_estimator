@@ -61,14 +61,16 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // two May 2026 sales; SALES_ONLY in fit_hedonic.py), and its sales above 40x the
 // floor count.
 // 2.3.3 (2026-10-21, James): biomes 74, 77, 78 and 81 set to what their two latest
-// sales say, Plague's floor multiple lowered in line with its sales, and two bids
-// he knows were accepted far under value left out (excluded-sales.json).
+// sales say, Plague's floor multiple lowered in line with its sales, Godmode
+// priced from its sales instead of v1, two bids he knows were accepted far under
+// value left out (excluded-sales.json), and the Mesa, gm and Matrix premiums
+// removed: like Lith0-like and Synchro they are visual tags only.
 const HEDONIC_MODEL_VERSION = '2.3.3';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
-// other traits don't stack on it. Lith0 and Plague are one floor multiple each,
-// read off their own sales (special_multiples, from fit_hedonic.py); the others
-// keep v1's price, collapsed to a point. Spine and 1of1 are NOT here — they are
+// other traits don't stack on it. Lith0, Plague and Godmode are one floor
+// multiple each, from their own sales (special_multiples, from fit_hedonic.py);
+// X-Seed and Y-Seed keep v1's (X-Seed) price, collapsed to a point. Spine and 1of1 are NOT here — they are
 // premiums layered onto the standard formula.
 const TIER2_SPECIALS = new Set(['X-Seed', 'Y-Seed', 'Lith0', 'Plague']);
 const SPECIAL_MULTIPLES = coeffs.special_multiples || {};
@@ -133,14 +135,10 @@ function applyOfferFloor(estimate, offer) {
 function badgeFlags(traits, modeGroup) {
   const isTerrain = modeGroup === 'Terrain';
   const biome = String(traits.biome);
-  const mystery = traits.mysteryValue;
+  // Mesa, gm and Matrix are visual tags only since 2026-10-21 (James), as
+  // Lith0-like and Synchro always were: no premium in the model.
   return {
-    mesa: isTerrain && biome === '39' && mystery != null && mystery < 30000,
-    // Intro Forest is required: biome 58 alone is already carried by the biome
-    // coefficient, and the narrow definition is what the product calls Matrix.
-    matrix: isTerrain && biome === '58' && traits.zone === 'Intro Forest',
     heartbeat: isTerrain && traits.zone === '[BLOOD]' && traits.chroma === 'Pulse',
-    gm: isTerrain && biome === '71' && mystery != null && mystery < 30000,
     biome0_flow: biome === '0' && traits.chroma === 'Flow',
   };
 }

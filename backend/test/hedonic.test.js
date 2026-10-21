@@ -77,13 +77,18 @@ test('Spine adds nothing on a level-20 (penthouse) parcel', () => {
   assert.strictEqual(estimateHedonic({ ...penthouse, specialType: 'Spine' }, FLOOR).on, estimateHedonic(penthouse, FLOOR).on);
 });
 
-test('a premium set outright is served exactly (Mesa)', () => {
-  const fixed = coeffs.meta.fixed_premiums?.['badge mesa'];
-  if (fixed == null) return; // coefficients from before 2.3
-  const mesa = { tokenId: 0, zone: 'Holo', biome: 39, level: 10, chroma: 'Flow', mode: 'Terrain', specialType: null,
-    isOneOfOne: false, isS0: false, isGodmode: false, isLith0like: false, isGm: false, mysteryValue: 20000 };
-  const ratio = estimateHedonic(mesa, FLOOR).on / estimateHedonic({ ...mesa, mysteryValue: 40000 }, FLOOR).on;
-  assert.ok(Math.abs(ratio - fixed) < 0.005, `Mesa over plain biome 39: x${ratio.toFixed(4)}, set x${fixed}`);
+test('Mesa, gm, Matrix, Synchro and Lith0-like are tags, not premiums', () => {
+  const plain = { tokenId: 0, zone: 'Holo', biome: 39, level: 10, chroma: 'Flow', mode: 'Terrain', specialType: null,
+    isOneOfOne: false, isS0: false, isGodmode: false, isLith0like: false, isGm: false, mysteryValue: 40000 };
+  const price = (t) => estimateHedonic(t, FLOOR).on;
+  assert.strictEqual(price({ ...plain, mysteryValue: 20000 }), price(plain));                     // Mesa
+  const b71 = { ...plain, biome: 71 };
+  assert.strictEqual(price({ ...b71, mysteryValue: 20000, isGm: true }), price(b71));            // gm
+  const b58 = { ...plain, biome: 58, zone: 'Intro Forest' };
+  assert.ok(!estimateHedonic(b58, FLOOR).breakdown.on.some((p) => /matrix/i.test(p.label)));     // Matrix
+  assert.strictEqual(price({ ...plain, specialType: 'Synchro' }), price(plain));                  // Synchro
+  assert.strictEqual(price({ ...plain, biome: 0, isLith0like: true }), price({ ...plain, biome: 0 })); // Lith0-like
+  assert.ok(!coeffs.meta.fixed_premiums?.['badge mesa']);
 });
 
 test('exactly the approved traits lean on their own sales', () => {
