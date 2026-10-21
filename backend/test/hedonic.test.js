@@ -77,7 +77,7 @@ test('Spine adds nothing on a level-20 (penthouse) parcel', () => {
   assert.strictEqual(estimateHedonic({ ...penthouse, specialType: 'Spine' }, FLOOR).on, estimateHedonic(penthouse, FLOOR).on);
 });
 
-test('Mesa, gm, Matrix, Synchro and Lith0-like are tags, not premiums', () => {
+test('the visual traits are tags, not premiums', () => {
   const plain = { tokenId: 0, zone: 'Holo', biome: 39, level: 10, chroma: 'Flow', mode: 'Terrain', specialType: null,
     isOneOfOne: false, isS0: false, isGodmode: false, isLith0like: false, isGm: false, mysteryValue: 40000 };
   const price = (t) => estimateHedonic(t, FLOOR).on;
@@ -88,6 +88,9 @@ test('Mesa, gm, Matrix, Synchro and Lith0-like are tags, not premiums', () => {
   assert.ok(!estimateHedonic(b58, FLOOR).breakdown.on.some((p) => /matrix/i.test(p.label)));     // Matrix
   assert.strictEqual(price({ ...plain, specialType: 'Synchro' }), price(plain));                  // Synchro
   assert.strictEqual(price({ ...plain, biome: 0, isLith0like: true }), price({ ...plain, biome: 0 })); // Lith0-like
+  const blood = { ...plain, zone: '[BLOOD]', biome: 32 };
+  const pulse = estimateHedonic({ ...blood, chroma: 'Pulse' }, FLOOR);
+  assert.ok(!pulse.breakdown.on.some((p) => /heartbeat/i.test(p.label)));                       // Heartbeat
   assert.ok(!coeffs.meta.fixed_premiums?.['badge mesa']);
 });
 

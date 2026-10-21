@@ -62,9 +62,10 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // floor count.
 // 2.3.3 (2026-10-21, James): biomes 74, 77, 78 and 81 set to what their two latest
 // sales say, Plague's floor multiple lowered in line with its sales, Godmode
-// priced from its sales instead of v1, two bids he knows were accepted far under
-// value left out (excluded-sales.json), and the Mesa, gm and Matrix premiums
-// removed: like Lith0-like and Synchro they are visual tags only.
+// priced from its sales instead of v1 (45x the floor, ask side), two bids he knows
+// were accepted far under value left out (excluded-sales.json), every visual trait
+// (Mesa, gm, Matrix, Heartbeat, Synchro, Lith0-like) a tag only, and each sale read
+// in the mode the parcel was in when it sold (build_dream_history.js).
 const HEDONIC_MODEL_VERSION = '2.3.3';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
@@ -132,14 +133,12 @@ function applyOfferFloor(estimate, offer) {
 
 /** Badge tests. MUST stay in lockstep with badges() in fit_hedonic.py — a badge
  *  applied on a definition the model did not fit is worse than no badge at all. */
-function badgeFlags(traits, modeGroup) {
-  const isTerrain = modeGroup === 'Terrain';
-  const biome = String(traits.biome);
-  // Mesa, gm and Matrix are visual tags only since 2026-10-21 (James), as
-  // Lith0-like and Synchro always were: no premium in the model.
+function badgeFlags(traits) {
+  // The visual traits (Mesa, gm, Matrix, Heartbeat, Synchro, Lith0-like) are tags
+  // only since 2026-10-21 (James): no premium in the model. Biome 0 Flow is a
+  // biome-and-chroma effect and stays.
   return {
-    heartbeat: isTerrain && traits.zone === '[BLOOD]' && traits.chroma === 'Pulse',
-    biome0_flow: biome === '0' && traits.chroma === 'Flow',
+    biome0_flow: String(traits.biome) === '0' && traits.chroma === 'Flow',
   };
 }
 
@@ -181,7 +180,7 @@ function subModelMultiple(modelKey, traits) {
   const modeBiome = M.mode_biome?.[g]?.[String(traits.biome)];
   if (modeBiome != null) { mult *= modeBiome; push(`biome ${traits.biome} in ${g === 'DDTF' ? 'daydream/terraform' : g}`, modeBiome); }
 
-  const flags = badgeFlags(traits, g);
+  const flags = badgeFlags(traits);
   for (const [name, on] of Object.entries(flags)) {
     if (!on) continue;
     const b = M.badge[name] ?? 1;

@@ -11,9 +11,11 @@ Sub-models:
   money_sword_ON  (retail ask):   weight mass 80% ASK / 20% BID
 
 Features: zone, biome, chroma(Flow base), mode-group(Terrain base), level,
-          the Heartbeat and Biome 0 Flow badges, the 1of1 / S0 / Spine flags,
-          and one interaction: Daydream/Terraform x ln(v1 biome prior). Mesa,
-          gm, Matrix, Synchro and Lith0-like are tags, not features. Override specials
+          the Biome 0 Flow badge, the 1of1 / S0 / Spine flags, and one
+          interaction: Daydream/Terraform x ln(v1 biome prior). The visual traits
+          (Mesa, gm, Matrix, Heartbeat, Synchro, Lith0-like) are tags, not
+          features. Mode is the parcel's mode AT THE SALE (views.sql,
+          build_dream_history.js). Override specials
           (Godmode/Plague/seeds/Lith0) excluded -> Tier-2, each type one floor
           multiple from its own sales (special_multiples).
 Shrinkage: thin traits shrink toward v1's multipliers, except those James has
@@ -172,11 +174,13 @@ FIXED_PREMIUMS = {('biome', '74'): 11.9, ('biome', '81'): 5.44, ('biome', '77'):
 # Tier-2 floor multiples James has set over what the type's sales give. Plague
 # (2026-10-21): in line with its two latest sales (#1239 at 50 ETH, Dec 2024;
 # #4649 at 135, Dec 2022), 10% under the 81.2x the median of all seven gave.
-# Godmode (2026-10-21): what its two latest sales say, both taken listings:
-# #83 at 14 ETH (Oct 2025) and #1955's June 2026 deal at ~12.1 ETH (11 ETH plus
-# #2451, a Blossom B0 our model valued ~1.1 ETH that day; the DB has the 11).
-# 42.8x the floor index on the ask side, 36.16x on the bid side these hold.
-FIXED_SPECIAL_MULTIPLES = {'Plague': 72.7, 'Godmode': 36.16}
+# Godmode (2026-10-21): 45x the floor on the ask side, which James judged
+# closer to fair than the 42.8x its two latest sales give (#83 at 14 ETH, Oct
+# 2025; #1955's June 2026 deal at ~12.1 ETH: 11 ETH plus #2451, a Blossom B0 our
+# model valued ~1.1 ETH that day; the DB has the 11).
+# Each entry is (side, multiple): 'bid' is served as the bid; 'ask' is divided by
+# the fitted ask premium so the ask lands on it.
+FIXED_SPECIAL_MULTIPLES = {'Plague': ('bid', 72.7), 'Godmode': ('ask', 45.0)}
 # Sales James has ruled out of the model, each with his reason
 # (excluded-sales.json; own-price.js reads the same file for the floor index and
 # the calibration): bids accepted so far under a parcel's value as to be
@@ -333,12 +337,12 @@ def load_records(mt, override_ids, flags):
     return recs, tier2, dropped
 
 def badges(r):
-    """The look-badges the model prices. Mesa, gm and Matrix left the model
-    2026-10-21 (James: complexity for no reliable signal); like Lith0-like and
-    Synchro they stay visual tags on the site, valued as plain parcels of their
-    zone and biome."""
-    b, mode_t = {}, (r['mode_group'] == 'Terrain')
-    b['heartbeat'] = 1 if (r['zone'] == '[BLOOD]' and r['chroma'] == 'Pulse' and mode_t) else 0
+    """The badges the model prices: Biome 0 Flow only, a biome-and-chroma
+    effect. The visual traits left the model 2026-10-21 (James: complexity for no
+    reliable signal) — Mesa, gm and Matrix, then Heartbeat; like Lith0-like and
+    Synchro they stay tags on the site, their parcels valued as plain parcels of
+    their zone, biome and chroma."""
+    b = {}
     b['biome0_flow'] = 1 if (r['biome'] == '0' and r['chroma'] == 'Flow') else 0
     return b
 
@@ -367,7 +371,7 @@ def build_design(recs, priors, sweep_model=None):
     levels = sorted(l for l in {r['level'] for r in recs} if l in EXTREME_LEVELS)
     chromas = ['Pulse', 'Hyper']          # Flow = baseline
     modes = ['DDTF', 'ORIG']              # Terrain = baseline
-    badge_names = ['heartbeat', 'biome0_flow']
+    badge_names = ['biome0_flow']
     cols = ([f'zone={z}' for z in zones] + [f'biome={b}' for b in biomes] +
             [f'level={l}' for l in levels] + [f'chroma={c}' for c in chromas] +
             [f'mode={m}' for m in modes] + [f'badge={b}' for b in badge_names] +
@@ -764,9 +768,11 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tie
                 entry['sales_implied'] = round(v, 4)
     all_specials = special_multiples(tier2, premium)
     specials = {k: v for k, v in all_specials.items() if k in SALES_PRICED_SPECIALS}
-    for typ, mult in FIXED_SPECIAL_MULTIPLES.items():
+    for typ, (side, mult) in FIXED_SPECIAL_MULTIPLES.items():
         if typ in specials:
-            specials[typ] = {**specials[typ], 'multiple': mult, 'sales_say': specials[typ]['multiple'], 'source': 'fixed'}
+            bid = mult / premium if side == 'ask' else mult
+            specials[typ] = {**specials[typ], 'multiple': round(bid, 3), 'sales_say': specials[typ]['multiple'],
+                             'source': f'fixed: {mult}x {side}'}
 
     # Per-side held-out error, so the report stays comparable with the two-fit run.
     n = len(y); k = int(n * 0.8); te = order[k:]
@@ -865,7 +871,7 @@ def main():
         'sales_only': {f'{k} {n}': f'{h:g}d half-life' for (k, n), h in SALES_ONLY.items()} if ANCHOR_SALES else {},
         'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
         'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
-        'fixed_special_multiples': FIXED_SPECIAL_MULTIPLES,
+        'fixed_special_multiples': {t: {'side': sd, 'multiple': m} for t, (sd, m) in FIXED_SPECIAL_MULTIPLES.items()},
         'excluded_sales': len(EXCLUDED_SALES),
         'sweeps': (f'{SWEEP_MODEL}: multi-parcel legs at their own price (one seller repeating one price '
                    f'at >= {BUNDLE_MIN_FLOOR_MULTIPLE}x floor = a bundle order, never)') if INCLUDE_SWEEPS else 'excluded',
@@ -874,7 +880,7 @@ def main():
         'excluded': 'override specials (Godmode/Plague/seeds/Lith0), Plague chroma, bundles, wash, self-trades',
         'fitted_flags': EXTRA_FLAGS,
         'interactions': ['DDTF x ln(v1 biome prior)'] if DDTF_BIOME_INTERACTION else [],
-        'caveat': 'mode is current snapshot, not mode-as-of-sale (firstDaydreamTs pending)'}}
+        'mode': 'at the sale: Terrain until the parcel\'s first Daydreaming/Terraformed event (parcel_dreams, build_dream_history.js)'}}
 
     counts = trait_counts(recs)
     if PRIOR_K <= 0:

@@ -53,6 +53,8 @@ sales database/*
 !sales database/backtest_hedonic.py
 !sales database/own-price.js
 !sales database/excluded-sales.json
+!sales database/build_dream_history.js
+!sales database/views.sql
 !sales database/build_floor_index.js
 !sales database/build_priors.js
 !sales database/calibrate-floor.js

@@ -24,6 +24,8 @@
 #                                   or it refuses (CALIB_MAX_AGE_DAYS)
 #   2. catchup + enrich           — the freshest sales, which is the whole point
 #   3. build_floor_index          — the endogenous deflator the fit trains against
+#   3c. dream history             — when each parcel left Terrain (chain), so the
+#                                   views give every sale its mode at the time
 #   4. views + priors             — model_eligible, floor_at_sale, thin-trait priors
 #   5. fit_hedonic.py             — writes pricing-v2-coeffs.json
 #   6. calibrate-floor --write    — MUST be last: the fit overwrites the JSON that
@@ -107,6 +109,11 @@ node build_floor_index.js >/dev/null || fail "build_floor_index"
 echo "[refit] 3b/7 export sales history"
 node export_sales_history.js || echo "[refit] WARNING: sales history export failed — keeping the previous export"
 
+echo "[refit] 3c/7 dream history (each sale's mode at the time)"
+# When each parcel left Terrain, from the chain (Daydreaming/Terraformed events),
+# so a sale reads in the mode the parcel was in when it sold. Incremental; on a
+# failure the table keeps what it had and only parcels dreamed since read wrong.
+node build_dream_history.js || echo "[refit] WARNING: dream history not updated — parcels dreamed since the last run read as their current mode"
 echo "[refit] 4/7 views + priors"
 node -e "require('better-sqlite3')('terraforms_sales.db').exec(require('fs').readFileSync('views.sql','utf8'))" || fail "views"
 node build_priors.js >/dev/null || fail "build_priors"

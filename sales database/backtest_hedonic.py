@@ -97,6 +97,8 @@ def run_origin(job):
         'sweep': r['sweep'],
         # A sale whose parcel has a trait with fewer than PRIOR_K sales so far.
         'rare': any(counts_all[k].get(n, 0) < 120 for k, n in fh.trait_keys(r)),
+        # The parcel's mode group when it sold (views.sql; build_dream_history.js).
+        'mode': r['mode_group'],
     } for r in test]
     calib = {d: [r for r in train_all if r['u'] > origin - d * DAY and not r['sweep']] for d in CALIB_D}
     # Singles from the 30 days before the window, for the daily level (production
@@ -170,6 +172,8 @@ def score(runs, ci, window=30):
                 buckets['premium' if prem else 'floor'].append(e)
                 if seg['rare']:
                     buckets['rare'].append(e)
+                if not seg['sweep'] and seg.get('mode') in ('Terrain', 'DDTF'):
+                    buckets['terrain' if seg['mode'] == 'Terrain' else 'dreamed'].append(e)
         out[f'y{yi + 1}'] = {k: (round(mdape(v) * 100, 2), len(v)) for k, v in buckets.items()}
     return out
 
@@ -260,6 +264,10 @@ def main():
         print('...'); print(line(cur, '<- current'))
     n = {k: (best['score']['y1'][k][1], best['score']['y2'][k][1]) for k in ('all', 'single', 'sweep', 'rare', 'premium')}
     print(f"\ntest sales per year: {n}")
+    cs = cur['score']
+    print("current config by mode at the sale, single sales (MdAPE %, n): "
+          + " | ".join(f"{m} {cs['y1'].get(m, (float('nan'), 0))[0]:.2f} ({cs['y1'].get(m, (0, 0))[1]}) / "
+                       f"{cs['y2'].get(m, (float('nan'), 0))[0]:.2f} ({cs['y2'].get(m, (0, 0))[1]})" for m in ('terrain', 'dreamed')))
     ci_best = configs.index({k: best[k] for k in CURRENT})
     ci_cur = configs.index(dict(CURRENT))
     if ci_best != ci_cur:
