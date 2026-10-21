@@ -165,7 +165,22 @@ SALES_PRICED_SPECIALS = {'Lith0', 'Plague'}
 # its sales never supported v1's +25% over biome 39 (the last, #2518 at 0.9 ETH in
 # Aug 2025, cleared ~1.9x the floor, level with other biome-39 parcels), so +5%
 # for now, to come down further if the sales keep saying so (2026-10-20).
-FIXED_PREMIUMS = {('badge', 'mesa'): 1.05}
+# Rare biomes, set to what their two latest sales say (James, 2026-10-21, from
+# the rare-trait check: each sale against today's model on its day). Biome 74
+# 11.9x (the blend gave 6.65x), 81 5.44x (4.27x), 77 6.38x (5.05x), 78 5.60x
+# (4.54x). Biomes 76 and 79 stay where they are.
+FIXED_PREMIUMS = {('badge', 'mesa'): 1.05,
+                  ('biome', '74'): 11.9, ('biome', '81'): 5.44, ('biome', '77'): 6.38, ('biome', '78'): 5.60}
+# Tier-2 floor multiples James has set over what the type's sales give. Plague
+# (2026-10-21): in line with its two latest sales (#1239 at 50 ETH, Dec 2024;
+# #4649 at 135, Dec 2022), 10% under the 81.2x the median of all seven gave.
+FIXED_SPECIAL_MULTIPLES = {'Plague': 72.7}
+# Sales James has ruled out of the model, each with his reason
+# (excluded-sales.json; own-price.js reads the same file for the floor index and
+# the calibration): bids accepted so far under a parcel's value as to be
+# anomalous.
+EXCLUDED_SALES = {(e['tx'].lower(), int(e['tokenId']))
+                  for e in json.load(open(os.path.join(HERE, 'excluded-sales.json')))['sales']}
 # Sweep legs: several parcels settled in one transaction, each its own order at its
 # own price. The view (v_model_sales) drops every multi-parcel transaction as a
 # possible bundle, but only one order spanning several parcels repeats its total
@@ -268,6 +283,8 @@ def load_records(mt, override_ids, flags):
         return n == 1 or len(sellers) > 1 or price < BUNDLE_MIN_FLOOR_MULTIPLE * floor
     recs, tier2, dropped = [], [], Counter()
     for tid, u, price, floor, side, zone, biome, level, mode, eligible, bundle, tx, seller in rows:
+        if (str(tx).lower(), tid) in EXCLUDED_SALES:
+            dropped['excluded_by_james'] += 1; continue
         if bundle:
             if not (INCLUDE_SWEEPS and own_price(tx, price, floor)):
                 dropped['bundle_order'] += 1; continue
@@ -750,6 +767,9 @@ def emit_side_dummy(result, recs, X, y, u, cols, counts, priors, all_priors, tie
                 entry['sales_implied'] = round(v, 4)
     all_specials = special_multiples(tier2, premium)
     specials = {k: v for k, v in all_specials.items() if k in SALES_PRICED_SPECIALS}
+    for typ, mult in FIXED_SPECIAL_MULTIPLES.items():
+        if typ in specials:
+            specials[typ] = {**specials[typ], 'multiple': mult, 'sales_say': specials[typ]['multiple'], 'source': 'fixed'}
 
     # Per-side held-out error, so the report stays comparable with the two-fit run.
     n = len(y); k = int(n * 0.8); te = order[k:]
@@ -848,6 +868,8 @@ def main():
         'sales_only': {f'{k} {n}': f'{h:g}d half-life' for (k, n), h in SALES_ONLY.items()} if ANCHOR_SALES else {},
         'specials_from_sales': sorted(SALES_PRICED_SPECIALS),
         'fixed_premiums': {f'{k} {n}': v for (k, n), v in FIXED_PREMIUMS.items()},
+        'fixed_special_multiples': FIXED_SPECIAL_MULTIPLES,
+        'excluded_sales': len(EXCLUDED_SALES),
         'sweeps': (f'{SWEEP_MODEL}: multi-parcel legs at their own price (one seller repeating one price '
                    f'at >= {BUNDLE_MIN_FLOOR_MULTIPLE}x floor = a bundle order, never)') if INCLUDE_SWEEPS else 'excluded',
         'n_sweep_legs': sum(r['sweep'] for r in recs),

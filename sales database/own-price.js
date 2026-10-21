@@ -9,6 +9,12 @@
 // the transaction was structured.
 const BUNDLE_MIN_FLOOR_MULTIPLE = 1.5;
 
+// Sales James has ruled out of the model, each with his reason
+// (excluded-sales.json; fit_hedonic.py reads the same file). Rows need tx_hash
+// and token_id.
+const EXCLUDED = new Set(require('./excluded-sales.json').sales.map((s) => `${s.tx.toLowerCase()}|${s.tokenId}`));
+const isExcluded = (r) => EXCLUDED.has(`${String(r.tx_hash).toLowerCase()}|${r.token_id}`);
+
 /**
  * @param rows     [{ tx_hash, price_native, seller, is_bundle, ... }]
  * @param floorOf  row -> the floor for the 1.5x test (null/0: unknown)
@@ -23,7 +29,10 @@ function ownPriceSales(rows, floorOf) {
     g.sellers.add(String(r.seller).toLowerCase());
     groups.set(key, g);
   }
+  // The groups count every leg, an excluded one too, so excluding a sale never
+  // changes how the rest of its transaction reads.
   return rows.filter((r) => {
+    if (isExcluded(r)) return false;
     if (!r.is_bundle) return true;
     const g = groups.get(`${r.tx_hash}|${r.price_native}`);
     const floor = floorOf(r);
@@ -31,4 +40,4 @@ function ownPriceSales(rows, floorOf) {
   });
 }
 
-module.exports = { ownPriceSales, BUNDLE_MIN_FLOOR_MULTIPLE };
+module.exports = { ownPriceSales, isExcluded, BUNDLE_MIN_FLOOR_MULTIPLE };

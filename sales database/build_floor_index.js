@@ -29,7 +29,7 @@ const MAX_W = Number(process.env.MAX_WINDOW_D || 120) * 86400;
 const SALE_SET = (process.env.SALE_SET || 'ALL').toUpperCase();
 const SWEEPS = process.env.SWEEPS !== '0';
 const DAY = 86400;
-const { ownPriceSales } = require('./own-price');
+const { ownPriceSales, isExcluded } = require('./own-price');
 
 function percentile(sorted, p) {
   if (sorted.length === 0) return null;
@@ -60,11 +60,11 @@ db.exec(`
 // ownPriceSales then sorts into own-price legs and bundle orders.
 const sideClause = SALE_SET === 'ASK' ? "AND side='ASK'" : '';
 const candidates = db.prepare(
-  `SELECT event_unix AS u, price_native AS p, price_native, tx_hash, seller, is_bundle FROM v_model_sales
+  `SELECT event_unix AS u, price_native AS p, price_native, tx_hash, token_id, seller, is_bundle FROM v_model_sales
    WHERE is_wash = 0 AND lower(buyer) <> lower(seller) AND payment_symbol IN ('ETH', 'WETH')
      AND price_native > 0 ${sideClause} ORDER BY event_unix`
 ).all();
-const singles = candidates.filter((s) => !s.is_bundle);
+const singles = candidates.filter((s) => !s.is_bundle && !isExcluded(s));
 if (!singles.length) { console.error('No eligible sales — run views.sql first.'); process.exit(1); }
 
 // Daily floor from `sales` (sorted by u): day string -> { floor, n, windowDays }.

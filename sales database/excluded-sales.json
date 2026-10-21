@@ -1,0 +1,25 @@
+{
+  "note": "Sales the valuation model never reads: the fit (fit_hedonic.py), the floor index (build_floor_index.js), the calibration and its check (own-price.js, for calibrate-floor.js and ops/verify-model.js). They stay on the /sales page: they happened. Each entry is a call James made on a sale he knows, with his reason.",
+  "sales": [
+    {
+      "tx": "0x2fce640e3af4c311629163f09f7653e959287f3ed4bc2c294f5414e1c1203900",
+      "tokenId": 9007,
+      "date": "2026-10-13",
+      "priceEth": 0.4,
+      "trait": "biome 79",
+      "reason": "The seller accepted a bid so far below the parcel's value as to be anomalous.",
+      "by": "James",
+      "on": "2026-10-21"
+    },
+    {
+      "tx": "0x83e186b90cc0716271e549ff2f9108e9456ea72f9df26c2b3edf01e64a422b11",
+      "tokenId": 3345,
+      "date": "2025-11-23",
+      "priceEth": 0.2,
+      "trait": "zone [SOON]",
+      "reason": "The seller accepted a bid so far below the parcel's value as to be anomalous (one leg of a ten-parcel Blur bid sale; the other legs stay).",
+      "by": "James",
+      "on": "2026-10-21"
+    }
+  ]
+}

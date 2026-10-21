@@ -60,7 +60,10 @@ const coeffs = require('./pricing-v2-coeffs.json');
 // 2.3.2 (2026-10-21, James): level 20 is priced by its own recent sales alone (the
 // two May 2026 sales; SALES_ONLY in fit_hedonic.py), and its sales above 40x the
 // floor count.
-const HEDONIC_MODEL_VERSION = '2.3.2';
+// 2.3.3 (2026-10-21, James): biomes 74, 77, 78 and 81 set to what their two latest
+// sales say, Plague's floor multiple lowered in line with its sales, and two bids
+// he knows were accepted far under value left out (excluded-sales.json).
+const HEDONIC_MODEL_VERSION = '2.3.3';
 
 // Tier-2: too few sales to fit. As in v1 the type sets the value — the parcel's
 // other traits don't stack on it. Lith0 and Plague are one floor multiple each,
