@@ -538,8 +538,8 @@ function PickMenu({ menu, values, state, update, countOf, scoped }) {
 // or picks written `<prefix><id>`, one goal group either way (buildRubric in
 // backend/src/collectionHelper.js). Special traits, blades and glyph sets.
 // What blades and origin glyph sets are, for the info icons beside them.
-const BLADE_INFO = 'Blades are drawn by the v2 renderer in a parcel\u2019s Daydream and Terraform animations: one of 27 character sets, fixed by its biome and seed. Not visible on Terrain parcels until they are dreamed. Origins and Y-Seeds have none.';
-const GLYPH_INFO = 'Origin glyph sets are what an origin parcel (Origin Daydream or Origin Terraform) animates in the v2 renderer: one of 28 sets, fixed by its seed. X-Seed origins animate all 28 at once, so they count as none.';
+const BLADE_INFO = 'Blades are drawn by the v2 renderer contracts, which went live in December 2023, and are only visible on Daydream and Terraform mode animations. There are 27 possible character sets. Does not apply to Origin, X-Seed, and Y-Seed parcels.';
+const GLYPH_INFO = 'The origin glyph sets are extra characters that appear on origin mode parcel (Origin Daydreams or Origin Terraforms) v2 animations. There are 28 sets. Applies to all parcels with the Origin trait except for X-Seeds.';
 
 // A small (i) that shows a short explanation on hover, or on focus/tap. The note
 // is out of the layout until shown (display, not visibility: a hidden box still
