@@ -1,11 +1,11 @@
 {
   "meta": {
-    "built": "2026-10-22T02:20:29Z",
+    "built": "2026-10-23T02:20:30Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
     "estimator": "weighted Ridge (alpha 3, fixed)",
-    "n_eligible": 29572,
+    "n_eligible": 29576,
     "features": 181,
     "train_cutoff_unix": null,
     "reference_parcel": {
@@ -68,16 +68,16 @@
     "side_model": "dummy"
   },
   "ask_premium": {
-    "value": 1.180848,
+    "value": 1.180735,
     "note": "ask = bid x this. One fit, is-ask indicator; guarantees ask >= bid for every parcel."
   },
   "special_multiples": {
     "Godmode": {
-      "multiple": 38.108,
+      "multiple": 38.112,
       "n": 3,
       "n_ask": 2,
       "last_sale": "2026-06-12",
-      "sales_say": 34.16,
+      "sales_say": 34.163,
       "source": "fixed: 45.0x ask"
     },
     "Lith0": {
@@ -91,13 +91,13 @@
       "n": 7,
       "n_ask": 5,
       "last_sale": "2024-12-09",
-      "sales_say": 81.425,
+      "sales_say": 81.433,
       "source": "fixed: 72.7x bid"
     }
   },
   "special_sales": {
     "Godmode": {
-      "multiple": 34.16,
+      "multiple": 34.163,
       "n": 3,
       "n_ask": 2,
       "last_sale": "2026-06-12"
@@ -109,7 +109,7 @@
       "last_sale": "2026-05-25"
     },
     "Plague": {
-      "multiple": 81.425,
+      "multiple": 81.433,
       "n": 7,
       "n_ask": 5,
       "last_sale": "2024-12-09"
@@ -121,7 +121,7 @@
       "last_sale": "2026-07-25"
     },
     "Y-Seed": {
-      "multiple": 12.608,
+      "multiple": 12.609,
       "n": 30,
       "n_ask": 14,
       "last_sale": "2026-05-26"
@@ -130,34 +130,34 @@
   "money_sword_off": {
     "label": "money_sword_off",
     "bid_share": 0.8,
-    "holdout_median_pct_err": 0.06914063698896711,
+    "holdout_median_pct_err": 0.06899927015792029,
     "alpha": 3,
-    "weighted_r2": 0.708483964787683,
-    "n": 29572,
+    "weighted_r2": 0.7086000091376583,
+    "n": 29576,
     "prior_audit": [
       {
         "kind": "zone",
         "name": "Aetherking",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0903,
-        "prior": 7.2806,
+        "fitted": 1.0901,
+        "prior": 7.2807,
         "prior_source": "v1",
-        "v1_prior": 7.2806,
+        "v1_prior": 7.2807,
         "blended": 5.9705,
-        "sales_implied": 2.0332
+        "sales_implied": 2.0329
       },
       {
         "kind": "zone",
         "name": "Akileaf",
-        "n": 181,
-        "w": 0.601,
-        "fitted": 1.0903,
-        "prior": 1.1421,
+        "n": 182,
+        "w": 0.603,
+        "fitted": 1.0918,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.1107,
-        "sales_implied": 1.0668
+        "v1_prior": 1.1422,
+        "blended": 1.1115,
+        "sales_implied": 1.1118
       },
       {
         "kind": "zone",
@@ -169,7 +169,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9829,
         "blended": 1.0397,
-        "sales_implied": 0.9775
+        "sales_implied": 0.9777
       },
       {
         "kind": "zone",
@@ -181,19 +181,19 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.2394,
-        "sales_implied": 1.1696
+        "sales_implied": 1.1697
       },
       {
         "kind": "zone",
         "name": "Antenna",
         "n": 15,
         "w": 0.111,
-        "fitted": 4.6642,
-        "prior": 9.0553,
+        "fitted": 4.6591,
+        "prior": 9.0554,
         "prior_source": "v1",
-        "v1_prior": 9.0553,
-        "blended": 8.4118,
-        "sales_implied": 7.7347
+        "v1_prior": 9.0554,
+        "blended": 8.4108,
+        "sales_implied": 7.7333
       },
       {
         "kind": "zone",
@@ -205,31 +205,31 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9706,
-        "sales_implied": 0.9657
+        "sales_implied": 0.966
       },
       {
         "kind": "zone",
         "name": "Aria",
         "n": 100,
         "w": 0.455,
-        "fitted": 1.7058,
+        "fitted": 1.7057,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
         "blended": 1.7061,
-        "sales_implied": 1.717
+        "sales_implied": 1.7173
       },
       {
         "kind": "zone",
         "name": "Avidana",
         "n": 56,
         "w": 0.318,
-        "fitted": 2.2887,
-        "prior": 2.7647,
+        "fitted": 2.2875,
+        "prior": 2.769,
         "prior_source": "sales",
-        "v1_prior": 1.7746,
-        "blended": 2.6034,
-        "sales_implied": 2.7647
+        "v1_prior": 1.7747,
+        "blended": 2.6057,
+        "sales_implied": 2.769
       },
       {
         "kind": "zone",
@@ -237,11 +237,11 @@
         "n": 138,
         "w": 0.535,
         "fitted": 1.2287,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.1473,
-        "sales_implied": 0.9846
+        "sales_implied": 0.9845
       },
       {
         "kind": "zone",
@@ -249,11 +249,11 @@
         "n": 145,
         "w": 0.547,
         "fitted": 0.9975,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.0606,
-        "sales_implied": 0.9711
+        "sales_implied": 0.9713
       },
       {
         "kind": "zone",
@@ -264,19 +264,19 @@
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.2749,
-        "sales_implied": 1.3058
+        "blended": 1.275,
+        "sales_implied": 1.306
       },
       {
         "kind": "zone",
         "name": "Calyx",
         "n": 286,
         "w": 0.704,
-        "fitted": 1.0357,
-        "prior": 1.0602,
+        "fitted": 1.0358,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0429,
+        "v1_prior": 1.0603,
+        "blended": 1.043,
         "sales_implied": 1.0108
       },
       {
@@ -284,72 +284,72 @@
         "name": "Cradle",
         "n": 126,
         "w": 0.512,
-        "fitted": 1.1698,
+        "fitted": 1.1701,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.2238,
-        "sales_implied": 1.1161
+        "blended": 1.224,
+        "sales_implied": 1.1162
       },
       {
         "kind": "zone",
         "name": "Dhampir",
         "n": 121,
         "w": 0.502,
-        "fitted": 1.4171,
+        "fitted": 1.4172,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
         "blended": 1.3887,
-        "sales_implied": 1.4488
+        "sales_implied": 1.449
       },
       {
         "kind": "zone",
         "name": "Dread",
         "n": 27,
         "w": 0.184,
-        "fitted": 4.595,
-        "prior": 8.1356,
+        "fitted": 4.592,
+        "prior": 8.1357,
         "prior_source": "sales",
         "v1_prior": 3.4128,
-        "blended": 7.3252,
-        "sales_implied": 8.1356
+        "blended": 7.3244,
+        "sales_implied": 8.1357
       },
       {
         "kind": "zone",
         "name": "Dynacrypts",
-        "n": 408,
+        "n": 409,
         "w": 0.773,
-        "fitted": 1.412,
+        "fitted": 1.4156,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.3816,
-        "sales_implied": 1.348
+        "blended": 1.3844,
+        "sales_implied": 1.2958
       },
       {
         "kind": "zone",
         "name": "Ender",
         "n": 342,
         "w": 0.74,
-        "fitted": 1.0317,
-        "prior": 1.1421,
+        "fitted": 1.0319,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.0593,
-        "sales_implied": 0.9853
+        "v1_prior": 1.1422,
+        "blended": 1.0595,
+        "sales_implied": 0.9855
       },
       {
         "kind": "zone",
         "name": "Everglades",
         "n": 202,
         "w": 0.627,
-        "fitted": 0.9378,
+        "fitted": 0.9377,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.0541,
-        "sales_implied": 0.9366
+        "blended": 1.054,
+        "sales_implied": 0.9361
       },
       {
         "kind": "zone",
@@ -361,55 +361,55 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9423,
-        "sales_implied": 0.9474
+        "sales_implied": 0.9475
       },
       {
         "kind": "zone",
         "name": "First Earth",
         "n": 113,
         "w": 0.485,
-        "fitted": 2.1821,
-        "prior": 2.1863,
+        "fitted": 2.1792,
+        "prior": 2.186,
         "prior_source": "sales",
         "v1_prior": 1.7064,
-        "blended": 2.1843,
-        "sales_implied": 2.1863
+        "blended": 2.1827,
+        "sales_implied": 2.186
       },
       {
         "kind": "zone",
         "name": "Gemina",
         "n": 25,
         "w": 0.172,
-        "fitted": 4.4764,
-        "prior": 4.878,
+        "fitted": 4.474,
+        "prior": 4.8781,
         "prior_source": "v1",
-        "v1_prior": 4.878,
-        "blended": 4.8063,
-        "sales_implied": 4.7437
+        "v1_prior": 4.8781,
+        "blended": 4.8059,
+        "sales_implied": 4.743
       },
       {
         "kind": "zone",
         "name": "Greysunn",
         "n": 135,
         "w": 0.529,
-        "fitted": 1.2213,
-        "prior": 1.6017,
+        "fitted": 1.2216,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.3875,
-        "sales_implied": 1.2168
+        "v1_prior": 1.6018,
+        "blended": 1.3877,
+        "sales_implied": 1.2175
       },
       {
         "kind": "zone",
         "name": "Grove",
         "n": 984,
         "w": 0.891,
-        "fitted": 0.9864,
+        "fitted": 0.9863,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9778,
-        "sales_implied": 0.9686
+        "blended": 0.9777,
+        "sales_implied": 0.9679
       },
       {
         "kind": "zone",
@@ -428,11 +428,11 @@
         "name": "Hyphae",
         "n": 1232,
         "w": 0.911,
-        "fitted": 0.9555,
+        "fitted": 0.9556,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9514,
+        "blended": 0.9515,
         "sales_implied": 0.9478
       },
       {
@@ -440,47 +440,47 @@
         "name": "Intro Forest",
         "n": 256,
         "w": 0.681,
-        "fitted": 1.1562,
+        "fitted": 1.1564,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.1953,
-        "sales_implied": 1.1572
+        "blended": 1.1955,
+        "sales_implied": 1.1574
       },
       {
         "kind": "zone",
         "name": "Jadeite",
         "n": 182,
         "w": 0.603,
-        "fitted": 0.9858,
+        "fitted": 0.9861,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.1204,
-        "sales_implied": 0.9889
+        "blended": 1.1207,
+        "sales_implied": 0.989
       },
       {
         "kind": "zone",
         "name": "Kairo",
         "n": 942,
         "w": 0.887,
-        "fitted": 1.0173,
+        "fitted": 1.0172,
         "prior": 0.9829,
         "prior_source": "v1",
         "v1_prior": 0.9829,
-        "blended": 1.0134,
-        "sales_implied": 0.9831
+        "blended": 1.0133,
+        "sales_implied": 0.9824
       },
       {
         "kind": "zone",
         "name": "Killscreen",
         "n": 100,
         "w": 0.455,
-        "fitted": 2.1427,
-        "prior": 1.7746,
+        "fitted": 2.1422,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
-        "blended": 1.9334,
+        "v1_prior": 1.7747,
+        "blended": 1.9332,
         "sales_implied": 1.9994
       },
       {
@@ -501,35 +501,35 @@
         "n": 260,
         "w": 0.684,
         "fitted": 1.023,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0346,
-        "sales_implied": 0.9864
+        "sales_implied": 0.9863
       },
       {
         "kind": "zone",
         "name": "Mecha",
         "n": 1143,
         "w": 0.905,
-        "fitted": 0.9675,
+        "fitted": 0.9674,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9619,
-        "sales_implied": 0.9644
+        "blended": 0.9618,
+        "sales_implied": 0.9643
       },
       {
         "kind": "zone",
         "name": "Mirage",
         "n": 978,
         "w": 0.891,
-        "fitted": 0.9173,
+        "fitted": 0.9174,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9165,
-        "sales_implied": 0.9446
+        "blended": 0.9166,
+        "sales_implied": 0.9445
       },
       {
         "kind": "zone",
@@ -537,18 +537,18 @@
         "n": 120,
         "w": 0.5,
         "fitted": 1.6756,
-        "prior": 1.6017,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.6383,
-        "sales_implied": 1.5838
+        "sales_implied": 1.5836
       },
       {
         "kind": "zone",
         "name": "Mould",
         "n": 89,
         "w": 0.426,
-        "fitted": 1.7595,
+        "fitted": 1.7594,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
@@ -560,12 +560,12 @@
         "name": "Mt Zuka",
         "n": 215,
         "w": 0.642,
-        "fitted": 1.3488,
+        "fitted": 1.349,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.353,
-        "sales_implied": 1.301
+        "blended": 1.3531,
+        "sales_implied": 1.3016
       },
       {
         "kind": "zone",
@@ -577,19 +577,19 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.1075,
-        "sales_implied": 1.0457
+        "sales_implied": 1.046
       },
       {
         "kind": "zone",
         "name": "Nightrose",
         "n": 1555,
         "w": 0.928,
-        "fitted": 0.9684,
+        "fitted": 0.9683,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9641,
-        "sales_implied": 0.9709
+        "blended": 0.964,
+        "sales_implied": 0.9711
       },
       {
         "kind": "zone",
@@ -601,18 +601,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.997,
-        "sales_implied": 1.0355
+        "sales_implied": 1.0357
       },
       {
         "kind": "zone",
         "name": "Palace",
         "n": 398,
         "w": 0.768,
-        "fitted": 0.9906,
-        "prior": 1.0602,
+        "fitted": 0.9907,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0063,
+        "v1_prior": 1.0603,
+        "blended": 1.0064,
         "sales_implied": 0.9856
       },
       {
@@ -621,47 +621,47 @@
         "n": 236,
         "w": 0.663,
         "fitted": 1.0837,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1031,
-        "sales_implied": 0.9475
+        "sales_implied": 0.9476
       },
       {
         "kind": "zone",
         "name": "Promiselands",
         "n": 105,
         "w": 0.467,
-        "fitted": 1.3638,
-        "prior": 1.6017,
+        "fitted": 1.3639,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.4859,
-        "sales_implied": 1.2664
+        "v1_prior": 1.6018,
+        "blended": 1.486,
+        "sales_implied": 1.266
       },
       {
         "kind": "zone",
         "name": "Radiant",
         "n": 72,
         "w": 0.375,
-        "fitted": 1.2758,
-        "prior": 1.6017,
+        "fitted": 1.2756,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.4707,
-        "sales_implied": 1.3322
+        "sales_implied": 1.3317
       },
       {
         "kind": "zone",
         "name": "Riso",
-        "n": 1334,
-        "w": 0.917,
-        "fitted": 0.9793,
+        "n": 1335,
+        "w": 0.918,
+        "fitted": 0.9798,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9734,
-        "sales_implied": 0.9757
+        "blended": 0.9739,
+        "sales_implied": 0.9773
       },
       {
         "kind": "zone",
@@ -673,7 +673,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3606,
         "blended": 1.317,
-        "sales_implied": 1.2129
+        "sales_implied": 1.2126
       },
       {
         "kind": "zone",
@@ -681,9 +681,9 @@
         "n": 118,
         "w": 0.496,
         "fitted": 1.8027,
-        "prior": 1.7746,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
+        "v1_prior": 1.7747,
         "blended": 1.7885,
         "sales_implied": 1.81
       },
@@ -692,23 +692,23 @@
         "name": "Shahra",
         "n": 11,
         "w": 0.084,
-        "fitted": 4.4821,
-        "prior": 11.922,
+        "fitted": 4.4755,
+        "prior": 11.9222,
         "prior_source": "v1",
-        "v1_prior": 11.922,
-        "blended": 10.9818,
-        "sales_implied": 10.7308
+        "v1_prior": 11.9222,
+        "blended": 10.9806,
+        "sales_implied": 10.7298
       },
       {
         "kind": "zone",
         "name": "Shiro",
         "n": 744,
         "w": 0.861,
-        "fitted": 0.9793,
+        "fitted": 0.9792,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9694,
+        "blended": 0.9693,
         "sales_implied": 0.9598
       },
       {
@@ -716,72 +716,72 @@
         "name": "Tetsu",
         "n": 78,
         "w": 0.394,
-        "fitted": 1.9589,
+        "fitted": 1.959,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
-        "blended": 1.8017,
-        "sales_implied": 2.0651
+        "blended": 1.8018,
+        "sales_implied": 2.0653
       },
       {
         "kind": "zone",
         "name": "Toad",
         "n": 162,
         "w": 0.574,
-        "fitted": 1.3021,
+        "fitted": 1.3019,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.294,
-        "sales_implied": 1.3769
+        "blended": 1.2939,
+        "sales_implied": 1.3772
       },
       {
         "kind": "zone",
         "name": "Treasure",
         "n": 135,
         "w": 0.529,
-        "fitted": 1.529,
-        "prior": 1.6017,
+        "fitted": 1.5291,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.5628,
-        "sales_implied": 1.4315
+        "v1_prior": 1.6018,
+        "blended": 1.5629,
+        "sales_implied": 1.4319
       },
       {
         "kind": "zone",
         "name": "Uwo",
         "n": 108,
         "w": 0.474,
-        "fitted": 1.5093,
-        "prior": 1.6017,
+        "fitted": 1.5087,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.5573,
-        "sales_implied": 1.5418
+        "v1_prior": 1.6018,
+        "blended": 1.557,
+        "sales_implied": 1.542
       },
       {
         "kind": "zone",
         "name": "Valeria",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.1103,
+        "fitted": 1.1104,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.2301,
-        "sales_implied": 1.0583
+        "blended": 1.2302,
+        "sales_implied": 1.0586
       },
       {
         "kind": "zone",
         "name": "Venmon",
         "n": 85,
         "w": 0.415,
-        "fitted": 1.4752,
-        "prior": 1.6017,
+        "fitted": 1.4751,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.548,
-        "sales_implied": 1.4093
+        "sales_implied": 1.4094
       },
       {
         "kind": "zone",
@@ -789,11 +789,11 @@
         "n": 272,
         "w": 0.694,
         "fitted": 1.0151,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0287,
-        "sales_implied": 1.0156
+        "sales_implied": 1.0157
       },
       {
         "kind": "zone",
@@ -801,47 +801,47 @@
         "n": 154,
         "w": 0.562,
         "fitted": 1.2374,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1947,
-        "sales_implied": 1.0818
+        "sales_implied": 1.0816
       },
       {
         "kind": "zone",
         "name": "Xleph",
         "n": 116,
         "w": 0.492,
-        "fitted": 1.3329,
+        "fitted": 1.333,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
-        "blended": 1.5113,
-        "sales_implied": 1.4105
+        "blended": 1.5114,
+        "sales_implied": 1.4107
       },
       {
         "kind": "zone",
         "name": "Zerinia",
         "n": 351,
         "w": 0.745,
-        "fitted": 1.0502,
-        "prior": 1.0602,
+        "fitted": 1.0501,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0527,
-        "sales_implied": 1.0555
+        "sales_implied": 1.0551
       },
       {
         "kind": "zone",
         "name": "[BLOOD]",
         "n": 381,
         "w": 0.76,
-        "fitted": 1.1377,
-        "prior": 1.1421,
+        "fitted": 1.1378,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1388,
-        "sales_implied": 1.0782
+        "sales_implied": 1.0785
       },
       {
         "kind": "zone",
@@ -849,33 +849,33 @@
         "n": 394,
         "w": 0.767,
         "fitted": 0.9751,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.0118,
-        "sales_implied": 0.9716
+        "sales_implied": 0.9715
       },
       {
         "kind": "zone",
         "name": "[CUR2]",
         "n": 364,
         "w": 0.752,
-        "fitted": 0.9674,
-        "prior": 1.0602,
+        "fitted": 0.9675,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 0.9896,
-        "sales_implied": 0.9855
+        "v1_prior": 1.0603,
+        "blended": 0.9897,
+        "sales_implied": 0.9857
       },
       {
         "kind": "zone",
         "name": "[DARK]",
         "n": 373,
         "w": 0.757,
-        "fitted": 1.063,
-        "prior": 1.0602,
+        "fitted": 1.0629,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0623,
         "sales_implied": 1.0425
       },
@@ -885,23 +885,23 @@
         "n": 168,
         "w": 0.583,
         "fitted": 1.1564,
-        "prior": 1.6017,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.3245,
-        "sales_implied": 1.0064
+        "sales_implied": 1.0066
       },
       {
         "kind": "zone",
         "name": "[HYCA]",
         "n": 447,
         "w": 0.788,
-        "fitted": 0.9646,
+        "fitted": 0.9647,
         "prior": 0.9829,
         "prior_source": "v1",
         "v1_prior": 0.9829,
-        "blended": 0.9684,
-        "sales_implied": 0.9484
+        "blended": 0.9685,
+        "sales_implied": 0.9482
       },
       {
         "kind": "zone",
@@ -913,43 +913,43 @@
         "prior_source": "v1",
         "v1_prior": 0.9829,
         "blended": 0.9536,
-        "sales_implied": 0.9526
+        "sales_implied": 0.9528
       },
       {
         "kind": "zone",
         "name": "[MOON]",
         "n": 485,
         "w": 0.802,
-        "fitted": 0.9836,
+        "fitted": 0.9837,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9686,
-        "sales_implied": 0.9542
+        "sales_implied": 0.9541
       },
       {
         "kind": "zone",
         "name": "[NEON]",
-        "n": 268,
-        "w": 0.691,
-        "fitted": 1.0069,
-        "prior": 1.0602,
+        "n": 269,
+        "w": 0.692,
+        "fitted": 1.0045,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0231,
-        "sales_implied": 1.0038
+        "v1_prior": 1.0603,
+        "blended": 1.0214,
+        "sales_implied": 0.9993
       },
       {
         "kind": "zone",
         "name": "[NOV]",
         "n": 52,
         "w": 0.302,
-        "fitted": 1.4161,
-        "prior": 1.7746,
+        "fitted": 1.4154,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
-        "blended": 1.6576,
-        "sales_implied": 1.4437
+        "v1_prior": 1.7747,
+        "blended": 1.6574,
+        "sales_implied": 1.4434
       },
       {
         "kind": "zone",
@@ -961,43 +961,43 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9841,
-        "sales_implied": 0.9753
+        "sales_implied": 0.9755
       },
       {
         "kind": "zone",
         "name": "[SOON]",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.5251,
+        "fitted": 1.5239,
         "prior": 3.4128,
         "prior_source": "v1",
         "v1_prior": 3.4128,
-        "blended": 3.1206,
-        "sales_implied": 3.4049
+        "blended": 3.1204,
+        "sales_implied": 3.404
       },
       {
         "kind": "zone",
         "name": "[SUN]",
         "n": 28,
         "w": 0.189,
-        "fitted": 2.7898,
+        "fitted": 2.789,
         "prior": 3.4128,
         "prior_source": "v1",
         "v1_prior": 3.4128,
-        "blended": 3.2851,
-        "sales_implied": 2.5368
+        "blended": 3.285,
+        "sales_implied": 2.5361
       },
       {
         "kind": "zone",
         "name": "[WEN]",
         "n": 393,
         "w": 0.766,
-        "fitted": 0.999,
+        "fitted": 0.9991,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9775,
-        "sales_implied": 0.9703
+        "sales_implied": 0.9707
       },
       {
         "kind": "zone",
@@ -1021,55 +1021,55 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.1374,
-        "sales_implied": 1.043
+        "sales_implied": 1.0422
       },
       {
         "kind": "biome",
         "name": "0",
         "n": 168,
         "w": 0.583,
-        "fitted": 2.1686,
-        "prior": 3.3677,
+        "fitted": 2.1683,
+        "prior": 3.3678,
         "prior_source": "v1",
-        "v1_prior": 3.3677,
-        "blended": 2.6051,
-        "sales_implied": 2.4553
+        "v1_prior": 3.3678,
+        "blended": 2.6049,
+        "sales_implied": 2.4554
       },
       {
         "kind": "biome",
         "name": "1",
         "n": 219,
         "w": 0.646,
-        "fitted": 1.2621,
+        "fitted": 1.2618,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.255,
-        "sales_implied": 1.2745
+        "blended": 1.2549,
+        "sales_implied": 1.2746
       },
       {
         "kind": "biome",
         "name": "2",
         "n": 188,
         "w": 0.61,
-        "fitted": 1.0907,
+        "fitted": 1.0906,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
         "blended": 1.1474,
-        "sales_implied": 1.0739
+        "sales_implied": 1.0744
       },
       {
         "kind": "biome",
         "name": "3",
         "n": 281,
         "w": 0.701,
-        "fitted": 1.0775,
+        "fitted": 1.0774,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0395,
-        "sales_implied": 1.0758
+        "blended": 1.0394,
+        "sales_implied": 1.0692
       },
       {
         "kind": "biome",
@@ -1077,11 +1077,11 @@
         "n": 201,
         "w": 0.626,
         "fitted": 1.115,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 1.0836,
-        "sales_implied": 1.016
+        "sales_implied": 1.0163
       },
       {
         "kind": "biome",
@@ -1100,71 +1100,71 @@
         "name": "6",
         "n": 276,
         "w": 0.697,
-        "fitted": 1.1317,
+        "fitted": 1.1316,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0752,
-        "sales_implied": 1.059
+        "blended": 1.0751,
+        "sales_implied": 1.055
       },
       {
         "kind": "biome",
         "name": "7",
         "n": 244,
         "w": 0.67,
-        "fitted": 1.1995,
+        "fitted": 1.1996,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.1129,
-        "sales_implied": 1.1597
+        "blended": 1.113,
+        "sales_implied": 1.1603
       },
       {
         "kind": "biome",
         "name": "8",
         "n": 175,
         "w": 0.593,
-        "fitted": 1.1316,
+        "fitted": 1.1313,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.1754,
-        "sales_implied": 1.0716
+        "blended": 1.1752,
+        "sales_implied": 1.0511
       },
       {
         "kind": "biome",
         "name": "9",
         "n": 159,
         "w": 0.57,
-        "fitted": 1.5288,
-        "prior": 1.0329,
+        "fitted": 1.5284,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.2916,
-        "sales_implied": 1.5451
+        "v1_prior": 1.033,
+        "blended": 1.2914,
+        "sales_implied": 1.5453
       },
       {
         "kind": "biome",
         "name": "10",
         "n": 42,
         "w": 0.259,
-        "fitted": 1.6535,
+        "fitted": 1.6507,
         "prior": 2.0932,
         "prior_source": "v1",
         "v1_prior": 2.0932,
-        "blended": 1.9691,
-        "sales_implied": 2.0894
+        "blended": 1.9682,
+        "sales_implied": 2.0863
       },
       {
         "kind": "biome",
         "name": "11",
         "n": 50,
         "w": 0.294,
-        "fitted": 1.5205,
+        "fitted": 1.5202,
         "prior": 2.0932,
         "prior_source": "v1",
         "v1_prior": 2.0932,
-        "blended": 1.9054,
+        "blended": 1.9053,
         "sales_implied": 1.3654
       },
       {
@@ -1177,89 +1177,89 @@
         "prior_source": "v1",
         "v1_prior": 1.3651,
         "blended": 1.2423,
-        "sales_implied": 0.9389
+        "sales_implied": 0.9391
       },
       {
         "kind": "biome",
         "name": "13",
         "n": 71,
         "w": 0.372,
-        "fitted": 1.282,
+        "fitted": 1.2819,
         "prior": 1.3651,
         "prior_source": "v1",
         "v1_prior": 1.3651,
         "blended": 1.3336,
-        "sales_implied": 1.0739
+        "sales_implied": 1.0736
       },
       {
         "kind": "biome",
         "name": "14",
         "n": 54,
         "w": 0.31,
-        "fitted": 1.3879,
-        "prior": 1.5471,
+        "fitted": 1.3875,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4959,
-        "sales_implied": 1.6342
+        "v1_prior": 1.5472,
+        "blended": 1.4957,
+        "sales_implied": 1.6343
       },
       {
         "kind": "biome",
         "name": "15",
         "n": 72,
         "w": 0.375,
-        "fitted": 1.0691,
-        "prior": 1.5471,
+        "fitted": 1.0687,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.3469,
-        "sales_implied": 1.0239
+        "v1_prior": 1.5472,
+        "blended": 1.3467,
+        "sales_implied": 1.0238
       },
       {
         "kind": "biome",
         "name": "16",
         "n": 88,
         "w": 0.423,
-        "fitted": 1.432,
-        "prior": 1.5471,
+        "fitted": 1.431,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4973,
-        "sales_implied": 1.1436
+        "v1_prior": 1.5472,
+        "blended": 1.4969,
+        "sales_implied": 1.1432
       },
       {
         "kind": "biome",
         "name": "17",
         "n": 40,
         "w": 0.25,
-        "fitted": 2.5088,
-        "prior": 3.024,
+        "fitted": 2.5082,
+        "prior": 3.0241,
         "prior_source": "sales",
         "v1_prior": 2.0932,
-        "blended": 2.886,
-        "sales_implied": 3.024
+        "blended": 2.8859,
+        "sales_implied": 3.0241
       },
       {
         "kind": "biome",
         "name": "18",
         "n": 67,
         "w": 0.358,
-        "fitted": 1.1629,
-        "prior": 1.5471,
+        "fitted": 1.1622,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.3967,
-        "sales_implied": 0.9646
+        "v1_prior": 1.5472,
+        "blended": 1.3964,
+        "sales_implied": 0.9642
       },
       {
         "kind": "biome",
         "name": "19",
         "n": 80,
         "w": 0.4,
-        "fitted": 1.1435,
-        "prior": 1.5471,
+        "fitted": 1.1434,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
+        "v1_prior": 1.5472,
         "blended": 1.3709,
         "sales_implied": 0.9586
       },
@@ -1268,23 +1268,23 @@
         "name": "20",
         "n": 40,
         "w": 0.25,
-        "fitted": 1.3188,
-        "prior": 1.5471,
+        "fitted": 1.3168,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4866,
-        "sales_implied": 1.1468
+        "v1_prior": 1.5472,
+        "blended": 1.486,
+        "sales_implied": 1.1447
       },
       {
         "kind": "biome",
         "name": "21",
         "n": 222,
         "w": 0.649,
-        "fitted": 1.1209,
-        "prior": 1.0329,
+        "fitted": 1.1207,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0892,
+        "v1_prior": 1.033,
+        "blended": 1.0891,
         "sales_implied": 1.0099
       },
       {
@@ -1292,11 +1292,11 @@
         "name": "22",
         "n": 184,
         "w": 0.605,
-        "fitted": 1.0082,
-        "prior": 1.0329,
+        "fitted": 1.0085,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0179,
+        "v1_prior": 1.033,
+        "blended": 1.0181,
         "sales_implied": 0.9325
       },
       {
@@ -1304,12 +1304,12 @@
         "name": "23",
         "n": 242,
         "w": 0.669,
-        "fitted": 1.0387,
-        "prior": 1.0329,
+        "fitted": 1.0386,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0368,
-        "sales_implied": 0.9288
+        "v1_prior": 1.033,
+        "blended": 1.0367,
+        "sales_implied": 0.929
       },
       {
         "kind": "biome",
@@ -1321,19 +1321,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0249,
-        "sales_implied": 1.0379
+        "sales_implied": 1.0377
       },
       {
         "kind": "biome",
         "name": "25",
         "n": 203,
         "w": 0.628,
-        "fitted": 1.2509,
-        "prior": 1.0329,
+        "fitted": 1.2506,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.165,
-        "sales_implied": 1.19
+        "v1_prior": 1.033,
+        "blended": 1.1648,
+        "sales_implied": 1.1898
       },
       {
         "kind": "biome",
@@ -1341,11 +1341,11 @@
         "n": 316,
         "w": 0.725,
         "fitted": 0.9849,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 0.9979,
-        "sales_implied": 0.9599
+        "sales_implied": 0.96
       },
       {
         "kind": "biome",
@@ -1357,19 +1357,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 1.0337,
-        "sales_implied": 0.9955
+        "sales_implied": 0.9954
       },
       {
         "kind": "biome",
         "name": "28",
         "n": 279,
         "w": 0.699,
-        "fitted": 0.9378,
+        "fitted": 0.9379,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9431,
-        "sales_implied": 0.915
+        "blended": 0.9432,
+        "sales_implied": 0.9155
       },
       {
         "kind": "biome",
@@ -1388,24 +1388,24 @@
         "name": "30",
         "n": 243,
         "w": 0.669,
-        "fitted": 0.9629,
+        "fitted": 0.9627,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9605,
-        "sales_implied": 0.9226
+        "blended": 0.9603,
+        "sales_implied": 0.9229
       },
       {
         "kind": "biome",
         "name": "31",
         "n": 527,
         "w": 0.815,
-        "fitted": 0.9868,
+        "fitted": 0.9866,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9721,
-        "sales_implied": 0.9465
+        "blended": 0.9719,
+        "sales_implied": 0.9466
       },
       {
         "kind": "biome",
@@ -1417,7 +1417,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9602,
-        "sales_implied": 0.9547
+        "sales_implied": 0.9543
       },
       {
         "kind": "biome",
@@ -1429,18 +1429,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9542,
-        "sales_implied": 0.9629
+        "sales_implied": 0.9628
       },
       {
         "kind": "biome",
         "name": "34",
         "n": 308,
         "w": 0.72,
-        "fitted": 1.0477,
+        "fitted": 1.0474,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.021,
+        "blended": 1.0208,
         "sales_implied": 1.0286
       },
       {
@@ -1448,36 +1448,36 @@
         "name": "35",
         "n": 294,
         "w": 0.71,
-        "fitted": 1.1618,
+        "fitted": 1.1617,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0978,
-        "sales_implied": 1.0595
+        "sales_implied": 1.0596
       },
       {
         "kind": "biome",
         "name": "36",
-        "n": 317,
-        "w": 0.725,
-        "fitted": 1.0084,
+        "n": 318,
+        "w": 0.726,
+        "fitted": 1.009,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9936,
-        "sales_implied": 0.9983
+        "blended": 0.9941,
+        "sales_implied": 1.0046
       },
       {
         "kind": "biome",
         "name": "37",
         "n": 287,
         "w": 0.705,
-        "fitted": 1.0447,
+        "fitted": 1.0446,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0176,
-        "sales_implied": 0.985
+        "blended": 1.0175,
+        "sales_implied": 0.9847
       },
       {
         "kind": "biome",
@@ -1489,31 +1489,31 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0086,
-        "sales_implied": 0.9778
+        "sales_implied": 0.978
       },
       {
         "kind": "biome",
         "name": "39",
         "n": 112,
         "w": 0.483,
-        "fitted": 2.4336,
-        "prior": 3.3484,
+        "fitted": 2.4333,
+        "prior": 3.3485,
         "prior_source": "sales",
-        "v1_prior": 1.5471,
-        "blended": 2.8703,
-        "sales_implied": 3.3484
+        "v1_prior": 1.5472,
+        "blended": 2.8702,
+        "sales_implied": 3.3485
       },
       {
         "kind": "biome",
         "name": "40",
         "n": 167,
         "w": 0.582,
-        "fitted": 1.1024,
+        "fitted": 1.1017,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.1589,
-        "sales_implied": 1.1199
+        "blended": 1.1584,
+        "sales_implied": 1.112
       },
       {
         "kind": "biome",
@@ -1521,35 +1521,35 @@
         "n": 217,
         "w": 0.644,
         "fitted": 0.939,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 0.9714,
-        "sales_implied": 0.9659
+        "sales_implied": 0.9661
       },
       {
         "kind": "biome",
         "name": "42",
         "n": 237,
         "w": 0.664,
-        "fitted": 1.2354,
+        "fitted": 1.2349,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.2377,
+        "blended": 1.2374,
         "sales_implied": 1.2188
       },
       {
         "kind": "biome",
         "name": "43",
-        "n": 873,
+        "n": 874,
         "w": 0.879,
-        "fitted": 0.9371,
+        "fitted": 0.9366,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9338,
-        "sales_implied": 0.9377
+        "blended": 0.9334,
+        "sales_implied": 0.9363
       },
       {
         "kind": "biome",
@@ -1561,7 +1561,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9658,
-        "sales_implied": 0.9538
+        "sales_implied": 0.954
       },
       {
         "kind": "biome",
@@ -1573,30 +1573,30 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9394,
-        "sales_implied": 0.9462
+        "sales_implied": 0.9464
       },
       {
         "kind": "biome",
         "name": "47",
         "n": 981,
         "w": 0.891,
-        "fitted": 0.9496,
+        "fitted": 0.9497,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9452,
-        "sales_implied": 0.9299
+        "blended": 0.9453,
+        "sales_implied": 0.9301
       },
       {
         "kind": "biome",
         "name": "48",
         "n": 1052,
         "w": 0.898,
-        "fitted": 0.9665,
+        "fitted": 0.9664,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9606,
+        "blended": 0.9605,
         "sales_implied": 0.9658
       },
       {
@@ -1621,18 +1621,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.962,
-        "sales_implied": 0.9619
+        "sales_implied": 0.962
       },
       {
         "kind": "biome",
         "name": "51",
         "n": 832,
         "w": 0.874,
-        "fitted": 0.9694,
+        "fitted": 0.9695,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9617,
+        "blended": 0.9618,
         "sales_implied": 0.9563
       },
       {
@@ -1640,12 +1640,12 @@
         "name": "52",
         "n": 806,
         "w": 0.87,
-        "fitted": 0.9562,
+        "fitted": 0.9563,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9501,
-        "sales_implied": 0.9497
+        "blended": 0.9502,
+        "sales_implied": 0.9499
       },
       {
         "kind": "biome",
@@ -1657,19 +1657,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9833,
-        "sales_implied": 0.9592
+        "sales_implied": 0.9593
       },
       {
         "kind": "biome",
         "name": "54",
         "n": 638,
         "w": 0.842,
-        "fitted": 1.0096,
+        "fitted": 1.0097,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9931,
-        "sales_implied": 0.9697
+        "blended": 0.9932,
+        "sales_implied": 0.9694
       },
       {
         "kind": "biome",
@@ -1681,7 +1681,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9419,
-        "sales_implied": 0.9464
+        "sales_implied": 0.9465
       },
       {
         "kind": "biome",
@@ -1693,19 +1693,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9467,
-        "sales_implied": 0.9349
+        "sales_implied": 0.9344
       },
       {
         "kind": "biome",
         "name": "57",
-        "n": 749,
+        "n": 750,
         "w": 0.862,
-        "fitted": 0.9355,
+        "fitted": 0.9364,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9319,
-        "sales_implied": 0.9417
+        "blended": 0.9327,
+        "sales_implied": 0.9432
       },
       {
         "kind": "biome",
@@ -1713,11 +1713,11 @@
         "n": 703,
         "w": 0.854,
         "fitted": 1.0077,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 1.0113,
-        "sales_implied": 0.9663
+        "sales_implied": 0.9665
       },
       {
         "kind": "biome",
@@ -1729,7 +1729,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9327,
-        "sales_implied": 0.9327
+        "sales_implied": 0.9328
       },
       {
         "kind": "biome",
@@ -1741,55 +1741,55 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9604,
-        "sales_implied": 0.9522
+        "sales_implied": 0.9523
       },
       {
         "kind": "biome",
         "name": "61",
         "n": 402,
         "w": 0.77,
-        "fitted": 0.9856,
+        "fitted": 0.9854,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9677,
-        "sales_implied": 0.9407
+        "blended": 0.9676,
+        "sales_implied": 0.9408
       },
       {
         "kind": "biome",
         "name": "62",
         "n": 590,
         "w": 0.831,
-        "fitted": 0.9356,
+        "fitted": 0.9357,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9312,
-        "sales_implied": 0.9157
+        "blended": 0.9313,
+        "sales_implied": 0.916
       },
       {
         "kind": "biome",
         "name": "63",
         "n": 400,
         "w": 0.769,
-        "fitted": 0.9372,
+        "fitted": 0.9373,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9309,
-        "sales_implied": 0.9335
+        "sales_implied": 0.9336
       },
       {
         "kind": "biome",
         "name": "64",
         "n": 488,
         "w": 0.803,
-        "fitted": 0.9654,
+        "fitted": 0.9653,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9542,
-        "sales_implied": 0.9374
+        "blended": 0.9541,
+        "sales_implied": 0.9375
       },
       {
         "kind": "biome",
@@ -1801,18 +1801,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9321,
-        "sales_implied": 0.9212
+        "sales_implied": 0.9213
       },
       {
         "kind": "biome",
         "name": "66",
         "n": 298,
         "w": 0.713,
-        "fitted": 1.0008,
+        "fitted": 1.0009,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9876,
+        "blended": 0.9877,
         "sales_implied": 0.9653
       },
       {
@@ -1820,11 +1820,11 @@
         "name": "67",
         "n": 362,
         "w": 0.751,
-        "fitted": 0.9707,
+        "fitted": 0.9708,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9669,
+        "blended": 0.967,
         "sales_implied": 0.9436
       },
       {
@@ -1837,7 +1837,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9704,
-        "sales_implied": 0.9703
+        "sales_implied": 0.9704
       },
       {
         "kind": "biome",
@@ -1849,7 +1849,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9612,
-        "sales_implied": 0.9527
+        "sales_implied": 0.9528
       },
       {
         "kind": "biome",
@@ -1861,18 +1861,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9229,
-        "sales_implied": 0.9212
+        "sales_implied": 0.9213
       },
       {
         "kind": "biome",
         "name": "71",
         "n": 401,
         "w": 0.77,
-        "fitted": 0.9569,
+        "fitted": 0.9567,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9459,
+        "blended": 0.9458,
         "sales_implied": 0.9014
       },
       {
@@ -1880,139 +1880,139 @@
         "name": "72",
         "n": 471,
         "w": 0.797,
-        "fitted": 1.0001,
+        "fitted": 1,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9811,
-        "sales_implied": 0.9759
+        "sales_implied": 0.9761
       },
       {
         "kind": "biome",
         "name": "73",
         "n": 38,
         "w": 0.241,
-        "fitted": 2.5498,
+        "fitted": 2.5492,
         "prior": 3.3673,
         "prior_source": "v1",
         "v1_prior": 3.3673,
-        "blended": 3.1494,
-        "sales_implied": 4.2971
+        "blended": 3.1493,
+        "sales_implied": 4.2769
       },
       {
         "kind": "biome",
         "name": "74",
         "n": 6,
         "w": 0.048,
-        "fitted": 5.3865,
+        "fitted": 5.3812,
         "prior": 11.9,
         "prior_source": "fixed",
-        "v1_prior": 6.7118,
+        "v1_prior": 6.7119,
         "blended": 11.9,
-        "sales_implied": 6.9995
+        "sales_implied": 7.0001
       },
       {
         "kind": "biome",
         "name": "75",
         "n": 87,
         "w": 0.42,
-        "fitted": 1.8638,
-        "prior": 1.5471,
+        "fitted": 1.8624,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.6731,
-        "sales_implied": 1.584
+        "v1_prior": 1.5472,
+        "blended": 1.6726,
+        "sales_implied": 1.5839
       },
       {
         "kind": "biome",
         "name": "76",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0868,
+        "fitted": 1.0867,
         "prior": 4.7215,
         "prior_source": "v1",
         "v1_prior": 4.7215,
         "blended": 4.0498,
-        "sales_implied": 0.895
+        "sales_implied": 0.8949
       },
       {
         "kind": "biome",
         "name": "77",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.0901,
+        "fitted": 1.0899,
         "prior": 6.38,
         "prior_source": "fixed",
-        "v1_prior": 5.5742,
+        "v1_prior": 5.5743,
         "blended": 6.38,
-        "sales_implied": 3.1115
+        "sales_implied": 3.1116
       },
       {
         "kind": "biome",
         "name": "78",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1565,
+        "fitted": 1.1561,
         "prior": 5.6,
         "prior_source": "fixed",
-        "v1_prior": 5.0054,
+        "v1_prior": 5.0055,
         "blended": 5.6,
-        "sales_implied": 3.6423
+        "sales_implied": 3.6436
       },
       {
         "kind": "biome",
         "name": "79",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1044,
+        "fitted": 1.1041,
         "prior": 4.7215,
         "prior_source": "v1",
         "v1_prior": 4.7215,
-        "blended": 4.2664,
-        "sales_implied": 1.7626
+        "blended": 4.2663,
+        "sales_implied": 1.763
       },
       {
         "kind": "biome",
         "name": "80",
-        "n": 204,
-        "w": 0.63,
-        "fitted": 1.0418,
-        "prior": 1.5471,
+        "n": 205,
+        "w": 0.631,
+        "fitted": 1.0465,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.2061,
-        "sales_implied": 0.9908
+        "v1_prior": 1.5472,
+        "blended": 1.209,
+        "sales_implied": 1.0301
       },
       {
         "kind": "biome",
         "name": "81",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.1781,
+        "fitted": 1.1776,
         "prior": 5.44,
         "prior_source": "fixed",
-        "v1_prior": 5.0054,
+        "v1_prior": 5.0055,
         "blended": 5.44,
-        "sales_implied": 2.9008
+        "sales_implied": 2.9006
       },
       {
         "kind": "biome",
         "name": "82",
         "n": 53,
         "w": 0.306,
-        "fitted": 1.195,
+        "fitted": 1.1942,
         "prior": 1.3651,
         "prior_source": "v1",
         "v1_prior": 1.3651,
-        "blended": 1.3106,
-        "sales_implied": 1.2427
+        "blended": 1.3103,
+        "sales_implied": 1.2422
       },
       {
         "kind": "biome",
         "name": "83",
         "n": 201,
         "w": 0.626,
-        "fitted": 0.9761,
+        "fitted": 0.9762,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
@@ -2025,10 +2025,10 @@
         "n": 134,
         "w": 0.528,
         "fitted": 0.9873,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.0576,
+        "v1_prior": 1.1422,
+        "blended": 1.0577,
         "sales_implied": 0.9695
       },
       {
@@ -2036,24 +2036,24 @@
         "name": "85",
         "n": 84,
         "w": 0.412,
-        "fitted": 1.2492,
+        "fitted": 1.2494,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.2451,
-        "sales_implied": 1.2657
+        "blended": 1.2452,
+        "sales_implied": 1.2658
       },
       {
         "kind": "biome",
         "name": "86",
         "n": 127,
         "w": 0.514,
-        "fitted": 1.081,
-        "prior": 1.0329,
+        "fitted": 1.0809,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0574,
-        "sales_implied": 0.9957
+        "v1_prior": 1.033,
+        "blended": 1.0573,
+        "sales_implied": 0.9953
       },
       {
         "kind": "biome",
@@ -2061,35 +2061,35 @@
         "n": 72,
         "w": 0.375,
         "fitted": 1.5438,
-        "prior": 1.5471,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
+        "v1_prior": 1.5472,
         "blended": 1.5459,
-        "sales_implied": 1.4712
+        "sales_implied": 1.4714
       },
       {
         "kind": "biome",
         "name": "88",
         "n": 65,
         "w": 0.351,
-        "fitted": 1.0607,
-        "prior": 1.5471,
+        "fitted": 1.0606,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.355,
-        "sales_implied": 1.0686
+        "v1_prior": 1.5472,
+        "blended": 1.3549,
+        "sales_implied": 1.0687
       },
       {
         "kind": "biome",
         "name": "89",
         "n": 157,
         "w": 0.567,
-        "fitted": 1.0179,
-        "prior": 1.1421,
+        "fitted": 1.0177,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.07,
-        "sales_implied": 1.0167
+        "v1_prior": 1.1422,
+        "blended": 1.0699,
+        "sales_implied": 1.0161
       },
       {
         "kind": "biome",
@@ -2097,46 +2097,46 @@
         "n": 141,
         "w": 0.54,
         "fitted": 0.9114,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.011,
-        "sales_implied": 0.9058
+        "v1_prior": 1.1422,
+        "blended": 1.0111,
+        "sales_implied": 0.906
       },
       {
         "kind": "biome",
         "name": "91",
         "n": 86,
         "w": 0.417,
-        "fitted": 1.1424,
+        "fitted": 1.1422,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
         "blended": 1.1995,
-        "sales_implied": 1.1857
+        "sales_implied": 1.1858
       },
       {
         "kind": "level",
         "name": "1",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.1457,
-        "prior": 11.376,
+        "fitted": 1.1453,
+        "prior": 11.3761,
         "prior_source": "v1",
-        "v1_prior": 11.376,
+        "v1_prior": 11.3761,
         "blended": 9.8555,
-        "sales_implied": 9.1089
+        "sales_implied": 9.1118
       },
       {
         "kind": "level",
         "name": "2",
         "n": 60,
         "w": 0.333,
-        "fitted": 1.3896,
+        "fitted": 1.39,
         "prior": 1.8202,
         "prior_source": "v1",
         "v1_prior": 1.8202,
-        "blended": 1.6635,
+        "blended": 1.6637,
         "sales_implied": 1.0276
       },
       {
@@ -2144,35 +2144,35 @@
         "name": "3",
         "n": 86,
         "w": 0.417,
-        "fitted": 1.099,
-        "prior": 1.5926,
+        "fitted": 1.0995,
+        "prior": 1.5927,
         "prior_source": "v1",
-        "v1_prior": 1.5926,
-        "blended": 1.3641,
-        "sales_implied": 1.0609
+        "v1_prior": 1.5927,
+        "blended": 1.3644,
+        "sales_implied": 1.0611
       },
       {
         "kind": "level",
         "name": "18",
         "n": 96,
         "w": 0.444,
-        "fitted": 1.0697,
-        "prior": 1.5926,
+        "fitted": 1.0698,
+        "prior": 1.5927,
         "prior_source": "v1",
-        "v1_prior": 1.5926,
-        "blended": 1.3344,
-        "sales_implied": 1.0315
+        "v1_prior": 1.5927,
+        "blended": 1.3345,
+        "sales_implied": 1.0317
       },
       {
         "kind": "level",
         "name": "19",
         "n": 57,
         "w": 0.322,
-        "fitted": 1.2837,
+        "fitted": 1.2839,
         "prior": 1.8202,
         "prior_source": "v1",
         "v1_prior": 1.8202,
-        "blended": 1.6266,
+        "blended": 1.6267,
         "sales_implied": 1.482
       },
       {
@@ -2180,269 +2180,269 @@
         "name": "20",
         "n": 14,
         "w": 0,
-        "fitted": 15.6592,
-        "prior": 26.2549,
+        "fitted": 15.6476,
+        "prior": 26.2527,
         "prior_source": "sales",
-        "v1_prior": 11.376,
-        "blended": 26.2549,
-        "sales_implied": 26.2549
+        "v1_prior": 11.3761,
+        "blended": 26.2527,
+        "sales_implied": 26.2527
       },
       {
         "kind": "badge",
         "name": "biome0_flow",
         "n": 98,
         "w": 0.45,
-        "fitted": 2.4305,
-        "prior": 2.1354,
+        "fitted": 2.4275,
+        "prior": 2.1302,
         "prior_source": "sales",
         "v1_prior": 1.5598,
-        "blended": 2.2634,
-        "sales_implied": 2.1354
+        "blended": 2.259,
+        "sales_implied": 2.1302
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.09880863228594,
+      "baseline_multiple": 1.0987931957420096,
       "zone": {
         "Aetherking": 5.9705,
-        "Akileaf": 1.1107,
+        "Akileaf": 1.1115,
         "Alto": 1.0397,
         "Angel": 1.2394,
-        "Antenna": 8.4118,
+        "Antenna": 8.4108,
         "Arc": 0.9706,
         "Aria": 1.7061,
-        "Avidana": 2.6034,
+        "Avidana": 2.6057,
         "Blossom": 1.1473,
         "Blushing": 1.0606,
-        "Bubble": 1.2749,
-        "Calyx": 1.0429,
-        "Cradle": 1.2238,
+        "Bubble": 1.275,
+        "Calyx": 1.043,
+        "Cradle": 1.224,
         "Dhampir": 1.3887,
-        "Dread": 7.3252,
-        "Dynacrypts": 1.3816,
-        "Ender": 1.0593,
-        "Everglades": 1.0541,
+        "Dread": 7.3244,
+        "Dynacrypts": 1.3844,
+        "Ender": 1.0595,
+        "Everglades": 1.054,
         "Exduo": 0.9423,
-        "First Earth": 2.1843,
-        "Gemina": 4.8063,
-        "Greysunn": 1.3875,
-        "Grove": 0.9778,
+        "First Earth": 2.1827,
+        "Gemina": 4.8059,
+        "Greysunn": 1.3877,
+        "Grove": 0.9777,
         "Hypermage": 0.9664,
-        "Hyphae": 0.9514,
-        "Intro Forest": 1.1953,
-        "Jadeite": 1.1204,
-        "Kairo": 1.0134,
-        "Killscreen": 1.9334,
+        "Hyphae": 0.9515,
+        "Intro Forest": 1.1955,
+        "Jadeite": 1.1207,
+        "Kairo": 1.0133,
+        "Killscreen": 1.9332,
         "Kippsun": 1.2167,
         "Linosim": 1.0346,
-        "Mecha": 0.9619,
-        "Mirage": 0.9165,
+        "Mecha": 0.9618,
+        "Mirage": 0.9166,
         "Mori": 1.6383,
         "Mould": 1.7288,
-        "Mt Zuka": 1.353,
+        "Mt Zuka": 1.3531,
         "Muxtai X1": 1.1075,
-        "Nightrose": 0.9641,
+        "Nightrose": 0.964,
         "Ouallada": 0.997,
-        "Palace": 1.0063,
+        "Palace": 1.0064,
         "Pepo": 1.1031,
-        "Promiselands": 1.4859,
+        "Promiselands": 1.486,
         "Radiant": 1.4707,
-        "Riso": 0.9734,
+        "Riso": 0.9739,
         "Rocket": 1.317,
         "Royal": 1.7885,
-        "Shahra": 10.9818,
-        "Shiro": 0.9694,
-        "Tetsu": 1.8017,
-        "Toad": 1.294,
-        "Treasure": 1.5628,
-        "Uwo": 1.5573,
-        "Valeria": 1.2301,
+        "Shahra": 10.9806,
+        "Shiro": 0.9693,
+        "Tetsu": 1.8018,
+        "Toad": 1.2939,
+        "Treasure": 1.5629,
+        "Uwo": 1.557,
+        "Valeria": 1.2302,
         "Venmon": 1.548,
         "Warp": 1.0287,
         "Wastelands": 1.1947,
-        "Xleph": 1.5113,
+        "Xleph": 1.5114,
         "Zerinia": 1.0527,
         "[BLOOD]": 1.1388,
         "[BOSS]": 1.0118,
-        "[CUR2]": 0.9896,
+        "[CUR2]": 0.9897,
         "[DARK]": 1.0623,
         "[HOME]": 1.3245,
-        "[HYCA]": 0.9684,
+        "[HYCA]": 0.9685,
         "[MENU]": 0.9536,
         "[MOON]": 0.9686,
-        "[NEON]": 1.0231,
-        "[NOV]": 1.6576,
+        "[NEON]": 1.0214,
+        "[NOV]": 1.6574,
         "[SEP]": 0.9841,
-        "[SOON]": 3.1206,
-        "[SUN]": 3.2851,
+        "[SOON]": 3.1204,
+        "[SUN]": 3.285,
         "[WEN]": 0.9775,
         "[YUNA]": 0.9696,
         "pfpfpfpbbx80": 1.1374,
         "Holo": 1
       },
       "biome": {
-        "0": 2.6051,
-        "1": 1.255,
+        "0": 2.6049,
+        "1": 1.2549,
         "2": 1.1474,
-        "3": 1.0395,
+        "3": 1.0394,
         "4": 1.0836,
         "5": 1.0473,
-        "6": 1.0752,
-        "7": 1.1129,
-        "8": 1.1754,
-        "9": 1.2916,
-        "10": 1.9691,
-        "11": 1.9054,
+        "6": 1.0751,
+        "7": 1.113,
+        "8": 1.1752,
+        "9": 1.2914,
+        "10": 1.9682,
+        "11": 1.9053,
         "12": 1.2423,
         "13": 1.3336,
-        "14": 1.4959,
-        "15": 1.3469,
-        "16": 1.4973,
-        "17": 2.886,
-        "18": 1.3967,
+        "14": 1.4957,
+        "15": 1.3467,
+        "16": 1.4969,
+        "17": 2.8859,
+        "18": 1.3964,
         "19": 1.3709,
-        "20": 1.4866,
-        "21": 1.0892,
-        "22": 1.0179,
-        "23": 1.0368,
+        "20": 1.486,
+        "21": 1.0891,
+        "22": 1.0181,
+        "23": 1.0367,
         "24": 1.0249,
-        "25": 1.165,
+        "25": 1.1648,
         "26": 0.9979,
         "27": 1.0337,
-        "28": 0.9431,
+        "28": 0.9432,
         "29": 0.9852,
-        "30": 0.9605,
-        "31": 0.9721,
+        "30": 0.9603,
+        "31": 0.9719,
         "32": 0.9602,
         "33": 0.9542,
-        "34": 1.021,
+        "34": 1.0208,
         "35": 1.0978,
-        "36": 0.9936,
-        "37": 1.0176,
+        "36": 0.9941,
+        "37": 1.0175,
         "38": 1.0086,
-        "39": 2.8703,
-        "40": 1.1589,
+        "39": 2.8702,
+        "40": 1.1584,
         "41": 0.9714,
-        "42": 1.2377,
-        "43": 0.9338,
+        "42": 1.2374,
+        "43": 0.9334,
         "44": 0.9658,
         "45": 0.9394,
         "46": 1,
-        "47": 0.9452,
-        "48": 0.9606,
+        "47": 0.9453,
+        "48": 0.9605,
         "49": 0.9825,
         "50": 0.962,
-        "51": 0.9617,
-        "52": 0.9501,
+        "51": 0.9618,
+        "52": 0.9502,
         "53": 0.9833,
-        "54": 0.9931,
+        "54": 0.9932,
         "55": 0.9419,
         "56": 0.9467,
-        "57": 0.9319,
+        "57": 0.9327,
         "58": 1.0113,
         "59": 0.9327,
         "60": 0.9604,
-        "61": 0.9677,
-        "62": 0.9312,
+        "61": 0.9676,
+        "62": 0.9313,
         "63": 0.9309,
-        "64": 0.9542,
+        "64": 0.9541,
         "65": 0.9321,
-        "66": 0.9876,
-        "67": 0.9669,
+        "66": 0.9877,
+        "67": 0.967,
         "68": 0.9704,
         "69": 0.9612,
         "70": 0.9229,
-        "71": 0.9459,
+        "71": 0.9458,
         "72": 0.9811,
-        "73": 3.1494,
+        "73": 3.1493,
         "74": 11.9,
-        "75": 1.6731,
+        "75": 1.6726,
         "76": 4.0498,
         "77": 6.38,
         "78": 5.6,
-        "79": 4.2664,
-        "80": 1.2061,
+        "79": 4.2663,
+        "80": 1.209,
         "81": 5.44,
-        "82": 1.3106,
+        "82": 1.3103,
         "83": 0.9684,
-        "84": 1.0576,
-        "85": 1.2451,
-        "86": 1.0574,
+        "84": 1.0577,
+        "85": 1.2452,
+        "86": 1.0573,
         "87": 1.5459,
-        "88": 1.355,
-        "89": 1.07,
-        "90": 1.011,
+        "88": 1.3549,
+        "89": 1.0699,
+        "90": 1.0111,
         "91": 1.1995
       },
       "level": {
         "1": 9.8555,
-        "2": 1.6635,
-        "3": 1.3641,
-        "18": 1.3344,
-        "19": 1.6266,
-        "20": 26.2549
+        "2": 1.6637,
+        "3": 1.3644,
+        "18": 1.3345,
+        "19": 1.6267,
+        "20": 26.2527
       },
       "chroma": {
         "Pulse": 0.9856,
         "Hyper": 0.9863
       },
       "mode": {
-        "DDTF": 0.9861,
-        "ORIG": 2.5966
+        "DDTF": 0.9862,
+        "ORIG": 2.595
       },
       "badge": {
-        "biome0_flow": 2.2634
+        "biome0_flow": 2.259
       },
       "extra": {
-        "one_of_one": 1.0112,
-        "s0": 0.9843,
-        "spine": 1.0584
+        "one_of_one": 1.0115,
+        "s0": 0.984,
+        "spine": 1.0585
       },
-      "ddtf_biome_beta": -0.460575,
+      "ddtf_biome_beta": -0.457001,
       "mode_biome": {
         "DDTF": {
-          "0": 0.5474,
-          "1": 0.8665,
-          "2": 0.8665,
-          "3": 0.9778,
-          "4": 0.9433,
-          "5": 0.9778,
-          "6": 0.9778,
-          "7": 0.9778,
-          "8": 0.8665,
-          "9": 0.9433,
-          "10": 0.6814,
-          "11": 0.6814,
-          "12": 0.8297,
-          "13": 0.8297,
-          "14": 0.7832,
-          "15": 0.7832,
-          "16": 0.7832,
-          "17": 0.6814,
-          "18": 0.7832,
-          "19": 0.7832,
-          "20": 0.7832,
-          "21": 0.9433,
-          "22": 0.9433,
-          "23": 0.9433,
-          "24": 0.9778,
-          "25": 0.9433,
-          "26": 0.9433,
+          "0": 0.5499,
+          "1": 0.8674,
+          "2": 0.8674,
+          "3": 0.9779,
+          "4": 0.9438,
+          "5": 0.9779,
+          "6": 0.9779,
+          "7": 0.9779,
+          "8": 0.8674,
+          "9": 0.9438,
+          "10": 0.6834,
+          "11": 0.6834,
+          "12": 0.8309,
+          "13": 0.8309,
+          "14": 0.7847,
+          "15": 0.7847,
+          "16": 0.7847,
+          "17": 0.6834,
+          "18": 0.7847,
+          "19": 0.7847,
+          "20": 0.7847,
+          "21": 0.9438,
+          "22": 0.9438,
+          "23": 0.9438,
+          "24": 0.9779,
+          "25": 0.9438,
+          "26": 0.9438,
           "27": 1,
-          "28": 0.9778,
-          "29": 0.9778,
-          "30": 0.9778,
+          "28": 0.9779,
+          "29": 0.9779,
+          "30": 0.9779,
           "31": 1,
           "32": 1,
           "33": 1,
-          "34": 0.9778,
-          "35": 0.9778,
-          "36": 0.9778,
-          "37": 0.9778,
-          "38": 0.9778,
-          "39": 0.7832,
-          "40": 0.8665,
-          "41": 0.9433,
-          "42": 0.8665,
+          "34": 0.9779,
+          "35": 0.9779,
+          "36": 0.9779,
+          "37": 0.9779,
+          "38": 0.9779,
+          "39": 0.7847,
+          "40": 0.8674,
+          "41": 0.9438,
+          "42": 0.8674,
           "43": 1,
           "44": 1,
           "45": 1,
@@ -2458,40 +2458,40 @@
           "55": 1,
           "56": 1,
           "57": 1,
-          "58": 0.9433,
+          "58": 0.9438,
           "59": 1,
           "60": 1,
           "61": 1,
           "62": 1,
           "63": 1,
           "64": 1,
-          "65": 0.9778,
-          "66": 0.9778,
-          "67": 0.9778,
-          "68": 0.9778,
-          "69": 0.9778,
+          "65": 0.9779,
+          "66": 0.9779,
+          "67": 0.9779,
+          "68": 0.9779,
+          "69": 0.9779,
           "70": 1,
           "71": 1,
           "72": 1,
-          "73": 0.5474,
-          "74": 0.3984,
-          "75": 0.7832,
-          "76": 0.4685,
-          "77": 0.434,
-          "78": 0.456,
-          "79": 0.4685,
-          "80": 0.7832,
-          "81": 0.456,
-          "82": 0.8297,
-          "83": 0.9778,
-          "84": 0.9007,
-          "85": 0.8665,
-          "86": 0.9433,
-          "87": 0.7832,
-          "88": 0.7832,
-          "89": 0.9007,
-          "90": 0.9007,
-          "91": 0.8665
+          "73": 0.55,
+          "74": 0.4013,
+          "75": 0.7847,
+          "76": 0.4712,
+          "77": 0.4368,
+          "78": 0.4588,
+          "79": 0.4712,
+          "80": 0.7847,
+          "81": 0.4588,
+          "82": 0.8309,
+          "83": 0.9779,
+          "84": 0.9014,
+          "85": 0.8674,
+          "86": 0.9438,
+          "87": 0.7847,
+          "88": 0.7847,
+          "89": 0.9014,
+          "90": 0.9014,
+          "91": 0.8674
         }
       }
     }
@@ -2499,34 +2499,34 @@
   "money_sword_on": {
     "label": "money_sword_on",
     "bid_share": 0.2,
-    "holdout_median_pct_err": 0.1219477817365009,
+    "holdout_median_pct_err": 0.1220605832082799,
     "alpha": 3,
-    "weighted_r2": 0.708483964787683,
-    "n": 29572,
+    "weighted_r2": 0.7086000091376583,
+    "n": 29576,
     "prior_audit": [
       {
         "kind": "zone",
         "name": "Aetherking",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0903,
-        "prior": 7.2806,
+        "fitted": 1.0901,
+        "prior": 7.2807,
         "prior_source": "v1",
-        "v1_prior": 7.2806,
+        "v1_prior": 7.2807,
         "blended": 5.9705,
-        "sales_implied": 2.0332
+        "sales_implied": 2.0329
       },
       {
         "kind": "zone",
         "name": "Akileaf",
-        "n": 181,
-        "w": 0.601,
-        "fitted": 1.0903,
-        "prior": 1.1421,
+        "n": 182,
+        "w": 0.603,
+        "fitted": 1.0918,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.1107,
-        "sales_implied": 1.0668
+        "v1_prior": 1.1422,
+        "blended": 1.1115,
+        "sales_implied": 1.1118
       },
       {
         "kind": "zone",
@@ -2538,7 +2538,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9829,
         "blended": 1.0397,
-        "sales_implied": 0.9775
+        "sales_implied": 0.9777
       },
       {
         "kind": "zone",
@@ -2550,19 +2550,19 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.2394,
-        "sales_implied": 1.1696
+        "sales_implied": 1.1697
       },
       {
         "kind": "zone",
         "name": "Antenna",
         "n": 15,
         "w": 0.111,
-        "fitted": 4.6642,
-        "prior": 9.0553,
+        "fitted": 4.6591,
+        "prior": 9.0554,
         "prior_source": "v1",
-        "v1_prior": 9.0553,
-        "blended": 8.4118,
-        "sales_implied": 7.7347
+        "v1_prior": 9.0554,
+        "blended": 8.4108,
+        "sales_implied": 7.7333
       },
       {
         "kind": "zone",
@@ -2574,31 +2574,31 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9706,
-        "sales_implied": 0.9657
+        "sales_implied": 0.966
       },
       {
         "kind": "zone",
         "name": "Aria",
         "n": 100,
         "w": 0.455,
-        "fitted": 1.7058,
+        "fitted": 1.7057,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
         "blended": 1.7061,
-        "sales_implied": 1.717
+        "sales_implied": 1.7173
       },
       {
         "kind": "zone",
         "name": "Avidana",
         "n": 56,
         "w": 0.318,
-        "fitted": 2.2887,
-        "prior": 2.7647,
+        "fitted": 2.2875,
+        "prior": 2.769,
         "prior_source": "sales",
-        "v1_prior": 1.7746,
-        "blended": 2.6034,
-        "sales_implied": 2.7647
+        "v1_prior": 1.7747,
+        "blended": 2.6057,
+        "sales_implied": 2.769
       },
       {
         "kind": "zone",
@@ -2606,11 +2606,11 @@
         "n": 138,
         "w": 0.535,
         "fitted": 1.2287,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.1473,
-        "sales_implied": 0.9846
+        "sales_implied": 0.9845
       },
       {
         "kind": "zone",
@@ -2618,11 +2618,11 @@
         "n": 145,
         "w": 0.547,
         "fitted": 0.9975,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.0606,
-        "sales_implied": 0.9711
+        "sales_implied": 0.9713
       },
       {
         "kind": "zone",
@@ -2633,19 +2633,19 @@
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.2749,
-        "sales_implied": 1.3058
+        "blended": 1.275,
+        "sales_implied": 1.306
       },
       {
         "kind": "zone",
         "name": "Calyx",
         "n": 286,
         "w": 0.704,
-        "fitted": 1.0357,
-        "prior": 1.0602,
+        "fitted": 1.0358,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0429,
+        "v1_prior": 1.0603,
+        "blended": 1.043,
         "sales_implied": 1.0108
       },
       {
@@ -2653,72 +2653,72 @@
         "name": "Cradle",
         "n": 126,
         "w": 0.512,
-        "fitted": 1.1698,
+        "fitted": 1.1701,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.2238,
-        "sales_implied": 1.1161
+        "blended": 1.224,
+        "sales_implied": 1.1162
       },
       {
         "kind": "zone",
         "name": "Dhampir",
         "n": 121,
         "w": 0.502,
-        "fitted": 1.4171,
+        "fitted": 1.4172,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
         "blended": 1.3887,
-        "sales_implied": 1.4488
+        "sales_implied": 1.449
       },
       {
         "kind": "zone",
         "name": "Dread",
         "n": 27,
         "w": 0.184,
-        "fitted": 4.595,
-        "prior": 8.1356,
+        "fitted": 4.592,
+        "prior": 8.1357,
         "prior_source": "sales",
         "v1_prior": 3.4128,
-        "blended": 7.3252,
-        "sales_implied": 8.1356
+        "blended": 7.3244,
+        "sales_implied": 8.1357
       },
       {
         "kind": "zone",
         "name": "Dynacrypts",
-        "n": 408,
+        "n": 409,
         "w": 0.773,
-        "fitted": 1.412,
+        "fitted": 1.4156,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.3816,
-        "sales_implied": 1.348
+        "blended": 1.3844,
+        "sales_implied": 1.2958
       },
       {
         "kind": "zone",
         "name": "Ender",
         "n": 342,
         "w": 0.74,
-        "fitted": 1.0317,
-        "prior": 1.1421,
+        "fitted": 1.0319,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.0593,
-        "sales_implied": 0.9853
+        "v1_prior": 1.1422,
+        "blended": 1.0595,
+        "sales_implied": 0.9855
       },
       {
         "kind": "zone",
         "name": "Everglades",
         "n": 202,
         "w": 0.627,
-        "fitted": 0.9378,
+        "fitted": 0.9377,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.0541,
-        "sales_implied": 0.9366
+        "blended": 1.054,
+        "sales_implied": 0.9361
       },
       {
         "kind": "zone",
@@ -2730,55 +2730,55 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9423,
-        "sales_implied": 0.9474
+        "sales_implied": 0.9475
       },
       {
         "kind": "zone",
         "name": "First Earth",
         "n": 113,
         "w": 0.485,
-        "fitted": 2.1821,
-        "prior": 2.1863,
+        "fitted": 2.1792,
+        "prior": 2.186,
         "prior_source": "sales",
         "v1_prior": 1.7064,
-        "blended": 2.1843,
-        "sales_implied": 2.1863
+        "blended": 2.1827,
+        "sales_implied": 2.186
       },
       {
         "kind": "zone",
         "name": "Gemina",
         "n": 25,
         "w": 0.172,
-        "fitted": 4.4764,
-        "prior": 4.878,
+        "fitted": 4.474,
+        "prior": 4.8781,
         "prior_source": "v1",
-        "v1_prior": 4.878,
-        "blended": 4.8063,
-        "sales_implied": 4.7437
+        "v1_prior": 4.8781,
+        "blended": 4.8059,
+        "sales_implied": 4.743
       },
       {
         "kind": "zone",
         "name": "Greysunn",
         "n": 135,
         "w": 0.529,
-        "fitted": 1.2213,
-        "prior": 1.6017,
+        "fitted": 1.2216,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.3875,
-        "sales_implied": 1.2168
+        "v1_prior": 1.6018,
+        "blended": 1.3877,
+        "sales_implied": 1.2175
       },
       {
         "kind": "zone",
         "name": "Grove",
         "n": 984,
         "w": 0.891,
-        "fitted": 0.9864,
+        "fitted": 0.9863,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9778,
-        "sales_implied": 0.9686
+        "blended": 0.9777,
+        "sales_implied": 0.9679
       },
       {
         "kind": "zone",
@@ -2797,11 +2797,11 @@
         "name": "Hyphae",
         "n": 1232,
         "w": 0.911,
-        "fitted": 0.9555,
+        "fitted": 0.9556,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9514,
+        "blended": 0.9515,
         "sales_implied": 0.9478
       },
       {
@@ -2809,47 +2809,47 @@
         "name": "Intro Forest",
         "n": 256,
         "w": 0.681,
-        "fitted": 1.1562,
+        "fitted": 1.1564,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.1953,
-        "sales_implied": 1.1572
+        "blended": 1.1955,
+        "sales_implied": 1.1574
       },
       {
         "kind": "zone",
         "name": "Jadeite",
         "n": 182,
         "w": 0.603,
-        "fitted": 0.9858,
+        "fitted": 0.9861,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.1204,
-        "sales_implied": 0.9889
+        "blended": 1.1207,
+        "sales_implied": 0.989
       },
       {
         "kind": "zone",
         "name": "Kairo",
         "n": 942,
         "w": 0.887,
-        "fitted": 1.0173,
+        "fitted": 1.0172,
         "prior": 0.9829,
         "prior_source": "v1",
         "v1_prior": 0.9829,
-        "blended": 1.0134,
-        "sales_implied": 0.9831
+        "blended": 1.0133,
+        "sales_implied": 0.9824
       },
       {
         "kind": "zone",
         "name": "Killscreen",
         "n": 100,
         "w": 0.455,
-        "fitted": 2.1427,
-        "prior": 1.7746,
+        "fitted": 2.1422,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
-        "blended": 1.9334,
+        "v1_prior": 1.7747,
+        "blended": 1.9332,
         "sales_implied": 1.9994
       },
       {
@@ -2870,35 +2870,35 @@
         "n": 260,
         "w": 0.684,
         "fitted": 1.023,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0346,
-        "sales_implied": 0.9864
+        "sales_implied": 0.9863
       },
       {
         "kind": "zone",
         "name": "Mecha",
         "n": 1143,
         "w": 0.905,
-        "fitted": 0.9675,
+        "fitted": 0.9674,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9619,
-        "sales_implied": 0.9644
+        "blended": 0.9618,
+        "sales_implied": 0.9643
       },
       {
         "kind": "zone",
         "name": "Mirage",
         "n": 978,
         "w": 0.891,
-        "fitted": 0.9173,
+        "fitted": 0.9174,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9165,
-        "sales_implied": 0.9446
+        "blended": 0.9166,
+        "sales_implied": 0.9445
       },
       {
         "kind": "zone",
@@ -2906,18 +2906,18 @@
         "n": 120,
         "w": 0.5,
         "fitted": 1.6756,
-        "prior": 1.6017,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.6383,
-        "sales_implied": 1.5838
+        "sales_implied": 1.5836
       },
       {
         "kind": "zone",
         "name": "Mould",
         "n": 89,
         "w": 0.426,
-        "fitted": 1.7595,
+        "fitted": 1.7594,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
@@ -2929,12 +2929,12 @@
         "name": "Mt Zuka",
         "n": 215,
         "w": 0.642,
-        "fitted": 1.3488,
+        "fitted": 1.349,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.353,
-        "sales_implied": 1.301
+        "blended": 1.3531,
+        "sales_implied": 1.3016
       },
       {
         "kind": "zone",
@@ -2946,19 +2946,19 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.1075,
-        "sales_implied": 1.0457
+        "sales_implied": 1.046
       },
       {
         "kind": "zone",
         "name": "Nightrose",
         "n": 1555,
         "w": 0.928,
-        "fitted": 0.9684,
+        "fitted": 0.9683,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9641,
-        "sales_implied": 0.9709
+        "blended": 0.964,
+        "sales_implied": 0.9711
       },
       {
         "kind": "zone",
@@ -2970,18 +2970,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.997,
-        "sales_implied": 1.0355
+        "sales_implied": 1.0357
       },
       {
         "kind": "zone",
         "name": "Palace",
         "n": 398,
         "w": 0.768,
-        "fitted": 0.9906,
-        "prior": 1.0602,
+        "fitted": 0.9907,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0063,
+        "v1_prior": 1.0603,
+        "blended": 1.0064,
         "sales_implied": 0.9856
       },
       {
@@ -2990,47 +2990,47 @@
         "n": 236,
         "w": 0.663,
         "fitted": 1.0837,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1031,
-        "sales_implied": 0.9475
+        "sales_implied": 0.9476
       },
       {
         "kind": "zone",
         "name": "Promiselands",
         "n": 105,
         "w": 0.467,
-        "fitted": 1.3638,
-        "prior": 1.6017,
+        "fitted": 1.3639,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.4859,
-        "sales_implied": 1.2664
+        "v1_prior": 1.6018,
+        "blended": 1.486,
+        "sales_implied": 1.266
       },
       {
         "kind": "zone",
         "name": "Radiant",
         "n": 72,
         "w": 0.375,
-        "fitted": 1.2758,
-        "prior": 1.6017,
+        "fitted": 1.2756,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.4707,
-        "sales_implied": 1.3322
+        "sales_implied": 1.3317
       },
       {
         "kind": "zone",
         "name": "Riso",
-        "n": 1334,
-        "w": 0.917,
-        "fitted": 0.9793,
+        "n": 1335,
+        "w": 0.918,
+        "fitted": 0.9798,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9734,
-        "sales_implied": 0.9757
+        "blended": 0.9739,
+        "sales_implied": 0.9773
       },
       {
         "kind": "zone",
@@ -3042,7 +3042,7 @@
         "prior_source": "v1",
         "v1_prior": 1.3606,
         "blended": 1.317,
-        "sales_implied": 1.2129
+        "sales_implied": 1.2126
       },
       {
         "kind": "zone",
@@ -3050,9 +3050,9 @@
         "n": 118,
         "w": 0.496,
         "fitted": 1.8027,
-        "prior": 1.7746,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
+        "v1_prior": 1.7747,
         "blended": 1.7885,
         "sales_implied": 1.81
       },
@@ -3061,23 +3061,23 @@
         "name": "Shahra",
         "n": 11,
         "w": 0.084,
-        "fitted": 4.4821,
-        "prior": 11.922,
+        "fitted": 4.4755,
+        "prior": 11.9222,
         "prior_source": "v1",
-        "v1_prior": 11.922,
-        "blended": 10.9818,
-        "sales_implied": 10.7308
+        "v1_prior": 11.9222,
+        "blended": 10.9806,
+        "sales_implied": 10.7298
       },
       {
         "kind": "zone",
         "name": "Shiro",
         "n": 744,
         "w": 0.861,
-        "fitted": 0.9793,
+        "fitted": 0.9792,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9694,
+        "blended": 0.9693,
         "sales_implied": 0.9598
       },
       {
@@ -3085,72 +3085,72 @@
         "name": "Tetsu",
         "n": 78,
         "w": 0.394,
-        "fitted": 1.9589,
+        "fitted": 1.959,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
-        "blended": 1.8017,
-        "sales_implied": 2.0651
+        "blended": 1.8018,
+        "sales_implied": 2.0653
       },
       {
         "kind": "zone",
         "name": "Toad",
         "n": 162,
         "w": 0.574,
-        "fitted": 1.3021,
+        "fitted": 1.3019,
         "prior": 1.2832,
         "prior_source": "v1",
         "v1_prior": 1.2832,
-        "blended": 1.294,
-        "sales_implied": 1.3769
+        "blended": 1.2939,
+        "sales_implied": 1.3772
       },
       {
         "kind": "zone",
         "name": "Treasure",
         "n": 135,
         "w": 0.529,
-        "fitted": 1.529,
-        "prior": 1.6017,
+        "fitted": 1.5291,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.5628,
-        "sales_implied": 1.4315
+        "v1_prior": 1.6018,
+        "blended": 1.5629,
+        "sales_implied": 1.4319
       },
       {
         "kind": "zone",
         "name": "Uwo",
         "n": 108,
         "w": 0.474,
-        "fitted": 1.5093,
-        "prior": 1.6017,
+        "fitted": 1.5087,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
-        "blended": 1.5573,
-        "sales_implied": 1.5418
+        "v1_prior": 1.6018,
+        "blended": 1.557,
+        "sales_implied": 1.542
       },
       {
         "kind": "zone",
         "name": "Valeria",
         "n": 118,
         "w": 0.496,
-        "fitted": 1.1103,
+        "fitted": 1.1104,
         "prior": 1.3606,
         "prior_source": "v1",
         "v1_prior": 1.3606,
-        "blended": 1.2301,
-        "sales_implied": 1.0583
+        "blended": 1.2302,
+        "sales_implied": 1.0586
       },
       {
         "kind": "zone",
         "name": "Venmon",
         "n": 85,
         "w": 0.415,
-        "fitted": 1.4752,
-        "prior": 1.6017,
+        "fitted": 1.4751,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.548,
-        "sales_implied": 1.4093
+        "sales_implied": 1.4094
       },
       {
         "kind": "zone",
@@ -3158,11 +3158,11 @@
         "n": 272,
         "w": 0.694,
         "fitted": 1.0151,
-        "prior": 1.0602,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0287,
-        "sales_implied": 1.0156
+        "sales_implied": 1.0157
       },
       {
         "kind": "zone",
@@ -3170,47 +3170,47 @@
         "n": 154,
         "w": 0.562,
         "fitted": 1.2374,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1947,
-        "sales_implied": 1.0818
+        "sales_implied": 1.0816
       },
       {
         "kind": "zone",
         "name": "Xleph",
         "n": 116,
         "w": 0.492,
-        "fitted": 1.3329,
+        "fitted": 1.333,
         "prior": 1.7064,
         "prior_source": "v1",
         "v1_prior": 1.7064,
-        "blended": 1.5113,
-        "sales_implied": 1.4105
+        "blended": 1.5114,
+        "sales_implied": 1.4107
       },
       {
         "kind": "zone",
         "name": "Zerinia",
         "n": 351,
         "w": 0.745,
-        "fitted": 1.0502,
-        "prior": 1.0602,
+        "fitted": 1.0501,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0527,
-        "sales_implied": 1.0555
+        "sales_implied": 1.0551
       },
       {
         "kind": "zone",
         "name": "[BLOOD]",
         "n": 381,
         "w": 0.76,
-        "fitted": 1.1377,
-        "prior": 1.1421,
+        "fitted": 1.1378,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.1388,
-        "sales_implied": 1.0782
+        "sales_implied": 1.0785
       },
       {
         "kind": "zone",
@@ -3218,33 +3218,33 @@
         "n": 394,
         "w": 0.767,
         "fitted": 0.9751,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
+        "v1_prior": 1.1422,
         "blended": 1.0118,
-        "sales_implied": 0.9716
+        "sales_implied": 0.9715
       },
       {
         "kind": "zone",
         "name": "[CUR2]",
         "n": 364,
         "w": 0.752,
-        "fitted": 0.9674,
-        "prior": 1.0602,
+        "fitted": 0.9675,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 0.9896,
-        "sales_implied": 0.9855
+        "v1_prior": 1.0603,
+        "blended": 0.9897,
+        "sales_implied": 0.9857
       },
       {
         "kind": "zone",
         "name": "[DARK]",
         "n": 373,
         "w": 0.757,
-        "fitted": 1.063,
-        "prior": 1.0602,
+        "fitted": 1.0629,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
+        "v1_prior": 1.0603,
         "blended": 1.0623,
         "sales_implied": 1.0425
       },
@@ -3254,23 +3254,23 @@
         "n": 168,
         "w": 0.583,
         "fitted": 1.1564,
-        "prior": 1.6017,
+        "prior": 1.6018,
         "prior_source": "v1",
-        "v1_prior": 1.6017,
+        "v1_prior": 1.6018,
         "blended": 1.3245,
-        "sales_implied": 1.0064
+        "sales_implied": 1.0066
       },
       {
         "kind": "zone",
         "name": "[HYCA]",
         "n": 447,
         "w": 0.788,
-        "fitted": 0.9646,
+        "fitted": 0.9647,
         "prior": 0.9829,
         "prior_source": "v1",
         "v1_prior": 0.9829,
-        "blended": 0.9684,
-        "sales_implied": 0.9484
+        "blended": 0.9685,
+        "sales_implied": 0.9482
       },
       {
         "kind": "zone",
@@ -3282,43 +3282,43 @@
         "prior_source": "v1",
         "v1_prior": 0.9829,
         "blended": 0.9536,
-        "sales_implied": 0.9526
+        "sales_implied": 0.9528
       },
       {
         "kind": "zone",
         "name": "[MOON]",
         "n": 485,
         "w": 0.802,
-        "fitted": 0.9836,
+        "fitted": 0.9837,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9686,
-        "sales_implied": 0.9542
+        "sales_implied": 0.9541
       },
       {
         "kind": "zone",
         "name": "[NEON]",
-        "n": 268,
-        "w": 0.691,
-        "fitted": 1.0069,
-        "prior": 1.0602,
+        "n": 269,
+        "w": 0.692,
+        "fitted": 1.0045,
+        "prior": 1.0603,
         "prior_source": "v1",
-        "v1_prior": 1.0602,
-        "blended": 1.0231,
-        "sales_implied": 1.0038
+        "v1_prior": 1.0603,
+        "blended": 1.0214,
+        "sales_implied": 0.9993
       },
       {
         "kind": "zone",
         "name": "[NOV]",
         "n": 52,
         "w": 0.302,
-        "fitted": 1.4161,
-        "prior": 1.7746,
+        "fitted": 1.4154,
+        "prior": 1.7747,
         "prior_source": "v1",
-        "v1_prior": 1.7746,
-        "blended": 1.6576,
-        "sales_implied": 1.4437
+        "v1_prior": 1.7747,
+        "blended": 1.6574,
+        "sales_implied": 1.4434
       },
       {
         "kind": "zone",
@@ -3330,43 +3330,43 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9841,
-        "sales_implied": 0.9753
+        "sales_implied": 0.9755
       },
       {
         "kind": "zone",
         "name": "[SOON]",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.5251,
+        "fitted": 1.5239,
         "prior": 3.4128,
         "prior_source": "v1",
         "v1_prior": 3.4128,
-        "blended": 3.1206,
-        "sales_implied": 3.4049
+        "blended": 3.1204,
+        "sales_implied": 3.404
       },
       {
         "kind": "zone",
         "name": "[SUN]",
         "n": 28,
         "w": 0.189,
-        "fitted": 2.7898,
+        "fitted": 2.789,
         "prior": 3.4128,
         "prior_source": "v1",
         "v1_prior": 3.4128,
-        "blended": 3.2851,
-        "sales_implied": 2.5368
+        "blended": 3.285,
+        "sales_implied": 2.5361
       },
       {
         "kind": "zone",
         "name": "[WEN]",
         "n": 393,
         "w": 0.766,
-        "fitted": 0.999,
+        "fitted": 0.9991,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9775,
-        "sales_implied": 0.9703
+        "sales_implied": 0.9707
       },
       {
         "kind": "zone",
@@ -3390,55 +3390,55 @@
         "prior_source": "v1",
         "v1_prior": 1.2832,
         "blended": 1.1374,
-        "sales_implied": 1.043
+        "sales_implied": 1.0422
       },
       {
         "kind": "biome",
         "name": "0",
         "n": 168,
         "w": 0.583,
-        "fitted": 2.1686,
-        "prior": 3.3677,
+        "fitted": 2.1683,
+        "prior": 3.3678,
         "prior_source": "v1",
-        "v1_prior": 3.3677,
-        "blended": 2.6051,
-        "sales_implied": 2.4553
+        "v1_prior": 3.3678,
+        "blended": 2.6049,
+        "sales_implied": 2.4554
       },
       {
         "kind": "biome",
         "name": "1",
         "n": 219,
         "w": 0.646,
-        "fitted": 1.2621,
+        "fitted": 1.2618,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.255,
-        "sales_implied": 1.2745
+        "blended": 1.2549,
+        "sales_implied": 1.2746
       },
       {
         "kind": "biome",
         "name": "2",
         "n": 188,
         "w": 0.61,
-        "fitted": 1.0907,
+        "fitted": 1.0906,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
         "blended": 1.1474,
-        "sales_implied": 1.0739
+        "sales_implied": 1.0744
       },
       {
         "kind": "biome",
         "name": "3",
         "n": 281,
         "w": 0.701,
-        "fitted": 1.0775,
+        "fitted": 1.0774,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0395,
-        "sales_implied": 1.0758
+        "blended": 1.0394,
+        "sales_implied": 1.0692
       },
       {
         "kind": "biome",
@@ -3446,11 +3446,11 @@
         "n": 201,
         "w": 0.626,
         "fitted": 1.115,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 1.0836,
-        "sales_implied": 1.016
+        "sales_implied": 1.0163
       },
       {
         "kind": "biome",
@@ -3469,71 +3469,71 @@
         "name": "6",
         "n": 276,
         "w": 0.697,
-        "fitted": 1.1317,
+        "fitted": 1.1316,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0752,
-        "sales_implied": 1.059
+        "blended": 1.0751,
+        "sales_implied": 1.055
       },
       {
         "kind": "biome",
         "name": "7",
         "n": 244,
         "w": 0.67,
-        "fitted": 1.1995,
+        "fitted": 1.1996,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.1129,
-        "sales_implied": 1.1597
+        "blended": 1.113,
+        "sales_implied": 1.1603
       },
       {
         "kind": "biome",
         "name": "8",
         "n": 175,
         "w": 0.593,
-        "fitted": 1.1316,
+        "fitted": 1.1313,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.1754,
-        "sales_implied": 1.0716
+        "blended": 1.1752,
+        "sales_implied": 1.0511
       },
       {
         "kind": "biome",
         "name": "9",
         "n": 159,
         "w": 0.57,
-        "fitted": 1.5288,
-        "prior": 1.0329,
+        "fitted": 1.5284,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.2916,
-        "sales_implied": 1.5451
+        "v1_prior": 1.033,
+        "blended": 1.2914,
+        "sales_implied": 1.5453
       },
       {
         "kind": "biome",
         "name": "10",
         "n": 42,
         "w": 0.259,
-        "fitted": 1.6535,
+        "fitted": 1.6507,
         "prior": 2.0932,
         "prior_source": "v1",
         "v1_prior": 2.0932,
-        "blended": 1.9691,
-        "sales_implied": 2.0894
+        "blended": 1.9682,
+        "sales_implied": 2.0863
       },
       {
         "kind": "biome",
         "name": "11",
         "n": 50,
         "w": 0.294,
-        "fitted": 1.5205,
+        "fitted": 1.5202,
         "prior": 2.0932,
         "prior_source": "v1",
         "v1_prior": 2.0932,
-        "blended": 1.9054,
+        "blended": 1.9053,
         "sales_implied": 1.3654
       },
       {
@@ -3546,89 +3546,89 @@
         "prior_source": "v1",
         "v1_prior": 1.3651,
         "blended": 1.2423,
-        "sales_implied": 0.9389
+        "sales_implied": 0.9391
       },
       {
         "kind": "biome",
         "name": "13",
         "n": 71,
         "w": 0.372,
-        "fitted": 1.282,
+        "fitted": 1.2819,
         "prior": 1.3651,
         "prior_source": "v1",
         "v1_prior": 1.3651,
         "blended": 1.3336,
-        "sales_implied": 1.0739
+        "sales_implied": 1.0736
       },
       {
         "kind": "biome",
         "name": "14",
         "n": 54,
         "w": 0.31,
-        "fitted": 1.3879,
-        "prior": 1.5471,
+        "fitted": 1.3875,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4959,
-        "sales_implied": 1.6342
+        "v1_prior": 1.5472,
+        "blended": 1.4957,
+        "sales_implied": 1.6343
       },
       {
         "kind": "biome",
         "name": "15",
         "n": 72,
         "w": 0.375,
-        "fitted": 1.0691,
-        "prior": 1.5471,
+        "fitted": 1.0687,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.3469,
-        "sales_implied": 1.0239
+        "v1_prior": 1.5472,
+        "blended": 1.3467,
+        "sales_implied": 1.0238
       },
       {
         "kind": "biome",
         "name": "16",
         "n": 88,
         "w": 0.423,
-        "fitted": 1.432,
-        "prior": 1.5471,
+        "fitted": 1.431,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4973,
-        "sales_implied": 1.1436
+        "v1_prior": 1.5472,
+        "blended": 1.4969,
+        "sales_implied": 1.1432
       },
       {
         "kind": "biome",
         "name": "17",
         "n": 40,
         "w": 0.25,
-        "fitted": 2.5088,
-        "prior": 3.024,
+        "fitted": 2.5082,
+        "prior": 3.0241,
         "prior_source": "sales",
         "v1_prior": 2.0932,
-        "blended": 2.886,
-        "sales_implied": 3.024
+        "blended": 2.8859,
+        "sales_implied": 3.0241
       },
       {
         "kind": "biome",
         "name": "18",
         "n": 67,
         "w": 0.358,
-        "fitted": 1.1629,
-        "prior": 1.5471,
+        "fitted": 1.1622,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.3967,
-        "sales_implied": 0.9646
+        "v1_prior": 1.5472,
+        "blended": 1.3964,
+        "sales_implied": 0.9642
       },
       {
         "kind": "biome",
         "name": "19",
         "n": 80,
         "w": 0.4,
-        "fitted": 1.1435,
-        "prior": 1.5471,
+        "fitted": 1.1434,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
+        "v1_prior": 1.5472,
         "blended": 1.3709,
         "sales_implied": 0.9586
       },
@@ -3637,23 +3637,23 @@
         "name": "20",
         "n": 40,
         "w": 0.25,
-        "fitted": 1.3188,
-        "prior": 1.5471,
+        "fitted": 1.3168,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.4866,
-        "sales_implied": 1.1468
+        "v1_prior": 1.5472,
+        "blended": 1.486,
+        "sales_implied": 1.1447
       },
       {
         "kind": "biome",
         "name": "21",
         "n": 222,
         "w": 0.649,
-        "fitted": 1.1209,
-        "prior": 1.0329,
+        "fitted": 1.1207,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0892,
+        "v1_prior": 1.033,
+        "blended": 1.0891,
         "sales_implied": 1.0099
       },
       {
@@ -3661,11 +3661,11 @@
         "name": "22",
         "n": 184,
         "w": 0.605,
-        "fitted": 1.0082,
-        "prior": 1.0329,
+        "fitted": 1.0085,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0179,
+        "v1_prior": 1.033,
+        "blended": 1.0181,
         "sales_implied": 0.9325
       },
       {
@@ -3673,12 +3673,12 @@
         "name": "23",
         "n": 242,
         "w": 0.669,
-        "fitted": 1.0387,
-        "prior": 1.0329,
+        "fitted": 1.0386,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0368,
-        "sales_implied": 0.9288
+        "v1_prior": 1.033,
+        "blended": 1.0367,
+        "sales_implied": 0.929
       },
       {
         "kind": "biome",
@@ -3690,19 +3690,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0249,
-        "sales_implied": 1.0379
+        "sales_implied": 1.0377
       },
       {
         "kind": "biome",
         "name": "25",
         "n": 203,
         "w": 0.628,
-        "fitted": 1.2509,
-        "prior": 1.0329,
+        "fitted": 1.2506,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.165,
-        "sales_implied": 1.19
+        "v1_prior": 1.033,
+        "blended": 1.1648,
+        "sales_implied": 1.1898
       },
       {
         "kind": "biome",
@@ -3710,11 +3710,11 @@
         "n": 316,
         "w": 0.725,
         "fitted": 0.9849,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 0.9979,
-        "sales_implied": 0.9599
+        "sales_implied": 0.96
       },
       {
         "kind": "biome",
@@ -3726,19 +3726,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 1.0337,
-        "sales_implied": 0.9955
+        "sales_implied": 0.9954
       },
       {
         "kind": "biome",
         "name": "28",
         "n": 279,
         "w": 0.699,
-        "fitted": 0.9378,
+        "fitted": 0.9379,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9431,
-        "sales_implied": 0.915
+        "blended": 0.9432,
+        "sales_implied": 0.9155
       },
       {
         "kind": "biome",
@@ -3757,24 +3757,24 @@
         "name": "30",
         "n": 243,
         "w": 0.669,
-        "fitted": 0.9629,
+        "fitted": 0.9627,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9605,
-        "sales_implied": 0.9226
+        "blended": 0.9603,
+        "sales_implied": 0.9229
       },
       {
         "kind": "biome",
         "name": "31",
         "n": 527,
         "w": 0.815,
-        "fitted": 0.9868,
+        "fitted": 0.9866,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9721,
-        "sales_implied": 0.9465
+        "blended": 0.9719,
+        "sales_implied": 0.9466
       },
       {
         "kind": "biome",
@@ -3786,7 +3786,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9602,
-        "sales_implied": 0.9547
+        "sales_implied": 0.9543
       },
       {
         "kind": "biome",
@@ -3798,18 +3798,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9542,
-        "sales_implied": 0.9629
+        "sales_implied": 0.9628
       },
       {
         "kind": "biome",
         "name": "34",
         "n": 308,
         "w": 0.72,
-        "fitted": 1.0477,
+        "fitted": 1.0474,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.021,
+        "blended": 1.0208,
         "sales_implied": 1.0286
       },
       {
@@ -3817,36 +3817,36 @@
         "name": "35",
         "n": 294,
         "w": 0.71,
-        "fitted": 1.1618,
+        "fitted": 1.1617,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0978,
-        "sales_implied": 1.0595
+        "sales_implied": 1.0596
       },
       {
         "kind": "biome",
         "name": "36",
-        "n": 317,
-        "w": 0.725,
-        "fitted": 1.0084,
+        "n": 318,
+        "w": 0.726,
+        "fitted": 1.009,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9936,
-        "sales_implied": 0.9983
+        "blended": 0.9941,
+        "sales_implied": 1.0046
       },
       {
         "kind": "biome",
         "name": "37",
         "n": 287,
         "w": 0.705,
-        "fitted": 1.0447,
+        "fitted": 1.0446,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 1.0176,
-        "sales_implied": 0.985
+        "blended": 1.0175,
+        "sales_implied": 0.9847
       },
       {
         "kind": "biome",
@@ -3858,31 +3858,31 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 1.0086,
-        "sales_implied": 0.9778
+        "sales_implied": 0.978
       },
       {
         "kind": "biome",
         "name": "39",
         "n": 112,
         "w": 0.483,
-        "fitted": 2.4336,
-        "prior": 3.3484,
+        "fitted": 2.4333,
+        "prior": 3.3485,
         "prior_source": "sales",
-        "v1_prior": 1.5471,
-        "blended": 2.8703,
-        "sales_implied": 3.3484
+        "v1_prior": 1.5472,
+        "blended": 2.8702,
+        "sales_implied": 3.3485
       },
       {
         "kind": "biome",
         "name": "40",
         "n": 167,
         "w": 0.582,
-        "fitted": 1.1024,
+        "fitted": 1.1017,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.1589,
-        "sales_implied": 1.1199
+        "blended": 1.1584,
+        "sales_implied": 1.112
       },
       {
         "kind": "biome",
@@ -3890,35 +3890,35 @@
         "n": 217,
         "w": 0.644,
         "fitted": 0.939,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 0.9714,
-        "sales_implied": 0.9659
+        "sales_implied": 0.9661
       },
       {
         "kind": "biome",
         "name": "42",
         "n": 237,
         "w": 0.664,
-        "fitted": 1.2354,
+        "fitted": 1.2349,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.2377,
+        "blended": 1.2374,
         "sales_implied": 1.2188
       },
       {
         "kind": "biome",
         "name": "43",
-        "n": 873,
+        "n": 874,
         "w": 0.879,
-        "fitted": 0.9371,
+        "fitted": 0.9366,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9338,
-        "sales_implied": 0.9377
+        "blended": 0.9334,
+        "sales_implied": 0.9363
       },
       {
         "kind": "biome",
@@ -3930,7 +3930,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9658,
-        "sales_implied": 0.9538
+        "sales_implied": 0.954
       },
       {
         "kind": "biome",
@@ -3942,30 +3942,30 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9394,
-        "sales_implied": 0.9462
+        "sales_implied": 0.9464
       },
       {
         "kind": "biome",
         "name": "47",
         "n": 981,
         "w": 0.891,
-        "fitted": 0.9496,
+        "fitted": 0.9497,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9452,
-        "sales_implied": 0.9299
+        "blended": 0.9453,
+        "sales_implied": 0.9301
       },
       {
         "kind": "biome",
         "name": "48",
         "n": 1052,
         "w": 0.898,
-        "fitted": 0.9665,
+        "fitted": 0.9664,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9606,
+        "blended": 0.9605,
         "sales_implied": 0.9658
       },
       {
@@ -3990,18 +3990,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.962,
-        "sales_implied": 0.9619
+        "sales_implied": 0.962
       },
       {
         "kind": "biome",
         "name": "51",
         "n": 832,
         "w": 0.874,
-        "fitted": 0.9694,
+        "fitted": 0.9695,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9617,
+        "blended": 0.9618,
         "sales_implied": 0.9563
       },
       {
@@ -4009,12 +4009,12 @@
         "name": "52",
         "n": 806,
         "w": 0.87,
-        "fitted": 0.9562,
+        "fitted": 0.9563,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9501,
-        "sales_implied": 0.9497
+        "blended": 0.9502,
+        "sales_implied": 0.9499
       },
       {
         "kind": "biome",
@@ -4026,19 +4026,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9833,
-        "sales_implied": 0.9592
+        "sales_implied": 0.9593
       },
       {
         "kind": "biome",
         "name": "54",
         "n": 638,
         "w": 0.842,
-        "fitted": 1.0096,
+        "fitted": 1.0097,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9931,
-        "sales_implied": 0.9697
+        "blended": 0.9932,
+        "sales_implied": 0.9694
       },
       {
         "kind": "biome",
@@ -4050,7 +4050,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9419,
-        "sales_implied": 0.9464
+        "sales_implied": 0.9465
       },
       {
         "kind": "biome",
@@ -4062,19 +4062,19 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9467,
-        "sales_implied": 0.9349
+        "sales_implied": 0.9344
       },
       {
         "kind": "biome",
         "name": "57",
-        "n": 749,
+        "n": 750,
         "w": 0.862,
-        "fitted": 0.9355,
+        "fitted": 0.9364,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9319,
-        "sales_implied": 0.9417
+        "blended": 0.9327,
+        "sales_implied": 0.9432
       },
       {
         "kind": "biome",
@@ -4082,11 +4082,11 @@
         "n": 703,
         "w": 0.854,
         "fitted": 1.0077,
-        "prior": 1.0329,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
+        "v1_prior": 1.033,
         "blended": 1.0113,
-        "sales_implied": 0.9663
+        "sales_implied": 0.9665
       },
       {
         "kind": "biome",
@@ -4098,7 +4098,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9327,
-        "sales_implied": 0.9327
+        "sales_implied": 0.9328
       },
       {
         "kind": "biome",
@@ -4110,55 +4110,55 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9604,
-        "sales_implied": 0.9522
+        "sales_implied": 0.9523
       },
       {
         "kind": "biome",
         "name": "61",
         "n": 402,
         "w": 0.77,
-        "fitted": 0.9856,
+        "fitted": 0.9854,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9677,
-        "sales_implied": 0.9407
+        "blended": 0.9676,
+        "sales_implied": 0.9408
       },
       {
         "kind": "biome",
         "name": "62",
         "n": 590,
         "w": 0.831,
-        "fitted": 0.9356,
+        "fitted": 0.9357,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9312,
-        "sales_implied": 0.9157
+        "blended": 0.9313,
+        "sales_implied": 0.916
       },
       {
         "kind": "biome",
         "name": "63",
         "n": 400,
         "w": 0.769,
-        "fitted": 0.9372,
+        "fitted": 0.9373,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9309,
-        "sales_implied": 0.9335
+        "sales_implied": 0.9336
       },
       {
         "kind": "biome",
         "name": "64",
         "n": 488,
         "w": 0.803,
-        "fitted": 0.9654,
+        "fitted": 0.9653,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9542,
-        "sales_implied": 0.9374
+        "blended": 0.9541,
+        "sales_implied": 0.9375
       },
       {
         "kind": "biome",
@@ -4170,18 +4170,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9321,
-        "sales_implied": 0.9212
+        "sales_implied": 0.9213
       },
       {
         "kind": "biome",
         "name": "66",
         "n": 298,
         "w": 0.713,
-        "fitted": 1.0008,
+        "fitted": 1.0009,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9876,
+        "blended": 0.9877,
         "sales_implied": 0.9653
       },
       {
@@ -4189,11 +4189,11 @@
         "name": "67",
         "n": 362,
         "w": 0.751,
-        "fitted": 0.9707,
+        "fitted": 0.9708,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
-        "blended": 0.9669,
+        "blended": 0.967,
         "sales_implied": 0.9436
       },
       {
@@ -4206,7 +4206,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9704,
-        "sales_implied": 0.9703
+        "sales_implied": 0.9704
       },
       {
         "kind": "biome",
@@ -4218,7 +4218,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9556,
         "blended": 0.9612,
-        "sales_implied": 0.9527
+        "sales_implied": 0.9528
       },
       {
         "kind": "biome",
@@ -4230,18 +4230,18 @@
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9229,
-        "sales_implied": 0.9212
+        "sales_implied": 0.9213
       },
       {
         "kind": "biome",
         "name": "71",
         "n": 401,
         "w": 0.77,
-        "fitted": 0.9569,
+        "fitted": 0.9567,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
-        "blended": 0.9459,
+        "blended": 0.9458,
         "sales_implied": 0.9014
       },
       {
@@ -4249,139 +4249,139 @@
         "name": "72",
         "n": 471,
         "w": 0.797,
-        "fitted": 1.0001,
+        "fitted": 1,
         "prior": 0.9101,
         "prior_source": "v1",
         "v1_prior": 0.9101,
         "blended": 0.9811,
-        "sales_implied": 0.9759
+        "sales_implied": 0.9761
       },
       {
         "kind": "biome",
         "name": "73",
         "n": 38,
         "w": 0.241,
-        "fitted": 2.5498,
+        "fitted": 2.5492,
         "prior": 3.3673,
         "prior_source": "v1",
         "v1_prior": 3.3673,
-        "blended": 3.1494,
-        "sales_implied": 4.2971
+        "blended": 3.1493,
+        "sales_implied": 4.2769
       },
       {
         "kind": "biome",
         "name": "74",
         "n": 6,
         "w": 0.048,
-        "fitted": 5.3865,
+        "fitted": 5.3812,
         "prior": 11.9,
         "prior_source": "fixed",
-        "v1_prior": 6.7118,
+        "v1_prior": 6.7119,
         "blended": 11.9,
-        "sales_implied": 6.9995
+        "sales_implied": 7.0001
       },
       {
         "kind": "biome",
         "name": "75",
         "n": 87,
         "w": 0.42,
-        "fitted": 1.8638,
-        "prior": 1.5471,
+        "fitted": 1.8624,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.6731,
-        "sales_implied": 1.584
+        "v1_prior": 1.5472,
+        "blended": 1.6726,
+        "sales_implied": 1.5839
       },
       {
         "kind": "biome",
         "name": "76",
         "n": 14,
         "w": 0.104,
-        "fitted": 1.0868,
+        "fitted": 1.0867,
         "prior": 4.7215,
         "prior_source": "v1",
         "v1_prior": 4.7215,
         "blended": 4.0498,
-        "sales_implied": 0.895
+        "sales_implied": 0.8949
       },
       {
         "kind": "biome",
         "name": "77",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.0901,
+        "fitted": 1.0899,
         "prior": 6.38,
         "prior_source": "fixed",
-        "v1_prior": 5.5742,
+        "v1_prior": 5.5743,
         "blended": 6.38,
-        "sales_implied": 3.1115
+        "sales_implied": 3.1116
       },
       {
         "kind": "biome",
         "name": "78",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1565,
+        "fitted": 1.1561,
         "prior": 5.6,
         "prior_source": "fixed",
-        "v1_prior": 5.0054,
+        "v1_prior": 5.0055,
         "blended": 5.6,
-        "sales_implied": 3.6423
+        "sales_implied": 3.6436
       },
       {
         "kind": "biome",
         "name": "79",
         "n": 9,
         "w": 0.07,
-        "fitted": 1.1044,
+        "fitted": 1.1041,
         "prior": 4.7215,
         "prior_source": "v1",
         "v1_prior": 4.7215,
-        "blended": 4.2664,
-        "sales_implied": 1.7626
+        "blended": 4.2663,
+        "sales_implied": 1.763
       },
       {
         "kind": "biome",
         "name": "80",
-        "n": 204,
-        "w": 0.63,
-        "fitted": 1.0418,
-        "prior": 1.5471,
+        "n": 205,
+        "w": 0.631,
+        "fitted": 1.0465,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.2061,
-        "sales_implied": 0.9908
+        "v1_prior": 1.5472,
+        "blended": 1.209,
+        "sales_implied": 1.0301
       },
       {
         "kind": "biome",
         "name": "81",
         "n": 15,
         "w": 0.111,
-        "fitted": 1.1781,
+        "fitted": 1.1776,
         "prior": 5.44,
         "prior_source": "fixed",
-        "v1_prior": 5.0054,
+        "v1_prior": 5.0055,
         "blended": 5.44,
-        "sales_implied": 2.9008
+        "sales_implied": 2.9006
       },
       {
         "kind": "biome",
         "name": "82",
         "n": 53,
         "w": 0.306,
-        "fitted": 1.195,
+        "fitted": 1.1942,
         "prior": 1.3651,
         "prior_source": "v1",
         "v1_prior": 1.3651,
-        "blended": 1.3106,
-        "sales_implied": 1.2427
+        "blended": 1.3103,
+        "sales_implied": 1.2422
       },
       {
         "kind": "biome",
         "name": "83",
         "n": 201,
         "w": 0.626,
-        "fitted": 0.9761,
+        "fitted": 0.9762,
         "prior": 0.9556,
         "prior_source": "v1",
         "v1_prior": 0.9556,
@@ -4394,10 +4394,10 @@
         "n": 134,
         "w": 0.528,
         "fitted": 0.9873,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.0576,
+        "v1_prior": 1.1422,
+        "blended": 1.0577,
         "sales_implied": 0.9695
       },
       {
@@ -4405,24 +4405,24 @@
         "name": "85",
         "n": 84,
         "w": 0.412,
-        "fitted": 1.2492,
+        "fitted": 1.2494,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
-        "blended": 1.2451,
-        "sales_implied": 1.2657
+        "blended": 1.2452,
+        "sales_implied": 1.2658
       },
       {
         "kind": "biome",
         "name": "86",
         "n": 127,
         "w": 0.514,
-        "fitted": 1.081,
-        "prior": 1.0329,
+        "fitted": 1.0809,
+        "prior": 1.033,
         "prior_source": "v1",
-        "v1_prior": 1.0329,
-        "blended": 1.0574,
-        "sales_implied": 0.9957
+        "v1_prior": 1.033,
+        "blended": 1.0573,
+        "sales_implied": 0.9953
       },
       {
         "kind": "biome",
@@ -4430,35 +4430,35 @@
         "n": 72,
         "w": 0.375,
         "fitted": 1.5438,
-        "prior": 1.5471,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
+        "v1_prior": 1.5472,
         "blended": 1.5459,
-        "sales_implied": 1.4712
+        "sales_implied": 1.4714
       },
       {
         "kind": "biome",
         "name": "88",
         "n": 65,
         "w": 0.351,
-        "fitted": 1.0607,
-        "prior": 1.5471,
+        "fitted": 1.0606,
+        "prior": 1.5472,
         "prior_source": "v1",
-        "v1_prior": 1.5471,
-        "blended": 1.355,
-        "sales_implied": 1.0686
+        "v1_prior": 1.5472,
+        "blended": 1.3549,
+        "sales_implied": 1.0687
       },
       {
         "kind": "biome",
         "name": "89",
         "n": 157,
         "w": 0.567,
-        "fitted": 1.0179,
-        "prior": 1.1421,
+        "fitted": 1.0177,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.07,
-        "sales_implied": 1.0167
+        "v1_prior": 1.1422,
+        "blended": 1.0699,
+        "sales_implied": 1.0161
       },
       {
         "kind": "biome",
@@ -4466,46 +4466,46 @@
         "n": 141,
         "w": 0.54,
         "fitted": 0.9114,
-        "prior": 1.1421,
+        "prior": 1.1422,
         "prior_source": "v1",
-        "v1_prior": 1.1421,
-        "blended": 1.011,
-        "sales_implied": 0.9058
+        "v1_prior": 1.1422,
+        "blended": 1.0111,
+        "sales_implied": 0.906
       },
       {
         "kind": "biome",
         "name": "91",
         "n": 86,
         "w": 0.417,
-        "fitted": 1.1424,
+        "fitted": 1.1422,
         "prior": 1.2423,
         "prior_source": "v1",
         "v1_prior": 1.2423,
         "blended": 1.1995,
-        "sales_implied": 1.1857
+        "sales_implied": 1.1858
       },
       {
         "kind": "level",
         "name": "1",
         "n": 8,
         "w": 0.062,
-        "fitted": 1.1457,
-        "prior": 11.376,
+        "fitted": 1.1453,
+        "prior": 11.3761,
         "prior_source": "v1",
-        "v1_prior": 11.376,
+        "v1_prior": 11.3761,
         "blended": 9.8555,
-        "sales_implied": 9.1089
+        "sales_implied": 9.1118
       },
       {
         "kind": "level",
         "name": "2",
         "n": 60,
         "w": 0.333,
-        "fitted": 1.3896,
+        "fitted": 1.39,
         "prior": 1.8202,
         "prior_source": "v1",
         "v1_prior": 1.8202,
-        "blended": 1.6635,
+        "blended": 1.6637,
         "sales_implied": 1.0276
       },
       {
@@ -4513,35 +4513,35 @@
         "name": "3",
         "n": 86,
         "w": 0.417,
-        "fitted": 1.099,
-        "prior": 1.5926,
+        "fitted": 1.0995,
+        "prior": 1.5927,
         "prior_source": "v1",
-        "v1_prior": 1.5926,
-        "blended": 1.3641,
-        "sales_implied": 1.0609
+        "v1_prior": 1.5927,
+        "blended": 1.3644,
+        "sales_implied": 1.0611
       },
       {
         "kind": "level",
         "name": "18",
         "n": 96,
         "w": 0.444,
-        "fitted": 1.0697,
-        "prior": 1.5926,
+        "fitted": 1.0698,
+        "prior": 1.5927,
         "prior_source": "v1",
-        "v1_prior": 1.5926,
-        "blended": 1.3344,
-        "sales_implied": 1.0315
+        "v1_prior": 1.5927,
+        "blended": 1.3345,
+        "sales_implied": 1.0317
       },
       {
         "kind": "level",
         "name": "19",
         "n": 57,
         "w": 0.322,
-        "fitted": 1.2837,
+        "fitted": 1.2839,
         "prior": 1.8202,
         "prior_source": "v1",
         "v1_prior": 1.8202,
-        "blended": 1.6266,
+        "blended": 1.6267,
         "sales_implied": 1.482
       },
       {
@@ -4549,269 +4549,269 @@
         "name": "20",
         "n": 14,
         "w": 0,
-        "fitted": 15.6592,
-        "prior": 26.2549,
+        "fitted": 15.6476,
+        "prior": 26.2527,
         "prior_source": "sales",
-        "v1_prior": 11.376,
-        "blended": 26.2549,
-        "sales_implied": 26.2549
+        "v1_prior": 11.3761,
+        "blended": 26.2527,
+        "sales_implied": 26.2527
       },
       {
         "kind": "badge",
         "name": "biome0_flow",
         "n": 98,
         "w": 0.45,
-        "fitted": 2.4305,
-        "prior": 2.1354,
+        "fitted": 2.4275,
+        "prior": 2.1302,
         "prior_source": "sales",
         "v1_prior": 1.5598,
-        "blended": 2.2634,
-        "sales_implied": 2.1354
+        "blended": 2.259,
+        "sales_implied": 2.1302
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.2975254570366186,
+      "baseline_multiple": 1.2973837603853602,
       "zone": {
         "Aetherking": 5.9705,
-        "Akileaf": 1.1107,
+        "Akileaf": 1.1115,
         "Alto": 1.0397,
         "Angel": 1.2394,
-        "Antenna": 8.4118,
+        "Antenna": 8.4108,
         "Arc": 0.9706,
         "Aria": 1.7061,
-        "Avidana": 2.6034,
+        "Avidana": 2.6057,
         "Blossom": 1.1473,
         "Blushing": 1.0606,
-        "Bubble": 1.2749,
-        "Calyx": 1.0429,
-        "Cradle": 1.2238,
+        "Bubble": 1.275,
+        "Calyx": 1.043,
+        "Cradle": 1.224,
         "Dhampir": 1.3887,
-        "Dread": 7.3252,
-        "Dynacrypts": 1.3816,
-        "Ender": 1.0593,
-        "Everglades": 1.0541,
+        "Dread": 7.3244,
+        "Dynacrypts": 1.3844,
+        "Ender": 1.0595,
+        "Everglades": 1.054,
         "Exduo": 0.9423,
-        "First Earth": 2.1843,
-        "Gemina": 4.8063,
-        "Greysunn": 1.3875,
-        "Grove": 0.9778,
+        "First Earth": 2.1827,
+        "Gemina": 4.8059,
+        "Greysunn": 1.3877,
+        "Grove": 0.9777,
         "Hypermage": 0.9664,
-        "Hyphae": 0.9514,
-        "Intro Forest": 1.1953,
-        "Jadeite": 1.1204,
-        "Kairo": 1.0134,
-        "Killscreen": 1.9334,
+        "Hyphae": 0.9515,
+        "Intro Forest": 1.1955,
+        "Jadeite": 1.1207,
+        "Kairo": 1.0133,
+        "Killscreen": 1.9332,
         "Kippsun": 1.2167,
         "Linosim": 1.0346,
-        "Mecha": 0.9619,
-        "Mirage": 0.9165,
+        "Mecha": 0.9618,
+        "Mirage": 0.9166,
         "Mori": 1.6383,
         "Mould": 1.7288,
-        "Mt Zuka": 1.353,
+        "Mt Zuka": 1.3531,
         "Muxtai X1": 1.1075,
-        "Nightrose": 0.9641,
+        "Nightrose": 0.964,
         "Ouallada": 0.997,
-        "Palace": 1.0063,
+        "Palace": 1.0064,
         "Pepo": 1.1031,
-        "Promiselands": 1.4859,
+        "Promiselands": 1.486,
         "Radiant": 1.4707,
-        "Riso": 0.9734,
+        "Riso": 0.9739,
         "Rocket": 1.317,
         "Royal": 1.7885,
-        "Shahra": 10.9818,
-        "Shiro": 0.9694,
-        "Tetsu": 1.8017,
-        "Toad": 1.294,
-        "Treasure": 1.5628,
-        "Uwo": 1.5573,
-        "Valeria": 1.2301,
+        "Shahra": 10.9806,
+        "Shiro": 0.9693,
+        "Tetsu": 1.8018,
+        "Toad": 1.2939,
+        "Treasure": 1.5629,
+        "Uwo": 1.557,
+        "Valeria": 1.2302,
         "Venmon": 1.548,
         "Warp": 1.0287,
         "Wastelands": 1.1947,
-        "Xleph": 1.5113,
+        "Xleph": 1.5114,
         "Zerinia": 1.0527,
         "[BLOOD]": 1.1388,
         "[BOSS]": 1.0118,
-        "[CUR2]": 0.9896,
+        "[CUR2]": 0.9897,
         "[DARK]": 1.0623,
         "[HOME]": 1.3245,
-        "[HYCA]": 0.9684,
+        "[HYCA]": 0.9685,
         "[MENU]": 0.9536,
         "[MOON]": 0.9686,
-        "[NEON]": 1.0231,
-        "[NOV]": 1.6576,
+        "[NEON]": 1.0214,
+        "[NOV]": 1.6574,
         "[SEP]": 0.9841,
-        "[SOON]": 3.1206,
-        "[SUN]": 3.2851,
+        "[SOON]": 3.1204,
+        "[SUN]": 3.285,
         "[WEN]": 0.9775,
         "[YUNA]": 0.9696,
         "pfpfpfpbbx80": 1.1374,
         "Holo": 1
       },
       "biome": {
-        "0": 2.6051,
-        "1": 1.255,
+        "0": 2.6049,
+        "1": 1.2549,
         "2": 1.1474,
-        "3": 1.0395,
+        "3": 1.0394,
         "4": 1.0836,
         "5": 1.0473,
-        "6": 1.0752,
-        "7": 1.1129,
-        "8": 1.1754,
-        "9": 1.2916,
-        "10": 1.9691,
-        "11": 1.9054,
+        "6": 1.0751,
+        "7": 1.113,
+        "8": 1.1752,
+        "9": 1.2914,
+        "10": 1.9682,
+        "11": 1.9053,
         "12": 1.2423,
         "13": 1.3336,
-        "14": 1.4959,
-        "15": 1.3469,
-        "16": 1.4973,
-        "17": 2.886,
-        "18": 1.3967,
+        "14": 1.4957,
+        "15": 1.3467,
+        "16": 1.4969,
+        "17": 2.8859,
+        "18": 1.3964,
         "19": 1.3709,
-        "20": 1.4866,
-        "21": 1.0892,
-        "22": 1.0179,
-        "23": 1.0368,
+        "20": 1.486,
+        "21": 1.0891,
+        "22": 1.0181,
+        "23": 1.0367,
         "24": 1.0249,
-        "25": 1.165,
+        "25": 1.1648,
         "26": 0.9979,
         "27": 1.0337,
-        "28": 0.9431,
+        "28": 0.9432,
         "29": 0.9852,
-        "30": 0.9605,
-        "31": 0.9721,
+        "30": 0.9603,
+        "31": 0.9719,
         "32": 0.9602,
         "33": 0.9542,
-        "34": 1.021,
+        "34": 1.0208,
         "35": 1.0978,
-        "36": 0.9936,
-        "37": 1.0176,
+        "36": 0.9941,
+        "37": 1.0175,
         "38": 1.0086,
-        "39": 2.8703,
-        "40": 1.1589,
+        "39": 2.8702,
+        "40": 1.1584,
         "41": 0.9714,
-        "42": 1.2377,
-        "43": 0.9338,
+        "42": 1.2374,
+        "43": 0.9334,
         "44": 0.9658,
         "45": 0.9394,
         "46": 1,
-        "47": 0.9452,
-        "48": 0.9606,
+        "47": 0.9453,
+        "48": 0.9605,
         "49": 0.9825,
         "50": 0.962,
-        "51": 0.9617,
-        "52": 0.9501,
+        "51": 0.9618,
+        "52": 0.9502,
         "53": 0.9833,
-        "54": 0.9931,
+        "54": 0.9932,
         "55": 0.9419,
         "56": 0.9467,
-        "57": 0.9319,
+        "57": 0.9327,
         "58": 1.0113,
         "59": 0.9327,
         "60": 0.9604,
-        "61": 0.9677,
-        "62": 0.9312,
+        "61": 0.9676,
+        "62": 0.9313,
         "63": 0.9309,
-        "64": 0.9542,
+        "64": 0.9541,
         "65": 0.9321,
-        "66": 0.9876,
-        "67": 0.9669,
+        "66": 0.9877,
+        "67": 0.967,
         "68": 0.9704,
         "69": 0.9612,
         "70": 0.9229,
-        "71": 0.9459,
+        "71": 0.9458,
         "72": 0.9811,
-        "73": 3.1494,
+        "73": 3.1493,
         "74": 11.9,
-        "75": 1.6731,
+        "75": 1.6726,
         "76": 4.0498,
         "77": 6.38,
         "78": 5.6,
-        "79": 4.2664,
-        "80": 1.2061,
+        "79": 4.2663,
+        "80": 1.209,
         "81": 5.44,
-        "82": 1.3106,
+        "82": 1.3103,
         "83": 0.9684,
-        "84": 1.0576,
-        "85": 1.2451,
-        "86": 1.0574,
+        "84": 1.0577,
+        "85": 1.2452,
+        "86": 1.0573,
         "87": 1.5459,
-        "88": 1.355,
-        "89": 1.07,
-        "90": 1.011,
+        "88": 1.3549,
+        "89": 1.0699,
+        "90": 1.0111,
         "91": 1.1995
       },
       "level": {
         "1": 9.8555,
-        "2": 1.6635,
-        "3": 1.3641,
-        "18": 1.3344,
-        "19": 1.6266,
-        "20": 26.2549
+        "2": 1.6637,
+        "3": 1.3644,
+        "18": 1.3345,
+        "19": 1.6267,
+        "20": 26.2527
       },
       "chroma": {
         "Pulse": 0.9856,
         "Hyper": 0.9863
       },
       "mode": {
-        "DDTF": 0.9861,
-        "ORIG": 2.5966
+        "DDTF": 0.9862,
+        "ORIG": 2.595
       },
       "badge": {
-        "biome0_flow": 2.2634
+        "biome0_flow": 2.259
       },
       "extra": {
-        "one_of_one": 1.0112,
-        "s0": 0.9843,
-        "spine": 1.0584
+        "one_of_one": 1.0115,
+        "s0": 0.984,
+        "spine": 1.0585
       },
-      "ddtf_biome_beta": -0.460575,
+      "ddtf_biome_beta": -0.457001,
       "mode_biome": {
         "DDTF": {
-          "0": 0.5474,
-          "1": 0.8665,
-          "2": 0.8665,
-          "3": 0.9778,
-          "4": 0.9433,
-          "5": 0.9778,
-          "6": 0.9778,
-          "7": 0.9778,
-          "8": 0.8665,
-          "9": 0.9433,
-          "10": 0.6814,
-          "11": 0.6814,
-          "12": 0.8297,
-          "13": 0.8297,
-          "14": 0.7832,
-          "15": 0.7832,
-          "16": 0.7832,
-          "17": 0.6814,
-          "18": 0.7832,
-          "19": 0.7832,
-          "20": 0.7832,
-          "21": 0.9433,
-          "22": 0.9433,
-          "23": 0.9433,
-          "24": 0.9778,
-          "25": 0.9433,
-          "26": 0.9433,
+          "0": 0.5499,
+          "1": 0.8674,
+          "2": 0.8674,
+          "3": 0.9779,
+          "4": 0.9438,
+          "5": 0.9779,
+          "6": 0.9779,
+          "7": 0.9779,
+          "8": 0.8674,
+          "9": 0.9438,
+          "10": 0.6834,
+          "11": 0.6834,
+          "12": 0.8309,
+          "13": 0.8309,
+          "14": 0.7847,
+          "15": 0.7847,
+          "16": 0.7847,
+          "17": 0.6834,
+          "18": 0.7847,
+          "19": 0.7847,
+          "20": 0.7847,
+          "21": 0.9438,
+          "22": 0.9438,
+          "23": 0.9438,
+          "24": 0.9779,
+          "25": 0.9438,
+          "26": 0.9438,
           "27": 1,
-          "28": 0.9778,
-          "29": 0.9778,
-          "30": 0.9778,
+          "28": 0.9779,
+          "29": 0.9779,
+          "30": 0.9779,
           "31": 1,
           "32": 1,
           "33": 1,
-          "34": 0.9778,
-          "35": 0.9778,
-          "36": 0.9778,
-          "37": 0.9778,
-          "38": 0.9778,
-          "39": 0.7832,
-          "40": 0.8665,
-          "41": 0.9433,
-          "42": 0.8665,
+          "34": 0.9779,
+          "35": 0.9779,
+          "36": 0.9779,
+          "37": 0.9779,
+          "38": 0.9779,
+          "39": 0.7847,
+          "40": 0.8674,
+          "41": 0.9438,
+          "42": 0.8674,
           "43": 1,
           "44": 1,
           "45": 1,
@@ -4827,53 +4827,53 @@
           "55": 1,
           "56": 1,
           "57": 1,
-          "58": 0.9433,
+          "58": 0.9438,
           "59": 1,
           "60": 1,
           "61": 1,
           "62": 1,
           "63": 1,
           "64": 1,
-          "65": 0.9778,
-          "66": 0.9778,
-          "67": 0.9778,
-          "68": 0.9778,
-          "69": 0.9778,
+          "65": 0.9779,
+          "66": 0.9779,
+          "67": 0.9779,
+          "68": 0.9779,
+          "69": 0.9779,
           "70": 1,
           "71": 1,
           "72": 1,
-          "73": 0.5474,
-          "74": 0.3984,
-          "75": 0.7832,
-          "76": 0.4685,
-          "77": 0.434,
-          "78": 0.456,
-          "79": 0.4685,
-          "80": 0.7832,
-          "81": 0.456,
-          "82": 0.8297,
-          "83": 0.9778,
-          "84": 0.9007,
-          "85": 0.8665,
-          "86": 0.9433,
-          "87": 0.7832,
-          "88": 0.7832,
-          "89": 0.9007,
-          "90": 0.9007,
-          "91": 0.8665
+          "73": 0.55,
+          "74": 0.4013,
+          "75": 0.7847,
+          "76": 0.4712,
+          "77": 0.4368,
+          "78": 0.4588,
+          "79": 0.4712,
+          "80": 0.7847,
+          "81": 0.4588,
+          "82": 0.8309,
+          "83": 0.9779,
+          "84": 0.9014,
+          "85": 0.8674,
+          "86": 0.9438,
+          "87": 0.7847,
+          "88": 0.7847,
+          "89": 0.9014,
+          "90": 0.9014,
+          "91": 0.8674
         }
       }
     }
   },
   "floor_calibration": {
-    "value": 0.7964,
-    "measured_at": "2026-10-22T02:20:32.416Z",
+    "value": 0.8,
+    "measured_at": "2026-10-23T02:20:32.488Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
-    "n_sales": 178,
+    "n_sales": 180,
     "iqr": [
       0.72,
-      0.864
+      0.867
     ],
     "note": "Solved against settled sales, not against the index/live-floor ratio — that ratio measures the lag between a trailing index and a point sample, and swings hardest exactly when the floor moves. Re-measured every 24h by ops/daily-refit.sh, after the fit it corrects."
   }
