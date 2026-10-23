@@ -174,13 +174,15 @@ FIXED_PREMIUMS = {('biome', '74'): 11.9, ('biome', '81'): 5.44, ('biome', '77'):
 # Tier-2 floor multiples James has set over what the type's sales give. Plague
 # (2026-10-21): in line with its two latest sales (#1239 at 50 ETH, Dec 2024;
 # #4649 at 135, Dec 2022), 10% under the 81.2x the median of all seven gave.
-# Godmode (2026-10-21): 45x the floor on the ask side, which James judged
-# closer to fair than the 42.8x its two latest sales give (#83 at 14 ETH, Oct
-# 2025; #1955's June 2026 deal at ~12.1 ETH: 11 ETH plus #2451, a Blossom B0 our
-# model valued ~1.1 ETH that day; the DB has the 11).
+# Godmode (James, 2026-10-23): 60x the floor on the ask side, so the site reads
+# 13-14 ETH (13.48 at floor 0.2809 and calibration 0.80; the multiple applies to
+# the calibrated floor, so 45x had been showing ~10.1). Its two latest sales: #83
+# at 14 ETH, Oct 2025; #1955's June 2026 deal, 11 ETH plus #2451 (Blossom zone,
+# biome 0) — the 11 went through Blur, #2451 followed in a separate transfer
+# two minutes later; our model valued #2451 ~1.1 ETH that day. The DB has the 11.
 # Each entry is (side, multiple): 'bid' is served as the bid; 'ask' is divided by
 # the fitted ask premium so the ask lands on it.
-FIXED_SPECIAL_MULTIPLES = {'Plague': ('bid', 72.7), 'Godmode': ('ask', 45.0)}
+FIXED_SPECIAL_MULTIPLES = {'Plague': ('bid', 72.7), 'Godmode': ('ask', 60.0)}
 # Sales James has ruled out of the model, each with his reason
 # (excluded-sales.json; own-price.js reads the same file for the floor index and
 # the calibration): bids accepted so far under a parcel's value as to be

@@ -73,12 +73,12 @@
   },
   "special_multiples": {
     "Godmode": {
-      "multiple": 38.112,
+      "multiple": 50.816,
       "n": 3,
       "n_ask": 2,
       "last_sale": "2026-06-12",
       "sales_say": 34.163,
-      "source": "fixed: 45.0x ask"
+      "source": "fixed: 60.0x ask"
     },
     "Lith0": {
       "multiple": 29.666,
