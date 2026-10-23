@@ -778,6 +778,7 @@ app.get('/listings-slim', async (req, res) => {
         mode: p.traits?.mode ?? null,
         specialType: p.traits?.specialType ?? null,
         zoneCategory: p.pricing?.zoneCategory ?? null,
+        biomeCategory: p.pricing?.biomeCategory ?? null,
       })),
       floor: full.floor,
       totalListings: full.totalListings,

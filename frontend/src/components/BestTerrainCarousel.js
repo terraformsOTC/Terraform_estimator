@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ParcelArt from './ParcelArt';
-import { EthIcon, parcelImage, SpecialBadge, CATEGORY_COLORS, vsModelColor, headlineBadges } from './shared';
+import { EthIcon, parcelImage, SpecialBadge, CATEGORY_COLORS, vsModelColor, headlineBadges, topCategory } from './shared';
 
 // How many cards the rail holds. /listings returns every active listing (~145
 // today, ~94 of them Terrain); past the first couple of dozen the "best deal"
@@ -39,9 +39,12 @@ function CardSkeleton() {
 
 function ParcelCard({ parcel, rank }) {
   // Flat shape from /listings-slim — no nested traits/pricing objects.
-  const { tokenId, listedPrice, discount, mode, specialType, zoneCategory } = parcel;
+  const { tokenId, listedPrice, discount, mode, specialType, zoneCategory, biomeCategory, level } = parcel;
 
   const headline = headlineBadges(mode, specialType);
+  // Best of zone, biome and level, as on /listings: a level 20 parcel in a Floor
+  // zone (#2356) was showing no tier at all.
+  const tier = topCategory(zoneCategory, biomeCategory, level);
 
   return (
     <a
@@ -65,9 +68,9 @@ function ParcelCard({ parcel, rank }) {
       <div className="mt-2 flex flex-col gap-1">
         <div className="flex items-baseline gap-1.5">
           <span className="text-sm opacity-90">#{tokenId}</span>
-          {zoneCategory && zoneCategory !== 'Floor' && (
-            <span className="text-xs" style={{ color: CATEGORY_COLORS[zoneCategory], opacity: 0.8 }}>
-              {zoneCategory.toLowerCase()}
+          {tier && tier !== 'Floor' && (
+            <span className="text-xs" style={{ color: CATEGORY_COLORS[tier], opacity: 0.8 }}>
+              {tier.toLowerCase()}
             </span>
           )}
         </div>

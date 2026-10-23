@@ -260,6 +260,14 @@ export function getLevelCategory(level) {
 
 const CATEGORY_ORDER = { Mythical: 0, Rare: 1, Premium: 2, Uncommon: 3, Floor: 4 };
 
+// A parcel's headline tier: the best of its zone, biome and level tiers. A level
+// 20 parcel in a Floor zone is Mythical on the level alone.
+export function topCategory(zoneCategory, biomeCategory, level) {
+  return [zoneCategory, biomeCategory, getLevelCategory(level)]
+    .filter(Boolean)
+    .sort((a, b) => CATEGORY_ORDER[a] - CATEGORY_ORDER[b])[0] ?? null;
+}
+
 
 // ─── Shared trait row components ─────────────────────────────────────────────
 // Used in both ParcelResult and UnmintedResult
