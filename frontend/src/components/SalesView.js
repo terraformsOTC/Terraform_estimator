@@ -84,8 +84,9 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
                 </tr>
               </thead>
               <tbody>
-                {sales.map((s) => (
-                  <SaleRow key={s.eventId || `${s.tokenId}-${s.closingDate}`} sale={s} />
+                {sales.map((s, i) => (
+                  <SaleRow key={s.eventId || `${s.tokenId}-${s.closingDate}`} sale={s}
+                    bundleEdge={bundleEdge(sales, i)} />
                 ))}
               </tbody>
             </table>
@@ -123,7 +124,18 @@ function BundleNote({ legs, others }) {
   );
 }
 
-function SaleRow({ sale }) {
+// The legs of one bundle order sit in consecutive rows; their thumbnails share
+// one box, closed at the first and last leg on the page.
+function bundleEdge(sales, i) {
+  const s = sales[i];
+  if (s.kind !== 'bundle' || !s.txHash) return null;
+  const same = (o) => o && o.kind === 'bundle' && o.txHash === s.txHash;
+  return { top: !same(sales[i - 1]), bottom: !same(sales[i + 1]) };
+}
+
+const BUNDLE_BOX = '1px solid rgba(232,232,232,0.5)';
+
+function SaleRow({ sale, bundleEdge }) {
   const { tokenId, traits, pricing, salePrice, currency, basis, reference, vsReference, closingDate, seller, winner, sellerEns, winnerEns, kind, legs, bundleWith } = sale;
   // The column next to the percentage is the number the percentage was measured
   // against, and it is labelled with which basis that was. The row must state
@@ -154,7 +166,16 @@ function SaleRow({ sale }) {
           <BundleNote legs={legs} others={bundleWith || []} />
         )}
       </td>
-      <td className="py-3 pr-4 hidden sm:table-cell">
+      <td
+        className={bundleEdge ? 'py-3 px-2 hidden sm:table-cell' : 'py-3 pr-4 hidden sm:table-cell'}
+        title={bundleEdge ? 'sold together in one bundle' : undefined}
+        style={bundleEdge ? {
+          borderLeft: BUNDLE_BOX,
+          borderRight: BUNDLE_BOX,
+          borderTop: bundleEdge.top ? BUNDLE_BOX : undefined,
+          borderBottom: bundleEdge.bottom ? BUNDLE_BOX : undefined,
+        } : undefined}
+      >
         <a href={`/?token=${tokenId}`}>
           <img
             src={parcelImage(tokenId)}

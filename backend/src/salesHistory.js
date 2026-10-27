@@ -326,7 +326,8 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
       // dropped from it on purpose (a self-trade, say); only newer sales merge.
       .filter((s) => s.closingDate > newest)
       .map(fromLive)
-      .sort((a, b) => b.closingDate - a.closingDate);
+      // Legs of one transaction stay together (the page boxes a bundle's rows).
+      .sort((a, b) => b.closingDate - a.closingDate || String(a.txHash).localeCompare(String(b.txHash)) || a.tokenId - b.tokenId);
     classifyLive(extra);
     merged = { liveAt, sales: extra.length ? [...extra, ...base] : base, liveAdded: extra.length };
     return merged;
