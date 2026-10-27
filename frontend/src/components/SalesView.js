@@ -104,8 +104,27 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
   );
 }
 
+// A bundle leg's price is the order total, so the row says which parcels it sold
+// together with. Long bundles name the first few.
+const BUNDLE_NAMED = 3;
+function BundleNote({ legs, others }) {
+  const named = others.slice(0, BUNDLE_NAMED);
+  const rest = others.length - named.length;
+  const title = `Sold together in one order${others.length ? ` with ${others.map((id) => `#${id}`).join(', ')}` : ''}. `
+    + `The price is the total for all ${legs} parcels.`;
+  return (
+    <span className="block text-xs opacity-50" title={title}>
+      bundle ×{legs}
+      {named.length > 0 && <> with {named.map((id, i) => (
+        <span key={id}>{i ? ', ' : ''}<a href={`/?token=${id}`}>#{id}</a></span>
+      ))}{rest > 0 && ` +${rest}`}</>}
+      <span className="block opacity-70">total for {legs}</span>
+    </span>
+  );
+}
+
 function SaleRow({ sale }) {
-  const { tokenId, traits, pricing, salePrice, currency, basis, reference, vsReference, closingDate, seller, winner, sellerEns, winnerEns, kind, legs } = sale;
+  const { tokenId, traits, pricing, salePrice, currency, basis, reference, vsReference, closingDate, seller, winner, sellerEns, winnerEns, kind, legs, bundleWith } = sale;
   // The column next to the percentage is the number the percentage was measured
   // against, and it is labelled with which basis that was. The row must state
   // one comparison, not two — showing a reference the figure was not computed
@@ -132,9 +151,7 @@ function SaleRow({ sale }) {
           {currency === 'WETH' && <span className="text-xs opacity-40 ml-0.5">w</span>}
         </span>
         {kind === 'bundle' && (
-          <span className="block text-xs opacity-40" title="one order for several parcels; the price is the order total">
-            bundle ×{legs}
-          </span>
+          <BundleNote legs={legs} others={bundleWith || []} />
         )}
       </td>
       <td className="py-3 pr-4 hidden sm:table-cell">

@@ -135,6 +135,25 @@ function summarize(sales) {
   };
 }
 
+// Each leg of a bundle order names the other parcels in it, so a row can say
+// what it sold together with: the price on every leg is the order's total.
+function linkBundles(sales) {
+  const byTx = new Map();
+  for (const s of sales) {
+    if (s.kind !== 'bundle' || !s.txHash) continue;
+    if (!byTx.has(s.txHash)) byTx.set(s.txHash, []);
+    byTx.get(s.txHash).push(s.tokenId);
+  }
+  for (const s of sales) {
+    if (s.kind === 'bundle' && byTx.has(s.txHash)) {
+      s.bundleWith = byTx.get(s.txHash).filter((id) => id !== s.tokenId).sort((a, b) => a - b);
+    }
+  }
+}
+
+// export_sales_history.js's rule, for live sales newer than the export.
+const BUNDLE_MIN_FLOOR_MULTIPLE = 1.5;
+
 /**
  * @param history      parsed sales-history.json, or null
  * @param floorIndex   parsed floor-index.json, or null
@@ -238,7 +257,38 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
         source: 'history',
       });
     }
+    linkBundles(historyRows);
     return historyRows;
+  }
+
+  // Live sales come one row per leg, each marked single. Group them by transaction
+  // as the export does: several legs at one price from one seller to one buyer, at
+  // least 1.5x the day's floor, are one bundle order repeating its total; any other
+  // multi-parcel transaction is a sweep of separately priced orders.
+  function classifyLive(sales) {
+    const byTx = new Map();
+    for (const s of sales) {
+      if (!s.txHash) continue;
+      if (!byTx.has(s.txHash)) byTx.set(s.txHash, []);
+      byTx.get(s.txHash).push(s);
+    }
+    for (const legs of byTx.values()) {
+      const tokens = new Set(legs.map((s) => s.tokenId));
+      if (tokens.size < 2) continue;
+      const oneOrder = new Set(legs.map((s) => s.salePrice)).size === 1
+        && new Set(legs.map((s) => s.seller)).size === 1
+        && new Set(legs.map((s) => s.winner)).size === 1;
+      const floor = indexFloor(legs[0].closingDate);
+      const bundle = oneOrder && floor > 0 && legs[0].salePrice >= BUNDLE_MIN_FLOOR_MULTIPLE * floor;
+      for (const s of legs) {
+        s.legs = tokens.size;
+        s.kind = bundle ? 'bundle' : 'sweep';
+        // A leg's price is the order total, not what that parcel sold for.
+        if (bundle) { s.basis = null; s.reference = null; s.vsReference = null; }
+      }
+    }
+    linkBundles(sales);
+    return sales;
   }
 
   // Live sales newer than the export, reshaped to the history row.
@@ -277,6 +327,7 @@ function createSalesHistory({ history, floorIndex, getSnapshotTraits, floorHisto
       .filter((s) => s.closingDate > newest)
       .map(fromLive)
       .sort((a, b) => b.closingDate - a.closingDate);
+    classifyLive(extra);
     merged = { liveAt, sales: extra.length ? [...extra, ...base] : base, liveAdded: extra.length };
     return merged;
   }
