@@ -133,7 +133,38 @@ function bundleEdge(sales, i) {
   return { top: !same(sales[i - 1]), bottom: !same(sales[i + 1]) };
 }
 
-const BUNDLE_BOX = '1px solid rgba(232,232,232,0.5)';
+const THUMB_W = 67;
+const THUMB_H = 97;
+const BUNDLE_LINE = '2px solid rgba(232,232,232,0.55)';
+const BUNDLE_PAD = 8;   // px from a thumbnail to the outside of the outline, every side
+
+// Drawn round the thumbnail itself rather than as the cell's borders, so it sits
+// the same distance from the image on all four sides instead of following the
+// column's width. The thumbnail is at the cell's left edge (pl-0: a browser's
+// default 1px cell padding made the left gap 2px wider), centred vertically
+// (py-3 above and below); the sides run the full row height so consecutive legs
+// join, and the top and bottom close at the first and last leg on the page.
+function BundleOutline({ edge }) {
+  const closed = `calc(50% - ${THUMB_H / 2 + BUNDLE_PAD}px)`;
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        pointerEvents: 'none',
+        boxSizing: 'border-box',
+        left: -BUNDLE_PAD,
+        width: THUMB_W + 2 * BUNDLE_PAD,
+        top: edge.top ? closed : 0,
+        bottom: edge.bottom ? closed : 0,
+        borderLeft: BUNDLE_LINE,
+        borderRight: BUNDLE_LINE,
+        borderTop: edge.top ? BUNDLE_LINE : 'none',
+        borderBottom: edge.bottom ? BUNDLE_LINE : 'none',
+      }}
+    />
+  );
+}
 
 function SaleRow({ sale, bundleEdge }) {
   const { tokenId, traits, pricing, salePrice, currency, basis, reference, vsReference, closingDate, seller, winner, sellerEns, winnerEns, kind, legs, bundleWith } = sale;
@@ -167,21 +198,17 @@ function SaleRow({ sale, bundleEdge }) {
         )}
       </td>
       <td
-        className={bundleEdge ? 'py-3 px-2 hidden sm:table-cell' : 'py-3 pr-4 hidden sm:table-cell'}
+        className="py-3 pr-4 pl-0 hidden sm:table-cell"
         title={bundleEdge ? 'sold together in one bundle' : undefined}
-        style={bundleEdge ? {
-          borderLeft: BUNDLE_BOX,
-          borderRight: BUNDLE_BOX,
-          borderTop: bundleEdge.top ? BUNDLE_BOX : undefined,
-          borderBottom: bundleEdge.bottom ? BUNDLE_BOX : undefined,
-        } : undefined}
+        style={bundleEdge ? { position: 'relative' } : undefined}
       >
+        {bundleEdge && <BundleOutline edge={bundleEdge} />}
         <a href={`/?token=${tokenId}`}>
           <img
             src={parcelImage(tokenId)}
             alt={`Parcel ${tokenId}`}
-            width={67}
-            height={97}
+            width={THUMB_W}
+            height={THUMB_H}
             loading="lazy"
             decoding="async"
             style={{ display: 'block', objectFit: 'cover' }}
