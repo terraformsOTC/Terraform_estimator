@@ -76,6 +76,7 @@ export default function StatsPage() {
             <Listings listings={data.listings} pending={data.listingsPending} />
           </>
         )}
+        <OpenData />
       </main>
       <Footer />
     </div>
@@ -177,6 +178,105 @@ function Listings({ listings, pending }) {
           <p className="text-xs opacity-45 mt-3">
             OpenSea listings, refreshed every 30 minutes. Browse them on <a href="/listings" className="opacity-80">[listings]</a>.
           </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+// The monthly open-data release of every sale (sales database/export_sales_dataset.js,
+// static under /data). Its SHA-256 is shown here, sits beside the file, and is
+// committed to the public repo, so a download can be checked against a source other
+// than this page; the checker below hashes a file locally, nothing is uploaded.
+const DATASET_MANIFEST = '/data/sales-dataset.json';
+const REPO_DATA_HISTORY = 'https://github.com/terraformsOTC/Terraform_estimator/commits/main/frontend/public/data/sales-dataset.json';
+
+function OpenData() {
+  const [manifest, setManifest] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [check, setCheck] = useState(null);
+
+  useEffect(() => {
+    fetch(DATASET_MANIFEST, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(setManifest)
+      .catch(() => setFailed(true));
+  }, []);
+
+  const verify = async (file) => {
+    if (!file || !manifest?.latest) return;
+    setCheck({ state: 'hashing', name: file.name });
+    try {
+      const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      const hex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+      const release = [manifest.latest, ...(manifest.history || [])].find(r => r.sha256 === hex);
+      setCheck({ state: release ? 'match' : 'mismatch', name: file.name, hex, release });
+    } catch {
+      setCheck({ state: 'error', name: file.name });
+    }
+  };
+
+  const latest = manifest?.latest;
+  const day = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return (
+    <section className="mb-12">
+      <h2 className="text-xs opacity-50 uppercase tracking-widest mb-4">Open data: the sales history</h2>
+      <p className="text-sm opacity-75 leading-relaxed mb-4">
+        Every Terraforms sale since mint, one row per parcel, as a CSV: free to download, so you can run your own
+        models against the same raw data ours is fitted on. Updated monthly.
+      </p>
+      {failed && <p className="text-sm opacity-60">[download unavailable]</p>}
+      {latest && (
+        <>
+          <p className="text-sm mb-1">
+            <a href={`/data/${latest.file}`} download className="btn-primary btn-sm text-xs no-underline">
+              download {latest.file} ({(latest.bytes / 1048576).toFixed(1)} MB)
+            </a>
+          </p>
+          <p className="text-xs opacity-55 mb-4 leading-relaxed">
+            {latest.rows.toLocaleString()} sales, {day(latest.firstSale)} to {day(latest.lastSale)} · gzipped CSV ·{' '}
+            <a href="/data/sales-dataset-README.txt" className="opacity-90">[what each column means]</a>
+          </p>
+          <p className="text-xs opacity-55 mb-4 leading-relaxed">
+            Licence:{' '}
+            <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer" className="opacity-90">CC0 1.0 ↗</a>
+            {' '}— public domain: use it for anything, no permission or credit needed{' '}
+            <a href="/data/LICENSE-CC0-1.0.txt" className="opacity-90">[full text]</a>. The estimator&apos;s code is open source under the{' '}
+            <a href="https://github.com/terraformsOTC/Terraform_estimator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="opacity-90">AGPL-3.0 ↗</a>.
+          </p>
+
+          <p className="text-xs opacity-50 uppercase tracking-widest mb-1">SHA-256</p>
+          <p className="text-xs break-all select-all mb-3" style={{ fontFamily: 'monospace' }}>{latest.sha256}</p>
+          <p className="text-xs opacity-55 leading-relaxed mb-2">
+            Check the file before you use it. Download the{' '}
+            <a href={`/data/${latest.file}.sha256`} download className="opacity-90">[checksum file]</a> into the same folder, then:
+          </p>
+          <pre className="text-xs opacity-75 mb-3 overflow-x-auto" style={{ whiteSpace: 'pre' }}>
+{`macOS    shasum -a 256 -c ${latest.file}.sha256
+Linux    sha256sum -c ${latest.file}.sha256
+Windows  Get-FileHash ${latest.file} -Algorithm SHA256`}
+          </pre>
+          <p className="text-xs opacity-55 leading-relaxed mb-4">
+            The same checksum is committed to the public repository with every release, so you can check it against
+            a source other than this page:{' '}
+            <a href={REPO_DATA_HISTORY} target="_blank" rel="noopener noreferrer" className="opacity-90">release history ↗</a>
+          </p>
+
+          <label className="text-xs opacity-75 block mb-1">or check a downloaded file here (it is hashed in your browser, not uploaded):</label>
+          <input type="file" accept=".gz,.csv" onChange={e => verify(e.target.files?.[0])} className="text-xs mb-2" />
+          {check?.state === 'hashing' && <p className="text-xs opacity-60">[checking {check.name}...]</p>}
+          {check?.state === 'match' && (
+            <p className="text-xs" style={{ color: '#7fd18b' }}>
+              ✓ {check.name} matches the release through {check.release.through}
+              {check.release !== latest ? ' (an earlier release — the current one is above)' : ''}.
+            </p>
+          )}
+          {check?.state === 'mismatch' && (
+            <p className="text-xs" style={{ color: '#e0796b' }}>
+              ✗ {check.name} does not match any release (its SHA-256 is {check.hex}). Do not use it; download it again.
+            </p>
+          )}
+          {check?.state === 'error' && <p className="text-xs opacity-70">[could not read that file]</p>}
         </>
       )}
     </section>

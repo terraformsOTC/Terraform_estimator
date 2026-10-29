@@ -1,0 +1,68 @@
+{
+  "description": "Terraforms (0x4E1f41613c9084FdB9E34E11fAE9412427480e56) secondary-market sales, from the Terraform Estimator. Updated monthly.",
+  "repository": "https://github.com/terraformsOTC/Terraform_estimator",
+  "license": {
+    "id": "CC0-1.0",
+    "name": "Creative Commons Zero v1.0 Universal (public domain dedication)",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "file": "LICENSE-CC0-1.0.txt"
+  },
+  "verify": "shasum -a 256 -c <file>.sha256  (or sha256sum -c; on Windows: Get-FileHash <file> -Algorithm SHA256)",
+  "columns": [
+    {
+      "name": "sale_time_utc",
+      "meaning": "when the sale settled, ISO 8601 UTC"
+    },
+    {
+      "name": "unix",
+      "meaning": "the same, as a Unix timestamp (seconds)"
+    },
+    {
+      "name": "token_id",
+      "meaning": "the parcel, 1-9911"
+    },
+    {
+      "name": "price",
+      "meaning": "sale price in the currency column. For kind=bundle this is the ORDER TOTAL, repeated on every parcel in the bundle (OpenSea reports it that way) — divide by legs for a per-parcel figure"
+    },
+    {
+      "name": "currency",
+      "meaning": "ETH (a listing was bought), WETH (an offer was accepted) or BETH (Blur pool ETH, an accepted Blur bid)"
+    },
+    {
+      "name": "kind",
+      "meaning": "single (one parcel in the transaction), sweep (several parcels, each its own order at its own price) or bundle (one order for several parcels)"
+    },
+    {
+      "name": "legs",
+      "meaning": "parcels in the same transaction"
+    },
+    {
+      "name": "buyer",
+      "meaning": "buying wallet"
+    },
+    {
+      "name": "seller",
+      "meaning": "selling wallet"
+    },
+    {
+      "name": "tx_hash",
+      "meaning": "the Ethereum transaction"
+    },
+    {
+      "name": "floor_index_eth",
+      "meaning": "the estimator's daily floor index for that day (12th percentile of clean single-parcel sales over a trailing 14+ day window) — derived, not raw; empty where the index has no value"
+    }
+  ],
+  "latest": {
+    "file": "terraforms-sales-through-2026-10-28.csv.gz",
+    "sha256": "c38eb7aab15b3a6e1ec36cddb364d64f957f5c415fdd7c7d2c7bbbb6b5f51e19",
+    "bytes": 1805046,
+    "rows": 30002,
+    "through": "2026-10-28",
+    "firstSale": "2021-12-17T18:15:52Z",
+    "lastSale": "2026-10-28T21:40:23Z",
+    "generatedAt": "2026-10-29T12:50:36.506Z"
+  },
+  "history": []
+}

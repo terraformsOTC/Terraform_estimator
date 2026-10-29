@@ -1,5 +1,6 @@
 {
   "name": "terraformestimator-api",
+  "license": "AGPL-3.0-or-later",
   "version": "1.0.0",
   "description": "Terraforms parcel price estimator API",
   "main": "src/server.js",

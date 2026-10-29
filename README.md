@@ -42,3 +42,9 @@ hook appends a live floor sample and commits it, then asks for the push to be ru
 
 See `CLAUDE.md` for the moving parts and `sales database/fit_hedonic.py` for how the fit is chosen
 (its header records the backtest behind the current half-life and regularisation).
+
+## License
+
+The code is free software under the **GNU Affero General Public License v3.0 or later** ([LICENSE](LICENSE)): you may use, study, change and share it, and if you run a modified version as a service you must offer its source to its users.
+
+The sales data published for download (`frontend/public/data/`, the open-data section of `/stats`) is dedicated to the public domain under **CC0 1.0** ([full text](frontend/public/data/LICENSE-CC0-1.0.txt)): use it for anything, no permission or credit needed.

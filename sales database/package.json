@@ -1,5 +1,6 @@
 {
   "name": "terraforms-sales",
+  "license": "AGPL-3.0-or-later",
   "version": "1.0.0",
   "private": true,
   "description": "Local SQLite backfill of every Terraforms (Mathcastles) secondary sale via the OpenSea v2 API, with wash-sale flagging.",
