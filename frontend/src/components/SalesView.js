@@ -45,7 +45,6 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
 
   const { total, summary, floor } = data;
   const sales = rows || [];
-  const since = summary?.first ? new Date(summary.first * 1000).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : null;
 
   // Each sale carries its own basis, decided server-side: a plain parcel that
   // cleared below floor is measured against the floor, everything else against
@@ -54,12 +53,7 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
   // just the rows loaded so far.
   return (
     <div style={{ opacity: loading ? 0.5 : 1 }}>
-      <div className="mb-6 text-xs opacity-50">
-        {total.toLocaleString()} {total === 1 ? 'sale' : 'sales'}{filtered ? ' match' : ''}
-        {since ? ` since ${since}` : ''}
-        {summary?.volume != null && <>{' · '}{summary.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} ETH volume</>}
-        {floor != null && <>{' · '}floor {floor.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString()}` : ''}</>}
-      </div>
+      <SalesHeadline total={total} summary={summary} floor={floor} ethUsd={ethUsd} filtered={filtered} />
 
       {error && <p className="mb-4 text-xs opacity-70">[error: {error}]</p>}
 
@@ -97,10 +91,24 @@ export default function SalesView({ data, rows, loading, loadingMore, error, eth
                 {loadingMore ? '[loading...]' : '[load more]'}
               </button>
             )}
-            <span className="opacity-40">showing {sales.length.toLocaleString()} of {total.toLocaleString()}</span>
+            <span className="opacity-40">showing {sales.length.toLocaleString('en-US')} of {total.toLocaleString('en-US')}</span>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// The first page is rendered on the server (app/sales/page.js), so numbers use one
+// fixed locale: the server's HTML and the browser's first render must agree.
+function SalesHeadline({ total, summary, floor, ethUsd, filtered }) {
+  const since = summary?.first ? new Date(summary.first * 1000).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : null;
+  return (
+    <div className="mb-6 text-xs opacity-50">
+      {total.toLocaleString('en-US')} {total === 1 ? 'sale' : 'sales'}{filtered ? ' match' : ''}
+      {since ? ` since ${since}` : ''}
+      {summary?.volume != null && <>{' · '}{summary.volume.toLocaleString('en-US', { maximumFractionDigits: 1 })} ETH volume</>}
+      {floor != null && <>{' · '}floor {floor.toFixed(3)} ETH{ethUsd ? ` / $${Math.round(floor * ethUsd).toLocaleString('en-US')}` : ''}</>}
     </div>
   );
 }
@@ -224,7 +232,8 @@ function SaleRow({ sale, bundleEdge }) {
       <td className="py-3 pr-4 hidden lg:table-cell text-xs">
         <WalletLink address={winner} ens={winnerEns} />
       </td>
-      <td className="py-3 pr-4 hidden sm:table-cell text-xs opacity-55 whitespace-nowrap">
+      {/* Relative to the viewer's clock: the server's cached HTML said it earlier. */}
+      <td className="py-3 pr-4 hidden sm:table-cell text-xs opacity-55 whitespace-nowrap" suppressHydrationWarning>
         {formatWhen(closingDate)}
       </td>
       <td className="py-3 pr-4 hidden md:table-cell">

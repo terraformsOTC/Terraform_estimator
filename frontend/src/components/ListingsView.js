@@ -18,7 +18,7 @@ function timeAgo(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function ListingsView({ data, loading, error, viewMode = 'list', filters = null, wishlist = null }) {
+export default function ListingsView({ data, loading, error, viewMode = 'list', filters = null, wishlist = null, summary = null }) {
   const [sort, setSort] = useState('newest');
   const [bargainsOnly, setBargainsOnly] = useState(false);
   const [wishOnly, setWishOnly] = useState(false);
@@ -49,9 +49,20 @@ export default function ListingsView({ data, loading, error, viewMode = 'list', 
     });
   }, [matched, sort, bargainsOnly, wishOnly, marks]);
 
+  // `summary` is rendered on the server (app/listings/page.js) from the same OpenSea
+  // cache, so the HTML says what is listed while the full set loads. Unfiltered
+  // figures, so only shown without filters; one fixed locale, so it hydrates as is.
   if (loading) {
     return (
       <div className="text-sm opacity-75">
+        {summary && !filtered && (
+          <div className="mb-4 text-xs opacity-65">
+            {summary.count.toLocaleString('en-US')} listings
+            {summary.floor != null && <> · floor {summary.floor.toFixed(3)} ETH</>}
+            {summary.median != null && <> · median ask {summary.median.toFixed(3)} ETH</>}
+            {' · '}{summary.belowEstimate.toLocaleString('en-US')} listed below our estimate
+          </div>
+        )}
         [fetching listings...]
         <br />
         <span className="opacity-55 text-xs">scanning all OpenSea listings + on-chain traits — may take 20–40s on first load.</span>
