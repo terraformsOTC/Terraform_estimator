@@ -55,14 +55,23 @@
     }
   ],
   "latest": {
-    "file": "terraforms-sales-through-2026-10-28.csv.gz",
-    "sha256": "c38eb7aab15b3a6e1ec36cddb364d64f957f5c415fdd7c7d2c7bbbb6b5f51e19",
-    "bytes": 1805046,
-    "rows": 30002,
-    "through": "2026-10-28",
+    "file": "terraforms-sales-through-2026-10-31.csv.gz",
+    "sha256": "29ad2545f72821d9211b3aec75ed79fbc0bfcc76caf0d1f3d00f9dcd37443751",
+    "bytes": 1805399,
+    "rows": 30007,
+    "through": "2026-10-31",
     "firstSale": "2021-12-17T18:15:52Z",
-    "lastSale": "2026-10-28T21:40:23Z",
-    "generatedAt": "2026-10-29T12:50:36.506Z"
+    "lastSale": "2026-10-31T17:50:47Z",
+    "generatedAt": "2026-11-01T03:20:20.027Z"
   },
-  "history": []
+  "history": [
+    {
+      "file": "terraforms-sales-through-2026-10-28.csv.gz",
+      "sha256": "c38eb7aab15b3a6e1ec36cddb364d64f957f5c415fdd7c7d2c7bbbb6b5f51e19",
+      "bytes": 1805046,
+      "rows": 30002,
+      "through": "2026-10-28",
+      "generatedAt": "2026-10-29T12:50:36.506Z"
+    }
+  ]
 }
