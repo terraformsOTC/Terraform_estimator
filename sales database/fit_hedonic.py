@@ -147,10 +147,12 @@ GODMODE_IDS = {83, 124, 1955}
 #   2026-10-20  the five whose sales sat above v1: First Earth, Avidana, biome
 #               17, and the Biome 0 Flow and Matrix badges (Matrix left the
 #               model 2026-10-21; see badges)
+#   2026-11-04  [SOON], after #2320 sold at 0.90 WETH (16 sales; that one carries
+#               93% of the anchor's weight)
 SALES_ANCHORED = {
     ('level', '20'), ('zone', 'Dread'), ('biome', '39'),
     ('zone', 'First Earth'), ('zone', 'Avidana'), ('biome', '17'),
-    ('badge', 'biome0_flow'),
+    ('badge', 'biome0_flow'), ('zone', '[SOON]'),
 }
 ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
 # Anchored traits priced by their own sales alone: the anchor with no share left on
