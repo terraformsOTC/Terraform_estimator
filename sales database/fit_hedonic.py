@@ -157,9 +157,11 @@ ANCHOR_SALES = os.environ.get('ANCHOR_SALES', '1') != '0'
 # the ridge fit, read with its own half-life (days). Level 20 (James, 2026-10-21):
 # the two May 2026 sales (#7508 at 7.7 ETH, #6339 at 8.5) are the penthouse
 # market. Their anchor sat at 23.4x, and n/(n+K) still left 9% on the ridge's
-# 15.7x, a read of the same dozen sales shrunk toward no premium. A 90-day
-# half-life leaves 2021-24 sales counting only until there's nothing newer.
-SALES_ONLY = {('level', '20'): 90.0}
+# 15.7x, a read of the same dozen sales shrunk toward no premium.
+# 2026-11-04 (James): half-life 90 -> 180 days, the same as the other anchors. The
+# May pair still carries 96% of the weight, so the premium only moved 26.19x ->
+# 25.88x; the difference is that a new sale displaces them less quickly.
+SALES_ONLY = {('level', '20'): 180.0}
 ANCHOR_ROUNDS = 4
 # Tier-2 types priced at a floor multiple from their own sales (special_
 # multiples; Godmode since 2026-10-21). X-Seed keeps v1's price, and
