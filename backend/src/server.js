@@ -128,6 +128,10 @@ let provider, contract, antennaContract;
 function getProvider() {
   if (!provider) {
     provider = new ethers.JsonRpcProvider(RPC_URL);
+    // No CCIP-read: an ENS resolver could otherwise make this server fetch any URL
+    // it names, with no size limit (a 200 MB reply took a local test to 3.2 GB).
+    // Names on offchain resolvers therefore don't resolve in wallet search.
+    provider.disableCcipRead = true;
     contract = new ethers.Contract(TERRAFORMS_ADDRESS, TERRAFORMS_ABI, provider);
     antennaContract = new ethers.Contract(ANTENNA_ADDRESS, ANTENNA_ABI, provider);
   }
