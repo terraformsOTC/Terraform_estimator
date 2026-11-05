@@ -1,6 +1,6 @@
 {
   "meta": {
-    "built": "2026-11-04T03:20:18Z",
+    "built": "2026-11-05T03:20:20Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
@@ -24,10 +24,11 @@
       "level 20",
       "zone Avidana",
       "zone Dread",
-      "zone First Earth"
+      "zone First Earth",
+      "zone [SOON]"
     ],
     "sales_only": {
-      "level 20": "90d half-life"
+      "level 20": "180d half-life"
     },
     "specials_from_sales": [
       "Godmode",
@@ -969,10 +970,10 @@
         "n": 16,
         "w": 0.118,
         "fitted": 3.4032,
-        "prior": 3.4036,
-        "prior_source": "v1",
+        "prior": 4.0797,
+        "prior_source": "sales",
         "v1_prior": 3.4036,
-        "blended": 3.4035,
+        "blended": 3.9936,
         "sales_implied": 4.0797
       },
       {
@@ -1645,7 +1646,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9076,
         "blended": 0.9474,
-        "sales_implied": 0.9461
+        "sales_implied": 0.946
       },
       {
         "kind": "biome",
@@ -1825,7 +1826,7 @@
         "prior_source": "v1",
         "v1_prior": 0.953,
         "blended": 0.9604,
-        "sales_implied": 0.942
+        "sales_implied": 0.9418
       },
       {
         "kind": "biome",
@@ -2181,11 +2182,11 @@
         "n": 14,
         "w": 0,
         "fitted": 15.6128,
-        "prior": 26.1854,
+        "prior": 25.8801,
         "prior_source": "sales",
         "v1_prior": 11.3452,
-        "blended": 26.1854,
-        "sales_implied": 26.1854
+        "blended": 25.8801,
+        "sales_implied": 25.8801
       },
       {
         "kind": "badge",
@@ -2201,7 +2202,7 @@
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.101789031942661,
+      "baseline_multiple": 1.1017890319426606,
       "zone": {
         "Aetherking": 5.9542,
         "Akileaf": 1.1127,
@@ -2272,7 +2273,7 @@
         "[NEON]": 1.0254,
         "[NOV]": 1.6659,
         "[SEP]": 0.9839,
-        "[SOON]": 3.4035,
+        "[SOON]": 3.9936,
         "[SUN]": 3.2779,
         "[WEN]": 0.983,
         "[YUNA]": 0.9573,
@@ -2379,7 +2380,7 @@
         "3": 1.3627,
         "18": 1.3327,
         "19": 1.6235,
-        "20": 26.1854
+        "20": 25.8801
       },
       "chroma": {
         "Pulse": 0.9879,
@@ -2499,7 +2500,7 @@
   "money_sword_on": {
     "label": "money_sword_on",
     "bid_share": 0.2,
-    "holdout_median_pct_err": 0.12003101897339785,
+    "holdout_median_pct_err": 0.12003101897339757,
     "alpha": 3,
     "weighted_r2": 0.7093299595432234,
     "n": 29627,
@@ -3338,10 +3339,10 @@
         "n": 16,
         "w": 0.118,
         "fitted": 3.4032,
-        "prior": 3.4036,
-        "prior_source": "v1",
+        "prior": 4.0797,
+        "prior_source": "sales",
         "v1_prior": 3.4036,
-        "blended": 3.4035,
+        "blended": 3.9936,
         "sales_implied": 4.0797
       },
       {
@@ -4014,7 +4015,7 @@
         "prior_source": "v1",
         "v1_prior": 0.9076,
         "blended": 0.9474,
-        "sales_implied": 0.9461
+        "sales_implied": 0.946
       },
       {
         "kind": "biome",
@@ -4194,7 +4195,7 @@
         "prior_source": "v1",
         "v1_prior": 0.953,
         "blended": 0.9604,
-        "sales_implied": 0.942
+        "sales_implied": 0.9418
       },
       {
         "kind": "biome",
@@ -4550,11 +4551,11 @@
         "n": 14,
         "w": 0,
         "fitted": 15.6128,
-        "prior": 26.1854,
+        "prior": 25.8801,
         "prior_source": "sales",
         "v1_prior": 11.3452,
-        "blended": 26.1854,
-        "sales_implied": 26.1854
+        "blended": 25.8801,
+        "sales_implied": 25.8801
       },
       {
         "kind": "badge",
@@ -4570,7 +4571,7 @@
       }
     ],
     "multipliers": {
-      "baseline_multiple": 1.3017194971205395,
+      "baseline_multiple": 1.3017194971205392,
       "zone": {
         "Aetherking": 5.9542,
         "Akileaf": 1.1127,
@@ -4641,7 +4642,7 @@
         "[NEON]": 1.0254,
         "[NOV]": 1.6659,
         "[SEP]": 0.9839,
-        "[SOON]": 3.4035,
+        "[SOON]": 3.9936,
         "[SUN]": 3.2779,
         "[WEN]": 0.983,
         "[YUNA]": 0.9573,
@@ -4748,7 +4749,7 @@
         "3": 1.3627,
         "18": 1.3327,
         "19": 1.6235,
-        "20": 26.1854
+        "20": 25.8801
       },
       "chroma": {
         "Pulse": 0.9879,
@@ -4867,7 +4868,7 @@
   },
   "floor_calibration": {
     "value": 0.8097,
-    "measured_at": "2026-11-04T03:20:19.130Z",
+    "measured_at": "2026-11-05T03:20:21.364Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
     "n_sales": 114,

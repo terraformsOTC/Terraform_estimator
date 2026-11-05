@@ -1,6 +1,6 @@
 {
 "version":1,
-"exportedAt":"2026-11-04T03:20:16.228Z",
+"exportedAt":"2026-11-05T03:20:16.011Z",
 "source":"sales database/terraforms_sales.db via export_sales_history.js",
 "columns":["unix","tokenId","price","currency","legs","kind","buyer","seller","tx"],
 "currencies":["ETH","WETH","BETH"],
