@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { ALL_ZONES, ALL_MODES, ALL_CHROMAS, ALL_BIOMES, ALL_LEVELS } from '@/lib/parcelTraitDomains';
+import { BLADES, abbreviateGlyphs } from '@/lib/parcelGlyphs';
+
+// The on-chain font that draws blade glyphs, as on the parcel page and /helper.
+const BLADE_FONT = "'MathcastlesRemix-Regular', monospace";
 
 // Attribute filtering for parcel grids (wallet/portfolio view).
 //
@@ -66,7 +70,37 @@ export const FILTER_ATTRS = [
     layout: 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10',
     collapsible: true,
   },
+  // The blade animation characters (lib/parcelGlyphs.js): 0-26, set by the API
+  // from biome + seed (backend bladeIndexOf). Origins and X/Y-seeds have none, so
+  // a blade filter leaves them out. Numbered 1-27 as on /helper; chips draw the
+  // glyphs in the on-chain font.
+  {
+    key: 'blade',
+    label: 'blade',
+    domain: BLADES.map((_, i) => i),
+    get: t => (Number.isInteger(t.blade) && t.blade >= 0 ? t.blade : null),
+    compare: (a, b) => a - b,
+    format: v => String(v + 1),
+    render: v => <BladeChipLabel n={v + 1} blade={BLADES[v]} />,
+    layout: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+    collapsible: true,
+  },
 ];
+
+// A blade chip: its number, then the opening and closing runs of its glyphs.
+function BladeChipLabel({ n, blade }) {
+  const [head, tail] = abbreviateGlyphs(blade || '', 7, 7);
+  return (
+    <span className="flex items-baseline gap-2 min-w-0">
+      <span className="opacity-60 w-5 shrink-0 text-right">{n}</span>
+      <span className="whitespace-pre overflow-hidden text-ellipsis min-w-0" style={{ fontFamily: BLADE_FONT }}>
+        {head}
+        {tail != null && <span style={{ opacity: 0.5, fontFamily: "'Courier New', Courier, monospace" }}>{' … '}</span>}
+        {tail}
+      </span>
+    </span>
+  );
+}
 
 export const EMPTY_FILTERS = Object.freeze(
   Object.fromEntries(FILTER_ATTRS.map(a => [a.key, new Set()])),
@@ -239,7 +273,7 @@ function FilterSection({ attr, options, selected, onToggle, open, onToggleOpen, 
       {options.map(({ value, label, count }) => (
         <FilterChip
           key={String(value)}
-          label={label}
+          label={attr.render ? attr.render(value) : label}
           count={count}
           owned={count > 0}
           active={selected?.has(value)}

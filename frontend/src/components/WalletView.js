@@ -159,6 +159,9 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
   // than in ParcelCard so only one can be open at a time.
   const [zoomed, setZoomed] = useState(null);
   const [wishOnly, setWishOnly] = useState(false);
+  // Names of the set chips clicked: the grid shows the parcels that count toward
+  // any of them (the API's per-set tokenIds).
+  const [setFilter, setSetFilter] = useState(new Set());
   // tokenId -> the wishlist gaps it fills (lib/wishlist.js): set only on another
   // collector's wallet, with the viewer's wishlist on and their wallet connected.
   const marks = wishlist?.status === 'on' ? wishlist.marks : null;
@@ -178,17 +181,35 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
 
   const filterOptions = useMemo(() => buildFilterOptions(sortedParcels), [sortedParcels]);
 
-  // Highlight chips, attribute filters and [show only these] compose with AND:
-  // a parcel must carry one of the selected badges *and* match every attribute
-  // selection *and*, with the toggle on, fill a gap on the viewer's wishlist.
+  // tokenIds counting toward the clicked sets, or null with none clicked.
+  const setMembers = useMemo(() => {
+    if (setFilter.size === 0) return null;
+    const ids = new Set();
+    for (const set of data?.sets ?? []) {
+      if (setFilter.has(set.name)) for (const id of set.tokenIds ?? []) ids.add(id);
+    }
+    return ids;
+  }, [setFilter, data?.sets]);
+
+  // Highlight chips, set chips, attribute filters and [show only these] compose
+  // with AND: a parcel must carry one of the selected badges *and* count toward
+  // one of the selected sets *and* match every attribute selection *and*, with
+  // the toggle on, fill a gap on the viewer's wishlist.
   const displayParcels = useMemo(() => {
     let list = highlightFilter.size === 0
       ? sortedParcels
       : sortedParcels.filter(p => [...highlightFilter].some(key => parcelHasBadge(p, key)));
+    if (setMembers) list = list.filter(p => setMembers.has(p.tokenId));
     if (hasActiveFilters(attrFilters)) list = list.filter(p => matchesFilters(p, attrFilters));
     if (wishOnly && marks) list = list.filter(p => marks.has(p.tokenId));
     return list;
-  }, [sortedParcels, highlightFilter, attrFilters, wishOnly, marks]);
+  }, [sortedParcels, highlightFilter, setMembers, attrFilters, wishOnly, marks]);
+
+  const toggleSetFilter = name => setSetFilter(prev => {
+    const next = new Set(prev);
+    if (next.has(name)) next.delete(name); else next.add(name);
+    return next;
+  });
 
   const wishCount = useMemo(
     () => (marks ? sortedParcels.filter(p => marks.has(p.tokenId)).length : 0),
@@ -323,9 +344,22 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
           </h2>
           <div className="flex flex-wrap gap-2">
             {sets.map(set => (
-              <SetChip key={set.name} set={set} />
+              <SetChip
+                key={set.name}
+                set={set}
+                active={setFilter.has(set.name)}
+                onClick={() => toggleSetFilter(set.name)}
+              />
             ))}
           </div>
+          {setFilter.size > 0 && (
+            <p className="text-xs mt-2" style={{ opacity: 0.45 }}>
+              showing parcels in {[...setFilter].join(' + ')} —{' '}
+              <button onClick={() => setSetFilter(new Set())} style={{ textDecoration: 'underline' }}>
+                clear
+              </button>
+            </p>
+          )}
         </div>
       )}
 
@@ -358,7 +392,7 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
             <p className="opacity-75 text-sm">
               no parcels match the selected filters.{' '}
               <button
-                onClick={() => { resetAttrFilters(); setHighlightFilter(new Set()); setWishOnly(false); }}
+                onClick={() => { resetAttrFilters(); setHighlightFilter(new Set()); setSetFilter(new Set()); setWishOnly(false); }}
                 style={{ textDecoration: 'underline' }}
               >
                 reset
@@ -381,28 +415,49 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
   );
 }
 
-function SetChip({ set }) {
+// A set chip. Clicking it shows the wallet's parcels that count toward the set
+// (`tokenIds` from the API). Sets every parcel counts toward (full level / zone /
+// biome: `coversAll`) and sets the wallet holds nothing of aren't clickable.
+function SetChip({ set, active = false, onClick }) {
   const [hovered, setHovered] = useState(false);
-  const { name, completed, missingCount, missingItems } = set;
+  const { name, completed, missingCount, missingItems, coversAll, tokenIds } = set;
   const color = SET_COLORS[name];
+  const held = tokenIds?.length ?? 0;
+  const clickable = !coversAll && held > 0 && !!onClick;
 
-  const tooltipText = completed
+  const status = completed
     ? 'completed'
     : missingCount === 1
       ? `1 away: ${missingItems?.[0] ?? '?'}`
       : `missing ${missingCount}`;
+  const tooltipText = coversAll
+    ? `${status} · every parcel counts toward it`
+    : held > 0
+      ? `${status} · ${active ? 'click to clear' : `click to show ${held} ${held === 1 ? 'parcel' : 'parcels'}`}`
+      : status;
 
   const chipStyle = completed
     ? { color, border: `1px solid ${color}`, opacity: 0.85 }
     : missingCount === 1
       ? { color: 'rgba(200,200,200,0.4)', border: '1px solid rgba(200,200,200,0.2)' }
       : { color: 'rgba(200,200,200,0.2)', border: '1px solid rgba(200,200,200,0.1)' };
+  const ring = completed ? color : 'rgba(232,232,232,0.6)';
 
   return (
     <span style={{ position: 'relative', display: 'inline-block' }}>
       <span
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        aria-pressed={clickable ? active : undefined}
         className="text-xs px-1 py-0.5"
-        style={{ ...chipStyle, cursor: 'default', userSelect: 'none' }}
+        style={{
+          ...chipStyle,
+          ...(active ? { opacity: 1, outline: `1px solid ${ring}`, outlineOffset: '2px', background: completed ? `${color}18` : 'rgba(232,232,232,0.08)', ...(completed ? {} : { color: 'rgba(232,232,232,0.85)' }) } : {}),
+          cursor: clickable ? 'pointer' : 'default',
+          userSelect: 'none',
+        }}
+        onClick={clickable ? onClick : undefined}
+        onKeyDown={clickable ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }) : undefined}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -410,10 +465,11 @@ function SetChip({ set }) {
       </span>
       {hovered && (
         <span style={{
+          // Left-aligned to the chip: centred, the first chip's tooltip ran off
+          // the left edge of the page.
           position: 'absolute',
           bottom: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          left: 0,
           marginBottom: '4px',
           background: 'rgba(18,18,18,0.97)',
           border: '1px solid rgba(255,255,255,0.15)',

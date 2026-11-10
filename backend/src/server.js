@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ethers } = require('ethers');
 const { estimatePrice, detectSets, SETS, FLOOR_PRICE_ETH } = require('./pricingModel');
+// A parcel's blade, for the zone/biome/blade filters (see bladeIndexOf).
+const { bladeOf } = require('./collectionHelper');
 // Shadow model: computed alongside v1 and returned, but not what the UI shows.
 // See hedonicModel.js and "sales database/MODELING.md".
 const { estimateHedonic, applyOfferFloor, HEDONIC_MODEL_VERSION } = require('./hedonicModel');
@@ -174,6 +176,15 @@ try {
   console.warn('[snapshot] parcel-constants.json not found — seed and x/y fall back to RPC');
 }
 
+// A parcel's blade, 0-26 (collectionHelper.bladeOf: (biome + seed) % 27 on a
+// non-origin parcel with seed <= 9950, else null). Biome, seed and origin status
+// are all fixed at mint, so it is a lookup, never an RPC call; it rides on every
+// trait record so the wallet, listings and sales filters can offer it.
+function bladeIndexOf(tokenId, t) {
+  const seed = PARCEL_CONSTANTS[Number(tokenId)]?.[0];
+  return bladeOf({ mode: t.mode, biome: t.biome, seed: Number.isInteger(seed) ? seed : t.seed });
+}
+
 // Detect special type from metadata attributes
 function detectSpecialType(attributes) {
   if (!attributes) return null;
@@ -220,7 +231,9 @@ try {
 // Full trait object for a minted parcel from the snapshot, or null if absent.
 function getSnapshotTraits(tokenId) {
   const rec = MINTED_TRAITS_SNAPSHOT?.get(Number(tokenId));
-  return rec ? snapshotTraits(rec) : null;
+  if (!rec) return null;
+  const t = snapshotTraits(rec);
+  return { ...t, blade: bladeIndexOf(tokenId, t) };
 }
 
 // ─── TOP COLLECTION-WIDE BID ──────────────────────────────────────────────────
@@ -1271,6 +1284,7 @@ async function getParcelTraits(tokenId, { includeSeed = true, includeCoords = tr
       seed,
       x,
       y,
+      blade: bladeIndexOf(tokenId, { mode, biome: isNaN(biome) ? null : biome, seed }),
     };
   } catch (err) {
     console.error(`Error fetching traits for token ${tokenId}:`, err);
@@ -1566,7 +1580,9 @@ app.get('/wallet/:address', async (req, res) => {
     }
 
     // Set detection runs on all parcels
-    const sets = detectSets(allParcels);
+    // With members, each set lists the tokenIds that count toward it, so a set
+    // chip on the wallet page can show those parcels.
+    const sets = detectSets(allParcels, { members: true });
 
     // Every enumerated parcel is priced and returned. estimatePrice/safeHedonic
     // are pure arithmetic on traits already in hand, and a parcel serialises to

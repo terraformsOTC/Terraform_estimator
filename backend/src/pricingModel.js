@@ -535,7 +535,26 @@ function estimatePrice(traits, floorOverride) {
 }
 
 // ─── SET DETECTION ─────────────────────────────────────────────────────────────
-function detectSets(parcels) {
+// Does a parcel count toward a set? For the sets that need one parcel of EVERY
+// level, zone or biome, every parcel counts, so they report `coversAll` instead
+// of a member list (a chip filtering to the whole wallet would show nothing new).
+function setMember(setDef, p) {
+  const biome = parseInt(p.biome, 10);
+  if (setDef.requiredSpecialTypes) {
+    return setDef.requiredSpecialTypes.includes(p.specialType)
+      || (setDef.requiredBiomes || []).includes(biome)
+      || (setDef.requiredModes || []).includes(p.mode);
+  }
+  if (setDef.requiredBiomes) return setDef.requiredBiomes.includes(biome);
+  if (setDef.requiredZones) return setDef.requiredZones.includes(p.zone);
+  return false;
+}
+
+const coversAll = setDef => !!(setDef.allZones || setDef.allBiomes || setDef.requiredLevels);
+
+// `members: true` adds each set's `tokenIds` (the wallet page's set chips filter
+// the grid by them); parcels must then carry tokenId.
+function detectSets(parcels, { members = false } = {}) {
   const ownedBiomes = new Set(parcels.map(p => parseInt(p.biome, 10)).filter(b => !isNaN(b)));
   const ownedZones = new Set(parcels.map(p => p.zone).filter(Boolean));
   const ownedLevels = new Set(parcels.map(p => parseInt(p.level, 10)).filter(l => !isNaN(l)));
@@ -576,6 +595,10 @@ function detectSets(parcels) {
       completed: missingCount === 0,
       missingCount,
       missingItems: missingCount > 0 && missingCount <= 5 ? missingItems.map(String) : null,
+      ...(members ? {
+        coversAll: coversAll(setDef),
+        tokenIds: coversAll(setDef) ? null : parcels.filter(p => setMember(setDef, p)).map(p => Number(p.tokenId)),
+      } : {}),
     };
   });
 }

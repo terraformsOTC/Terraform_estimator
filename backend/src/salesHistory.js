@@ -36,6 +36,8 @@ const FILTER_ATTRS = {
   level:  { get: (t) => (Number.isInteger(t.level) && t.level > 0 ? t.level : null), parse: Number },
   zone:   { get: (t) => t.zone || null, parse: String },
   biome:  { get: (t) => (Number.isInteger(t.biome) && t.biome >= 0 ? t.biome : null), parse: Number },
+  // 0-26, null for origins and seeds above 9950 (server.js bladeIndexOf).
+  blade:  { get: (t) => (Number.isInteger(t.blade) ? t.blade : null), parse: Number },
 };
 const ATTR_KEYS = Object.keys(FILTER_ATTRS);
 // Sale size in ETH: ?min=1 keeps sales of at least 1 ETH, ?max=5 at most 5. A
