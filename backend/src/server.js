@@ -125,9 +125,15 @@ const ANTENNA_ABI = [
 
 let provider, contract, antennaContract;
 
+// One cap on every RPC request the API makes, whichever route, store or poller
+// asks: 8 at a time, up to 400 waiting, then "RPC busy" (security scan finding
+// 4, 2026-11-10 — see rpcLimiter.js). /health reports its counters.
+const { RpcLimiter, CappedJsonRpcProvider } = require('./rpcLimiter');
+const rpcLimiter = new RpcLimiter({ maxInFlight: 8, maxQueued: 400 });
+
 function getProvider() {
   if (!provider) {
-    provider = new ethers.JsonRpcProvider(RPC_URL);
+    provider = new CappedJsonRpcProvider(RPC_URL, rpcLimiter);
     // No CCIP-read: an ENS resolver could otherwise make this server fetch any URL
     // it names, with no size limit (a 200 MB reply took a local test to 3.2 GB).
     // Names on offchain resolvers therefore don't resolve in wallet search.
@@ -1390,6 +1396,7 @@ app.get('/estimate/:tokenId', async (req, res) => {
 const MAX_AGGREGATE_WALLETS = 4;
 const MAX_WALLET_TOKENS = 500;        // per wallet, as before
 const MAX_AGGREGATE_TOKENS = 1000;    // across all of them
+const { walletTokenIds } = require('./walletTokens');
 
 // The name to show for a wallet: its primary ENS name, or else the name that
 // was typed for it — which just resolved to this address, so it is a true name
@@ -1398,19 +1405,44 @@ function walletDisplayName(ensMap, w) {
   return ensMap[w.address.toLowerCase()] || (ethers.isAddress(w.input) ? null : w.input.toLowerCase());
 }
 
+// Forward ENS (name -> address) cache. /wallet and /collection resolve every
+// name they're given, and the helper re-asks after each edit, so without it the
+// same names cost several RPC calls each time. A resolved name is kept 10 min
+// (a name can be repointed, so not long); a name with no address 2 min. Lookups
+// that fail or time out are not cached. Bounded like ensNameCache.
+const ensAddressCache = new Map(); // lc name -> { address: string|null, ts }
+const ENS_ADDRESS_TTL_MS = 10 * 60 * 1000;
+const ENS_ADDRESS_MISS_TTL_MS = 2 * 60 * 1000;
+const ENS_ADDRESS_CACHE_MAX = 5_000;
+
 // ENS name or address -> checksummed address, or throws a user-facing message.
 async function resolveWalletInput(input) {
   if (ethers.isAddress(input)) return ethers.getAddress(input);
   const safe = String(input).slice(0, 100).replace(/[<>"']/g, '');
+  const key = String(input).toLowerCase();
+  const hit = ensAddressCache.get(key);
+  const now = Date.now();
   let resolved;
-  try {
-    // Supports .eth names including emoji ENS like 🐒.eth
-    resolved = await withTimeout(getProvider().provider.resolveName(input), 10_000);
-  } catch {
-    throw Object.assign(new Error(`Invalid address or unresolvable name: ${safe}`), { status: 400 });
+  if (hit && now - hit.ts < (hit.address ? ENS_ADDRESS_TTL_MS : ENS_ADDRESS_MISS_TTL_MS)) {
+    resolved = hit.address;
+  } else {
+    try {
+      // Supports .eth names including emoji ENS like 🐒.eth
+      resolved = await withTimeout(getProvider().provider.resolveName(input), 10_000);
+    } catch {
+      throw Object.assign(new Error(`Invalid address or unresolvable name: ${safe}`), { status: 400 });
+    }
+    ensAddressCache.delete(key);
+    ensAddressCache.set(key, { address: resolved || null, ts: now });
+    if (ensAddressCache.size > ENS_ADDRESS_CACHE_MAX) {
+      for (const k of ensAddressCache.keys()) {
+        ensAddressCache.delete(k);
+        if (ensAddressCache.size <= ENS_ADDRESS_CACHE_MAX * 0.9) break;
+      }
+    }
+    if (resolved) console.log(`[wallet] ENS resolved: ${safe} → ${resolved}`);
   }
   if (!resolved) throw Object.assign(new Error(`Could not resolve ENS name: ${safe}`), { status: 400 });
-  console.log(`[wallet] ENS resolved: ${input} → ${resolved}`);
   return resolved;
 }
 
@@ -1443,17 +1475,15 @@ app.get('/wallet/:address', async (req, res) => {
     }
     const address = wallets[0].address;
 
-    const { contract } = getProvider();
-    const balances = await Promise.all(wallets.map(w => withTimeout(contract.balanceOf(w.address))));
-    let budget = MAX_AGGREGATE_TOKENS;
-    for (let i = 0; i < wallets.length; i++) {
-      wallets[i].totalParcels = Number(balances[i]);
-      wallets[i].fetchCount = Math.min(wallets[i].totalParcels, MAX_WALLET_TOKENS, budget);
-      budget -= wallets[i].fetchCount;
-      if (wallets[i].fetchCount < wallets[i].totalParcels) {
-        console.warn(`[wallet] ${wallets[i].address}: balance=${wallets[i].totalParcels} exceeds cap, clamping to ${wallets[i].fetchCount}`);
-      }
-    }
+    // Which parcels: from the owner index (one balanceOf per wallet to check
+    // it), or on-chain where the index disagrees or isn't loaded. See walletTokens.js.
+    const { tokenIds, holderOf } = await walletTokenIds(wallets, {
+      ownerIndex,
+      contract: getProvider().contract,
+      withTimeout,
+      maxPerWallet: MAX_WALLET_TOKENS,
+      maxTotal: MAX_AGGREGATE_TOKENS,
+    });
     const count = wallets.reduce((n, w) => n + w.totalParcels, 0);
     const fetchCount = wallets.reduce((n, w) => n + w.fetchCount, 0);
 
@@ -1470,30 +1500,6 @@ app.get('/wallet/:address', async (req, res) => {
       });
     }
 
-    // Batched enumeration — fan-out is capped per batch so public RPCs (which
-    // silently rate-limit beyond ~20–50 concurrent requests) don't drop calls
-    // and corrupt the token list. Each call still gets the standard RPC timeout
-    // via withTimeout; the outer 30s budget here just
-    // bounds the total enumeration walltime, across every wallet in the request.
-    const ENUM_BATCH_SIZE = 20;
-    const tokenIds = [];
-    const holderOf = new Map();   // tokenId -> the wallet holding it
-    const enumStart = Date.now();
-    for (const w of wallets) {
-      for (let i = 0; i < w.fetchCount; i += ENUM_BATCH_SIZE) {
-        if (Date.now() - enumStart > 30_000) throw new Error('Wallet enumeration timed out');
-        const batchEnd = Math.min(i + ENUM_BATCH_SIZE, w.fetchCount);
-        const batch = await Promise.all(
-          Array.from({ length: batchEnd - i }, (_, k) => withTimeout(contract.tokenOfOwnerByIndex(w.address, i + k))),
-        );
-        for (const id of batch) {
-          if (holderOf.has(Number(id))) continue;
-          holderOf.set(Number(id), w.address);
-          tokenIds.push(id);
-        }
-      }
-    }
-
     // Batch fetch live traits for all tokens (needed for accurate set detection
     // and for the trait filters on the portfolio grid).
     //
@@ -1503,7 +1509,7 @@ app.get('/wallet/:address', async (req, res) => {
     // parcel is now one tokenURI call plus an antenna call only when the
     // antenna is on, so a batch of 12 peaks around 24 requests in flight.
     //
-    // Same walltime guard as the enumeration loop above — without one, a
+    // Same walltime guard as the on-chain enumeration (walletTokens.js) — without one, a
     // 500-parcel wallet can hold the request open (and keep spending RPC) long
     // after the client has given up.
     const BATCH_SIZE = 12;
@@ -2015,6 +2021,9 @@ app.get('/health', async (_req, res) => {
     staleAfterHours: MODEL_STALE_HOURS,
     now: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
+    // The shared RPC cap (rpcLimiter.js): requests started, how many had to
+    // wait, how many were refused as "busy", the longest queue seen, and now.
+    rpc: { ...rpcLimiter.stats, active: rpcLimiter.active, waiting: rpcLimiter.waiting.length, maxInFlight: rpcLimiter.maxInFlight },
     model: {
       version: HEDONIC_MODEL_VERSION,
       built: coeffs?.meta?.built ?? null,
