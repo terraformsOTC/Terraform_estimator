@@ -21,7 +21,8 @@ function PortfolioStats({ data }) {
   const showRange = typeof high === 'number' && high !== low;
   return (
     <div className="text-left md:text-right">
-      <div className="flex text-left md:text-right gap-6 whitespace-nowrap">
+      {/* Wraps below md: on a 390px phone the three columns were 448px wide. */}
+      <div className="flex flex-wrap md:flex-nowrap text-left md:text-right gap-x-6 gap-y-2 whitespace-nowrap">
         <div>
           <p className="font-semibold">Parcels</p>
           <span>{data.totalParcels}</span>
