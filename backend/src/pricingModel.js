@@ -270,6 +270,16 @@ const SETS = {
     attainability: "Very difficult",
     bottleneck: "Plague chroma",
   },
+  // James, 2026-11-10. A parcel's blade (0-26) rides on its traits as `blade`
+  // (server.js bladeIndexOf); origins and X/Y-seeds have none. Blades are drawn
+  // only on Daydream and Terraform parcels (v2 renderer), latent on Terrain.
+  "Full blade": {
+    description: "One parcel with each of the 27 blades",
+    allBlades: true,
+    attainability: "Medium",
+    // 323 parcels carry blade 20 (index 19), the fewest; the most carry 401.
+    bottleneck: "blade 20",
+  },
   "Full zone": {
     description: "One parcel from each zone (75 zones)",
     allZones: true,
@@ -550,7 +560,12 @@ function setMember(setDef, p) {
   return false;
 }
 
-const coversAll = setDef => !!(setDef.allZones || setDef.allBiomes || setDef.requiredLevels);
+const coversAll = setDef => !!(setDef.allZones || setDef.allBiomes || setDef.requiredLevels || setDef.allBlades);
+// What the wallet's tooltip says about a coversAll set.
+const coversAllNote = setDef => (setDef.allBlades
+  ? 'every parcel with a blade counts toward it (not origins or X/Y-seeds)'
+  : 'every parcel counts toward it');
+const BLADE_COUNT = 27;
 
 // `members: true` adds each set's `tokenIds` (the wallet page's set chips filter
 // the grid by them); parcels must then carry tokenId.
@@ -560,6 +575,7 @@ function detectSets(parcels, { members = false } = {}) {
   const ownedLevels = new Set(parcels.map(p => parseInt(p.level, 10)).filter(l => !isNaN(l)));
   const ownedSpecialTypes = new Set(parcels.map(p => p.specialType).filter(Boolean));
   const ownedModes = new Set(parcels.map(p => p.mode).filter(Boolean));
+  const ownedBlades = new Set(parcels.map(p => p.blade).filter(b => Number.isInteger(b)));
 
   const ALL_ZONES = Object.keys(ZONE_MULTIPLES);
   const ALL_BIOMES = Object.keys(BIOME_MULTIPLES).map(Number);
@@ -584,6 +600,10 @@ function detectSets(parcels, { members = false } = {}) {
       missingItems = ALL_ZONES.filter(z => !ownedZones.has(z));
     } else if (setDef.allBiomes) {
       missingItems = ALL_BIOMES.filter(b => !ownedBiomes.has(b)).map(b => `biome ${b}`);
+    } else if (setDef.allBlades) {
+      // Numbered 1-27 for people, as on /helper and the filters.
+      missingItems = Array.from({ length: BLADE_COUNT }, (_, i) => i)
+        .filter(i => !ownedBlades.has(i)).map(i => `blade ${i + 1}`);
     }
 
     const missingCount = missingItems.length;
@@ -597,6 +617,7 @@ function detectSets(parcels, { members = false } = {}) {
       missingItems: missingCount > 0 && missingCount <= 5 ? missingItems.map(String) : null,
       ...(members ? {
         coversAll: coversAll(setDef),
+        ...(coversAll(setDef) ? { coversAllNote: coversAllNote(setDef) } : {}),
         tokenIds: coversAll(setDef) ? null : parcels.filter(p => setMember(setDef, p)).map(p => Number(p.tokenId)),
       } : {}),
     };

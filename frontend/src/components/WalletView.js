@@ -420,7 +420,7 @@ export default function WalletView({ data, loading, address, wishlist = null }) 
 // biome: `coversAll`) and sets the wallet holds nothing of aren't clickable.
 function SetChip({ set, active = false, onClick }) {
   const [hovered, setHovered] = useState(false);
-  const { name, completed, missingCount, missingItems, coversAll, tokenIds } = set;
+  const { name, completed, missingCount, missingItems, coversAll, coversAllNote, tokenIds } = set;
   const color = SET_COLORS[name];
   const held = tokenIds?.length ?? 0;
   const clickable = !coversAll && held > 0 && !!onClick;
@@ -431,7 +431,7 @@ function SetChip({ set, active = false, onClick }) {
       ? `1 away: ${missingItems?.[0] ?? '?'}`
       : `missing ${missingCount}`;
   const tooltipText = coversAll
-    ? `${status} · every parcel counts toward it`
+    ? `${status} · ${coversAllNote || 'every parcel counts toward it'}`
     : held > 0
       ? `${status} · ${active ? 'click to clear' : `click to show ${held} ${held === 1 ? 'parcel' : 'parcels'}`}`
       : status;

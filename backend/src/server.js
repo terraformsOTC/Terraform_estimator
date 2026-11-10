@@ -1943,7 +1943,34 @@ function setMembers(def) {
   if (def.requiredLevels) {
     return def.requiredLevels.map(l => ({ label: `L${l}`, pick: t => t.level === l }));
   }
+  if (def.allBlades) {
+    return Array.from({ length: 27 }, (_, i) => ({ label: `blade ${i + 1}`, blade: i }));
+  }
   return [];   // allZones / allBiomes — far too many to illustrate
+}
+
+// A blade only shows on a Daydream or Terraform parcel drawn by the v2 renderer
+// (tokenURI attribute Version "2.0"; a v1-rendered parcel has none), so the blade
+// set's examples are Daydream parcels on v2 (James, 2026-11-10), Flow first so a
+// row differs only in its blade. Reads the parcel store's live attributes; null
+// until the store has warmed (getSets doesn't cache until then).
+function pickBladeExamples() {
+  const best = new Map();   // blade -> { tokenId, traits, exact }
+  if (!MINTED_TRAITS_SNAPSHOT) return best;
+  for (const tokenId of MINTED_TRAITS_SNAPSHOT.keys()) {
+    const attrs = parcelStore.docs.get(Number(tokenId))?.attributes;
+    if (!attrs) continue;
+    const attr = name => attrs.find(a => a.trait_type === name)?.value;
+    if (attr('Mode') !== 'Daydream' || attr('Version') !== '2.0') continue;
+    const traits = getSnapshotTraits(tokenId);
+    if (!traits || !Number.isInteger(traits.blade)) continue;
+    const prev = best.get(traits.blade);
+    if (prev?.exact) continue;
+    const live = { ...traits, mode: 'Daydream', chroma: attr('Chroma') || traits.chroma };
+    if (live.chroma === 'Flow') best.set(traits.blade, { tokenId, traits: live, exact: true });
+    else if (!prev) best.set(traits.blade, { tokenId, traits: live, exact: false });
+  }
+  return best;
 }
 
 let SETS_PAYLOAD = null;
@@ -1952,10 +1979,12 @@ function getSets() {
   const t0 = Date.now();
   const sets = Object.entries(SETS).map(([name, def]) => {
     const members = setMembers(def);
-    const shown = members.slice(0, SET_EXAMPLE_CAP);
+    // The blade set shows all 27: each blade is its own look, none to spare.
+    const shown = members.slice(0, def.allBlades ? members.length : SET_EXAMPLE_CAP);
+    const bladeHits = def.allBlades ? pickBladeExamples() : null;
     const examples = shown
       .map(m => {
-        const hit = pickExample(m.pick, m.label);
+        const hit = m.blade != null ? bladeHits.get(m.blade) : pickExample(m.pick, m.label);
         return hit ? { label: m.label, tokenId: hit.tokenId, traits: hit.traits, exact: hit.exact } : null;
       })
       .filter(Boolean);
@@ -1969,9 +1998,12 @@ function getSets() {
       examples,
     };
   });
-  SETS_PAYLOAD = { sets };
-  console.log(`[sets] Built set examples in ${Date.now() - t0}ms`);
-  return SETS_PAYLOAD;
+  const payload = { sets };
+  // The blade set's examples need the parcel store's live attributes; until it
+  // has warmed (~17 min after boot), serve this build but don't keep it.
+  if (parcelStore.warmedAt) SETS_PAYLOAD = payload;
+  console.log(`[sets] Built set examples in ${Date.now() - t0}ms${parcelStore.warmedAt ? '' : ' (parcel store warming; not cached)'}`);
+  return payload;
 }
 
 app.use('/sets', standardLimiter);
@@ -2385,7 +2417,10 @@ function currentTraitsOf(tokenId) {
   const seed = PARCEL_CONSTANTS[id]?.[0] ?? null;
   const doc = parcelStore.docs.get(id);
   const live = antennaOverrides.get(id);
-  if (!doc && !live) return { ...snapshotTraits(rec), seed };
+  if (!doc && !live) {
+    const t = snapshotTraits(rec);
+    return { ...t, seed, blade: bladeIndexOf(id, t) };
+  }
   const attr = name => doc?.attributes.find(a => a.trait_type === name)?.value;
   const level = parseInt(attr('Level'), 10);
   const mystery = attr('???');
@@ -2396,7 +2431,7 @@ function currentTraitsOf(tokenId) {
     level: Number.isFinite(level) ? level : rec.level,
     mysteryValue: mystery != null ? Number(mystery) : rec.mysteryValue,
     ...(live ? { antennaOn: live.antennaOn, antennaFirstTs: live.antennaFirstTs } : {}),
-  }), seed };
+  }), seed, blade: bladeIndexOf(id, { mode: attr('Mode') || rec.mode, biome: rec.biome }) };
 }
 
 // Every minted parcel with current traits, for supply counts. Rebuilt every 10

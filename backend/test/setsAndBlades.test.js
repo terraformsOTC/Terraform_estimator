@@ -70,3 +70,27 @@ test('sales history filters and facets by blade', () => {
   assert.strictEqual(facets.blade['3'], 1);
   assert.strictEqual(facets.blade['7'], 1);
 });
+
+test('Full blade: one parcel with each of the 27 blades', () => {
+  const all = Array.from({ length: 27 }, (_, i) => ({ tokenId: 100 + i, zone: 'Alto', biome: 1, level: 5, mode: 'Daydream', specialType: null, blade: i }));
+  const done = byName(detectSets(all, { members: true }))['Full blade'];
+  assert.strictEqual(done.completed, true);
+  assert.strictEqual(done.coversAll, true);
+  assert.match(done.coversAllNote, /blade/);
+  // Two short: named 1-27, as on /helper and the filters.
+  const short = byName(detectSets(all.filter(p => p.blade !== 3 && p.blade !== 26)))['Full blade'];
+  assert.strictEqual(short.missingCount, 2);
+  assert.deepStrictEqual(short.missingItems, ['blade 4', 'blade 27']);
+  // Origins and X/Y-seeds (blade null) don't count.
+  assert.strictEqual(byName(detectSets([{ tokenId: 1, biome: 0, mode: 'Origin Daydream', blade: null }]))['Full blade'].missingCount, 27);
+});
+
+test('the helper offers Full blade as a set goal of 27 blade targets', () => {
+  const { PRESETS } = require('../src/collectionHelper');
+  const preset = PRESETS.find(p => p.id === 'set:full-blade');
+  assert.ok(preset, 'set:full-blade preset');
+  const group = preset.build();
+  assert.strictEqual(group.category, 'sets');
+  assert.strictEqual(group.targets.length, 27);
+  assert.ok(group.targets[0].match({ mode: 'Daydream', biome: 0, seed: 27 }));   // (0 + 27) % 27 = blade 0
+});

@@ -93,6 +93,8 @@ function setGroup(name, def) {
     targets = ALL_ZONES.map(target.zone);
   } else if (def.allBiomes) {
     targets = ALL_BIOMES.map(target.biome);
+  } else if (def.allBlades) {
+    targets = BLADES.map(target.blade);
   }
   return {
     id: `set:${slug(name)}`, label: name, category: 'sets',
