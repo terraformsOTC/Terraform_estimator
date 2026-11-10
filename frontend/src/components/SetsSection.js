@@ -4,6 +4,44 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { API_URL } from '@/components/shared';
 import ParcelArt from '@/components/ParcelArt';
 import { SETS_GLOSSARY, setStyle } from '@/lib/setsGlossary';
+import { BLADES, abbreviateGlyphs } from '@/lib/parcelGlyphs';
+
+// Sets whose examples play the on-chain animation instead of the static image:
+// a blade exists only in the v2 renderer's animation, on a Terraform parcel's
+// raised cells — the static SVG draws the biome's characters (2026-11-10).
+const ANIMATED_SETS = new Set(['Full blade']);
+const BLADE_FONT = "'MathcastlesRemix-Regular', monospace";
+
+// The parcel's live animation, mounted only while the card is on screen (27 of
+// them in one rail would otherwise all animate at once); the static image sits
+// underneath until then.
+function AnimatedArt({ tokenId, alt }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setVisible(true); return undefined; }
+    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { rootMargin: '0px 200px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="relative" style={{ width: 190, height: 274 }}>
+      <ParcelArt tokenId={tokenId} width={190} height={274} alt={alt} />
+      {visible && (
+        <iframe
+          src={`https://tokens.mathcastles.xyz/terraforms/token-html/${tokenId}`}
+          title={alt}
+          scrolling="no"
+          sandbox="allow-scripts"
+          loading="lazy"
+          className="absolute inset-0 w-full h-full"
+          style={{ border: 'none', display: 'block', pointerEvents: 'none' }}
+        />
+      )}
+    </div>
+  );
+}
 
 // Examples come from the backend (GET /sets), which picks a Terrain + Flow parcel
 // per member so a row differs only in the trait the set is actually about. Where
@@ -12,17 +50,27 @@ import { SETS_GLOSSARY, setStyle } from '@/lib/setsGlossary';
 // exception the set is about, and the intro no longer sets up Terrain + Flow as a
 // rule, so a "· Plague" tag read as a defect rather than the point. The backend
 // still returns `exact` for anyone querying /sets directly.
-function ExampleCard({ example }) {
+function ExampleCard({ example, animate = false }) {
   const { label, tokenId, traits } = example;
+  const bladeIndex = animate && /^blade \d+$/.test(label) ? Number(label.slice(6)) - 1 : null;
+  const blade = bladeIndex != null ? BLADES[bladeIndex] : null;
+  const [head, tail] = blade ? abbreviateGlyphs(blade, 6, 6) : [null, null];
   return (
     <a
       href={`/?token=${tokenId}`}
       className="flex-shrink-0 w-[190px] no-underline"
       style={{ scrollSnapAlign: 'start' }}
     >
-      <ParcelArt tokenId={tokenId} width={190} height={274} alt={`Parcel ${tokenId} — ${label}`} />
+      {animate
+        ? <AnimatedArt tokenId={tokenId} alt={`Parcel ${tokenId} — ${label}`} />
+        : <ParcelArt tokenId={tokenId} width={190} height={274} alt={`Parcel ${tokenId} — ${label}`} />}
       <div className="mt-2 flex flex-col gap-0.5">
         <span className="text-sm opacity-90">{label}</span>
+        {blade && (
+          <span className="text-xs opacity-60 whitespace-pre overflow-hidden" style={{ fontFamily: BLADE_FONT }}>
+            {head}{tail != null && <span style={{ fontFamily: "'Courier New', Courier, monospace", opacity: 0.6 }}>{' … '}</span>}{tail}
+          </span>
+        )}
         <span className="text-xs opacity-45">
           #{tokenId} · {traits?.zone}
         </span>
@@ -31,7 +79,7 @@ function ExampleCard({ example }) {
   );
 }
 
-function ExampleRail({ examples }) {
+function ExampleRail({ examples, animate = false }) {
   const railRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -70,7 +118,7 @@ function ExampleRail({ examples }) {
         style={{ scrollSnapType: 'x mandatory' }}
         tabIndex={0}
       >
-        {examples.map(e => <ExampleCard key={`${e.label}-${e.tokenId}`} example={e} />)}
+        {examples.map(e => <ExampleCard key={`${e.label}-${e.tokenId}`} example={e} animate={animate} />)}
       </div>
     </div>
   );
@@ -105,7 +153,7 @@ function SetBlock({ set, data }) {
 
       {examples.length > 0 ? (
         <>
-          <ExampleRail examples={examples} />
+          <ExampleRail examples={examples} animate={ANIMATED_SETS.has(set.name)} />
           {data.truncated && (
             <p className="mt-2 text-xs opacity-35">
               Showing {examples.length} of {data.memberCount}.

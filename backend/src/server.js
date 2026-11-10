@@ -1949,26 +1949,46 @@ function setMembers(def) {
   return [];   // allZones / allBiomes — far too many to illustrate
 }
 
-// A blade only shows on a Daydream or Terraform parcel drawn by the v2 renderer
-// (tokenURI attribute Version "2.0"; a v1-rendered parcel has none), so the blade
-// set's examples are Daydream parcels on v2 (James, 2026-11-10), Flow first so a
-// row differs only in its blade. Reads the parcel store's live attributes; null
-// until the store has warmed (getSets doesn't cache until then).
+// A blade is drawn only on a parcel's RAISED cells, by the v2 renderer, in
+// Daydream or Terraform mode: cells with height 0 show the biome's characters.
+// A Daydream parcel's canvas is blank until someone paints on it, so it shows no
+// blade on its own; a Terraform parcel's committed heightmap raises its cells.
+// The examples are therefore Terraform parcels on v2 with a heavily raised canvas
+// (James asked for Daydream on 2026-11-10; measured in the animation, #564 and
+// #205 showed nothing). Pinned per blade (index 0-26), each checked in headless
+// Chrome on 2026-11-10: 542-1,024 of 1,024 cells raised, Flow except blade 8
+// (#600, Pulse; its only Flow candidates had flat canvases).
+const BLADE_EXAMPLE_PINS = { 0: 2008, 1: 8938, 2: 1300, 3: 582, 4: 278, 5: 1624, 6: 1917, 7: 600, 8: 7463, 9: 377, 10: 1958, 11: 231, 12: 868, 13: 202, 14: 957, 15: 2629, 16: 1145, 17: 2424, 18: 621, 19: 3957, 20: 336, 21: 1044, 22: 2121, 23: 4402, 24: 3641, 25: 878, 26: 790 };
+
+// The pin while it is still a Terraform parcel on v2 (the parcel store's live
+// attributes: Mode, Version "2.0"), else the first Terraform v2 parcel with that
+// blade, Flow first. Null until the store has warmed (getSets doesn't cache
+// until then).
 function pickBladeExamples() {
   const best = new Map();   // blade -> { tokenId, traits, exact }
   if (!MINTED_TRAITS_SNAPSHOT) return best;
+  const liveAttrs = id => {
+    const attrs = parcelStore.docs.get(Number(id))?.attributes;
+    return attrs ? name => attrs.find(a => a.trait_type === name)?.value : null;
+  };
+  const usable = id => {
+    const attr = liveAttrs(id);
+    const traits = attr && getSnapshotTraits(id);
+    if (!traits || attr('Mode') !== 'Terraform' || attr('Version') !== '2.0') return null;
+    return { ...traits, mode: 'Terraform', chroma: attr('Chroma') || traits.chroma };
+  };
+  for (const [blade, id] of Object.entries(BLADE_EXAMPLE_PINS)) {
+    const traits = usable(id);
+    if (traits && traits.blade === Number(blade)) best.set(Number(blade), { tokenId: id, traits, exact: true });
+    else if (parcelStore.warmedAt) console.warn(`[sets] blade ${Number(blade) + 1} example #${id} is no longer a Terraform v2 parcel — auto-picking`);
+  }
   for (const tokenId of MINTED_TRAITS_SNAPSHOT.keys()) {
-    const attrs = parcelStore.docs.get(Number(tokenId))?.attributes;
-    if (!attrs) continue;
-    const attr = name => attrs.find(a => a.trait_type === name)?.value;
-    if (attr('Mode') !== 'Daydream' || attr('Version') !== '2.0') continue;
-    const traits = getSnapshotTraits(tokenId);
+    const traits = usable(tokenId);
     if (!traits || !Number.isInteger(traits.blade)) continue;
     const prev = best.get(traits.blade);
     if (prev?.exact) continue;
-    const live = { ...traits, mode: 'Daydream', chroma: attr('Chroma') || traits.chroma };
-    if (live.chroma === 'Flow') best.set(traits.blade, { tokenId, traits: live, exact: true });
-    else if (!prev) best.set(traits.blade, { tokenId, traits: live, exact: false });
+    if (traits.chroma === 'Flow') best.set(traits.blade, { tokenId, traits, exact: true });
+    else if (!prev) best.set(traits.blade, { tokenId, traits, exact: false });
   }
   return best;
 }
