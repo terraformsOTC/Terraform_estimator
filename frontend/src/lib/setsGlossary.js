@@ -6,23 +6,24 @@
 // across all three consumers (glossary, /traits#sets, the wallet view), so it has to match
 // the backend's SETS keys exactly.
 //
-// `size` is how many parcels complete the set, and the list is kept in ascending
-// order of it — that is the order the sets section of /traits renders, so the page reads from
-// the easiest set to the hardest without needing to sort.
+// `size` is how many parcels complete the set. The list is in the order the sets
+// section of /traits renders: roughly easiest to hardest by size, except that Full
+// blade sits under Chess biomes (James, 2026-11-10) — the two glyph-themed sets
+// together. The backend's SETS keep the same order, so the wallet's chips match.
 //
 // Colour is difficulty, which is NOT the same ordering — Grails needs only seven
 // parcels but two of them are a Plague and a Spine, so it sits early in the list
-// and purple in the palette. Green easy, blue medium, purple hard, yellow
-// near-impossible.
+// and yellow, with Full zone and Full biome (James, 2026-11-10). Green easy, blue
+// medium, purple hard, yellow near-impossible.
 export const SETS_GLOSSARY = [
   { name: 'Binary biomes',  size:  3, color: '#34d399', description: 'One parcel from biomes 54, 58, and 89. These biomes all have binary 0/1 characters in their animations.' },
   { name: 'Meadow biomes',  size:  3, color: '#34d399', description: 'One parcel from biomes 42, 65, and 60. These biomes all have the appearance of wind flowing over grass in their animations.' },
   { name: 'Chess biomes',   size:  5, color: '#34d399', description: 'One parcel from biomes 85, 39, 26, 27, and 38. These biomes all have various chess piece unicode characters in their animations.' },
-  { name: 'Grails',         size:  7, color: '#c084fc', description: 'One parcel from each of special parcel types: X-Seed, Y-Seed, Plague, Lith0, and Spine, plus a biome 0 parcel and an Origin Daydream or Origin Terraform.' },
+  { name: 'Full blade',     size: 27, color: '#60a5fa', description: 'One parcel with each of the 27 blades, the character sets the v2 renderer animates across a parcel. Blades show only on Daydream and Terraform parcels (on a Terrain parcel the blade is latent until it is dreamed), and only on a parcel\'s raised cells, so the examples here are Terraform parcels on the v2 renderer whose canvas is raised (a Daydream parcel shows its blade where you paint on it). Origin, X-Seed and Y-Seed parcels have no blade.' },
+  { name: 'Grails',         size:  7, color: '#ffe401', description: 'One parcel from each of special parcel types: X-Seed, Y-Seed, Plague, Lith0, and Spine, plus a biome 0 parcel and an Origin Daydream or Origin Terraform.' },
   { name: '[DUOTONE]',      size: 15, color: '#60a5fa', description: 'One parcel from every duotone zone. These zones are all easily identified by their square bracket naming convention (e.g. [BLOOD], [MOON], [SOON]) and are distinct for their two-colour animations.' },
   { name: 'Blocky biomes',  size: 17, color: '#60a5fa', description: 'One parcel from the first 16 biomes, including biome 0. These parcels are all made up of various "blocky" unicode characters that create very distinctive and recognisable animations.' },
   { name: 'Full level',     size: 20, color: '#c084fc', description: 'One parcel at each of the 20 levels of the Hypercastle (L1–L20). Parcels on the top and the bottom of the Hypercastle are the most difficult to acquire.' },
-  { name: 'Full blade',     size: 27, color: '#60a5fa', description: 'One parcel with each of the 27 blades, the character sets the v2 renderer animates across a parcel. Blades show only on Daydream and Terraform parcels (on a Terrain parcel the blade is latent until it is dreamed), and only on a parcel\'s raised cells, so the examples here are Terraform parcels on the v2 renderer whose canvas is raised (a Daydream parcel shows its blade where you paint on it). Origin, X-Seed and Y-Seed parcels have no blade.' },
   { name: 'Polychrome set', size: 60, color: '#c084fc', description: 'One parcel from every multicoloured zone. These are easily identified by their standard case names without brackets.' },
   { name: 'Full zone',      size: 75, color: '#ffe401', description: 'One parcel from every zone in the collection.' },
   { name: 'Full biome',     size: 92, color: '#ffe401', description: 'One parcel from every biome. The hardest set of all to acquire.' },

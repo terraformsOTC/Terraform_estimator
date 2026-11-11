@@ -215,6 +215,16 @@ const SETS = {
     attainability: "Easy",
     bottleneck: "biome 39",
   },
+  // James, 2026-11-10. A parcel's blade (0-26) rides on its traits as `blade`
+  // (server.js bladeIndexOf); origins and X/Y-seeds have none. Blades are drawn
+  // only on Daydream and Terraform parcels (v2 renderer), latent on Terrain.
+  "Full blade": {
+    description: "One parcel with each of the 27 blades",
+    allBlades: true,
+    attainability: "Medium",
+    // 323 parcels carry blade 20 (index 19), the fewest; the most carry 401.
+    bottleneck: "blade 20",
+  },
   "Binary biomes": {
     description: "Biomes 54, 58, 89",
     requiredBiomes: [54, 58, 89],
@@ -269,16 +279,6 @@ const SETS = {
     requiredModes: ["Origin Daydream", "Origin Terraform"],
     attainability: "Very difficult",
     bottleneck: "Plague chroma",
-  },
-  // James, 2026-11-10. A parcel's blade (0-26) rides on its traits as `blade`
-  // (server.js bladeIndexOf); origins and X/Y-seeds have none. Blades are drawn
-  // only on Daydream and Terraform parcels (v2 renderer), latent on Terrain.
-  "Full blade": {
-    description: "One parcel with each of the 27 blades",
-    allBlades: true,
-    attainability: "Medium",
-    // 323 parcels carry blade 20 (index 19), the fewest; the most carry 401.
-    bottleneck: "blade 20",
   },
   "Full zone": {
     description: "One parcel from each zone (75 zones)",
