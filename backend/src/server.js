@@ -445,9 +445,12 @@ function floorAt(tsSeconds) {
   return found === -1 ? null : FLOOR_HISTORY[found].floor;
 }
 
-// ─── LIVE FLOOR PRICE (Alchemy NFT API) ────────────────────────────────────────
-const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-let floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: 0, isLive: false };
+// ─── LIVE FLOOR PRICE ─────────────────────────────────────────────────────────
+// Alchemy's OpenSea floor, else OpenSea's own (collection stats), with a minute's
+// backoff when both fail and isLive false once the floor is 2 h old — floorPrice.js
+// (security scan F3, 2026-11-12). Refreshed at most every 5 min.
+const FLOOR_CACHE_TTL_MS = 5 * 60 * 1000;
+const { createFloorSource } = require('./floorPrice');
 
 // Browser cache for price endpoints. Safe because the live floor only refreshes every
 // FLOOR_CACHE_TTL_MS server-side, so a 2-min client cache never serves anything staler than
@@ -462,34 +465,48 @@ const PRICE_CACHE_CONTROL = 'public, max-age=120, stale-while-revalidate=300';
 // `?refresh=1` is answered with no-store so the button always reaches the origin.
 const FEED_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=1800';
 
+async function fetchAlchemyFloor() {
+  const apiKey = process.env.ALCHEMY_API_KEY;
+  if (!apiKey) throw new Error('ALCHEMY_API_KEY not set');
+  const res = await fetch(
+    `https://eth-mainnet.g.alchemy.com/nft/v3/${apiKey}/getFloorPrice?contractAddress=0x4E1f41613c9084FdB9E34E11fAE9412427480e56`,
+    { signal: AbortSignal.timeout(5000) }
+  );
+  if (!res.ok) throw new Error(`Alchemy HTTP ${res.status}`);
+  const data = await res.json();
+  // OpenSea's floor only. The LooksRare figure was a fallback here until 2026-11-12;
+  // it read 1 ETH against a 0.2 floor that day (a stale listing), so OpenSea's own
+  // stats replace it as the second source.
+  return data?.openSea?.floorPrice;
+}
+
+async function fetchOpenSeaFloor() {
+  if (!OPENSEA_API_KEY) throw new Error('OPENSEA_API_KEY not set');
+  const res = await fetch('https://api.opensea.io/api/v2/collections/terraforms/stats', {
+    headers: { 'X-API-KEY': OPENSEA_API_KEY, Accept: 'application/json' },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`OpenSea HTTP ${res.status}`);
+  const data = await res.json();
+  return data?.total?.floor_price;
+}
+
+const floorSource = createFloorSource({
+  sources: [
+    { name: 'alchemy', fetch: fetchAlchemyFloor },
+    { name: 'opensea', fetch: fetchOpenSeaFloor },
+  ],
+  fallbackPrice: FLOOR_PRICE_ETH,
+  ttlMs: FLOOR_CACHE_TTL_MS,
+  onLive: (t, floor, source) => {
+    recordFloorSample(t, floor);
+    console.log(`[floor] Live floor updated: ${floor} ETH (${source})`);
+  },
+});
+
+// { price, isLive, fetchedAt, ageMs, source, refreshFailing }
 async function getFloorPrice() {
-  const now = Date.now();
-  if (floorCache.isLive && (now - floorCache.fetchedAt) < FLOOR_CACHE_TTL_MS) {
-    return floorCache;
-  }
-  try {
-    const apiKey = process.env.ALCHEMY_API_KEY;
-    if (!apiKey) throw new Error('ALCHEMY_API_KEY not set');
-    const res = await fetch(
-      `https://eth-mainnet.g.alchemy.com/nft/v3/${apiKey}/getFloorPrice?contractAddress=0x4E1f41613c9084FdB9E34E11fAE9412427480e56`,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!res.ok) throw new Error(`Alchemy HTTP ${res.status}`);
-    const data = await res.json();
-    // Use OpenSea floor as primary source; fall back to looksRare if OpenSea unavailable
-    const floor = data?.openSea?.floorPrice ?? data?.looksRare?.floorPrice;
-    if (typeof floor !== 'number' || floor <= 0) throw new Error('Unexpected response shape');
-    floorCache = { price: floor, fetchedAt: now, isLive: true };
-    recordFloorSample(now, floor);
-    console.log(`[floor] Live floor updated: ${floor} ETH`);
-  } catch (err) {
-    console.warn(`[floor] Fetch failed (${err.message}), using fallback ${FLOOR_PRICE_ETH} ETH`);
-    // Preserve stale live cache if we have one; otherwise use hardcoded fallback
-    if (!floorCache.isLive) {
-      floorCache = { price: FLOOR_PRICE_ETH, fetchedAt: now, isLive: false };
-    }
-  }
-  return floorCache;
+  return floorSource.get();
 }
 
 // ─── OPENSEA LISTINGS ─────────────────────────────────────────────────────────
@@ -2078,6 +2095,11 @@ app.get('/health', async (_req, res) => {
     floor = {
       eth: f.price,
       isLive: f.isLive,
+      // Where the floor came from and how old it is (F3): 'alchemy', 'opensea', or
+      // 'fallback' (the hardcoded figure, nothing fetched yet).
+      source: f.source,
+      ageMinutes: f.ageMs == null ? null : Math.round(f.ageMs / 60000),
+      refreshFailing: f.refreshFailing,
       topBid: typeof bid === 'number' && bid > 0 ? bid : null,
     };
   } catch { /* leave null */ }
@@ -2147,9 +2169,9 @@ app.get('/collectors', async (req, res) => {
 
 app.get('/floor', async (req, res) => {
   try {
-    const { price, isLive, fetchedAt } = await getFloorPrice();
+    const { price, isLive, fetchedAt, source } = await getFloorPrice();
     res.setHeader('Cache-Control', PRICE_CACHE_CONTROL);
-    res.json({ floor: price, isLive, fetchedAt });
+    res.json({ floor: price, isLive, fetchedAt, source });
   } catch (err) {
     console.error('[floor]', err.message);
     res.status(500).json({ error: 'Failed to fetch floor price.' });

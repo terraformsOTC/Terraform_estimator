@@ -117,7 +117,7 @@ function MarketCap({ data, ethUsd }) {
       </div>
 
       <p className="text-xs opacity-55 leading-relaxed">
-        floor {floor.toFixed(3)} ETH{floorIsLive ? '' : ' (fallback)'}
+        floor {floor.toFixed(3)} ETH{floorIsLive ? '' : ' (not live)'}
         {topOffer ? <> · top collection bid {topOffer.toFixed(3)} ETH</> : null}
         {' · '}floor × minted supply {eth(marketCap.floorTimesSupply, 0)} ETH
       </p>
