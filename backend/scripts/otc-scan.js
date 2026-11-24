@@ -66,6 +66,7 @@ const KNOWN = {
   // ERC-4337 EntryPoint: a smart account batching calls, same blind spot as
   // EIP-7702 — the real venue is only visible in the receipt logs.
   '0x0000000071727de22e5e9d8baf0edac6f37da032': { name: 'ERC-4337 EntryPoint', kind: 'direct' },
+  '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789': { name: 'ERC-4337 EntryPoint v0.6', kind: 'direct' },
 };
 
 const byKind = (kind) =>
