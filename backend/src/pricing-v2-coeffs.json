@@ -1,6 +1,6 @@
 {
   "meta": {
-    "built": "2026-11-23T03:20:17Z",
+    "built": "2026-11-24T03:20:20Z",
     "target": "ln(price_native / floor_at_sale)",
     "floor": "endogenous p12 trailing index (build_floor_index.js)",
     "half_life_days": 180,
@@ -4868,10 +4868,10 @@
   },
   "floor_calibration": {
     "value": 0.8248,
-    "measured_at": "2026-11-23T03:20:18.363Z",
+    "measured_at": "2026-11-24T03:20:21.190Z",
     "method": "median(sale_price / (live_floor_at_sale * fitted_multiple))",
     "window_days": 30,
-    "n_sales": 113,
+    "n_sales": 111,
     "iqr": [
       0.773,
       0.886
